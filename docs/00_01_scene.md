@@ -1,66 +1,123 @@
-# Объект Scene - система команд
+# Библиотека Scene - система команд
 
-PythonOCC - это не просто порт библиотеки. В нем присутствует много кода на Python облегчающего работу. И это довольно удобно. Но чтобы еще более упростить создание и демонстрацию сцен в данных примерах создан объект Scene.
-
-Объект Scene предназначен для быстрого вывода объектов на экран и управление их внешним видом. Объекты загружаются в сцену, при этом им присваивается имя, которое позволяет в дальнейшем контролировать его отображение. Возможны групповые операции, манипулирующие сразу с несколькими объектами, выбираемыми по маске. Также реализована возможность несложной анимации и управление параметрическими объектами. Еще объект сцена имеет методы для управления стереоскопическими режимами и методы экспорта сцены в последовательность PNG-файлов, последовательность OBJ-файлов, экспорт сцены в браузерный просмотрщик, основанный на технологии  Three.js.
-
-Ниже набор команд объекта Scene.
+Объект Scene предназначен для быстрого вывода объектов на экран и управление их внешним видом. Объекты загружаются в сцену, при этом им присваивается имя, которое позволяет в дальнейшем контролировать его отображение. 
 
 
 
-addAxis(name)
+Первоначальные настройки (до SceneStart)
 
-addBoard(name)
+- ScenePresetDebug()
 
+- ScenePresetWindowSize(with, height, isFullScreen)
 
+- ScenePresetStereoMode(mode = mono/stareoTV/crossEye/anaglith)
 
-addObject(obj, name) - добавляет объект в сцену ( добавляться могут любые объекты, но отображаются только объекты потомки AIS_InteractiveObject), также в качестве объекта может быть передана функция, возвращающая объект AIS_InteractiveObject (см ниже параметрические объекты)
+  
 
-addObjects(dict, mask, postfix='') - добавляет объекты из именованного списка, фильтруя их по mask и добавляя в конце postfix (для избежания пересечения имен)
+Настройки анимации (до SceneStart)
 
+- SceneStopPoint(t, delayInDemoMode, comment)
 
+- SceneRegAction(eraseFlag, setupFunc, animateFunc(None for dtatic), tStart, tEnd, step ,mode=normal/exportToWeb/exportToPng, dirName)
 
-setInfoStyle(mask, startFrame = None, finishFrame=None)
+  
 
-setMainStyle(mask, startFrame = None, finishFrame=None)
+SceneStart()
 
-setLabel(mask, isOn=True, startFrame = None, finishFrame=None)
-
-setComment(comment, startFrame = None, finishFrame = None)
-
-setVisible(mask, isOn=True, startFrame = None, finishFrame=None)
-
-
-
-setPointColor(mask, startR, startG, startB, startT, startFrame = None, finishR = None, finishB = None, finishT = None, finishFrame= None)
-
-setLineColor(mask, startR, startG, startB, startT, startFrame = None, finishR = None, finishB = None, finishT = None, finishFrame= None)
-
-setSurfaceColor(mask, startR, startG, startB, startT, startFrame = None, finishR = None, finishB = None, finishT = None, finishFrame= None)
-
-setPointSize(mask, startSize,  startFrame = None, finishSize = None, finishFrame= None)
-
-setLineSize(mask, startSize,  startFrame = None, finishSize = None, finishFrame= None)
+SceneEnd()
 
 
 
-setParameter(mask, paramName, startValue,  startFrame = None, finishValue = None, finishFrame= None)
+SceneLayer(layerName)
 
+SceneSetStyle(styleName, styleValue)
 
+SceneGetStyle(styleName)
 
-setTranslation(mask, startVector, startFrame = None, finishVector = None, finishFrame = None)
+SceneApplyStyle(objName, propName, propValue)
 
-setScale(mask, startVector, startFrame = None, finishVector = None, finishFrame = None)
+ 
 
-setRotation(mask, startVector, startAngle, startFrame = None, finishVector = None, finishAngle = None, finishFrame = None)
+SceneLevelDown(levelName)
 
+SceneLevelUp()
 
+ 
 
-start(with, height, stereoMode='flat', isFullscreen=false, isRayTracing=false, startFrame=None, finishFrame=None) - открывает окно нужных размеров, в требуемом стерео-режиме ('flat','crossEye','stereoTV','anaglyph'), и если нужно - на полный экран
+Привязки работают с учетом преобразования локальных координат
 
-exportPNG(with, height, stereoMode='flat', dir, filePrefix, startFrame=None, finishFrame=None)
+SceneSetPivot(path, pivotName, xyz)
 
-exportOBJ(mask, dir, file_prefix, startFrame=None, finishFrame=None)
+xyz = SceneGetPivot(path, pivotname)
 
-exportScene(startFrame=None, finishFrame=None)
+[xyz] = SceneGetPivots(path)
 
+  
+
+SceneDrawPoint(name, xyz)
+
+SceneDrawLine(name, xyzStart, xyzFinish, arrowStart, arrowFinish, growFactor, growType)
+
+SceneDrawFlat(name, xyz, xyz, xyz, growFactor, growType)
+
+SceneDrawCyrcle(name, xyz, xyz, xyz)
+
+SceneDrawArc(name, xyz, xyz, xyz, arrowStart, arrowFinish, growFactor, growType)
+
+ 
+
+SceneDrawBox(name, xyz)
+
+SceneDrawSphere(name, r)
+
+SceneDrawCone(name, r, h)
+
+SceneDrawCylr(name, r, h)
+
+ 
+
+SceneDrawShape(name, sh, filename)
+
+SceneDrawMessage(name, xyz, text)
+
+SceneDrawLabel(name, text = None)
+
+ 
+
+Стандартные декорации
+
+SceneDrawAxis(name)
+
+SceneDrawBox(name)
+
+ 
+
+obj = SceneGetNativeObject(name)
+
+ 
+
+SceneMove(xyzFrom, xyzTo)
+
+SceneRotate(xyzCenter, xyzAxis, angle)
+
+SceneScale(xyzCenter, xyzScale)
+
+SceneOrientTo(xyzCenter, xyzPivot, xyzMass ,xyzOrientTo, ScaleFactor)
+
+ 
+
+ 
+
+SceneFIReset(linear/spline)
+
+SceneFIAdd(t,float)
+
+float = SceneFIGet(t)
+
+ 
+
+ScenePIReset(linear/spline)
+
+ScenePIAdd(t,xyz)
+
+xyz=ScenePIGet(t)
