@@ -4,7 +4,7 @@
 
 Для нашей версии достаточно пакета "Миниконда".
 
-Скачиваем установщик: https://repo.anaconda.com/miniconda/Miniconda3-latest-Windows-x86_64.exe
+Скачиваем установщик: [https://repo.anaconda.com/miniconda/Miniconda3-latest-Windows-x86_64.exe](https://repo.anaconda.com/miniconda/Miniconda3-latest-Windows-x86_64.exe)
 
 Запускаем и оставляем все опции по умолчанию.
 
