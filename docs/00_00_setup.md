@@ -48,7 +48,7 @@ conda install -c dlr-sc pythonocc-core=7.4.0
 
 ## Устанавливаем Git
 
-Загружаем и запускаем отсюда https://git-scm.com/download/win. Все настройки оставляем по умолчанию.
+Загружаем и запускаем отсюда [https://git-scm.com/download/win]( https://git-scm.com/download/win). Все настройки оставляем по умолчанию.
 
 ## Создаем проект Spyder с примерами OpenCascade
 
