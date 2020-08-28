@@ -121,13 +121,13 @@ git clone https://github.com/headfire/occ-tutorial.git
 
 ## Полезные ссылки
 
-* https://www.opencascade.com/
-* https://www.opencascade.com/doc/occt-6.9.1/refman/html/index.html
-* https://docs.conda.io/en/latest/miniconda.html
-* https://anaconda.org/anaconda/spyder
-* https://github.com/tpaviot/pythonocc-core
-* https://github.com/tpaviot/pythonocc-demos
-* https://git-scm.com/download/win
+* [https://www.opencascade.com/](https://www.opencascade.com/) 
+* [https://www.opencascade.com/doc/occt-6.9.1/refman/html/index.html](https://www.opencascade.com/doc/occt-6.9.1/refman/html/index.html)
+* [https://docs.conda.io/en/latest/miniconda.html](https://docs.conda.io/en/latest/miniconda.html)
+* [https://anaconda.org/anaconda/spyder](https://anaconda.org/anaconda/spyder)
+* [https://github.com/tpaviot/pythonocc-core](https://github.com/tpaviot/pythonocc-core)
+* [https://github.com/tpaviot/pythonocc-demos](https://github.com/tpaviot/pythonocc-demos)
+* [https://git-scm.com/download/win](https://git-scm.com/download/win)
 
  
 
