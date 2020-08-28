@@ -1,2 +1,2 @@
-# crpoint
-System for create 3D presentation
+# Точка сборки
+Система для создания 3D презентаций
