@@ -298,6 +298,17 @@ def SceneDebug():
     return sc.debug()
     
 def SceneStart(): 
+
+    SceneLayer('hide')
+    SceneSetStyle('visible', False)                
+    SceneSetStyle('color', (0, 0, 1))             
+    SceneSetStyle('transparency', 0 )             
+    SceneSetStyle('lineType', 'solid')             
+    SceneSetStyle('lineWidth', 3)             
+    SceneSetStyle('pointType', 'ball')             
+    SceneSetStyle('pointSize', 3 )             
+    SceneSetStyle('textColor', (55/255, 74/255, 148/255))             
+    SceneSetStyle('textHeight', 20)             
     
     SceneLayer('info')
     SceneSetStyle('visible', True)                
@@ -323,17 +334,6 @@ def SceneStart():
     
     SceneLayer('main')
     SceneSetStyle('visible', True)                
-    SceneSetStyle('color', (0, 0, 1))             
-    SceneSetStyle('transparency', 0 )             
-    SceneSetStyle('lineType', 'solid')             
-    SceneSetStyle('lineWidth', 3)             
-    SceneSetStyle('pointType', 'ball')             
-    SceneSetStyle('pointSize', 3 )             
-    SceneSetStyle('textColor', (55/255, 74/255, 148/255))             
-    SceneSetStyle('textHeight', 20)             
-
-    SceneLayer('hide')
-    SceneSetStyle('visible', False)                
     SceneSetStyle('color', (0, 0, 1))             
     SceneSetStyle('transparency', 0 )             
     SceneSetStyle('lineType', 'solid')             
