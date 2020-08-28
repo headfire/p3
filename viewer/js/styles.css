@@ -1,0 +1,228 @@
+	
+	body {
+	  overflow:hidden;
+      background-color: #ffffff;
+      color: #000000;
+      font-family: Arial, "Helvetica Neue", Helvetica, sans-serif;
+      font-size: 14px;
+    }
+	
+	#drawArea {
+	   position:absolute; 
+	   top:70px; 
+	   bottom:40px;
+	   left:480px;
+	   right:40px;
+	}
+
+	#drawZone {
+	  width:100%;
+	  height:100%;
+	}
+
+	#webgl {
+ 	  position:absolute; 
+	  width:100%;
+	  height:100%;
+	}
+	
+	.mono-mode .full {
+	  display:block;
+	}
+	
+	.mono-mode .half {
+	  display:none;
+	}
+	
+	.cross-eye-mode .full {
+	  display:block;
+	}
+
+	.cross-eye-mode .half {
+	  display:none;
+	}
+
+	.stereo-tv-mode .full {
+	  display:none;
+	}
+
+	.stereo-tv-mode .half {
+	  display:block;
+	}
+	
+	
+	.play-on img.icon-play-on {
+	   display:block;
+	}
+	
+	.play-on img.icon-play-off {
+	   display:none;
+	}
+
+	.play-off  img.icon-play-off {
+	   display:block;
+	}
+	
+	.play-off  img.icon-play-on {
+	   display:none;
+	}
+
+	.info-on img.icon-info-on {
+	   display:block;
+	}
+	
+	.info-on img.icon-info-off {
+	   display:none;
+	}
+
+	.info-off  img.icon-info-off {
+	   display:block;
+	}
+	
+	.info-off  img.icon-info-on {
+	   display:none;
+	}
+	
+	.info-on  .info {
+	   display:block
+	}
+	
+	.info-off  .info {
+	   display:none
+	}
+	
+	.mono-layout {
+ 	  position:absolute; 
+      left:0px;
+	  width:100%;
+/*	  height:100%; */
+	}
+	
+	.left-layout {
+	  position:absolute; 
+      left:0px;
+	  width:50%;
+/*	  height:100%; */
+	}
+	
+	.right-layout {
+      position:absolute; 
+	  right:0px;
+	  width:50%;
+/*	  height:100%; */
+	}
+	
+  	.full .info {
+	  position:absolute; 
+	  top:10px; 
+	  left:10px; 
+	  right:450px;
+	  color:#000;
+	  font-size:13px;
+	  font-weight: bold;
+	}
+	
+  	.half .info {
+	  position:absolute; 
+	  top:10px; 
+	  left:10px; 
+	  right:250px;
+	  color:#000;
+	  font-size:13px;
+	  font-stretch:ultra-condensed;
+	}
+
+	.full .toolbar {
+	   position:absolute; 
+	   top:10px; 
+	   right:10px; 
+	   background-color:gray; 
+	   text-align:center; 
+	   border-radius:8px;
+    }
+
+	.half .toolbar {
+	   position:absolute; 
+	   top:10px; 
+	   right:5px; 
+	   background-color:gray; 
+	   text-align:center; 
+	   border-radius:8px;
+    }
+    
+
+	.full .toolbar td { 
+     vertical-align:middle; 
+     text-align:center;	 
+      width: 35px; 
+	  height:35px; 
+	}
+	
+	.full .toolbar  img 
+	{ width:30px;
+      height:30px;	 
+	  }
+	  
+	.full .toolbar .frame-counter {
+	  font-size:15px; 
+	  color:white; 
+	  font-weight:bold;
+	} 
+	
+	.full .toolbar .toolbar-space {
+	  width:15px;
+	}
+
+	.full .toolbar .toolbar-counter {
+	  width:50px;
+	}
+				
+	.half .toolbar td { 
+      vertical-align:middle; 
+      text-align:center;	 
+      width: 17px; 
+	  height:35px; 
+	}
+	
+	.half .toolbar  img 
+	{ width:15px;
+      height:30px;	 
+	  }
+	  
+	.half .toolbar .frame-counter {
+	  font-size:15px; 
+	  color:white; 
+	  font-weight:normal;
+	  font-stretch:ultra-condensed;
+	} 
+	
+	.half .toolbar .toolbar-space {
+	  width:7px;
+	}
+
+	.half .toolbar .toolbar-counter {
+	  width:40px;
+	}
+				
+	
+/* for Code Manipulation */
+			
+    .CodeMirror {
+	     border: 1px solid black; 
+		 height:100%; }
+		 
+    .line-error {
+       background: #FBC2C4 !important;
+       color: #8a1f11 !important;
+    }
+
+/* for Label command */
+	.label {
+  	  text-shadow: -2px 2px 2px rgb(50,50,50);
+	  margin-left: 25px;
+	  font-size: 25px;
+			}
+			
+	.stereo-tv-mode .label {
+	  font-stretch:ultra-condensed;
+	}

@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <title>Z-Desk</title>
+    <link rel="shortcut icon" href="images/favicon.ico" />
+    <link href="js/codemirror/lib/codemirror.css" rel="stylesheet" type="text/css" />
+    <link href="js/styles.css" rel="stylesheet" type="text/css" />
+</head>
+<body style = "">
+<div style = " position:absolute; top:10px; height:50px; left:40px; right:40px;" >
+   <h2>Z-Desk. Трехмерные геометрические построения.</h2> 
+</div>
+
+
+<div style = " position:absolute; top:20px; height:100px;right:240px;width:300px; text-align:right;" >
+   <a href="#" onclick='mainLoadPopup("help")'>Помощь</a>
+   &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+   <a href="#" onclick='mainLoadPopup("about")'>О проекте</a>
+   &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+</div>
+
+<div style = " position:absolute; top:70px; height:100px;left:40px;width:400px;" >
+   <select id='examplesSelect' style = "width:280px;" onChange='mainOnExample();'>
+   </select>
+   &nbsp;&nbsp;&nbsp;
+   <input type="button" onclick="mainRunScript();" value="Выполнить"/>
+</div>
+
+<div id="codeArea" style = " position:absolute; top:120px; bottom:40px;left:40px;width:400px;" >
+<textarea id="codeEditor" name="code" style="width:100%;height:100%;">
+</textarea>
+</div>
+
+<div id="drawArea">
+<div id="drawZone" class='mono-mode text-on play-off' >
+
+<div id="webgl">
+</div>
+
+<div class="mono-layout full">
+<div id='mono-toolbar' class="toolbar" >
+<table><tr><td>
+<a href="#" title="Доску на место" onClick='mainOnHome()';>
+  <img src="images/black/home.png" />
+  </a>
+</td><td>
+<a  href="#" title="Вкл/выкл текст" onClick='mainOnInfo();'> 
+  <img class='icon-info-off' src="images/black/info.png" />
+  <img class='icon-info-on' src="images/white/info.png" />
+</a>
+</td><td class='toolbar-space'>
+</td><td>
+<a href="#" title="Предыдущий кадр" onClick='mainOnFramePrev();'>
+  <img src="images/black/arrow-left.png" />
+</a>
+</td><td class='toolbar-counter'>
+<span class="frame-counter" ></span>
+</td><td>
+<a  href="#" title="Следующий кадр" onClick='mainOnFrameNext();'>
+  <img src="images/black/arrow-right.png" />
+</a>
+</td><td>
+<a  href="#" title="Старт/Пауза" onClick='mainOnPlay();'>
+  <img class='icon-play-off' src="images/black/play.png"/>
+  <img class='icon-play-on' src="images/white/play.png"/>
+</a>
+</td><td class='toolbar-space'>
+</td><td>
+<a href="#" title="3D-режимы" onClick='mainOnMode();'>
+  <img src="images/3d.png"  />
+</a>
+</td><td>
+<a href="#" title="Полный экран" onClick='mainOnFullScreen();'>
+  <img src="images/black/fullscreen.png"  />
+</a>
+</td></tr></table>
+</div>
+<div id='mono-info' class="info">
+</div>
+</div>
+
+<div class='left-layout half'>
+<div id='left-toolbar' class="toolbar" >
+</div>
+<div id='left-info' class="info">
+</div>
+</div>
+
+<div class='right-layout half'>
+<div id='right-toolbar' class="toolbar" >
+</div>
+<div id='right-info' class="info">
+</div>
+</div>
+
+</div>
+</div>
+
+<div id="popupArea" style="position:absolute; top:50px; left:100px; right:100px; bottom:50px; background-color:white; border:1px solid black; padding:50px; display:none;z-index:2000; overflow: auto;">
+<img id='popupClose' src="images/close.png " width=20 align='right' style='position:absolute; right:10px; top:10px;' onClick='document.getElementById("popupArea").style.display = "none"'>
+<div id ='popupContent' style="" >
+</div>
+</div>
+
+<script type="text/javascript" src="js/three/three.min.js"></script>
+<!-- <script type="text/javascript" src="js/three/three.js"></script> -->
+<script type="text/javascript" src="js/three/Detector.js"></script>
+<script type="text/javascript" src="js/three/TrackballControls.js"></script>
+<script type="text/javascript" src="js/three/CSS2DRenderer.js"></script>
+<script type="text/javascript" src="js/three/StereoEffect.js"></script>
+<script type="text/javascript" src="js/codemirror/lib/codemirror.js"></script>
+<script type="text/javascript" src="js/codemirror/addon/edit/matchbrackets.js"></script>
+<script type="text/javascript" src="js/codemirror/addon/comment/continuecomment.js"></script>
+<script type="text/javascript" src="js/codemirror/addon/comment/comment.js"></script>
+<script type="text/javascript" src="js/codemirror/mode/javascript/javascript.js"></script>
+<script type="text/javascript" src="js/zdesk.js"></script>
+<script type="text/javascript" src="js/interface.js"></script>
+<script type="text/javascript" src="js/main.js"></script>
+<script type="text/javascript" src="exampl/examples.js"></script>
+<script>
+
+  // START SYSTEM
+  mainSetFlags();
+  mainCloneToolbar();
+  mainInitEditor(document.getElementById("codeEditor"));
+  mainLoadExamplesList(document.getElementById('examplesSelect'));
+  zdeskInit(document.getElementById( 'webgl' ),'images/textures/');
+  window.addEventListener( 'resize', mainOnWindowResize , false );
+  
+  mainLoadExample('start');
+ // mainLoadExample('lesson17minmax');
+  
+  mainFrame(0);
+  mainOnAnimationFrame();
+  
+</script>
+<!-- Yandex.Metrika counter -->
+<script type="text/javascript">
+    (function (d, w, c) {
+        (w[c] = w[c] || []).push(function() {
+            try {
+                w.yaCounter32441125 = new Ya.Metrika({
+                    id:32441125,
+                    clickmap:true,
+                    trackLinks:true,
+                    accurateTrackBounce:true
+                });
+            } catch(e) { }
+        });
+
+        var n = d.getElementsByTagName("script")[0],
+            s = d.createElement("script"),
+            f = function () { n.parentNode.insertBefore(s, n); };
+        s.type = "text/javascript";
+        s.async = true;
+        s.src = "https://mc.yandex.ru/metrika/watch.js";
+
+        if (w.opera == "[object Opera]") {
+            d.addEventListener("DOMContentLoaded", f, false);
+        } else { f(); }
+    })(document, window, "yandex_metrika_callbacks");
+</script>
+<noscript><div><img src="https://mc.yandex.ru/watch/32441125" style="position:absolute; left:-9999px;" alt="" /></div></noscript>
+<!-- /Yandex.Metrika counter -->
+</body>
+</html>
