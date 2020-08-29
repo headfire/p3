@@ -51,8 +51,12 @@ from OCC.Core.AIS import AIS_Point, AIS_InteractiveObject, AIS_Trihedron, AIS_Sh
 from OCC.Core.Quantity import Quantity_Color, Quantity_TOC_RGB
 from OCC.Core.Aspect import Aspect_TOM_BALL, Aspect_TOL_DASH, Aspect_TOL_SOLID
 from OCC.Core.TopExp import TopExp_Explorer
-from OCC.Core.TopAbs import (TopAbs_COMPOUND, TopAbs_COMPSOLID, TopAbs_SOLID, TopAbs_SHELL,
-                      TopAbs_FACE, TopAbs_WIRE, TopAbs_EDGE, TopAbs_VERTEX, TopAbs_SHAPE)
+
+#from OCC.Core.TopAbs import (TopAbs_COMPOUND, TopAbs_COMPSOLID, TopAbs_SOLID, TopAbs_SHELL,
+#                      TopAbs_FACE, TopAbs_WIRE, TopAbs_EDGE, TopAbs_VERTEX, TopAbs_SHAPE)
+
+from OCC.Core.TopAbs import TopAbs_EDGE, TopAbs_VERTEX
+
 from OCC.Core.TopoDS import TopoDS_Shape
 from OCC.Core.Bnd import Bnd_Box
 from OCC.Core.GC import  GC_MakeCircle
@@ -62,11 +66,12 @@ import json
 SHAPE_TYPES = ['TopAbs_COMPOUND', 'TopAbs_COMPSOLID', 'TopAbs_SOLID', 'TopAbs_SHELL',
   'TopAbs_FACE', 'TopAbs_WIRE', 'TopAbs_EDGE', 'TopAbs_VERTEX', 'TopAbs_SHAPE']
 
-
 def objToStr(obj) :
     ret = dict()
     ret['CLASS'] = str(obj.__class__.__name__)
-    if isinstance(obj,gp_Pnt):
+    if isinstance(obj, SceneObject):
+      ret['childs'] = obj.childs
+    elif isinstance(obj,gp_Pnt):
        ret['xyz'] = '(' + str(obj.X()) + ',' + str(obj.Y()) + ',' + str(obj.Z()) + ')'
     elif isinstance(obj, AIS_Point):
         ret['Component().Pnt()'] = obj.Component().Pnt()
@@ -117,118 +122,25 @@ def smartGetDict(d, mask):
 *****************************************************
 '''
 
-
-class Scene :
-    
-    def __init__(self):
-        
-        self.debugType = 'noDebug'
-        self.display = None
-        self.display = None 
-        self.start_display = None 
-        self.add_menu  = None  
-        self.add_function_to_menu = None
-        
-        self.root = dict()
-        self.parentDirs = list()
-        self.workDir = self.root
-        
-        self.parentEnvs = list()
-        self.workEnv = dict()
-
-
-    def setEnv(self, key, val):
-        self.workEnv[key] = val 
-    
-    def isEnv(self, key):
-        return key in self.workEnv
-    
-    def getEnv(self, key):
-        if key in self.workEnv:
-            return self.workEnv[key]
-        return None 
- 
-    def getEnvs(self, mask):
-        return smartGetDict(self.workEnv, mask)
-             
-    def isDirItem(self, key):
-        return key in self.workDir
-    
-    def setDirItem(self, key, val):
-        self.workDir[key] = val
-    
-    def getDirItem(self, key):
-        if key in self.workDir:
-           return self.workDir[key]
-        return None
-             
-    def getDirItems(self, mask):
-        return smartGetDict(self.workDir, mask)
-        
-    def dumpDir(self):
-        dumpObj(self.workDir)
-        
-    def dumpEnv(self):
-        dumpObj(self.workEnv)
-        
-    def getDir(self):
-        return self.workDir
-  
-    def levelUp(self):
-        if self.parentDirs:
-            self.workDir = self.parentDirs.pop()
-        else :
-            raise Exception('Try up from root level')
-        if self.parentEnvs:
-            self.workEnv = self.parentEnvs.pop()
-        else: 
-            raise Exception('Try up from root level')
-        
-    def levelDown(self, dirName):
-        #process child objects
-        if dirName in self.workDir:
-           newWorkDir = self.workDir[dirName]
-        else: 
-           newWorkDir = dict()
-           self.workDir[dirName] = newWorkDir
-        self.parentDirs.append(self.workDir)
-        self.workDir = newWorkDir
-        
-        #process styles
-        newEnv = dict(self.workEnv)
-        self.parentEnvs.append(self.workEnv)
-        self.workEnv = newEnv
-
-    def debug(self):
-        self.debugType = 'cliDebug'
-        
-
-'''
-*****************************************************
-*****************************************************
-*****************************************************
-*****************************************************
-'''
-
-class NativeTextStub:
-    def __init__(self, gpPnt, text):
+class NativeStubText:
+    def __init__(self, xyz, text):
+        x,y,z = xyz
         self.textColor = (0,0,0)
         self.textHeight = 20
-        self.position = gpPnt
+        self.position = gp_Pnt(x,y,z)
         self.text = text
         self.struct = None        
         self.visible = True
 
 class NativeLib:
-    
-    def __init__(self, gpPnt, text):
+    def __init__(self):
         self.isInit = False
         
     def isScreenInit(self):
         return self.isInit
     
     def initScreen(self):
-        if not self.initFlag:
+        if not self.isInit:
            self.display, self.start_display, self.add_menu,  self.add_function_to_menu  = init_display()
            self.isInit = True;   
            
@@ -240,7 +152,7 @@ class NativeLib:
     def activateNativeObj(self, nativeObj):
         return   
     def deactivateNativeObj(self, nativeObj):
-        self.stylingNativeObj(self, nativeObj, 'visible', False)
+        self.stylingNativeObj(nativeObj, 'visible', False)
            
     def stylingNativeObj(self, nativeObj, styleName, styleValue):
        #Todo must begin
@@ -250,7 +162,7 @@ class NativeLib:
        #Todo must end
        if obj == None:
             return
-       if isinstance(obj, NativeTextStub):
+       if isinstance(obj, NativeStubText):
             if propName == 'visible':
                if propValue == True: 
                   if self.isInit:
@@ -281,7 +193,7 @@ class NativeLib:
                       obj.Attributes().WireAspect().SetTypeOfLine(Aspect_TOL_DASH)
                       obj.Attributes().LineAspect().SetTypeOfLine(Aspect_TOL_DASH)
              elif propName == 'visible':         
-                 if self.isInit != None:
+                 if self.isInit:
                     if isinstance(obj, AIS_InteractiveObject):
                        if propValue:
                            self.display.Context.Display(obj, False) 
@@ -327,18 +239,18 @@ class NativeLib:
 '''
 
 class SceneObject:
-    def __init__(self, parentSceneObject, objType):
-        self.type = objType
-        self.native = None
-        self.childs = dict()
-        if parentSceneObject:
-           self.parent = parentSceneObject 
-           self.styles = dict()
-           self.currentLayerName = parentSceneObject.currentLayerName 
+    def __init__(self, parentSceneObject = None, nativeObj = None, nativeLib = None) :
+        self.parent = parentSceneObject
+        if self.parent:
+           self.nativeLib = parentSceneObject.nativeLib
         else:   
            #root object creation
-           self.parent = None
-           self.setStylesToDefault()
+           if nativeLib:
+              self.nativeLib = nativeLib
+           else:
+              raise Exception('Need nativeLib for root SceneObject')
+        self.nativeObj = nativeObj
+        self.childs = dict()
         self.handles = dict()  # center and label must init
         
     def getChild(self, objName):
@@ -346,6 +258,7 @@ class SceneObject:
             return self.childs[objName]
         else:
             return None
+        
     def setChild(self, objName, sceneObj):
         oldObj = self.getChild(objName)
         if oldObj:
@@ -354,34 +267,39 @@ class SceneObject:
         sceneObj.activate()
         
     def applyStyle(self, styleName, styleValue):
-        lib.stylingNativeObj(self.native, styleName, styleValue)    
+        self.nativeLib.stylingNativeObj(self.nativeObj, styleName, styleValue)    
         
     def applyTransform(self, nativeTransform) :
-        lib.transformNativeObj(self.native, nativeTransform)        
+        self.nativeLib.transformNativeObj(self.nativeObj, nativeTransform)        
         
     def activate(self):
-        lib.activateNativeObj(self.native, self.isVisible)
+        self.nativeLib.activateNativeObj(self.nativeObj)
         
     def deactivate(self):    
-        lib.deactivateNativeObj(self.native)
+        self.nativeLib.deactivateNativeObj(self.nativeObj)
         for key in self.childs:
            self.childs[key].deactivate()
         
-    def setCurrentLayer(self, layerName) :
-        self.currentLayerName = layerName
+    def detectCenter(self):
+        return self.nativeLib.detectCenter(self.nativeObj)
+
+
+'''
+'''
+
+class SceneStyles:
+    def __init__(self, stylesToCopy = None):
         
-    def getStyle(self, styleName):  
-       key = self.currentLayerName +'.' + styleName
-       if key in  currObj.styles:
-          return self.styles[key]
-      
-    def setStyle(self, styleName, styleValue):  
-       key = self.curLayerName +'.' + styleName
-       self.styles[key] = styleValue
-       
-    def setStylesToDefault(self):     
-        self.styles = dict()
-    
+        if stylesToCopy:
+           self.styles = dict(stylesToCopy.styles)
+           self.currentLayerName = stylesToCopy.currentLayerName
+        else: 
+           self.styles = dict()
+           self.initStyles()
+           self.currentLayerName = 'main'
+
+    def initStyles(self):
+        
         self.setCurrentLayer('hide')
         self.setStyle('visible', False)                
         self.setStyle('color', (0, 0, 1))             
@@ -422,201 +340,270 @@ class SceneObject:
         self.setStyle('textColor', (55/255, 74/255, 148/255))             
         self.setStyle('textHeight', 20)             
     
-        #last layer 'main' for begining paint
+    def setCurrentLayer(self, layerName) :
+        self.currentLayerName = layerName
         
-    def detectCenter(self):
-        lib.detectCenter(self.native)
-
-'''
-*****************************************************
-*****************************************************
-*****************************************************
-*****************************************************
-'''
-
-lib = NativeLib()
-rootObj = SceneObject(None,'level')
-currObj = rootObj
-
-
-def _sceneDrawAis(name, aisObj, drawType):
-    #order important
-    obj = SceneObject(currObj, drawType)
-    obj.native = aisObj 
-    _SceneSetObj(name, obj)
-    SceneApplyStyle(name, 'color', SceneGetStyle('color'))                
-    SceneApplyStyle(name, 'transparency', SceneGetStyle('transparency'))                
-    SceneApplyStyle(name, 'lineType', SceneGetStyle('lineType'))                
-    SceneApplyStyle(name, 'lineWidth', SceneGetStyle('lineWidth'))                
-    SceneApplyStyle(name, 'pointType', SceneGetStyle('pointType'))                
-    if isinstance(aisObj, AIS_Point):
-         aisObj.SetMarker(Aspect_TOM_BALL)
-    SceneApplyStyle(name, 'pointSize', SceneGetStyle('pointSize'))                
-    SceneApplyStyle(name, 'visible', SceneGetStyle('visible'))                
-
-
-def _SceneSetObj(objName, obj):
-    currObj.setChild(objName, obj)
-
-def _SceneGetObj(objName):
-    return currObj.getChild(objName)
-
-
-def SceneScreenInit():
-   lib.initScreen() 
-   
-def SceneScreenClear():
-   global currObj
-   global rootObj
-   rootObj = SceneObject(None,'level')
-   currObj = rootObj()
-   lib.clearScreen()
-   
-def SceneScreenStart():
-   if lib.isScreenInit() :
-     lib.startScreen()
-   else:
-     dumpObj(rootObj)   
-
-def SceneGetNative(objName, obj):
-    obj = _SceneGetObj(objName)
-    if obj:
-       return obj.native
-    else:
-       return None
-
-def SceneLayer(layerName):  
-    currObj.setCurrentLayer(layerName)
+    def getStyle(self, styleName):  
+       key = self.currentLayerName +'.' + styleName
+       if key in self.styles:
+          return self.styles[key]
+      
+    def setStyle(self, styleName, styleValue):  
+       key = self.currentLayerName +'.' + styleName
+       self.styles[key] = styleValue
  
-def SceneSetStyle(styleName, styleValue):  
-    currObj.setStyle(styleName, styleValue)
-
-def SceneGetStyle(styleName):  
-    currObj.setStyle(styleName)
-  
-def SceneApplyStyle(objName, styleName, styleValue):
-    obj = _SceneGetObj(objName)
-    if obj:
-        obj.applyStyle(styleName, styleValue)
+'''
+*****************************************************
+*****************************************************
+*****************************************************
+*****************************************************
+'''
+class Scene:
+    def __init__(self, nativeLib):
+        self.nativeLib = nativeLib
+        self.rootObj = SceneObject(None,'level', nativeLib)
+        self.currObj = self.rootObj
+        self.currStyles = SceneStyles()
+        self.stylesStack = list()
+        return 
     
-def SceneLevelUp():
-    global currObj
-    if currObj.parent:
-       currObj = currObj.parent
-    else:
-      raise 'Try level up from root level'    
+    def _setObj(self, objName, obj):
+        self.currObj.setChild(objName, obj)
     
-def SceneLevelDown(childName):
-    global currObj
-    childObj = currObj.getChild(childName)
-    if not childObj:
-      childObj = SceneObject(currObj, 'level')
-    else:
-      childObj.styles = dict(currObj)
-      childObj.currrentLayerName = currObj.currrentLayerName
-    currObj = childObj  
-
-
-
-def SceneDrawText(name, gpPnt, text):
-    native = NativeTextStub(gpPnt, text)
-    obj = SceneObject(currObj, 'text')
-    obj.native = native
-    _SceneSetObj(name, obj)
-    SceneApplyStyle(name, 'textColor', SceneGetStyle('textColor'))                
-    SceneApplyStyle(name, 'textHeight', SceneGetStyle('textHeight'))                
-    SceneApplyStyle(name, 'visible', SceneGetStyle('visible'))                
-
-def SceneDrawLabel(labeledObjName, text = None):
-    if text == None:
-         text = labeledObjName
-    labeledObj = _SceneGetObj(labeledObjName)     
-    if labeledObj :
-        x,y,z = labeledObj.detectCenter()     
-        SceneDrawText(labeledObjName + '_label', gp_Pnt(x+0.2, y+0.2, z+0.2), text)
-  
-def SceneDrawTrihedron(objName, size):
-    gpPnt = gp_Pnt(0,0,0)
-    gpDir1 = gp_Dir(gp_Vec(0,0,1))
-    gpDir2 = gp_Dir(gp_Vec(1,0,0))
-    geomAxis = Geom_Axis2Placement(gpPnt, gpDir1, gpDir2)
+    def _getObj(self, objName):
+        return self.currObj.getChild(objName)
     
-    trih = AIS_Trihedron(geomAxis)
-    trih.SetSize(11)
-    
-    _sceneDrawAis(objName, trih)
-  
-def SceneDrawAxis(name):
-    
-    def drawPoint(name, xyz, pointSize):
-        SceneDrawPoint(name, xyz)
-        SceneApplyStyle(name, 'pointSize', pointSize)
+    def _applyStyle(self, objName, styleName, styleValue):
+        obj = self._getObj(objName)
+        if obj:
+            obj.applyStyle(styleName, styleValue)
+ 
+    def _drawNative(self, objName, nativeObj):
+        obj = SceneObject(self.currObj, nativeObj)
+        self._setObj(objName, obj)
+
+        #order important
+        self._applyStyle(objName, 'color', self.getStyle('color'))                
+        self._applyStyle(objName, 'transparency', self.getStyle('transparency'))                
+        self._applyStyle(objName, 'lineType', self.getStyle('lineType'))                
+        self._applyStyle(objName, 'lineWidth',self.getStyle('lineWidth'))                
+        self._applyStyle(objName, 'pointType', self.getStyle('pointType'))                
+        self._applyStyle(objName, 'pointSize', self.getStyle('pointSize'))                
         
-    SceneLevelDown(name)
-
-    SceneLayer('info')    
-    SceneDrawTrihedron('trihedron',11)
+        self._applyStyle(objName, 'textColor', self.getStyle('textColor'))                
+        self._applyStyle(objName, 'textHeight', self.getStyle('textHeight'))                
     
-    drawPoint('center', (0,0,0), 2.5)
+        
+        self._applyStyle(objName, 'visible', self.getStyle('visible'))                
+ 
+    def screenInit(self):
+       self.nativeLib.initScreen() 
+       
+    def screenClear(self):
+       self.rootObj = SceneObject(None,'level', self.NativeLib)
+       self.currObj = self.rootObj
+       self.nativeLib.clearScreen()
+       
+    def screenStart(self):
+       if self.nativeLib.isScreenInit() :
+           self.nativeLib.startScreen()
+       else:
+         dumpObj(self.rootObj)
+         dumpObj(self.currObj)
+         pass
     
-    for i in range (1,10):
-        drawPoint('x'+ str(i), (i,0,0), 1.5)
-        drawPoint('y'+ str(i), (0,i,0), 1.5)
-        drawPoint('z'+ str(i), (0,0,i), 1.5)
+    def getNative(self, objName, obj):
+        obj = self._getObj(objName)
+        if obj:
+           return obj.native
+        else:
+           return None
+    
+    def layer(self, layerName):  
+        self.currStyles.setCurrentLayer(layerName)
+     
+    def setStyle(self, styleName, styleValue):  
+        self.currStyles.setStyle(styleName, styleValue)
+    
+    def getStyle(self, styleName):  
+        return self.currStyles.getStyle(styleName)
+      
+    def applyStyle(self, objName, styleName, styleValue):
+        self._applyStyle(objName, styleName, styleValue)
+ 
+    def setDefaultStyles(self, objName, styleName, styleValue):
+        self.currStyles = SceneStyles()
+ 
+    def levelUp(self):
+        if self.currObj.parent:
+           self.currObj = self.currObj.parent
+           self.currStyles = self.stylesStack.pop()
+        else:
+          raise 'Try level up from root level'    
           
-    SceneLevelUp()
-
-def SceneDrawPoint(objName, xyz):
-    x,y,z = xyz
-    gpPnt = gp_Pnt(x,y,z)
-    geomPnt = Geom_CartesianPoint(gpPnt)
-    aisPnt = AIS_Point(geomPnt)
-    _sceneDrawAis(objName, aisPnt)
-
-def SceneDrawLine(objName, xyzStart, xyzEnd):
-    x1,y1,z1 = xyzStart
-    gpPnt1 = gp_Pnt(x1,y1,z1)
-    geomPnt1 = Geom_CartesianPoint(gpPnt1)
-
-    x2,y2,z2 = xyzEnd
-    gpPnt2 = gp_Pnt(x2,y2,z2)
-    geomPnt2 = Geom_CartesianPoint(gpPnt2)
+        
+    def levelDown(self, childName):
+        childObj = self.currObj.getChild(childName)
+        if not childObj:
+          childObj = SceneObject(self.currObj, 'level')
+          self._setObj(childName, childObj)
+        self.currObj = childObj  
+        self.stylesStack.append(self.currStyles)
+        self.currStyles = SceneStyles(self.currStyles)
+           
     
-    aisLine = AIS_Line(geomPnt1,geomPnt2)
-    _sceneDrawAis(objName, aisLine)
+    def drawText(self, objName, xyz, text):
+        nativeObj = NativeStubText(xyz, text)
+        self._drawNative(objName, nativeObj)
+       
+    def drawLabel(self, labeledObjName, text = None):
+        if text == None:
+             text = labeledObjName
+        labeledObj = self._getObj(labeledObjName)     
+        if labeledObj :
+            x,y,z = labeledObj.detectCenter()     
+            self.drawText(labeledObjName + '_label',(x+0.2, y+0.2, z+0.2), text)
+      
+    def drawTrihedron(self, objName, size):
+        gpPnt = gp_Pnt(0,0,0)
+        gpDir1 = gp_Dir(gp_Vec(0,0,1))
+        gpDir2 = gp_Dir(gp_Vec(1,0,0))
+        geomAxis = Geom_Axis2Placement(gpPnt, gpDir1, gpDir2)
+        
+        trih = AIS_Trihedron(geomAxis)
+        trih.SetSize(11)
+        
+        self._drawNative(objName, trih)
+      
+    def drawAxis(self, objName):
+        
+        def localPoint(objName, xyz):
+            self.drawPoint(objName, xyz)
+            self.applyStyle(objName, 'pointSize', 1.5)
+            
+        self.levelDown(objName)
     
-
-def SceneDrawCircle3(objName, xyz1, xyz2, xyz3):
+        self.layer('info')    
+        self.drawTrihedron('trihedron',11)
+        
+        localPoint('center', (0,0,0))
+        
+        for i in range (1,10):
+            localPoint('x'+ str(i), (i,0,0))
+            localPoint('y'+ str(i), (0,i,0))
+            localPoint('z'+ str(i), (0,0,i))
+              
+        self.levelUp()
     
-    x1, y1, z1 = xyz1
-    x2, y2, z2 = xyz2
-    x3, y3, z3 = xyz3
+    def drawPoint(self, objName, xyz):
+        x,y,z = xyz
+        gpPnt = gp_Pnt(x,y,z)
+        geomPnt = Geom_CartesianPoint(gpPnt)
+        nativeObj = AIS_Point(geomPnt)
+        nativeObj.SetMarker(Aspect_TOM_BALL)
+        sc._drawNative(objName, nativeObj)
     
-    gpPnt1 = gp_Pnt(x1, y1, z1)
-    gpPnt2 = gp_Pnt(x2, y2, z2)
-    gpPnt3 = gp_Pnt(x3, y3, z3)
+    def drawLine(self, objName, xyzStart, xyzEnd):
+        x1,y1,z1 = xyzStart
+        gpPnt1 = gp_Pnt(x1,y1,z1)
+        geomPnt1 = Geom_CartesianPoint(gpPnt1)
     
-    geomCircle = GC_MakeCircle(gpPnt1, gpPnt2, gpPnt3).Value()
-    aisCircle = AIS_Circle(geomCircle)
+        x2,y2,z2 = xyzEnd
+        gpPnt2 = gp_Pnt(x2,y2,z2)
+        geomPnt2 = Geom_CartesianPoint(gpPnt2)
+        
+        aisLine = AIS_Line(geomPnt1,geomPnt2)
+        sc._drawNative(objName, aisLine)
+        
     
-    _sceneDrawAis('circle', aisCircle)
- 
-def SceneDrawCircle(objName, r):
-    pass
+    def drawCircle3(self, objName, xyz1, xyz2, xyz3):
+        
+        x1, y1, z1 = xyz1
+        x2, y2, z2 = xyz2
+        x3, y3, z3 = xyz3
+        
+        gpPnt1 = gp_Pnt(x1, y1, z1)
+        gpPnt2 = gp_Pnt(x2, y2, z2)
+        gpPnt3 = gp_Pnt(x3, y3, z3)
+        
+        geomCircle = GC_MakeCircle(gpPnt1, gpPnt2, gpPnt3).Value()
+        aisCircle = AIS_Circle(geomCircle)
+        
+        self._drawNative('circle', aisCircle)
+     
+    def drawCircle(self, objName, r):
+        pass
+    '''
+        gpPnt1 = gp_Pnt(x1, y1, z1)
+        gpPnt2 = gp_Pnt(x2, y2, z2)
+        gpPnt3 = gp_Pnt(x3, y3, z3)
+        geomPnt1 = Geom_CartesianPoint(gpPnt1)
+        geomPnt2 = Geom_CartesianPoint(gpPnt2)
+        geomPnt3 = Geom_CartesianPoint(gpPnt3)
+        geomCircle = GC_MakeCircle(gpPnt1, gpPnt2, gpPnt3).Value()
+        aisCircle = 
+        SceneDrawAis('circle', AIS_Circle(geom_circle))
+        _sceneDrawAis(objName, aisLine)
+    '''   
+     
+    def DrawShape(self, objName, shape):
+         nativeObj = AIS_Shape(shape)
+         self._drawNative(objName, nativeObj)
 '''
-    gpPnt1 = gp_Pnt(x1, y1, z1)
-    gpPnt2 = gp_Pnt(x2, y2, z2)
-    gpPnt3 = gp_Pnt(x3, y3, z3)
-    geomPnt1 = Geom_CartesianPoint(gpPnt1)
-    geomPnt2 = Geom_CartesianPoint(gpPnt2)
-    geomPnt3 = Geom_CartesianPoint(gpPnt3)
-    geomCircle = GC_MakeCircle(gpPnt1, gpPnt2, gpPnt3).Value()
-    aisCircle = 
-    SceneDrawAis('circle', AIS_Circle(geom_circle))
-    _sceneDrawAis(objName, aisLine)
- '''   
+***********************************************
+Functional interface
+***********************************************
+'''
 
+sc = Scene(NativeLib())
+    
+def SceneScreenInit():
+    return sc.screenInit()
+def SceneScreenClear():
+    return sc.screenClear()
+def SceneScreenStart():
+    return sc.screenStart()
+def SceneGetNative(objName, obj):
+    return sc.getNative(objName, obj)
+def SceneLayer(layerName):  
+     return sc.layer(layerName)
+def SceneSetStyle(styleName, styleValue):  
+    return sc.setStyle(styleName, styleValue)
+def SceneGetStyle(styleName):  
+    return sc.getStyle(styleName)
+def SceneApplyStyle(objName, styleName, styleValue):
+    return sc.applyStyle(objName, styleName, styleValue)
+def SceneSetDefaultStyles(objName, styleName, styleValue):
+    return sc.setDefaultStyles(objName, styleName, styleValue)
+def SceneLevelUp():
+    return sc.levelUp()
+def SceneLevelDown(childName):
+    return sc.levelDown(childName)
+def SceneDrawText(objName, gpPnt, text):
+    return sc.drawText(objName, gpPnt, text)
+def SceneDrawLabel(labeledObjName, text = None):
+    return sc.drawLabel(labeledObjName, text)
+def SceneDrawTrihedron(objName, size):
+    return sc.drawTrihedron(objName, size)
+def SceneDrawAxis(objName):
+    return sc.drawAxis(objName)
+def SceneDrawPoint(objName, xyz):
+    return sc.drawPoint(objName, xyz)
+def SceneDrawLine(objName, xyzStart, xyzEnd):
+    return sc.drawLine(objName, xyzStart, xyzEnd)
+def SceneDrawCircle3(objName, xyz1, xyz2, xyz3):
+    return sc.drawCircle3(objName, xyz1, xyz2, xyz3)
+def SceneDrawCircle(objName, r):
+    return sc.drawCircle(objName, r)
+def SceneDrawShape(objName, shape):
+    return sc.drawShape(objName, shape)
 
+        
+'''
+***********************************************
+Testing
+***********************************************
+'''
 
 if __name__ == '__main__':
     
@@ -677,7 +664,7 @@ if __name__ == '__main__':
         SceneDrawLabel('p1')
         SceneDrawPoint('p2', xyz2)
         SceneDrawLabel('p2')
-        SceneDrawPoint('p2', xyz3)
+        SceneDrawPoint('p3', xyz3)
         SceneDrawLabel('p3')
        
         SceneLevelUp()
@@ -687,7 +674,7 @@ if __name__ == '__main__':
         SceneLevelDown(name)
         
         SceneLayer('main')
-        SceneDrawText('meesage', gp_Pnt(5,5,5), 'Hello OpenCascade!')
+        SceneDrawText('meesage',(5,5,5), 'Hello OpenCascade!')
         
         SceneLevelUp()
 

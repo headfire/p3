@@ -14,9 +14,9 @@ from OCC.Core.BRep import BRep_Tool
 from OCC.Core.TopAbs import (TopAbs_COMPOUND, TopAbs_COMPSOLID, TopAbs_SOLID, TopAbs_SHELL,
                       TopAbs_FACE, TopAbs_WIRE, TopAbs_EDGE, TopAbs_VERTEX, TopAbs_SHAPE)
 
-from scene import (SceneGetObj, SceneApplyStyle, SceneDrawAis, SceneDrawAis,
- SceneDrawLabel, SceneLayer, SceneLevelUp, SceneLevelDown,
- SceneDebug, SceneStart, SceneEnd, SceneDrawAxis)
+from scene import (SceneGetNative, 
+                   SceneDrawLabel, SceneLayer, SceneLevelUp, SceneLevelDown,
+                   SceneScreenInit, SceneScreenStart, SceneDrawAxis)
 
 from math import cos, sin, pi
 
@@ -43,8 +43,8 @@ def PaintDaoShape(r, l):
     p8 = gp_Pnt(r2,-r2,0)      
  
     # base circle
-    circle = GC_MakeCircle(p3,p4,p5).Value()
-    SceneDrawAis('circle', AIS_Circle(circle))
+    circle = GC_MakeCircle().Value()
+    SceneDrawCircle3('circle', p3,p4,p5)
   
     # base dao
     arc1 =  GC_MakeArcOfCircle(p1,p2,p3).Value()
@@ -103,8 +103,7 @@ def getXYZ(pointName):
   
 if __name__ == '__main__':
     
-    #SceneDebug()
-    SceneStart()
+    #SceneScreenInit()
     
     SceneDrawAxis('axis')
     
@@ -119,5 +118,5 @@ if __name__ == '__main__':
     
     SceneLevelUp()
     
-    SceneEnd()
+    SceneScreenStart()
 
