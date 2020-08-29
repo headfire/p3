@@ -14,7 +14,7 @@ from OCC.Core.BRep import BRep_Tool
 from OCC.Core.TopAbs import (TopAbs_COMPOUND, TopAbs_COMPSOLID, TopAbs_SOLID, TopAbs_SHELL,
                       TopAbs_FACE, TopAbs_WIRE, TopAbs_EDGE, TopAbs_VERTEX, TopAbs_SHAPE)
 
-from scene import (SceneGetNative, 
+from scene import (SceneGetNative, SceneDrawCircle3, SceneDrawShape, SceneDrawPoint,
                    SceneDrawLabel, SceneLayer, SceneLevelUp, SceneLevelDown,
                    SceneScreenInit, SceneScreenStart, SceneDrawAxis)
 
@@ -43,8 +43,8 @@ def PaintDaoShape(r, l):
     p8 = gp_Pnt(r2,-r2,0)      
  
     # base circle
-    circle = GC_MakeCircle().Value()
-    SceneDrawCircle3('circle', p3,p4,p5)
+    SceneLayer('info')
+    SceneDrawCircle3('circle', p5,p6,p7)
   
     # base dao
     arc1 =  GC_MakeArcOfCircle(p1,p2,p3).Value()
@@ -57,29 +57,29 @@ def PaintDaoShape(r, l):
     edge3 = BRepBuilderAPI_MakeEdge(arc3).Edge()
     edge4 = BRepBuilderAPI_MakeEdge(arc4).Edge()
   
-    dao_base = BRepBuilderAPI_MakeWire(edge1, edge2, edge3, edge4).Wire()
+    wireDaoBase = BRepBuilderAPI_MakeWire(edge1, edge2, edge3, edge4).Wire()
     SceneLayer('base')
-    SceneDrawAis('dao_base', AIS_Shape(dao_base))
+    SceneDrawShape('dao_base', wireDaoBase)
     
     # dao with offset
     offset = BRepOffsetAPI_MakeOffset()
-    offset.AddWire(dao_base)
+    offset.AddWire(wireDaoBase)
     offset.Perform(-l)
-    dao = offset.Shape()  
+    wireDao = offset.Shape()  
     SceneLayer('main')
-    SceneDrawAis('dao', AIS_Shape(dao))
+    SceneDrawShape('dao', wireDao)
     
     # mirrored dao
     transform = gp_Trsf()
     transform.SetMirror(gp_Pnt(0,0,0))
     
-    dao_mirr =  BRepBuilderAPI_Transform(dao, transform).Shape()
+    wireDaoMirr =  BRepBuilderAPI_Transform(wireDao, transform).Shape()
     SceneLayer('info')
-    SceneDrawAis('dao_mirr', AIS_Shape(dao_mirr))
+    SceneDrawShape('dao_mirr', wireDaoMirr)
     
 def DetectBasePoints(name)     :
     
-    dao = SceneGetObj(name)
+    dao = SceneGetNative(name)
     shape = dao.Shape()
     exp = TopExp_Explorer(shape, TopAbs_VERTEX)
     i = 0
@@ -91,19 +91,15 @@ def DetectBasePoints(name)     :
        if i % 2 == 0:
           vind =  str(int(i/2))
           vname =  name+'_vertex_'+ vind
-          SceneDrawAis(vname, AIS_Point(Geom_CartesianPoint(pnt)))
+          SceneDrawPoint(vname, pnt)
           SceneDrawLabel(vname, 'p'+vind)
        i += 1 
        exp.Next()
-
-def getXYZ(pointName):
-     pnt = SceneGetObj(pointName).Component().Pnt()
-     return (pnt.X(), pnt.Y(), pnt.Z())
   
   
 if __name__ == '__main__':
     
-    #SceneScreenInit()
+    SceneScreenInit()
     
     SceneDrawAxis('axis')
     
@@ -111,10 +107,6 @@ if __name__ == '__main__':
   
     PaintDaoShape(5,0.3)
     DetectBasePoints('dao')
-
-    x,y,z = getXYZ('dao_vertex_1')
-    
-    print(x,y,z)
     
     SceneLevelUp()
     

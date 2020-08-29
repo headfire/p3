@@ -72,7 +72,7 @@ def objToStr(obj) :
     if isinstance(obj, SceneObject):
       ret['childs'] = obj.childs
     elif isinstance(obj,gp_Pnt):
-       ret['xyz'] = '(' + str(obj.X()) + ',' + str(obj.Y()) + ',' + str(obj.Z()) + ')'
+       ret['x,y,z'] = '(' + str(obj.X()) + ',' + str(obj.Y()) + ',' + str(obj.Z()) + ')'
     elif isinstance(obj, AIS_Point):
         ret['Component().Pnt()'] = obj.Component().Pnt()
     elif isinstance(obj, AIS_Line):
@@ -123,11 +123,10 @@ def smartGetDict(d, mask):
 '''
 
 class NativeStubText:
-    def __init__(self, xyz, text):
-        x,y,z = xyz
+    def __init__(self, gpPnt, text):
         self.textColor = (0,0,0)
         self.textHeight = 20
-        self.position = gp_Pnt(x,y,z)
+        self.position = gpPnt
         self.text = text
         self.struct = None        
         self.visible = True
@@ -206,7 +205,7 @@ class NativeLib:
     def transformNativeObj(self, nativeObj, nativeTranformation):
         pass
     
-    def transformXYZ(self, xyz, nativeTranformation):
+    def transformGpPnt(self, gpPnt, nativeTranformation):
         pass
     
     def dumpNativeObj(self, nativeObj):
@@ -214,21 +213,18 @@ class NativeLib:
 
     def detectCenter(self, nativeObj):
         if not nativeObj:  #pass non exist obj name 
-            return (0,0,0)
-        x,y,z = 0,0,0
+            return gp_Pnt(0,0,0)
         if isinstance(nativeObj, AIS_Point):
-            pnt = nativeObj.Component().Pnt()
-            x = pnt.X()
-            y = pnt.Y()
-            z = pnt.Z()
-        elif  self.isInit:
+            return nativeObj.Component().Pnt()
+        if  self.isInit:
             box = Bnd_Box()
             nativeObj.BoundingBox(box)
             xmin, ymin, zmin, xmax, ymax, zmax = box.Get()
             x = (xmax+xmin)/2
             y = (ymax+ymin)/2
             z = (zmax+zmin)/2
-        return (x,y,z)   
+            return gp_Pnt(x,y,z)
+        return gp_Pnt(0,0,0)
         
      
 '''
@@ -237,6 +233,7 @@ class NativeLib:
 *****************************************************
 *****************************************************
 '''
+
 
 class SceneObject:
     def __init__(self, parentSceneObject = None, nativeObj = None, nativeLib = None) :
@@ -412,10 +409,10 @@ class Scene:
          dumpObj(self.currObj)
          pass
     
-    def getNative(self, objName, obj):
+    def getNative(self, objName):
         obj = self._getObj(objName)
         if obj:
-           return obj.native
+           return obj.nativeObj
         else:
            return None
     
@@ -451,9 +448,12 @@ class Scene:
         self.stylesStack.append(self.currStyles)
         self.currStyles = SceneStyles(self.currStyles)
            
+    '''
+    ************************************************************
+    '''
     
-    def drawText(self, objName, xyz, text):
-        nativeObj = NativeStubText(xyz, text)
+    def drawText(self, objName, gpPnt, text):
+        nativeObj = NativeStubText(gpPnt, text)
         self._drawNative(objName, nativeObj)
        
     def drawLabel(self, labeledObjName, text = None):
@@ -461,8 +461,9 @@ class Scene:
              text = labeledObjName
         labeledObj = self._getObj(labeledObjName)     
         if labeledObj :
-            x,y,z = labeledObj.detectCenter()     
-            self.drawText(labeledObjName + '_label',(x+0.2, y+0.2, z+0.2), text)
+            gpPnt = labeledObj.detectCenter()     
+            gpPntPlace = gp_Pnt(gpPnt.X()+0.2,gpPnt.Y()+0.2,gpPnt.Z()+0.2)
+            self.drawText(labeledObjName + '_label', gpPntPlace, text)
       
     def drawTrihedron(self, objName, size):
         gpPnt = gp_Pnt(0,0,0)
@@ -477,8 +478,8 @@ class Scene:
       
     def drawAxis(self, objName):
         
-        def localPoint(objName, xyz):
-            self.drawPoint(objName, xyz)
+        def localPoint(objName, gpPnt):
+            self.drawPoint(objName, gpPnt)
             self.applyStyle(objName, 'pointSize', 1.5)
             
         self.levelDown(objName)
@@ -486,50 +487,31 @@ class Scene:
         self.layer('info')    
         self.drawTrihedron('trihedron',11)
         
-        localPoint('center', (0,0,0))
+        localPoint('center', gp_Pnt(0,0,0))
         
         for i in range (1,10):
-            localPoint('x'+ str(i), (i,0,0))
-            localPoint('y'+ str(i), (0,i,0))
-            localPoint('z'+ str(i), (0,0,i))
+            localPoint('x'+ str(i), gp_Pnt(i,0,0))
+            localPoint('y'+ str(i), gp_Pnt(0,i,0))
+            localPoint('z'+ str(i), gp_Pnt(0,0,i))
               
         self.levelUp()
     
-    def drawPoint(self, objName, xyz):
-        x,y,z = xyz
-        gpPnt = gp_Pnt(x,y,z)
+    def drawPoint(self, objName, gpPnt):
         geomPnt = Geom_CartesianPoint(gpPnt)
         nativeObj = AIS_Point(geomPnt)
         nativeObj.SetMarker(Aspect_TOM_BALL)
         sc._drawNative(objName, nativeObj)
     
-    def drawLine(self, objName, xyzStart, xyzEnd):
-        x1,y1,z1 = xyzStart
-        gpPnt1 = gp_Pnt(x1,y1,z1)
+    def drawLine(self, objName, gpPnt1, gpPnt2):
         geomPnt1 = Geom_CartesianPoint(gpPnt1)
-    
-        x2,y2,z2 = xyzEnd
-        gpPnt2 = gp_Pnt(x2,y2,z2)
         geomPnt2 = Geom_CartesianPoint(gpPnt2)
-        
-        aisLine = AIS_Line(geomPnt1,geomPnt2)
-        sc._drawNative(objName, aisLine)
-        
+        nativeObj = AIS_Line(geomPnt1,geomPnt2)
+        sc._drawNative(objName, nativeObj)
     
-    def drawCircle3(self, objName, xyz1, xyz2, xyz3):
-        
-        x1, y1, z1 = xyz1
-        x2, y2, z2 = xyz2
-        x3, y3, z3 = xyz3
-        
-        gpPnt1 = gp_Pnt(x1, y1, z1)
-        gpPnt2 = gp_Pnt(x2, y2, z2)
-        gpPnt3 = gp_Pnt(x3, y3, z3)
-        
+    def drawCircle3(self, objName, gpPnt1, gpPnt2, gpPnt3):
         geomCircle = GC_MakeCircle(gpPnt1, gpPnt2, gpPnt3).Value()
-        aisCircle = AIS_Circle(geomCircle)
-        
-        self._drawNative('circle', aisCircle)
+        nativeObj = AIS_Circle(geomCircle)
+        self._drawNative('circle', nativeObj)
      
     def drawCircle(self, objName, r):
         pass
@@ -546,7 +528,7 @@ class Scene:
         _sceneDrawAis(objName, aisLine)
     '''   
      
-    def DrawShape(self, objName, shape):
+    def drawShape(self, objName, shape):
          nativeObj = AIS_Shape(shape)
          self._drawNative(objName, nativeObj)
 '''
@@ -563,8 +545,8 @@ def SceneScreenClear():
     return sc.screenClear()
 def SceneScreenStart():
     return sc.screenStart()
-def SceneGetNative(objName, obj):
-    return sc.getNative(objName, obj)
+def SceneGetNative(objName):
+    return sc.getNative(objName)
 def SceneLayer(layerName):  
      return sc.layer(layerName)
 def SceneSetStyle(styleName, styleValue):  
@@ -587,12 +569,12 @@ def SceneDrawTrihedron(objName, size):
     return sc.drawTrihedron(objName, size)
 def SceneDrawAxis(objName):
     return sc.drawAxis(objName)
-def SceneDrawPoint(objName, xyz):
-    return sc.drawPoint(objName, xyz)
-def SceneDrawLine(objName, xyzStart, xyzEnd):
-    return sc.drawLine(objName, xyzStart, xyzEnd)
-def SceneDrawCircle3(objName, xyz1, xyz2, xyz3):
-    return sc.drawCircle3(objName, xyz1, xyz2, xyz3)
+def SceneDrawPoint(objName, gpPnt):
+    return sc.drawPoint(objName,  gpPnt)
+def SceneDrawLine(objName,  gpPnt1,  gpPnt2):
+    return sc.drawLine(objName,  gpPnt1, gpPnt2)
+def SceneDrawCircle3(objName,  gpPnt1,  gpPnt2,  gpPnt3):
+    return sc.drawCircle3(objName,  gpPnt1,  gpPnt2,  gpPnt3)
 def SceneDrawCircle(objName, r):
     return sc.drawCircle(objName, r)
 def SceneDrawShape(objName, shape):
@@ -623,26 +605,26 @@ if __name__ == '__main__':
         
         SceneLevelDown(name)
         
-        xyzPnt = (2,3,4)
+        gpPnt = gp_Pnt(2,3,4)
         
         SceneLayer('info')
-        SceneDrawPoint('pnt', xyzPnt)    
+        SceneDrawPoint('pnt', gpPnt)    
         SceneDrawLabel('pnt', 'pnt+')
         
-        xyzStart = (5,0,3)
-        xyzEnd = (0,5,3)
+        gpPntStart = gp_Pnt(5,0,3)
+        gpPntEnd = gp_Pnt(0,5,3)
         
         SceneLayer('main')
-        SceneDrawLine('line', xyzStart, xyzEnd)
+        SceneDrawLine('line', gpPntStart, gpPntEnd)
         SceneDrawLabel('line')
         
         SceneLayer('base')
-        SceneDrawPoint('lineStart', xyzStart)
+        SceneDrawPoint('lineStart', gpPntStart)
         SceneDrawLabel('lineStart', 'lineStart+')
         
      
         SceneLayer('hide')
-        SceneDrawPoint('lineEnd', xyzEnd)
+        SceneDrawPoint('lineEnd', gpPntEnd)
         SceneDrawLabel('lineEnd')
     
         SceneLevelUp()
@@ -651,20 +633,20 @@ if __name__ == '__main__':
         
         SceneLevelDown(name)
         
-        xyz1 = (1,1,10)
-        xyz2 = (5,2,5)
-        xyz3 = (5,-5,5)
+        gpPnt1 = gp_Pnt(1,1,10)
+        gpPnt2 = gp_Pnt(5,2,5)
+        gpPnt3 = gp_Pnt(5,-5,5)
         
         SceneLayer('main')
-        SceneDrawCircle3('circle', xyz1, xyz2, xyz3)
+        SceneDrawCircle3('circle', gpPnt1, gpPnt2, gpPnt3)
         SceneDrawLabel('circle')
         
         SceneLayer('base')
-        SceneDrawPoint('p1', xyz1)
+        SceneDrawPoint('p1', gpPnt1)
         SceneDrawLabel('p1')
-        SceneDrawPoint('p2', xyz2)
+        SceneDrawPoint('p2', gpPnt2)
         SceneDrawLabel('p2')
-        SceneDrawPoint('p3', xyz3)
+        SceneDrawPoint('p3', gpPnt3)
         SceneDrawLabel('p3')
        
         SceneLevelUp()
@@ -674,7 +656,7 @@ if __name__ == '__main__':
         SceneLevelDown(name)
         
         SceneLayer('main')
-        SceneDrawText('meesage',(5,5,5), 'Hello OpenCascade!')
+        SceneDrawText('meesage', gp_Pnt(5,5,5), 'Hello OpenCascade!')
         
         SceneLevelUp()
 
