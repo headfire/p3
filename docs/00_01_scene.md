@@ -51,9 +51,9 @@ nativeObj = SceneNativeObj(objName)
  Привязки работают с учетом преобразования локальных координат
 
 ```
-SceneSetPivot(objRelativePath, pivotName, xyz)
-xyz = SceneGetPivot(objRelativePath, pivotName)
-dict(xyz) = SceneGetPivots(objRelativePath)
+SceneSetBase(objRelativePath, pivotName, xyz)
+xyz = SceneGetBase(objRelativePath, pivotName)
+dict(xyz) = SceneGetBases(objRelativePath)
 ```
 
 Создание объектов. Если объект с именем есть он либо пересоздается либо видоизменяется для соответствия новым параметрам, если это возможно. Объекты создаются с учетом текущих стилей на текущем слое.

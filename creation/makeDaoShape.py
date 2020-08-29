@@ -96,6 +96,9 @@ def DetectBasePoints(name)     :
        i += 1 
        exp.Next()
 
+def getXYZ(pointName):
+     pnt = SceneGetObj(pointName).Component().Pnt()
+     return (pnt.X(), pnt.Y(), pnt.Z())
   
   
 if __name__ == '__main__':
@@ -109,8 +112,10 @@ if __name__ == '__main__':
   
     PaintDaoShape(5,0.3)
     DetectBasePoints('dao')
-    #DetectBasePoints('dao_mirr')
-    #DetectBasePoints('dao_base')
+
+    x,y,z = getXYZ('dao_vertex_1')
+    
+    print(x,y,z)
     
     SceneLevelUp()
     
