@@ -10,21 +10,21 @@ from scene import DrawAxis
 
 def PaintMyObject(name, size)
     SceneLevelDown(name)
-    PaintPoint(1,1,1)
+    SceneDrawPoint(gp_Pnt(1,1,1))
     SceneLevelUp()
 
 if __name__ == '__main__':
     
+    # may comment this line for debug
+    SceneScreenInitDebug()
     
-    SceneDebug()
-    SceneStart()
     
     DrawAxis('axis')
     
     PaintMyOnject('object', 10)
     
-    SceneEnd()
-
+    SceneScreenStart()
+  
 #  TEMPLATE END
     
 """
@@ -32,16 +32,12 @@ if __name__ == '__main__':
 """
 To do  
 
-DrawMessage
-DrawLabel
-env level restore
 color object dump
 SceneRegisterCreation
 SceneRegisterAnimation
 SceneRegisterMenu
 
 """
-
 
 from OCC.Display.SimpleGui import init_display
     
@@ -60,6 +56,7 @@ from OCC.Core.TopAbs import TopAbs_EDGE, TopAbs_VERTEX
 from OCC.Core.TopoDS import TopoDS_Shape
 from OCC.Core.Bnd import Bnd_Box
 from OCC.Core.GC import  GC_MakeCircle
+from copy import deepcopy
 
 import json
 
@@ -148,8 +145,25 @@ class NativeLib:
            self.display.FitAll()
            self.start_display()
            
-    def activateNativeObj(self, nativeObj):
-        return   
+    def activateNativeObj(self, nativeObj, styles):
+        
+        #order important
+    
+        self.stylingNativeObj(nativeObj, 'color', styles['color'])                
+        self.stylingNativeObj(nativeObj, 'transparency', styles.get('transparency'))                
+        self.stylingNativeObj(nativeObj, 'lineType', styles.get('lineType'))                
+        self.stylingNativeObj(nativeObj, 'lineWidth',styles.get('lineWidth'))                
+        
+        self.stylingNativeObj(nativeObj, 'textColor', styles.get('textColor'))                
+        self.stylingNativeObj(nativeObj, 'textHeight', styles.get('textHeight'))                
+     
+        if isinstance(nativeObj, AIS_Point):
+            nativeObj.SetMarker(Aspect_TOM_BALL)
+            
+        self.stylingNativeObj(nativeObj, 'pointSize', styles.get('pointSize'))                
+        
+        self.stylingNativeObj(nativeObj, 'visible', styles.get('visible'))                
+    
     def deactivateNativeObj(self, nativeObj):
         self.stylingNativeObj(nativeObj, 'visible', False)
            
@@ -256,12 +270,12 @@ class SceneObject:
         else:
             return None
         
-    def setChild(self, objName, sceneObj):
+    def setChild(self, objName, sceneObj, styles):
         oldObj = self.getChild(objName)
         if oldObj:
             oldObj.deactivate()
         self.childs[objName] = sceneObj
-        sceneObj.activate()
+        sceneObj.activate(styles)
         
     def applyStyle(self, styleName, styleValue):
         self.nativeLib.stylingNativeObj(self.nativeObj, styleName, styleValue)    
@@ -269,8 +283,8 @@ class SceneObject:
     def applyTransform(self, nativeTransform) :
         self.nativeLib.transformNativeObj(self.nativeObj, nativeTransform)        
         
-    def activate(self):
-        self.nativeLib.activateNativeObj(self.nativeObj)
+    def activate(self, styles):
+        self.nativeLib.activateNativeObj(self.nativeObj, styles)
         
     def deactivate(self):    
         self.nativeLib.deactivateNativeObj(self.nativeObj)
@@ -282,22 +296,38 @@ class SceneObject:
 
 
 '''
+****************************************************************
 '''
 
-class SceneStyles:
-    def __init__(self, stylesToCopy = None):
+class SceneStylesSetting:
+    
+    def __init__(self):
         
-        if stylesToCopy:
-           self.styles = dict(stylesToCopy.styles)
-           self.currentLayerName = stylesToCopy.currentLayerName
+        self.layers = dict()
+        self.curLayer = None
+        self.setLayer('default')
+        self.initStyles()
+        
+    def setLayer(self, layerName):
+        if layerName in self.layers:
+           self.curLayer = self.layers[layerName]
         else: 
-           self.styles = dict()
-           self.initStyles()
-           self.currentLayerName = 'main'
-
+           self.curLayer = dict()
+           self.layers[layerName] = self.curLayer
+        
+    def getLayerStyles(self):
+        return self.curLayer
+        
+    def getStyle(self, styleName):  
+        return self.curLayer.get(styleName)
+      
+    def setStyle(self, styleName, styleValue):  
+        self.curLayer[styleName] = styleValue
+        
+       
     def initStyles(self):
         
-        self.setCurrentLayer('hide')
+        self.setLayer('hide')
         self.setStyle('visible', False)                
         self.setStyle('color', (0, 0, 1))             
         self.setStyle('transparency', 0 )             
@@ -307,7 +337,7 @@ class SceneStyles:
         self.setStyle('textColor', (55/255, 74/255, 148/255))             
         self.setStyle('textHeight', 20)             
         
-        self.setCurrentLayer('info')
+        self.setLayer('info')
         self.setStyle('visible', True)                
         self.setStyle('color', (0.5, 0.5, 0.5))             
         self.setStyle('transparency', 0 )             
@@ -317,7 +347,7 @@ class SceneStyles:
         self.setStyle('textColor', (0.5, 0.5, 0.5))             
         self.setStyle('textHeight', 20)             
           
-        self.setCurrentLayer('base')
+        self.setLayer('base')
         self.setStyle('visible', True)                
         self.setStyle('color', (1, 0, 0))             
         self.setStyle('transparency', 0 )             
@@ -327,7 +357,7 @@ class SceneStyles:
         self.setStyle('textColor', (189/255, 60/255, 45/255))             
         self.setStyle('textHeight', 20)             
         
-        self.setCurrentLayer('main')
+        self.setLayer('main')
         self.setStyle('visible', True)                
         self.setStyle('color', (0, 0, 1))             
         self.setStyle('transparency', 0 )             
@@ -337,17 +367,7 @@ class SceneStyles:
         self.setStyle('textColor', (55/255, 74/255, 148/255))             
         self.setStyle('textHeight', 20)             
     
-    def setCurrentLayer(self, layerName) :
-        self.currentLayerName = layerName
         
-    def getStyle(self, styleName):  
-       key = self.currentLayerName +'.' + styleName
-       if key in self.styles:
-          return self.styles[key]
-      
-    def setStyle(self, styleName, styleValue):  
-       key = self.currentLayerName +'.' + styleName
-       self.styles[key] = styleValue
  
 '''
 *****************************************************
@@ -359,16 +379,16 @@ class Scene:
     def __init__(self, nativeLib):
         self.nativeLib = nativeLib
         self.rootObj = SceneObject(None,'level', nativeLib)
-        self.currObj = self.rootObj
-        self.currStyles = SceneStyles()
+        self.curObj = self.rootObj
+        self.curStylesSetting = SceneStylesSetting()
         self.stylesStack = list()
         return 
     
     def _setObj(self, objName, obj):
-        self.currObj.setChild(objName, obj)
+        self.curObj.setChild(objName, obj, self.curStylesSetting.getLayerStyles())
     
     def _getObj(self, objName):
-        return self.currObj.getChild(objName)
+        return self.curObj.getChild(objName)
     
     def _applyStyle(self, objName, styleName, styleValue):
         obj = self._getObj(objName)
@@ -376,29 +396,16 @@ class Scene:
             obj.applyStyle(styleName, styleValue)
  
     def _drawNative(self, objName, nativeObj):
-        obj = SceneObject(self.currObj, nativeObj)
+        obj = SceneObject(self.curObj, nativeObj)
         self._setObj(objName, obj)
 
-        #order important
-        self._applyStyle(objName, 'color', self.getStyle('color'))                
-        self._applyStyle(objName, 'transparency', self.getStyle('transparency'))                
-        self._applyStyle(objName, 'lineType', self.getStyle('lineType'))                
-        self._applyStyle(objName, 'lineWidth',self.getStyle('lineWidth'))                
-        self._applyStyle(objName, 'pointType', self.getStyle('pointType'))                
-        self._applyStyle(objName, 'pointSize', self.getStyle('pointSize'))                
-        
-        self._applyStyle(objName, 'textColor', self.getStyle('textColor'))                
-        self._applyStyle(objName, 'textHeight', self.getStyle('textHeight'))                
-    
-        
-        self._applyStyle(objName, 'visible', self.getStyle('visible'))                
- 
+  
     def screenInit(self):
        self.nativeLib.initScreen() 
        
     def screenClear(self):
        self.rootObj = SceneObject(None,'level', self.NativeLib)
-       self.currObj = self.rootObj
+       self.curObj = self.rootObj
        self.nativeLib.clearScreen()
        
     def screenStart(self):
@@ -406,7 +413,7 @@ class Scene:
            self.nativeLib.startScreen()
        else:
          dumpObj(self.rootObj)
-         dumpObj(self.currObj)
+         dumpObj(self.curObj)
          pass
     
     def getNative(self, objName):
@@ -417,36 +424,36 @@ class Scene:
            return None
     
     def layer(self, layerName):  
-        self.currStyles.setCurrentLayer(layerName)
+        self.curStylesSetting.setLayer(layerName)
      
     def setStyle(self, styleName, styleValue):  
-        self.currStyles.setStyle(styleName, styleValue)
+        self.curStylesSetting.setStyle(styleName, styleValue)
     
     def getStyle(self, styleName):  
-        return self.currStyles.getStyle(styleName)
+        return self.curStylesSetting.getStyle(styleName)
       
     def applyStyle(self, objName, styleName, styleValue):
         self._applyStyle(objName, styleName, styleValue)
  
     def setDefaultStyles(self, objName, styleName, styleValue):
-        self.currStyles = SceneStyles()
+        self.curStyleSetting = SceneStylesSetting()
  
     def levelUp(self):
-        if self.currObj.parent:
-           self.currObj = self.currObj.parent
-           self.currStyles = self.stylesStack.pop()
+        if self.curObj.parent:
+           self.curObj = self.curObj.parent
+           self.curStylesSetting = self.stylesStack.pop()
         else:
           raise 'Try level up from root level'    
           
         
     def levelDown(self, childName):
-        childObj = self.currObj.getChild(childName)
+        childObj = self.curObj.getChild(childName)
         if not childObj:
-          childObj = SceneObject(self.currObj, 'level')
+          childObj = SceneObject(self.curObj, 'level')
           self._setObj(childName, childObj)
-        self.currObj = childObj  
-        self.stylesStack.append(self.currStyles)
-        self.currStyles = SceneStyles(self.currStyles)
+        self.curObj = childObj  
+        self.stylesStack.append(self.curStylesSetting)
+        self.curStylesSettingeting = deepcopy(self.curStylesSetting)
            
     '''
     ************************************************************
@@ -499,7 +506,6 @@ class Scene:
     def drawPoint(self, objName, gpPnt):
         geomPnt = Geom_CartesianPoint(gpPnt)
         nativeObj = AIS_Point(geomPnt)
-        nativeObj.SetMarker(Aspect_TOM_BALL)
         sc._drawNative(objName, nativeObj)
     
     def drawLine(self, objName, gpPnt1, gpPnt2):
