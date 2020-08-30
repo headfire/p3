@@ -57,6 +57,7 @@ from OCC.Core.TopoDS import TopoDS_Shape
 from OCC.Core.Bnd import Bnd_Box
 from OCC.Core.GC import  GC_MakeCircle
 from copy import deepcopy
+from time import time
 
 import json
 
@@ -265,9 +266,13 @@ class SceneObject:
         oldObj = self.getChild(objName)
         if oldObj:
             oldObj.deactivate()
-        self.childs[objName] = sceneObj
-        sceneObj.activate(styles)
-        
+        if sceneObj:    
+           self.childs[objName] = sceneObj
+           sceneObj.objName = objName
+           sceneObj.activate(styles)
+        else:   
+           self.childs.pop(objName, None)
+           
     def applyStyle(self, styleName, styleValue):
         self.nativeLib.stylingNativeObj(self.nativeObj, styleName, styleValue)    
         
@@ -403,8 +408,8 @@ class Scene:
        if self.nativeLib.isScreenInit() :
            self.nativeLib.startScreen()
        else:
-         dumpObj(self.rootObj)
-         dumpObj(self.curObj)
+         #dumpObj(self.rootObj)
+         #dumpObj(self.curObj)
          pass
     
     def getNative(self, objName):
@@ -430,6 +435,7 @@ class Scene:
         self.curStyleSetting = SceneStylesSetting()
  
     def levelUp(self):
+        mayBeTemporaryName = self.curObj.objName
         if self.curObj.parent:
            self.curObj = self.curObj.parent
            self.curStylesSetting = self.stylesStack.pop()
@@ -437,7 +443,7 @@ class Scene:
           raise 'Try level up from root level'    
           
         
-    def levelDown(self, childName):
+    def levelDown(self, childName = None):
         childObj = self.curObj.getChild(childName)
         if not childObj:
           childObj = SceneObject(self.curObj, 'level')
@@ -528,6 +534,11 @@ class Scene:
     def drawShape(self, objName, shape):
          nativeObj = AIS_Shape(shape)
          self._drawNative(objName, nativeObj)
+         
+    def erase(self, objName):
+        self._setObj(objName, None)
+        
+    
 '''
 ***********************************************
 Functional interface
@@ -556,7 +567,7 @@ def SceneSetDefaultStyles(objName, styleName, styleValue):
     return sc.setDefaultStyles(objName, styleName, styleValue)
 def SceneLevelUp():
     return sc.levelUp()
-def SceneLevelDown(childName):
+def SceneLevelDown(childName = None):
     return sc.levelDown(childName)
 def SceneDrawText(objName, gpPnt, text):
     return sc.drawText(objName, gpPnt, text)
@@ -576,7 +587,8 @@ def SceneDrawCircle(objName, r):
     return sc.drawCircle(objName, r)
 def SceneDrawShape(objName, shape):
     return sc.drawShape(objName, shape)
-
+def SceneErase(objName):
+    return sc.erase(objName)
         
 '''
 ***********************************************
@@ -585,7 +597,6 @@ Testing
 '''
 
 if __name__ == '__main__':
-    
         
     def  testPoint(name):
         
@@ -665,5 +676,6 @@ if __name__ == '__main__':
     testLine('point')
     testLine('line')
     testCircle3('circle3')
+    testTemporary()
     
     SceneScreenStart()
