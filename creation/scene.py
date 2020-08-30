@@ -103,15 +103,6 @@ def dumpObj(obj):
   print(json.dumps(obj, default=lambda obj: objToStr(obj), indent=5))
 
 
-def smartGetDict(d, mask):
-    values = dict()
-    for key in d:
-         if key.startswith(mask):
-              subkey = key[len(mask)+1:len(key)] 
-              values[subkey] = d[key]
-    return values 
-
-
 '''
 *****************************************************
 *****************************************************

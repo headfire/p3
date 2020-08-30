@@ -1,8 +1,8 @@
 # OpenCascade tutorial by headfire (headfire@yandex.ru)
 # point and line attributes
 
-from OCC.Core.gp import gp_Pnt, gp_Trsf
-from OCC.Core.Geom import Geom_CartesianPoint
+from OCC.Core.gp import gp_Pnt, gp_Trsf, gp_Dir, gp_Vec
+from OCC.Core.Geom import Geom_CartesianPoint, Geom_Line
 
 from OCC.Core.GC import GC_MakeArcOfCircle, GC_MakeCircle
 from OCC.Core.AIS import AIS_Shape, AIS_Point, AIS_Circle
@@ -15,28 +15,34 @@ from OCC.Core.TopAbs import (TopAbs_COMPOUND, TopAbs_COMPSOLID, TopAbs_SOLID, To
                       TopAbs_FACE, TopAbs_WIRE, TopAbs_EDGE, TopAbs_VERTEX, TopAbs_SHAPE)
 
 from scene import (SceneGetNative, SceneDrawCircle3, SceneDrawShape, SceneDrawPoint,
+                   SceneDrawLine,
                    SceneDrawLabel, SceneLayer, SceneLevelUp, SceneLevelDown,
                    SceneScreenInit, SceneScreenStart, SceneDrawAxis)
 
-from math import cos, sin, pi
+from math import cos, sin, pi, atan
 
 # todo 
 # Переименовать переменные с указанием типа
 # Cделать базовую окружность шире 
 
-def cylPnt(x, y, z, r, a, h):
-    angle = a / 180 * pi 
-    return gp_Pnt(x + r*cos(angle), y +r*sin(angle), z+h)
+def xyz(gpPnt):
+    return (gpPnt.X(), gpPnt.Y(), gpPnt.Z())
+
+def anglePnt(gpPnt, r, angle):
+   x,y,z = xyz(gpPnt) 
+   return gp_Pnt(x + r*cos(angle), y +r*sin(angle), z)
 
 def PaintDaoShape(r, l):
   
     # base points    
     r2 = r/2
     
+    gpPntMinC = gp_Pnt(0,r2,0)
+    
     p1 = gp_Pnt(0,0,0)      
-    p2 = cylPnt(0,r2, 0 , r2, 90 + 90 + 45, 0)      
+    p2 = anglePnt(gpPntMinC , r2, 1.25*pi)      
     p3 = gp_Pnt(-r2,r2,0)      
-    p4 = cylPnt(0,r2, 0 , r2, 90 + 45, 0)      
+    p4 = anglePnt(gpPntMinC , r2, 0.75*pi)      
     p5 = gp_Pnt(0,r,0)      
     p6 = gp_Pnt(r,0,0)      
     p7 = gp_Pnt(0,-r,0)      
@@ -77,6 +83,7 @@ def PaintDaoShape(r, l):
     SceneLayer('info')
     SceneDrawShape('dao_mirr', wireDaoMirr)
     
+    
 def DetectBasePoints(name)     :
     
     dao = SceneGetNative(name)
@@ -90,12 +97,26 @@ def DetectBasePoints(name)     :
        SceneLayer('base')
        if i % 2 == 0:
           vind =  str(int(i/2))
-          vname =  name+'_vertex_'+ vind
+          vname = 'p'+vind
           SceneDrawPoint(vname, pnt)
-          SceneDrawLabel(vname, 'p'+vind)
+          SceneDrawLabel(vname)
        i += 1 
        exp.Next()
-  
+       
+       
+
+def ExternalLine(name, namePnt1, namePnt2, k):
+    gpPnt1 = SceneGetNative(namePnt1).Component().Pnt()
+    gpPnt2 = SceneGetNative(namePnt2).Component().Pnt()
+    gpPnt1New = ExternalPoint(gpPnt1, gpPnt2, k)
+    gpPnt2New = ExternalPoint(gpPnt2, gpPnt1, k)
+    SceneDrawLine(name, gpPnt1New, gpPnt2New)
+    
+def ExternalPoint(gpPnt1, gpPnt2, k):
+    x1,y1,z1 = gpPnt1.X(), gpPnt1.Y(), gpPnt1.Z()
+    x2,y2,z2 = gpPnt2.X(), gpPnt2.Y(), gpPnt2.Z()
+    return gp_Pnt( x1+(x2-x1)*k, y1+(y2-y1)*k, z1+(z2-z1)*k)
+    
   
 if __name__ == '__main__':
     
@@ -104,9 +125,42 @@ if __name__ == '__main__':
     SceneDrawAxis('axis')
     
     SceneLevelDown('dao_draw')
-  
-    PaintDaoShape(5,0.3)
+
+    r = 5
+    bevel = 0.3     
+
+    PaintDaoShape(r,bevel)
     DetectBasePoints('dao')
+    SceneLayer('info')
+    #ExternalLine('cLine1','p0','p2', 3)
+    #ExternalLine('cLine2','p0','p3', 1)
+    #SceneDrawLabel('cLine1')
+    #SceneDrawLabel('cLine2')
+    
+    #intersection
+    gpPntC = gp_Pnt(0,-r/2,0)
+    SceneLayer('main')
+    SceneDrawPoint('c', gpPntC)
+    SceneDrawLabel('c')
+    gpPnt1 = SceneGetNative('p2').Component().Pnt()
+    gpPnt2 = SceneGetNative('p3').Component().Pnt()
+
+    def angle(gpPnt1, gpPnt2):
+        x1,y1,z1 = xyz(gpPnt1)
+        x2,y2,z2 = xyz(gpPnt2)
+        dx, dy = x2-x1, y2-y1
+        angle = atan(dy/dx)
+        if dx > 0 :
+          return angle
+        else:
+          return angle+pi
+            
+    angle1 = angle(gpPntC, gpPnt1)
+    angle2 = angle(gpPntC, gpPnt2)
+    for i in range(0,11):
+        angle = angle1+(angle2-angle1)/10*i
+        gpPntI = anglePnt(gpPntC, 8, angle)
+        SceneDrawLine('l'+str(i), gpPntC , gpPntI)  
     
     SceneLevelUp()
     
