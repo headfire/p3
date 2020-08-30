@@ -15,8 +15,8 @@ from OCC.Core.BRep import BRep_Tool
 from OCC.Core.TopAbs import (TopAbs_COMPOUND, TopAbs_COMPSOLID, TopAbs_SOLID, TopAbs_SHELL,
                       TopAbs_FACE, TopAbs_WIRE, TopAbs_EDGE, TopAbs_VERTEX, TopAbs_SHAPE)
 
-from scene import (SceneGetNative, SceneDrawCircle3, SceneDrawShape, SceneDrawPoint,
-                   SceneDrawLine,
+from scene import (SceneGetNative, SceneDrawCircle, SceneDrawShape, SceneDrawPoint,
+                   SceneDrawLine, SceneSetStyle,
                    SceneDrawLabel, SceneLayer, SceneLevelUp, SceneLevelDown,
                    SceneScreenInit, SceneScreenStart, SceneDrawAxis)
 
@@ -180,7 +180,7 @@ def PaintDaoShape(r, bevel):
     
     # draw
     SceneLayer('info')
-    SceneDrawCircle3('circle', basis[4],basis[5],basis[6])
+    SceneDrawCircle('circle', basis[4],basis[5],basis[6])
     SceneLayer('info')
     SceneDrawShape('daoMirr', wireDaoMirr)
     SceneLayer('base')
@@ -188,7 +188,7 @@ def PaintDaoShape(r, bevel):
     SceneLayer('main')
     SceneDrawShape('dao', wireDao)
 
-    SceneLayer('base')
+    SceneLayer('fog')
     drawPoints(pVertexes, 'pv')
         
     pProjC = getProjectionCenter(r)
@@ -202,10 +202,12 @@ def PaintDaoShape(r, bevel):
         SceneDrawLine('line'+str(i), pProjC, p) 
         i+=1
 
+    SceneLayer('main')
     face = BRepBuilderAPI_MakeFace(wireDao).Face()
     #face = BRepBuilderAPI_MakeFace(getPlaneSurface(pProjC, pProjs[2]), 0.2).Face()
     SceneDrawShape('face', face)
     
+    SceneLayer('fog')
     face0 =getProjectionFace(pProjC, pProjs[0])
     SceneDrawShape('face0', face0)
     

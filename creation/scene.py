@@ -45,8 +45,11 @@ from OCC.Core.gp import gp_Pnt, gp_Dir, gp_Vec
 from OCC.Core.Geom import Geom_Axis2Placement, Geom_CartesianPoint, Geom_Point
 from OCC.Core.AIS import AIS_Point, AIS_InteractiveObject, AIS_Trihedron, AIS_Shape, AIS_Line, AIS_Circle
 from OCC.Core.Quantity import Quantity_Color, Quantity_TOC_RGB
-from OCC.Core.Aspect import Aspect_TOM_BALL, Aspect_TOL_DASH, Aspect_TOL_SOLID
+from OCC.Core.Aspect import Aspect_TOM_BALL
 from OCC.Core.TopExp import TopExp_Explorer
+from OCC.Core.Graphic3d import Graphic3d_MaterialAspect
+from OCC.Core.BRepPrimAPI import BRepPrimAPI_MakeSphere
+
 
 #from OCC.Core.TopAbs import (TopAbs_COMPOUND, TopAbs_COMPSOLID, TopAbs_SOLID, TopAbs_SHELL,
 #                      TopAbs_FACE, TopAbs_WIRE, TopAbs_EDGE, TopAbs_VERTEX, TopAbs_SHAPE)
@@ -61,8 +64,21 @@ from time import time
 
 import json
 
-SHAPE_TYPES = ['TopAbs_COMPOUND', 'TopAbs_COMPSOLID', 'TopAbs_SOLID', 'TopAbs_SHELL',
-  'TopAbs_FACE', 'TopAbs_WIRE', 'TopAbs_EDGE', 'TopAbs_VERTEX', 'TopAbs_SHAPE']
+
+
+POINT_TYPES = [ 'POINT', 'PLUS', 'STAR', 'X',  'O', 'O_POINT', 'O_PLUS', 'O_STAR',  'O_X', 
+  'RING1', 'RING2', 'RING3', 'BALL' ] 
+
+LINE_TYPES = ['SOLID', 'DASH', 'DOT', 'DOTDASH' ]
+
+MATERIAL_TYPES = [ 'BRASS', 'BRONZE', 'COPPER', 'GOLD',  'PEWTER', 'PLASTER', 'PLASTIC', 
+  'SILVER',  'STEEL', 'STONE', 'SHINY_PLASTIC', 'SATIN',  'METALIZED', 'NEON_GNC',
+  'CHROME', 'ALUMINIUM', 'OBSIDIAN', 'NEON_PHC', 'JADE, CHARCOAL',  'WATER, GLASS',
+  'DIAMOND', 'DEFAULT' ] 
+
+SHAPE_TYPES = ['COMPOUND', 'COMPSOLID', 'SOLID', 'SHELL',
+  'FACE', 'WIRE', 'EDGE', 'VERTEX', 'SHAPE']
+  
 
 def objToStr(obj) :
     ret = dict()
@@ -118,7 +134,7 @@ class NativeStubText:
         self.position = gpPnt
         self.text = text
         self.struct = None        
-        self.visible = True
+        self.visible = 1
 
 class NativeLib:
     def __init__(self):
@@ -141,73 +157,69 @@ class NativeLib:
         
         #order important
     
-        self.stylingNativeObj(nativeObj, 'color', styles['color'])                
-        self.stylingNativeObj(nativeObj, 'transparency', styles.get('transparency'))                
-        self.stylingNativeObj(nativeObj, 'lineType', styles.get('lineType'))                
-        self.stylingNativeObj(nativeObj, 'lineWidth',styles.get('lineWidth'))                
+        self.stylingNativeObj(nativeObj, 'color', styles.get('color',(1,1,1)) )                
+        self.stylingNativeObj(nativeObj, 'transparency', styles.get('transparency', 1))                
+        self.stylingNativeObj(nativeObj, 'material', styles.get('material', 'DEFAULT'))                
+        self.stylingNativeObj(nativeObj, 'lineWidth',styles.get('lineWidth', 1))                
+        self.stylingNativeObj(nativeObj, 'lineType', styles.get('lineType', 'SOLID'))                
         
-        self.stylingNativeObj(nativeObj, 'textColor', styles.get('textColor'))                
-        self.stylingNativeObj(nativeObj, 'textHeight', styles.get('textHeight'))                
+        self.stylingNativeObj(nativeObj, 'textColor', styles.get('textColor', (1,1,1)))                
+        self.stylingNativeObj(nativeObj, 'textHeight', styles.get('textHeight', 20))                
      
-        if isinstance(nativeObj, AIS_Point):
-            nativeObj.SetMarker(Aspect_TOM_BALL)
-            
-        self.stylingNativeObj(nativeObj, 'pointSize', styles.get('pointSize'))                
+        self.stylingNativeObj(nativeObj, 'pointType', styles.get('pointType', 'BALL'))                
+        self.stylingNativeObj(nativeObj, 'pointSize', styles.get('pointSize', 3))                
         
-        self.stylingNativeObj(nativeObj, 'visible', styles.get('visible'))                
+        self.stylingNativeObj(nativeObj, 'visible', styles.get('visible', 1))                
     
     def deactivateNativeObj(self, nativeObj):
-        self.stylingNativeObj(nativeObj, 'visible', False)
+        self.stylingNativeObj(nativeObj, 'visible', 0)
            
-    def stylingNativeObj(self, nativeObj, styleName, styleValue):
-       #Todo must begin
-       obj = nativeObj 
-       propName = styleName
-       propValue = styleValue
-       #Todo must end
+    def stylingNativeObj(self, obj, styleName, styleValue):
        if obj == None:
             return
        if isinstance(obj, NativeStubText):
-            if propName == 'visible':
-               if propValue == True: 
+            if styleName == 'visible':
+               if styleValue > 0.5: 
                   if self.isInit:
-                       obj.struct = self.display.DisplayMessage(obj.position, obj.text, obj.textHeight, 
-                                        obj.textColor, False)            
-                       obj.visible = True
-            elif propName == 'textColor':
-                obj.textColor = propValue
-            elif propName == 'textHeight':
-                obj.textHeight = propValue
-             
+                    obj.struct = self.display.DisplayMessage(obj.position, 
+                         obj.text, obj.textHeight, obj.textColor, False)            
+                    obj.visible = 1
+            elif styleName == 'textColor':
+                obj.textColor = styleValue
+            elif styleName == 'textHeight':
+                obj.textHeight = styleValue
        if isinstance(obj, AIS_InteractiveObject):  
-             if propName == 'color':
-                 r,g,b = propValue 
+             if styleName == 'color':
+                 r,g,b = styleValue 
                  color =  Quantity_Color(r, g, b, Quantity_TOC_RGB)
                  obj.SetColor(color)
                  if isinstance(obj, AIS_Trihedron):  
                      obj.SetArrowColor(color)
                      obj.SetTextColor(color)
-             elif propName == 'lineWidth':         
-                 obj.Attributes().LineAspect().SetWidth(propValue)
-                 obj.Attributes().WireAspect().SetWidth(propValue)
-             elif propName == 'lineType':         
-                  if propValue == 'solid':
-                      obj.Attributes().WireAspect().SetTypeOfLine(Aspect_TOL_SOLID)
-                      obj.Attributes().LineAspect().SetTypeOfLine(Aspect_TOL_SOLID)
-                  elif propValue == 'dash':
-                      obj.Attributes().WireAspect().SetTypeOfLine(Aspect_TOL_DASH)
-                      obj.Attributes().LineAspect().SetTypeOfLine(Aspect_TOL_DASH)
-             elif propName == 'visible':         
+             elif styleName == 'transparensy':
+                     obj.SetTransparency(styleValue)
+             elif styleName == 'material':
+                  aspect = Graphic3d_MaterialAspect(MATERIAL_TYPES.index(styleValue))
+                  obj.SetMaterial(aspect)
+             elif styleName == 'lineType':         
+                  lineType = LINE_TYPES.index(styleValue)
+                  obj.Attributes().WireAspect().SetTypeOfLine(lineType)
+                  obj.Attributes().LineAspect().SetTypeOfLine(lineType)
+             elif styleName == 'lineWidth':         
+                 obj.Attributes().LineAspect().SetWidth(styleValue)
+                 obj.Attributes().WireAspect().SetWidth(styleValue)
+             elif styleName == 'visible':         
                  if self.isInit:
-                    if isinstance(obj, AIS_InteractiveObject):
-                       if propValue:
-                           self.display.Context.Display(obj, False) 
-                       else:    
-                           self.display.Context.Erase(obj, False)    
-       if isinstance(obj, AIS_Point): 
-            if propName == 'pointSize':         
-                   obj.Attributes().PointAspect().SetScale(propValue)
-    
+                    if styleValue > 0.5:
+                        self.display.Context.Display(obj, False) 
+                    else:    
+                        self.display.Context.Erase(obj, False)    
+             if isinstance(obj, AIS_Point): 
+                 if styleName == 'pointType':         
+                      obj.SetMarker(POINT_TYPES.index(styleValue))
+                 if styleName == 'pointSize':         
+                      obj.Attributes().PointAspect().SetScale(styleValue)
+         
     def transformNativeObj(self, nativeObj, nativeTranformation):
         pass
     
@@ -301,8 +313,8 @@ class SceneStylesSetting:
         
         self.layers = dict()
         self.curLayer = None
-        self.setLayer('default')
         self.initStyles()
+        self.setLayer('default')
         
     def setLayer(self, layerName):
         if layerName in self.layers:
@@ -324,53 +336,80 @@ class SceneStylesSetting:
     def initStyles(self):
         
         self.setLayer('hide')
-        self.setStyle('visible', False)                
+        self.setStyle('visible', 0)                
         self.setStyle('color', (0, 0, 1))             
         self.setStyle('transparency', 0 )             
-        self.setStyle('lineType', 'solid')             
-        self.setStyle('lineWidth', 3)             
+        self.setStyle('material', 'DEFAULT' )             
+        self.setStyle('lineType', 'SOLID')             
+        self.setStyle('lineWidth', 3)            
+        self.setStyle('pointType', 'BALL')            
         self.setStyle('pointSize', 3 )             
         self.setStyle('textColor', (55/255, 74/255, 148/255))             
         self.setStyle('textHeight', 20)             
         
         self.setLayer('info')
-        self.setStyle('visible', True)                
+        self.setStyle('visible', 1)                
         self.setStyle('color', (0.5, 0.5, 0.5))             
+        self.setStyle('material', 'DEFAULT' )             
         self.setStyle('transparency', 0 )             
-        self.setStyle('lineType', 'dash')             
+        self.setStyle('lineType', 'DASH')             
         self.setStyle('lineWidth', 1)             
+        self.setStyle('pointType', 'BALL')            
         self.setStyle('pointSize', 3 )             
         self.setStyle('textColor', (0.5, 0.5, 0.5))             
         self.setStyle('textHeight', 20)             
           
         self.setLayer('base')
-        self.setStyle('visible', True)                
+        self.setStyle('visible', 1)                
         self.setStyle('color', (1, 0, 0))             
         self.setStyle('transparency', 0 )             
-        self.setStyle('lineType', 'dash')             
+        self.setStyle('material', 'DEFAULT' )             
+        self.setStyle('lineType', 'DASH')             
         self.setStyle('lineWidth', 2)             
+        self.setStyle('pointType', 'BALL')            
         self.setStyle('pointSize', 3 )             
         self.setStyle('textColor', (189/255, 60/255, 45/255))             
         self.setStyle('textHeight', 20)             
         
+        self.setLayer('fog')
+        self.setStyle('visible', 1)                
+        self.setStyle('color', (0, 0.7, 0))             
+        self.setStyle('transparency', 0.4 )             
+        self.setStyle('lineType', 'SOLID')             
+        self.setStyle('lineWidth', 2)             
+        self.setStyle('pointType', 'BALL')            
+        self.setStyle('pointSize', 3 )             
+        self.setStyle('textColor', (0, 0.7, 0))             
+        self.setStyle('textHeight', 20)             
+        
         self.setLayer('main')
-        self.setStyle('visible', True)                
+        self.setStyle('visible', 1)                
         self.setStyle('color', (0, 0, 1))             
         self.setStyle('transparency', 0 )             
-        self.setStyle('lineType', 'solid')             
+        self.setStyle('material', 'PLASTIC' )             
+        self.setStyle('lineType', 'SOLID')             
         self.setStyle('lineWidth', 3)             
+        self.setStyle('pointType', 'BALL')            
         self.setStyle('pointSize', 3 )             
         self.setStyle('textColor', (55/255, 74/255, 148/255))             
         self.setStyle('textHeight', 20)             
-    
+
+        self.setLayer('pres')
+        self.setStyle('visible', 1)                
+        self.setStyle('color', (0.7, 0.7, 0))             
+        self.setStyle('transparency', 0 )             
+        self.setStyle('material', 'GOLD' )             
+        self.setStyle('lineType', 'SOLID')             
+        self.setStyle('lineWidth', 5)             
+        self.setStyle('pointType', 'BALL')            
+        self.setStyle('pointSize', 3 )             
+        self.setStyle('textColor', (55/255, 74/255, 148/255))             
+        self.setStyle('textHeight', 20)             
         
- 
 '''
-*****************************************************
-*****************************************************
-*****************************************************
-*****************************************************
+****************************************************************
 '''
+
 class Scene:
     def __init__(self, nativeLib):
         self.nativeLib = nativeLib
@@ -408,9 +447,10 @@ class Scene:
        if self.nativeLib.isScreenInit() :
            self.nativeLib.startScreen()
        else:
+          print('Virtual run is complete')    
+          print('Use SceneScreenInit()')    
          #dumpObj(self.rootObj)
          #dumpObj(self.curObj)
-         pass
     
     def getNative(self, objName):
         obj = self._getObj(objName)
@@ -435,7 +475,6 @@ class Scene:
         self.curStyleSetting = SceneStylesSetting()
  
     def levelUp(self):
-        mayBeTemporaryName = self.curObj.objName
         if self.curObj.parent:
            self.curObj = self.curObj.parent
            self.curStylesSetting = self.stylesStack.pop()
@@ -450,7 +489,7 @@ class Scene:
           self._setObj(childName, childObj)
         self.curObj = childObj  
         self.stylesStack.append(self.curStylesSetting)
-        self.curStylesSettingeting = deepcopy(self.curStylesSetting)
+        self.curStylesSetting = deepcopy(self.curStylesSetting)
            
     '''
     ************************************************************
@@ -511,25 +550,10 @@ class Scene:
         nativeObj = AIS_Line(geomPnt1,geomPnt2)
         sc._drawNative(objName, nativeObj)
     
-    def drawCircle3(self, objName, gpPnt1, gpPnt2, gpPnt3):
+    def drawCircle(self, objName, gpPnt1, gpPnt2, gpPnt3):
         geomCircle = GC_MakeCircle(gpPnt1, gpPnt2, gpPnt3).Value()
         nativeObj = AIS_Circle(geomCircle)
         self._drawNative('circle', nativeObj)
-     
-    def drawCircle(self, objName, r):
-        pass
-    '''
-        gpPnt1 = gp_Pnt(x1, y1, z1)
-        gpPnt2 = gp_Pnt(x2, y2, z2)
-        gpPnt3 = gp_Pnt(x3, y3, z3)
-        geomPnt1 = Geom_CartesianPoint(gpPnt1)
-        geomPnt2 = Geom_CartesianPoint(gpPnt2)
-        geomPnt3 = Geom_CartesianPoint(gpPnt3)
-        geomCircle = GC_MakeCircle(gpPnt1, gpPnt2, gpPnt3).Value()
-        aisCircle = 
-        SceneDrawAis('circle', AIS_Circle(geom_circle))
-        _sceneDrawAis(objName, aisLine)
-    '''   
      
     def drawShape(self, objName, shape):
          nativeObj = AIS_Shape(shape)
@@ -581,10 +605,8 @@ def SceneDrawPoint(objName, gpPnt):
     return sc.drawPoint(objName,  gpPnt)
 def SceneDrawLine(objName,  gpPnt1,  gpPnt2):
     return sc.drawLine(objName,  gpPnt1, gpPnt2)
-def SceneDrawCircle3(objName,  gpPnt1,  gpPnt2,  gpPnt3):
-    return sc.drawCircle3(objName,  gpPnt1,  gpPnt2,  gpPnt3)
-def SceneDrawCircle(objName, r):
-    return sc.drawCircle(objName, r)
+def SceneDrawCircle(objName,  gpPnt1,  gpPnt2,  gpPnt3):
+    return sc.drawCircle(objName,  gpPnt1,  gpPnt2,  gpPnt3)
 def SceneDrawShape(objName, shape):
     return sc.drawShape(objName, shape)
 def SceneErase(objName):
@@ -637,7 +659,7 @@ if __name__ == '__main__':
     
         SceneLevelUp()
     
-    def  testCircle3(name):
+    def  testCircle(name):
         
         SceneLevelDown(name)
         
@@ -645,11 +667,11 @@ if __name__ == '__main__':
         gpPnt2 = gp_Pnt(5,2,5)
         gpPnt3 = gp_Pnt(5,-5,5)
         
-        SceneLayer('main')
-        SceneDrawCircle3('circle', gpPnt1, gpPnt2, gpPnt3)
+        SceneLayer('pres')
+        SceneDrawCircle('circle', gpPnt1, gpPnt2, gpPnt3)
         SceneDrawLabel('circle')
         
-        SceneLayer('base')
+        SceneLayer('fog')
         SceneDrawPoint('p1', gpPnt1)
         SceneDrawLabel('p1')
         SceneDrawPoint('p2', gpPnt2)
@@ -668,6 +690,12 @@ if __name__ == '__main__':
         
         SceneLevelUp()
 
+    def testSphere(name):
+        SceneLevelDown(name)
+        SceneDrawShape('sphere', BRepPrimAPI_MakeSphere(3).Shape())
+        SceneLevelUp()
+   
+
     SceneScreenInit() 
     
     SceneDrawAxis('axis')
@@ -675,7 +703,9 @@ if __name__ == '__main__':
     testMessage('mess')
     testLine('point')
     testLine('line')
-    testCircle3('circle3')
-    testTemporary()
+    testCircle('circle')
+      
+    dumpObj(sc.curStylesSetting)
+    testSphere('sphere')
     
     SceneScreenStart()
