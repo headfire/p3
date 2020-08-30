@@ -24,19 +24,19 @@ def getDaoShape():
     
 
 
-def intersectWireAndPlane(shape, plane)
+def intersectWireAndPlane(wire, plane)
 
    BRepBuilderAPI_MakePolygon polygon;
    Geom_Plane aplane = Geom_Plane(1.,0.,0.,0.);
    planeShape = BRepBuilderAPI_MakeFace(aplane).Face();
 
-   TopExp_Explorer Ex;
-   for (Ex.Init(S,TopAbs_EDGE); Ex.More(); Ex.Next())
-     { Handle(Geom_Surface) sFirst = BRep_Tool::Surface(TopoDS::Face(planeShape));
-Standard_Real First=0,Last=180.0;
-Handle(Geom_Curve) myCurve = BRep_Tool::Curve(TopoDS::Edge(Ex.Current()),First,Last);
+   Ex = TopExp_Explorer(wire, TopAbs_EDGE);
+   while Ex.More():
+     sFirst = BRep_Tool::Surface(TopoDS::Face(planeShape));
+     First,Last =0, 180
+      myCurve = BRep_Tool.Curve(Ex.Current(),First,Last);
 
-GeomAPI_IntCS Intersector(myCurve, sFirst);
+      GeomAPI_IntCS Intersector(myCurve, sFirst);
 Standard_Integer nb = Intersector.NbPoints();
 if(nb>0)
 {

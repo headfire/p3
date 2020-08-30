@@ -2,11 +2,12 @@
 # point and line attributes
 
 from OCC.Core.gp import gp_Pnt, gp_Trsf, gp_Dir, gp_Vec, gp_Ax1
-from OCC.Core.Geom import Geom_CartesianPoint, Geom_Line
+from OCC.Core.Geom import Geom_CartesianPoint, Geom_Line, Geom_Plane
 
 from OCC.Core.GC import GC_MakeArcOfCircle, GC_MakeCircle
 from OCC.Core.AIS import AIS_Shape, AIS_Point, AIS_Circle
-from OCC.Core.BRepBuilderAPI import  BRepBuilderAPI_MakeEdge, BRepBuilderAPI_MakeWire, BRepBuilderAPI_Transform 
+from OCC.Core.BRepBuilderAPI import  (BRepBuilderAPI_MakeEdge, BRepBuilderAPI_MakeWire, 
+             BRepBuilderAPI_Transform, BRepBuilderAPI_MakeFace)
 from OCC.Core.BRepOffsetAPI import BRepOffsetAPI_MakeOffset
 from OCC.Core.TopExp import TopExp_Explorer
 from OCC.Core.BRep import BRep_Tool
@@ -87,7 +88,7 @@ def getWireMirror(wire, p0):
     wireResult =  BRepBuilderAPI_Transform(wire, transform).Shape()
     return wireResult
 
-def getWireVertex(wire):
+def getWireVertexes(wire):
     result = list()
     exp = TopExp_Explorer(wire, TopAbs_VERTEX)
     i = 0
@@ -101,7 +102,7 @@ def getWireVertex(wire):
        exp.Next()
     return result       
 
-def getProjectionPoint(r):
+def getProjectionCenter(r):
     return gp_Pnt(0,-r/2,0)
 
 '''
@@ -131,6 +132,32 @@ def getProjectionPoints(p0, p1, p2, lenght, sCount):
   
     return result
 
+def getProjectionFace(p1, p2):
+    
+    x1, y1, z1 = xyz(p1)
+    x2, y2, z2 = xyz(p2)
+    pe0 = gp_Pnt(x1, y1, -6)
+    pe1 = gp_Pnt(x1, y1, +6)
+    pe2 = gp_Pnt(x2, y2, +6)
+    pe3 = gp_Pnt(x2, y2, -6)
+    
+    '''
+    arc1 =  GC_MakeLine(p0,p1,p2).Value()
+    arc2 =  GC_MakeArcOfCircle(p2,p3,p4).Value()
+    arc3 =  GC_MakeArcOfCircle(p4,p5,p6).Value()
+    arc4 =  GC_MakeArcOfCircle(p6,p7,p0).Value()
+    '''
+    
+    edge1 = BRepBuilderAPI_MakeEdge(pe0, pe1).Edge()
+    edge2 = BRepBuilderAPI_MakeEdge(pe1, pe2).Edge()
+    edge3 = BRepBuilderAPI_MakeEdge(pe2, pe3).Edge()
+    edge4 = BRepBuilderAPI_MakeEdge(pe3, pe0).Edge()
+  
+    wire = BRepBuilderAPI_MakeWire(edge1, edge2, edge3, edge4).Wire()
+    face = BRepBuilderAPI_MakeFace(wire).Face()
+    return face
+
+    
 
 def PaintDaoShape(r, bevel):
     
@@ -147,7 +174,7 @@ def PaintDaoShape(r, bevel):
     wireDaoClassic = getDaoWireClassic(basis)
     wireDao = getWireOffset(wireDaoClassic,-bevel)
     wireDaoMirr = getWireOffset(wireDao,-bevel)
-    pVertexes = getWireVertex(wireDao)
+    pVertexes = getWireVertexes(wireDao)
     
     
     
@@ -164,7 +191,7 @@ def PaintDaoShape(r, bevel):
     SceneLayer('base')
     drawPoints(pVertexes, 'pv')
         
-    pProjC = getProjectionPoint(r)
+    pProjC = getProjectionCenter(r)
     SceneDrawPoint('pProjC', pProjC)
     SceneDrawLabel('pProjC')
     
@@ -175,6 +202,13 @@ def PaintDaoShape(r, bevel):
         SceneDrawLine('line'+str(i), pProjC, p) 
         i+=1
 
+    face = BRepBuilderAPI_MakeFace(wireDao).Face()
+    #face = BRepBuilderAPI_MakeFace(getPlaneSurface(pProjC, pProjs[2]), 0.2).Face()
+    SceneDrawShape('face', face)
+    
+    face0 =getProjectionFace(pProjC, pProjs[0])
+    SceneDrawShape('face0', face0)
+    
 '''
 def ExternalLine(name, namePnt1, namePnt2, k):
     gpPnt1 = SceneGetNative(namePnt1).Component().Pnt()
