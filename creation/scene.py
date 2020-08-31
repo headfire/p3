@@ -267,6 +267,7 @@ class SceneObject:
         self.nativeObj = nativeObj
         self.childs = dict()
         self.handles = dict()  # center and label must init
+        self.autoNum = dict()
         
     def getChild(self, objName):
         if objName in self.childs:
@@ -275,6 +276,10 @@ class SceneObject:
             return None
         
     def setChild(self, objName, sceneObj, styles):
+        if objName.find('#')!= -1:
+           num = self.autoNum.get(objName,0)
+           self.autoNum[objName] = num + 1                   
+           objName = objName.replace('#', str(num))
         oldObj = self.getChild(objName)
         if oldObj:
             oldObj.deactivate()
@@ -553,7 +558,7 @@ class Scene:
     def drawCircle(self, objName, gpPnt1, gpPnt2, gpPnt3):
         geomCircle = GC_MakeCircle(gpPnt1, gpPnt2, gpPnt3).Value()
         nativeObj = AIS_Circle(geomCircle)
-        self._drawNative('circle', nativeObj)
+        self._drawNative(objName, nativeObj)
      
     def drawShape(self, objName, shape):
          nativeObj = AIS_Shape(shape)

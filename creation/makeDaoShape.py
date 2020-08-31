@@ -5,7 +5,10 @@ from OCC.Core.gp import gp_Pnt, gp_Trsf, gp_Dir, gp_Vec, gp_Ax1
 from OCC.Core.Geom import Geom_CartesianPoint, Geom_Line, Geom_Plane, Geom_TrimmedCurve
 from OCC.Core.GeomAPI import GeomAPI_IntCS
 from OCC.Core.TopExp import TopExp_Explorer
-
+from OCC.Core.GeomPlate import  (GeomPlate_BuildPlateSurface, 
+                                 GeomPlate_CurveConstraint, GeomPlate_MakeApprox,
+                                 GeomPlate_PointConstraint)
+from OCC.Core.GeomAdaptor import GeomAdaptor_HCurve
 
 from OCC.Core.GC import GC_MakeArcOfCircle, GC_MakeCircle
 from OCC.Core.AIS import AIS_Shape, AIS_Point, AIS_Circle
@@ -79,18 +82,14 @@ def delDoublePnts(pnts) :
         if iFind != -1:           
            pnts.pop(iFind)           
         
-def drawPoints(points, prefix):
-    i = 0 
-    for p in points:
-       SceneDrawPoint(prefix+str(i), p)
-       SceneDrawLabel(prefix+str(i))
-       i+=1
+def drawPoints(pnts, prefix):
+    for i in range(len(pnts)):
+       if isinstance(pnts[i],list) :
+           drawPoints(pnts[i], prefix+'_'+str(i))
+       else:    
+           SceneDrawPoint(prefix+'_'+str(i), pnts[i])
+           SceneDrawLabel(prefix+'_'+str(i))
 
-def drawLinesFromCenter(pntCenter, pnts, prefix): 
-    i = 0
-    for pnt in pnts:
-       SceneDrawLine(prefix+str(i), pntCenter, pnt) 
-       i+=1
 
 '''
 **************************************************'
@@ -217,13 +216,57 @@ def getPntsEdgesFacesIntersect(edgesShape, facesShape):
     return pnts   
     
 def getPntPrjZ(pnt1, pnt2):
-    #vec = gp_Vec(pnt1, pnt2)
-    #vec.Scale()
-    pass
+    v1 = gp_Vec(pnt1, pnt2)
+    v1.Scale(0.5)
+    v2 = gp_Vec(0,0,v1.Magnitude())
+    pnt = gp_Pnt(pnt1.XYZ())
+    pnt.Translate(v1)
+    pnt.Translate(v2)
+    return pnt
 
+def getShapeDao3d(pntssForCircles, pntStart, pntEnd):
+    '''
+    curves = []
+    for pnts in pntssForCircles:
+        curveCyrcle = GC_MakeCircle(pnts[0], pnts[1], pnts[2]).Value()
+        curves += [curveCyrcle]
+        
+    #Initialize a BuildPlateSurface 
+    BPSurf = GeomPlate_BuildPlateSurface(3,15,2)
+    
+    #Create the curve constraints 
+    for curve in curves:
+      gAdaptor = GeomAdaptor_HCurve(curve, 0, 180)
+      cCont = GeomPlate_CurveConstraint(gAdaptor,0)
+      BPSurf.Add(cCont)
+    
+    pCont1 = GeomPlate_PointConstraint(pntStart,0)
+    pCont2 = GeomPlate_PointConstraint(pntEnd,0)
+    BPSurf.Add(pCont1)
+    BPSurf.Add(pCont2)
+    
+    #Compute the Plate surface 
+    BPSurf.Perform()
+    
+    #Approximation of the Plate surface 
+    MaxSeg=9
+    MaxDegree=8
+    CritOrder=0
+    PSurf = BPSurf.Surface()
+    dmax = max(0.0001,10*BPSurf.G0Error())
+    Tol=0.0001
+    Mapp = GeomPlate_MakeApprox(PSurf,Tol,MaxSeg,MaxDegree,dmax,CritOrder)
+    Surf=Mapp.Surface()
+    
+    
+    #create a face corresponding to the approximated Plate 
+    Umin, Umax, Vmin, Vmax = PSurf.Bounds()
+    face = BRepBuilderAPI_MakeFace (Surf, Umin, Umax, Vmin, Vmax)
+    return face.Shape()
+    '''
+    pass 
 
 def PaintDaoShape(r, bevel, countTailPrjs):
-    
 
     pntsBase = getPntsBase(r)
      
@@ -231,52 +274,59 @@ def PaintDaoShape(r, bevel, countTailPrjs):
     shapeDao = getShapeOffset(shapeDaoClassic,-bevel)
     shapeDaoMirr = getShapeMirror(shapeDao,gp_Pnt(0,0,0))
     pntsDao = getPntsOfShapeDao(shapeDao)
+    pntDaoStart, pntDaoEnd = pntsDao[0], pntsDao[2]
          
     pntPrjCenter = getPntPrjCenter(r)
-    pntsPrjEnds = getPntsPrjEnds(pntPrjCenter, pntsDao[1], pntsDao[2], r*2, countTailPrjs)
+    pntsPrjEnds = getPntsPrjEnds(pntPrjCenter, pntDaoStart, pntDaoEnd, r*2, countTailPrjs)
     
-    pntsPrjA = [] 
-    pntsPrjB = [] 
-    pntsPrjZ = [] 
+    
+    pntssCar = []
     for pnt in  pntsPrjEnds :
         shapePlane = getShapePrjPlane(pntPrjCenter, pnt)
         pntsIntersect = getPntsEdgesFacesIntersect(shapeDao, shapePlane)
-        pntsPrjA += [pntsIntersect[0]]    
-        pntsPrjB += [pntsIntersect[1]]    
-        #pntsPrjZ += [getPntPrjZ(pntsIntersect[0],pntsIntersect[1])]
-        pass 
-     
+        pntssCar += [
+                         [ pntsIntersect[0],    
+                           getPntPrjZ(pntsIntersect[0],pntsIntersect[1]),
+                           pntsIntersect[1] ]   
+                         ] 
+
+    #shapeDao3D = getShapeDao3d(pntssCar, pntDaoStart, pntDaoEnd)    
+    #SceneDrawShape(shapeDao3D)
+    pass
+    
+    '''
     SceneLayer('info')
     
-    drawPoints(pntsBase, 'b')
+    #drawPoints(pntsBase, 'b')
     SceneDrawCircle('c', pntsBase[4], pntsBase[5], pntsBase[6])
     SceneDrawShape('daoMirr', shapeDaoMirr)
     #SceneLayer('base')
     #SceneDrawShape('daoClassic', shapeDaoClassic)
+    
+    SceneDrawPoint('prjCenter', pntPrjCenter)
+    SceneDrawLabel('prjC')
+    for pnt in pntsPrjEnds:
+       SceneDrawLine('Project_#', pntPrjCenter, pnt) 
+
     SceneLayer('main')
     SceneDrawShape('dao', shapeDao)
     drawPoints(pntsDao, 'd')
     
-    SceneDrawPoint('prjCenter', pntPrjCenter)
-    SceneDrawLabel('prjC')
-    
-    drawLinesFromCenter(pntPrjCenter, pntsPrjEnds, 'prjLines')
-    
-    SceneLayer('base')
-    drawPoints(pntsPrjA, 'A')
-    drawPoints(pntsPrjB, 'B')
-    drawPoints(pntsPrjZ, 'Z')
+    drawPoints(pntssCarcase, 'Car')
+    for pnts in pntssCarcase:
+       SceneDrawCircle('Carcase_#',pnts[0], pnts[1], pnts[2])
     
     #printShapeItems(shapeDao)
-      
+    '''
+    
 if __name__ == '__main__':
     
-    SceneScreenInit()
+    #SceneScreenInit()
     
     SceneDrawAxis('axis')
     
     SceneLevelDown('dao')
-    PaintDaoShape(5, 0.6, 10)
+    PaintDaoShape(5, 0.6, 20)
     SceneLevelUp()
     
     SceneScreenStart()
