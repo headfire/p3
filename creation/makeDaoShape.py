@@ -266,13 +266,12 @@ def getShapeDao3d(pntssForCircles, pntStart, pntEnd):
     '''
     pass 
 
-def PaintDaoShape(r, bevel, countTailPrjs):
-
+def getDaoScinningWires(r, bevel, countTailPrjs, start, end) :
+    
     pntsBase = getPntsBase(r)
      
     shapeDaoClassic = getShapeDaoClassic(pntsBase)
-    shapeDao = getShapeOffset(shapeDaoClassic,-bevel)
-    shapeDaoMirr = getShapeMirror(shapeDao,gp_Pnt(0,0,0))
+    shapeDao = getShapeOffset(shapeDaoClassic, -bevel)
     pntsDao = getPntsOfShapeDao(shapeDao)
     pntDaoStart, pntDaoEnd = pntsDao[0], pntsDao[2]
          
@@ -284,17 +283,75 @@ def PaintDaoShape(r, bevel, countTailPrjs):
     for pnt in  pntsPrjEnds :
         shapePlane = getShapePrjPlane(pntPrjCenter, pnt)
         pntsIntersect = getPntsEdgesFacesIntersect(shapeDao, shapePlane)
-        pntssCar += [
-                         [ pntsIntersect[0],    
+        pnt0 = pntsIntersect[0]
+        pnt1 = getPntPrjZ(pntsIntersect[0],pntsIntersect[1])
+        pnt2 = pntsIntersect[1]
+        pntssCar += [[pnt0, pnt1, pnt2]]
+      
+    #drawPoints(pntssCar, 'Car')
+  
+    wires = [] 
+    for pnts in pntssCar:
+       circle = GC_MakeCircle(pnts[0], pnts[1], pnts[2]).Value()
+       edge = BRepBuilderAPI_MakeEdge(circle).Edge()
+       wire =  BRepBuilderAPI_MakeWire(edge).Wire()
+       wires += [wire]
+       
+       
+    return wires[start:end], pntDaoStart, pntDaoEnd
+
+def PaintDao(r, bevel, countTailPrjs):
+    
+    '''
+    wires = getDaoScinningWires(r, bevel, countTailPrjs)
+    for wire in wires :
+        SceneDrawShape('sh_#',wire)
+    '''
+    '''
+    pntsBase = getPntsBase(r)
+     
+    shapeDaoClassic = getShapeDaoClassic(pntsBase)
+    shapeDao = getShapeOffset(shapeDaoClassic,-bevel)
+    shapeDaoMirr = getShapeMirror(shapeDao,gp_Pnt(0,0,0))
+    pntsDao = getPntsOfShapeDao(shapeDao)
+    pntDaoStart, pntDaoEnd = pntsDao[0], pntsDao[2]
+         
+    pntPrjCenter = getPntPrjCenter(r)
+    pntsPrjEnds = getPntsPrjEnds(pntPrjCenter, pntDaoStart, pntDaoEnd, r*2, countTailPrjs)
+    
+    pntssCar = []
+    for pnt in  pntsPrjEnds :
+        shapePlane = getShapePrjPlane(pntPrjCenter, pnt)
+        pntsIntersect = getPntsEdgesFacesIntersect(shapeDao, shapePlane)
+        pnt0 = pntsIntersect[0]
+        pnt1 = getPntPrjZ(pntsIntersect[0],pntsIntersect[1])
+        pnt2 = pntsIntersect[1]
+        v = gp_Vec(0,10,0)
+        pnt0.Translate(v)
+        pnt1.Translate(v)
+        pnt2.Translate(v)
+        
+        #v1 =  gp_Vec(pntPrjCenter, pntsIntersect[0])
+        #v2 =  gp_Vec(pntPrjCenter, pntsIntersect[1])
+        #if v1.Magnitude() > v2.Magnitude():
+        if True:    
+             pntssCar += [[pnt0, pnt1, pnt2]]
+        else:                 
+             pntssCar += [
+                         [ pntsIntersect[1],    
                            getPntPrjZ(pntsIntersect[0],pntsIntersect[1]),
-                           pntsIntersect[1] ]   
+                           pntsIntersect[0] ]   
                          ] 
+    wires = [] 
+    for pnts in pntssCarcase:
+       circle = GeomCirecle(pnts[0], pnts[1], pnts[2])
+        geomCircle = GC_MakeCircle(gpPnt1, gpPnt2, gpPnt3).Value()
+       SceneDrawCircle('Carcase_#',pnts[0], pnts[1], pnts[2])
 
     #shapeDao3D = getShapeDao3d(pntssCar, pntDaoStart, pntDaoEnd)    
     #SceneDrawShape(shapeDao3D)
     pass
     
-    '''
     SceneLayer('info')
     
     #drawPoints(pntsBase, 'b')
@@ -311,23 +368,26 @@ def PaintDaoShape(r, bevel, countTailPrjs):
     SceneLayer('main')
     SceneDrawShape('dao', shapeDao)
     drawPoints(pntsDao, 'd')
-    
-    drawPoints(pntssCarcase, 'Car')
+    '''
+    #drawPoints(pntssCar, 'Car')
+    '''
     for pnts in pntssCarcase:
        SceneDrawCircle('Carcase_#',pnts[0], pnts[1], pnts[2])
-    
+    '''   
+    '''
     #printShapeItems(shapeDao)
     '''
     
 if __name__ == '__main__':
     
-    #SceneScreenInit()
+    SceneScreenInit()
     
     SceneDrawAxis('axis')
     
-    SceneLevelDown('dao')
-    PaintDaoShape(5, 0.6, 20)
-    SceneLevelUp()
+    #PaintDao(5, 0.6, 20)
+    wires = getDaoScinningWires(5, 0.6, 20, 10, 12)
+    for wire in wires:
+        SceneDrawShape('wire#',wire)
     
     SceneScreenStart()
 
