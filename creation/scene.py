@@ -60,7 +60,6 @@ from OCC.Core.TopoDS import TopoDS_Shape
 from OCC.Core.Bnd import Bnd_Box
 from OCC.Core.GC import  GC_MakeCircle
 from copy import deepcopy
-from time import time
 
 import json
 
@@ -79,6 +78,16 @@ MATERIAL_TYPES = [ 'BRASS', 'BRONZE', 'COPPER', 'GOLD',  'PEWTER', 'PLASTER', 'P
 SHAPE_TYPES = ['COMPOUND', 'COMPSOLID', 'SOLID', 'SHELL',
   'FACE', 'WIRE', 'EDGE', 'VERTEX', 'SHAPE']
   
+TOPO_TYPES = ['TopAbs_COMPOUND', 'TopAbs_COMPSOLID', 'TopAbs_SOLID', 'TopAbs_SHELL',
+                      'TopAbs_FACE', 'TopAbs_WIRE', 'TopAbs_EDGE', 'TopAbs_VERTEX', 'TopAbs_SHAPE']
+
+
+def printShapeItems(shape):
+    for TYPE in TOPO_TYPES:
+        items = getShapeItems(shape, TOPO_TYPES.index(TYPE))  
+        print(TYPE +':'+str(len(items)))   
+
+
 
 def objToStr(obj) :
     ret = dict()
