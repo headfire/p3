@@ -1,6 +1,15 @@
 # OpenCascade tutorial by headfire (headfire@yandex.ru)
 # point and line attributes
 
+import sys
+sys.path.insert(0, "../scene")
+
+from scene import (SceneGetNative, SceneDrawCircle, SceneDrawShape, SceneDrawPoint,
+                   SceneDrawLine, SceneSetStyle,
+                   SceneDrawLabel, SceneLayer, SceneLevelUp, SceneLevelDown,
+                   SceneScreenInit, SceneScreenStart, SceneDrawAxis)
+
+
 from OCC.Core.gp import gp_Pnt, gp_Trsf, gp_Dir, gp_Vec, gp_Ax1
 from OCC.Core.Geom import Geom_CartesianPoint, Geom_Line, Geom_Plane, Geom_TrimmedCurve
 from OCC.Core.GeomAPI import GeomAPI_IntCS
@@ -23,20 +32,8 @@ from OCC.Core.TopLoc import TopLoc_Location
 from OCC.Core.TopAbs import (TopAbs_COMPOUND, TopAbs_COMPSOLID, TopAbs_SOLID, TopAbs_SHELL,
                       TopAbs_FACE, TopAbs_WIRE, TopAbs_EDGE, TopAbs_VERTEX, TopAbs_SHAPE)
 
-
-from scene import (SceneGetNative, SceneDrawCircle, SceneDrawShape, SceneDrawPoint,
-                   SceneDrawLine, SceneSetStyle,
-                   SceneDrawLabel, SceneLayer, SceneLevelUp, SceneLevelDown,
-                   SceneScreenInit, SceneScreenStart, SceneDrawAxis)
-
 from math import pi
 
-
-
-
-# todo 
-# Переименовать переменные с указанием типа
-# Cделать базовую окружность шире 
 
 def xyz(gpPnt):
     return (gpPnt.X(), gpPnt.Y(), gpPnt.Z())
