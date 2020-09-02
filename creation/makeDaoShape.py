@@ -57,10 +57,9 @@ def getPntTranslate(p, dx, dy, dz):
    pnt.Translate(gp_Vec(dx,dy,dz))
    return pnt
 
-
-def getAngle(gpPnt1, gpPnt2):
-    v1 = gp_Vec(gpPnt1, gpPnt2)
-    v2 = gp_Vec(gp_Dir(1,0,0))
+def getAngle(gpPnt0, gpPnt1, gpPnt2 ):
+    v1 = gp_Vec(gpPnt0, gpPnt1)
+    v2 = gp_Vec(gpPnt0, gpPnt2)
     return v2.AngleWithRef(v1, gp_Vec(0,0,1))
 
 def getShapeItems(shape, topoType):
@@ -89,13 +88,16 @@ def delDoublePnts(pnts) :
         if iFind != -1:           
            pnts.pop(iFind)           
         
-def drawPoints(pnts, prefix):
-    for i in range(len(pnts)):
-       if isinstance(pnts[i],list) :
-           drawPoints(pnts[i], prefix+'_'+str(i))
-       else:    
-           SceneDrawPoint(prefix+'_'+str(i), pnts[i])
-           SceneDrawLabel(prefix+'_'+str(i))
+def drawPoints(pnts, label):
+  if isinstance(pnts, list) or isinstance(pnts, tuple):
+     i = 0 
+     for pnt in pnts:
+        drawPoints(pnt, label + '_' + str(i))
+        i+=1
+  else:    
+     SceneDrawPoint(label, pnts)
+     SceneDrawLabel(label)
+  
 
 
 '''
@@ -166,6 +168,47 @@ def getPntsOfShapeDao(shape):
     delDoublePnts(pnts)
     return pnts       
 
+
+def getPntSectionUp(pnt1, pnt2):
+    v1 = gp_Vec(pnt1, pnt2)
+    v1.Scale(0.5)
+    v2 = gp_Vec(0,0,v1.Magnitude())
+    pnt = gp_Pnt(pnt1.XYZ())
+    pnt.Translate(v1)
+    pnt.Translate(v2)
+    return pnt
+
+
+def getPntsForDaoSection(pntDaoStart, pntUpLimit, pntDaoEnd, pntDownLimit, pntFocus, k):
+    angleLimit = 0
+    pntLimit = getPntScale(pntFocus, pntUpLimit, 1.2)
+    angleStart = getAngle(pntFocus, pntLimit, pntDaoStart)
+    angleEnd = getAngle(pntFocus, pntLimit, pntDaoEnd)
+    kLimit = (angleLimit - angleStart)/(angleEnd - angleStart)
+    #print ('kLimit')
+    #print (kLimit)
+    if k < kLimit: #head
+       kHead = (k - 0) / (kLimit- 0)
+       #print ('kHead')
+       #print (kHead)
+       xStart = pntUpLimit.X()
+       xEnd = pntDaoStart.X()
+       dx = (xEnd-xStart)*(1 - kHead)
+       pnt0 = getPntTranslate(pntFocus, dx, 0, 0)
+       pnt1 = getPntTranslate(pntLimit, dx, 0, 0)
+    else: #tail    
+        kTail = (k - kLimit) / (1 - kLimit)
+        #print ('kTail')
+        #print (kTail)
+        angle = -angleEnd*kTail
+        #print(angle)
+        
+        fDelta = gp_Vec(pntUpLimit, pntDownLimit).Magnitude()/3 * kTail
+        #delta = 1.3 * kTail
+        pnt0 = getPntTranslate(pntFocus, 0, fDelta, 0)
+        pnt1 = getPntRotate(pntFocus, pntLimit, angle)
+    return pnt0, pnt1
+
 def getSectionPlane(p1, p2):
     
     h = 2
@@ -206,36 +249,6 @@ def getPntsEdgesFacesIntersect(edgesShape, facesShape):
             pnts += pntsToAdd
     return pnts   
     
-def getPntSectionUp(pnt1, pnt2):
-    v1 = gp_Vec(pnt1, pnt2)
-    v1.Scale(0.5)
-    v2 = gp_Vec(0,0,v1.Magnitude())
-    pnt = gp_Pnt(pnt1.XYZ())
-    pnt.Translate(v1)
-    pnt.Translate(v2)
-    return pnt
-
-
-def getPntsForDaoSection(pntDaoStart, pntUpLimit, pntDownLimit, pntDaoEnd, pntFocus, k):
-    pntFocus1 = getPntScale(pntFocus, pntUpLimit, 1.2)
-    angleStart = getAngle(pntFocus, pntDaoStart)
-    angleLimit = getAngle(pntFocus, pntUpLimit)
-    angleEnd = getAngle(pntFocus, pntDaoEnd)
-    kLimit = (angleLimit - angleStart)/(angleEnd - angleStart)
-    if k < kLimit: #head
-       kHead = k * (kLimit- 0)
-       xStart = pntDaoStart.X()
-       xEnd = pntUpLimit.X()
-       dx = (xEnd-xStart)*kHead
-       pnt0 = getPntTranslate(pntFocus, dx, 0, 0)
-       pnt1 = getPntTranslate(pntFocus1, dx, 0, 0)
-    else: #tail    
-        kTail = k * (1 - kLimit)
-        angle = angleStart + (angleEnd-angleStart)*kTail
-        pnt0 = pntFocus
-        pnt1 = getPntRotate(pntFocus, pntFocus1, angle)
-    return pnt0, pnt1
-
 
 
 def getWireDaoSection(shapeDao, pntFocus, k):
@@ -275,38 +288,65 @@ def getShapeSkin(pntStart, wires, pntEnd):
   
 def PaintDao(r, bevel):
     
-    SceneLayer('base')
     
     pntsBase = getPntsBase(r)
-    shapeDaoClassic = getShapeDaoClassic(pntsBase)
-    shapeDao = getShapeOffset(shapeDaoClassic,-bevel)
     pntFocus = getPntDaoFocus(r)    
+    SceneLayer('info')
+    #drawPoints(pntsBase, 'b')
+    #drawPoints(pntFocus, 'f')
+    #SceneDrawCircle('c', pntsBase[4], pntsBase[5], pntsBase[6])
     
-    kStart = 0.001
-    kEnd = 0.999
-    cnt = 10
-    wires = []
-    for i in range(cnt+1):
-        kk = i/cnt
-        k = kStart + (kEnd - kStart)*(kk - kStart)
-        wires += [ getWireDaoSection(shapeDao, pntFocus, k) ]
-
-    '''
+    
+    shapeDaoClassic = getShapeDaoClassic(pntsBase)
+    SceneLayer('base')
+    #SceneDrawShape('daoClassic', shapeDaoClassic)
+    
+    shapeDao = getShapeOffset(shapeDaoClassic,-bevel)
+    SceneLayer('base')
+    #SceneDrawShape('dao', shapeDao)
+    
     pntsDao = getPntsOfShapeDao(shapeDao)
     pntDaoStart, pntUpLimit, pntDaoEnd, pntDownLimit = pntsDao
-    getShapeSkin(pntDaoStart, wires, pntDaoEnd)
-    '''
-    
-    '''
-    SceneLayer('info')
-    drawPoints(pntsBase, 'b')
-    SceneDrawCircle('c', pntsBase[4], pntsBase[5], pntsBase[6])
+    #drawPoints(pntsDao,'d')
     
     SceneLayer('base')
-    SceneDrawShape('daoClassic', shapeDaoClassic)
+    #p0,p1 = getPntsForDaoSection(pntDaoStart, pntUpLimit, pntDownLimit, pntDaoEnd, pntFocus, 1)
+    #SceneDrawLine('line', p0, p1)
     
-    SceneLayer('info')
-    SceneDrawPoint('prjCenter', pntPrjCenter)
+    '''
+    kStart = 0.03
+    kEnd = 0.97
+    cnt = 20
+    #wires = []
+    for i in range(cnt+1):
+        k = i/cnt
+        kkScale = kEnd - kStart
+        kk = kStart + k* kkScale
+        p0,p1 = getPntsForDaoSection(pntDaoStart, pntUpLimit, pntDaoEnd, pntDownLimit, pntFocus, kk)
+        SceneDrawLine('line#', p0, p1)
+       #wires += [ getWireDaoSection(shapeDao, pntFocus, k) ]
+    '''
+
+    '''
+    p0,p1 = getPntsForDaoSection(pntDaoStart, pntUpLimit, pntDaoEnd, pntDownLimit, pntFocus, kk)
+    SceneDrawLine('line#', p0, p1)
+    '''
+    kk = [ 3, 9 , 16, 24, 35, 50, 70, 85] 
+    wires = []
+ 
+    SceneLayer('main')
+    for k in  kk:
+       wire = getWireDaoSection(shapeDao, pntFocus, k/100)
+       #SceneDrawShape('wire#', wire)
+       wires += [wire]    
+    
+    
+    SceneLayer('pres')
+    skin = getShapeSkin(pntDaoStart, wires, pntDaoEnd)
+    SceneDrawShape('skin', skin)
+    
+    '''
+    
     SceneDrawLabel('prjC')
     for pnt in pntsPrjEnds:
        SceneDrawLine('Project_#', pntPrjCenter, pnt) 
@@ -323,11 +363,11 @@ def PaintDao(r, bevel):
     
 if __name__ == '__main__':
     
-    #SceneScreenInit()
+    SceneScreenInit()
     
     SceneDrawAxis('axis')
     
-    PaintDao(5, 0.4)
+    PaintDao(5, 1)
     
     
     SceneScreenStart()
