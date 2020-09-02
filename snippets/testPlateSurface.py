@@ -1,15 +1,13 @@
 #https://www.opencascade.com/doc/occt-7.3.0/overview/html/occt_user_guides__modeling_algos.html
 #Let us create a Plate surface and approximate it from a polyline as a curve constraint and a point constraint
 
+import sys
+sys.path.insert(0, "../scene")
 from scene import (SceneScreenInit, SceneDrawAxis, 
                    SceneDrawShape, SceneDrawPoint,  
-                   #SceneDrawLine, SceneDrawLabel, 
                    SceneScreenStart)
 
-from OCC.Core.gp import gp_Pnt  #, gp_Vec, gp_dir
-
-#from makeDaoShape import PaintDaoShape, detectBasePoints
-
+from OCC.Core.gp import gp_Pnt
 from OCC.Core.BRepBuilderAPI import BRepBuilderAPI_MakePolygon, BRepBuilderAPI_MakeFace
 from OCC.Core.GeomPlate import GeomPlate_BuildPlateSurface, GeomPlate_PointConstraint, GeomPlate_MakeApprox
 from OCC.Core.BRepTools import BRepTools_WireExplorer
@@ -17,11 +15,8 @@ from OCC.Core.BRepFill import BRepFill_CurveConstraint
 from OCC.Core.BRepAdaptor import BRepAdaptor_HCurve
 
 
-
 def getTestFace():
     
-#    NbCurFront = 4
-#    NbPointConstraint = 1
     P1 = gp_Pnt (0.,0.,0.)
     P12 = gp_Pnt (0.,2.,2.)
     P2 = gp_Pnt (0.,10.,0.)
@@ -42,7 +37,7 @@ def getTestFace():
     W.Add(P4)
     W.Add(P1)
     
-    SceneDrawShape('w',W)
+    SceneDrawShape('w',W.Shape())
     
     # Initialize a BuildPlateSurface 
     BPSurf = GeomPlate_BuildPlateSurface (3,15,2)
@@ -51,6 +46,7 @@ def getTestFace():
     # Create the curve constraints 
     anExp = BRepTools_WireExplorer()
     anExp.Init(W.Wire())
+    
     while anExp.More():
         E = anExp.Current()
         C = BRepAdaptor_HCurve()

@@ -359,6 +359,7 @@ def PaintDao(r, bevel):
     shapeDaoMirr = getShapeMirror(shapeDao,gp_Pnt(0,0,0))
     SceneDrawShape('daoMirr', shapeDaoMirr)
     '''
+
     
     
 if __name__ == '__main__':
