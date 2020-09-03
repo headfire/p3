@@ -81,12 +81,12 @@ SHAPE_TYPES = ['COMPOUND', 'COMPSOLID', 'SOLID', 'SHELL',
 TOPO_TYPES = ['TopAbs_COMPOUND', 'TopAbs_COMPSOLID', 'TopAbs_SOLID', 'TopAbs_SHELL',
                       'TopAbs_FACE', 'TopAbs_WIRE', 'TopAbs_EDGE', 'TopAbs_VERTEX', 'TopAbs_SHAPE']
 
-
+'''
 def printShapeItems(shape):
     for TYPE in TOPO_TYPES:
         items = getShapeItems(shape, TOPO_TYPES.index(TYPE))  
         print(TYPE +':'+str(len(items)))   
-
+'''
 
 
 def objToStr(obj) :
@@ -167,8 +167,8 @@ class NativeLib:
         #order important
     
         self.stylingNativeObj(nativeObj, 'color', styles.get('color',(1,1,1)) )                
-        self.stylingNativeObj(nativeObj, 'transparency', styles.get('transparency', 1))                
         self.stylingNativeObj(nativeObj, 'material', styles.get('material', 'DEFAULT'))                
+        self.stylingNativeObj(nativeObj, 'transparency', styles.get('transparency', 0))                
         self.stylingNativeObj(nativeObj, 'lineWidth',styles.get('lineWidth', 1))                
         self.stylingNativeObj(nativeObj, 'lineType', styles.get('lineType', 'SOLID'))                
         

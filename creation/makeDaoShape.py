@@ -4,13 +4,13 @@
 import sys
 sys.path.insert(0, "../scene")
 
-from scene import (SceneGetNative, SceneDrawCircle, SceneDrawShape, SceneDrawPoint,
+from scene import (SceneGetNative, SceneDrawCircle, SceneDrawShape, SceneDrawPoint, SceneApplyStyle,
                    SceneDrawLine, SceneSetStyle,
                    SceneDrawLabel, SceneLayer, SceneLevelUp, SceneLevelDown,
                    SceneScreenInit, SceneScreenStart, SceneDrawAxis)
 
 
-from OCC.Core.gp import gp_Pnt, gp_Trsf, gp_Dir, gp_Vec, gp_Ax1
+from OCC.Core.gp import gp_Pnt, gp_Trsf, gp_Dir, gp_Vec, gp_Ax1, gp_Ax2, gp_GTrsf
 from OCC.Core.Geom import Geom_CartesianPoint, Geom_Line, Geom_Plane, Geom_TrimmedCurve
 from OCC.Core.GeomAPI import GeomAPI_IntCS
 from OCC.Core.TopExp import TopExp_Explorer
@@ -22,7 +22,7 @@ from OCC.Core.GeomAdaptor import GeomAdaptor_HCurve
 from OCC.Core.GC import GC_MakeArcOfCircle, GC_MakeCircle
 from OCC.Core.AIS import AIS_Shape, AIS_Point, AIS_Circle
 from OCC.Core.BRepBuilderAPI import  (BRepBuilderAPI_MakeEdge, BRepBuilderAPI_MakeWire, 
-             BRepBuilderAPI_Transform, BRepBuilderAPI_MakeFace,  BRepBuilderAPI_MakeVertex)
+             BRepBuilderAPI_Transform, BRepBuilderAPI_GTransform, BRepBuilderAPI_MakeFace,  BRepBuilderAPI_MakeVertex)
 from OCC.Core.BRepOffsetAPI import BRepOffsetAPI_MakeOffset, BRepOffsetAPI_ThruSections
 
 from OCC.Core.TopExp import TopExp_Explorer
@@ -300,14 +300,10 @@ def getShapeRotate(shape, angle):
     shape =  BRepBuilderAPI_Transform(shape, transform).Shape()
     return shape
 
-def getShapeScale(shape, sx, sy, sz):
-    transform = gp_Trsf()
-    transform.SetValues	(	
-        sx,0,sx,0,
-        0,sy,0,0,
-        sz,0,0,0
-       )		
-    shape =  BRepBuilderAPI_Transform(shape, transform).Shape()
+def getShapeZScale(shape, s):
+    transform = gp_GTrsf()
+    transform.SetAffinity(gp_Ax2(gp_Pnt(0,0,0), gp_Dir(0,0,1),gp_Dir(0,1,0)), s)
+    shape =  BRepBuilderAPI_GTransform(shape, transform).Shape()
     return shape
 
 
@@ -336,25 +332,25 @@ def PaintDao(r, bevel):
     
     pntsBase = getPntsBase(r)
     pntFocus = getPntDaoFocus(r)    
-    SceneLayer('info')
+    #SceneLayer('info')
     #drawPoints(pntsBase, 'b')
     #drawPoints(pntFocus, 'f')
     #SceneDrawCircle('c', pntsBase[4], pntsBase[5], pntsBase[6])
     
     
     shapeDaoClassic = getShapeDaoClassic(pntsBase)
-    SceneLayer('base')
+    #SceneLayer('base')
     #SceneDrawShape('daoClassic', shapeDaoClassic)
     
     shapeDao = getShapeOffset(shapeDaoClassic,-bevel)
-    SceneLayer('base')
+    #SceneLayer('base')
     #SceneDrawShape('dao', shapeDao)
     
     pntsDao = getPntsOfShapeDao(shapeDao)
     pntDaoStart, pntUpLimit, pntDaoEnd, pntDownLimit = pntsDao
     #drawPoints(pntsDao,'d')
     
-    SceneLayer('base')
+    #SceneLayer('base')
     #p0,p1 = getPntsForDaoSection(pntDaoStart, pntUpLimit, pntDownLimit, pntDaoEnd, pntFocus, 1)
     #SceneDrawLine('line', p0, p1)
     
@@ -379,7 +375,7 @@ def PaintDao(r, bevel):
     kk = [ 3, 9 , 16, 24, 35, 50, 70, 85] 
     wires = []
  
-    SceneLayer('main')
+    #SceneLayer('main')
     for k in  kk:
        wire = getWireDaoSection(shapeDao, pntFocus, k/100)
        #SceneDrawShape('wire#', wire)
@@ -388,22 +384,27 @@ def PaintDao(r, bevel):
     
     SceneLayer('pres')
     skin = getShapeSkin(pntDaoStart, wires, pntDaoEnd)
-    skin  = getShapeScale(skin,2,1,0.5)
-    SceneLayer('pres')
+    skin  = getShapeZScale(skin,0.7)
+    skin  = getShapeRotate(skin, pi*0.2)
+    #SceneLayer('pres')
     SceneSetStyle('color', (0.7,0,0))
+    #SceneSetStyle('transparency', 0)
     SceneDrawShape('skin', skin)
-    #skin2  = getShapeRotate(skin, pi)
-    #skin2  = getShapeScale(skin2, 1,1,0.5)
-    #SceneSetStyle('color', (0,0.7,0))
-    #SceneDrawShape('skin2', skin2)
+    skin2  = getShapeRotate(skin, pi)
+    SceneSetStyle('color', (0,0.7,0))
+    #SceneSetStyle('material', 'WATER, GLASS')
+    #SceneSetStyle('transparency', 0.5)
+    SceneDrawShape('skin2', skin2)
+    #SceneApplyStyle('skin2','transparency', 0.5)
     
     
     case = getDaoCase(r,bevel, 0.3, 3)
-    #case = BRepAlgoAPI_Cut(case, skin).Shape()
-    #case = BRepAlgoAPI_Cut(case, skin2).Shape()
+    case = BRepAlgoAPI_Cut(case, skin).Shape()
+    case = BRepAlgoAPI_Cut(case, skin2).Shape()
+    
     case = getShapeTranslate(case, 0,0, -3)
-    SceneLayer('main')
-    SceneSetStyle('material', 'CHROME')
+    SceneSetStyle('color', (0.7,0.7,0))
+    #SceneSetStyle('material', 'OBSIDIAN')
     SceneDrawShape('case', case)
     
     '''
@@ -427,7 +428,7 @@ if __name__ == '__main__':
     
     SceneScreenInit()
     
-    SceneDrawAxis('axis')
+    #SceneDrawAxis('axis')
     
     PaintDao(5, 0.3)
     
