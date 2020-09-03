@@ -558,6 +558,15 @@ class Scene:
         nativeObj = AIS_Point(geomPnt)
         sc._drawNative(objName, nativeObj)
         
+    def drawPoints(self, objNamePrefix, pnts):
+        if isinstance(pnts, list) or isinstance(pnts, tuple):
+           i = 0 
+           for pnt in pnts:
+              self.drawPoints(objNamePrefix + '_' + str(i), pnt)
+              i+=1
+        else:    
+           SceneDrawPoint(objNamePrefix, pnts)
+           SceneDrawLabel(objNamePrefix)
     
     def drawLine(self, objName, gpPnt1, gpPnt2):
         geomPnt1 = Geom_CartesianPoint(gpPnt1)
@@ -618,6 +627,8 @@ def SceneDrawAxis(objName):
     return sc.drawAxis(objName)
 def SceneDrawPoint(objName, gpPnt):
     return sc.drawPoint(objName,  gpPnt)
+def SceneDrawPoints(objName, gpPnt):
+    return sc.drawPoints(objName,  gpPnt)
 def SceneDrawLine(objNamePrefix,  gpPnt1,  gpPnt2):
     return sc.drawLine(objNamePrefix,  gpPnt1, gpPnt2)
 def SceneDrawCircle(objName,  gpPnt1,  gpPnt2,  gpPnt3):
@@ -709,7 +720,25 @@ if __name__ == '__main__':
         SceneLevelDown(name)
         SceneDrawShape('sphere', BRepPrimAPI_MakeSphere(3).Shape())
         SceneLevelUp()
-  
+   
+    def testDrawPoints(name):
+        SceneLevelDown(name)
+        cnt = 3
+        pntsX = []  
+        for iX in range(cnt):
+          pntsY = []  
+          for iY in range(cnt):
+              pntsZ = []
+              for iZ in range(cnt):
+                  pntsZ += [gp_Pnt(iX,iY,iZ)]
+              pntsY += [pntsZ]
+          pntsX += [pntsY]
+              
+        SceneDrawPoints('p', pntsX)
+        
+        SceneLevelUp()
+   
+
     SceneScreenInit() 
     
     SceneDrawAxis('axis')
@@ -719,6 +748,7 @@ if __name__ == '__main__':
     testLine('line')
     testCircle('circle')
     testSphere('sphere')
+    testDrawPoints('points')
       
     #dumpObj(sc.curStylesSetting)
     

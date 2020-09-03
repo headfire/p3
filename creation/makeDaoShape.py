@@ -4,13 +4,12 @@
 import sys
 sys.path.insert(0, "../scene")
 
-from scene import (SceneGetNative, SceneDrawCircle, SceneDrawShape, SceneDrawPoint, SceneApplyStyle,
-                   SceneDrawLine, SceneSetStyle,
-                   SceneDrawLabel, SceneLayer, SceneLevelUp, SceneLevelDown,
-                   SceneScreenInit, SceneScreenStart, SceneDrawAxis)
+from scene import (SceneScreenInit, SceneDrawAxis,
+                   SceneDrawPoint, SceneDrawLine, SceneDrawCircle, SceneDrawShape, SceneDrawLabel,
+                   SceneScreenStart)
 
 
-from OCC.Core.gp import gp_Pnt, gp_Trsf, gp_Dir, gp_Vec, gp_Ax1, gp_Ax2, gp_GTrsf
+from OCC.Core.gp import gp_Pnt, gp_Trsf, gp_Dir, gp_Vec, gp_Ax1, gp_Ax2, gp_GTrsf, gp_OZ
 from OCC.Core.Geom import Geom_CartesianPoint, Geom_Line, Geom_Plane, Geom_TrimmedCurve
 from OCC.Core.GeomAPI import GeomAPI_IntCS
 from OCC.Core.TopExp import TopExp_Explorer
@@ -39,8 +38,34 @@ from OCC.Core.BRepAlgoAPI import BRepAlgoAPI_Common, BRepAlgoAPI_Cut
 from math import pi
 
 
-def xyz(gpPnt):
+'''
+def delDoublePnts(pnts) :
+    iFind = 10000
+    while iFind != -1:
+        iFind = -1 
+        for i1 in range(len(pnts)):
+            for i2 in range(i1):
+               if pnts[i1].IsEqual(pnts[i2], 0.001):
+                   iFind = i2
+        if iFind != -1:           
+           pnts.pop(iFind)           
+'''
+def getXYZ(gpPnt):
     return (gpPnt.X(), gpPnt.Y(), gpPnt.Z())
+
+
+def getPntExistInPnts(pnts, pntToFind):
+    for pnt in pnts:
+        if pnt.IsEqual(pntToFind, 0.001):
+            return True
+    return False    
+
+def getPntsUni(pnts) :
+    pntsUni = []
+    for pnt in pnts:
+      if not getPntExistInPnts(pntsUni, pnt):
+         pntsUni += [pnt]      
+    return pntsUni     
 
 def getPntRotate(pCenter,  p,  angle):
    ax = gp_Ax1(pCenter, gp_Dir(0,0,1))
@@ -77,79 +102,13 @@ def getPntsFromVertexes(vertexes):
     for v in vertexes:
         pnts += [BRep_Tool.Pnt(v)] 
     return pnts    
-
-def delDoublePnts(pnts) :
-    iFind = 10000
-    while iFind != -1:
-        iFind = -1 
-        for i1 in range(len(pnts)):
-            for i2 in range(i1):
-               if pnts[i1].IsEqual(pnts[i2], 0.001):
-                   iFind = i2
-        if iFind != -1:           
-           pnts.pop(iFind)           
         
-def drawPoints(pnts, label):
-  if isinstance(pnts, list) or isinstance(pnts, tuple):
-     i = 0 
-     for pnt in pnts:
-        drawPoints(pnt, label + '_' + str(i))
-        i+=1
-  else:    
-     SceneDrawPoint(label, pnts)
-     SceneDrawLabel(label)
+def getPntsOfShape(shape):
+    vertexes = getShapeItems(shape, TopAbs_VERTEX)
+    pnts = getPntsFromVertexes(vertexes)
+    return getPntsUni(pnts)
   
 
-
-'''
-**************************************************'
-**************************************************'
-**************************************************'
-
-'''
-
-def getPntsBase(r):
-    
-    r2 = r/2
-    
-    gpPntMinC = gp_Pnt(0,r2,0)
-    
-    p0 = gp_Pnt(0,0,0)      
-    #p1 = anglePnt(gpPntMinC , r2, 1.25*pi)      
-    p1 = getPntRotate(gpPntMinC , p0, -pi/4)      
-    p2 = gp_Pnt(-r2,r2,0)      
-    #p3 = anglePnt(gpPntMinC , r2, 0.75*pi)      
-    p3 = getPntRotate(gpPntMinC , p0, -pi/4*3)      
-    p4 = gp_Pnt(0,r,0)      
-    p5 = gp_Pnt(r,0,0)      
-    p6 = gp_Pnt(0,-r,0)      
-    p7 = gp_Pnt(r2,-r2,0)      
-    
-    return p0, p1, p2, p3, p4, p5, p6, p7
-
-def getPntDaoFocus(r):
-    return gp_Pnt(0,-r/2,0)
-
-
-def getShapeDaoClassic(ppBase):
-    
-    p0, p1, p2, p3, p4, p5, p6, p7  = ppBase
-    
-    # base dao
-    arc1 =  GC_MakeArcOfCircle(p0,p1,p2).Value()
-    arc2 =  GC_MakeArcOfCircle(p2,p3,p4).Value()
-    arc3 =  GC_MakeArcOfCircle(p4,p5,p6).Value()
-    arc4 =  GC_MakeArcOfCircle(p6,p7,p0).Value()
- 
-    edge1 = BRepBuilderAPI_MakeEdge(arc1).Edge()
-    edge2 = BRepBuilderAPI_MakeEdge(arc2).Edge()
-    edge3 = BRepBuilderAPI_MakeEdge(arc3).Edge()
-    edge4 = BRepBuilderAPI_MakeEdge(arc4).Edge()
-  
-    shape =  BRepBuilderAPI_MakeWire(edge1, edge2, edge3, edge4).Wire()
-    
-    return shape
-  
 def getShapeOffset(shape, offset):
     tool = BRepOffsetAPI_MakeOffset()
     tool.AddWire(shape)
@@ -163,13 +122,6 @@ def getShapeMirror(shape, p0):
     shape =  BRepBuilderAPI_Transform(shape, transform).Shape()
     return shape
 
-def getPntsOfShapeDao(shape):
-    vertexes = getShapeItems(shape, TopAbs_VERTEX)
-    pnts = getPntsFromVertexes(vertexes)
-    delDoublePnts(pnts)
-    return pnts       
-
-
 def getPntSectionUp(pnt1, pnt2):
     v1 = gp_Vec(pnt1, pnt2)
     v1.Scale(0.5)
@@ -179,42 +131,10 @@ def getPntSectionUp(pnt1, pnt2):
     pnt.Translate(v2)
     return pnt
 
-
-def getPntsForDaoSection(pntDaoStart, pntUpLimit, pntDaoEnd, pntDownLimit, pntFocus, k):
-    angleLimit = 0
-    pntLimit = getPntScale(pntFocus, pntUpLimit, 1.2)
-    angleStart = getAngle(pntFocus, pntLimit, pntDaoStart)
-    angleEnd = getAngle(pntFocus, pntLimit, pntDaoEnd)
-    kLimit = (angleLimit - angleStart)/(angleEnd - angleStart)
-    #print ('kLimit')
-    #print (kLimit)
-    if k < kLimit: #head
-       kHead = (k - 0) / (kLimit- 0)
-       #print ('kHead')
-       #print (kHead)
-       xStart = pntUpLimit.X()
-       xEnd = pntDaoStart.X()
-       dx = (xEnd-xStart)*(1 - kHead)
-       pnt0 = getPntTranslate(pntFocus, dx, 0, 0)
-       pnt1 = getPntTranslate(pntLimit, dx, 0, 0)
-    else: #tail    
-        kTail = (k - kLimit) / (1 - kLimit)
-        #print ('kTail')
-        #print (kTail)
-        angle = -angleEnd*kTail
-        #print(angle)
-        
-        fDelta = gp_Vec(pntUpLimit, pntDownLimit).Magnitude()/3 * kTail
-        #delta = 1.3 * kTail
-        pnt0 = getPntTranslate(pntFocus, 0, fDelta, 0)
-        pnt1 = getPntRotate(pntFocus, pntLimit, angle)
-    return pnt0, pnt1
-
-def getSectionPlane(p1, p2):
+def getFacePlane(pnt1, pnt2, h):
     
-    h = 2
-    x1, y1, z1 = xyz(p1)
-    x2, y2, z2 = xyz(p2)
+    x1, y1, z1 = getXYZ(pnt1)
+    x2, y2, z2 = getXYZ(pnt2)
     pe0 = gp_Pnt(x1, y1, -h)
     pe1 = gp_Pnt(x1, y1, +h)
     pe2 = gp_Pnt(x2, y2, +h)
@@ -234,7 +154,7 @@ def getPntsCurveSurfaceIntersect(curve, surface):
     tool = GeomAPI_IntCS(curve, surface)
     pCount = tool.NbPoints();
     for i in range(pCount):
-       pnts.append(tool.Point(1))
+       pnts += [tool.Point(1)]
     return pnts   
 
 def getPntsEdgesFacesIntersect(edgesShape, facesShape):
@@ -249,23 +169,6 @@ def getPntsEdgesFacesIntersect(edgesShape, facesShape):
             pntsToAdd = getPntsCurveSurfaceIntersect(curve, surface)       
             pnts += pntsToAdd
     return pnts   
-    
-
-
-def getWireDaoSection(shapeDao, pntFocus, k):
-    
-    pntsDao = getPntsOfShapeDao(shapeDao)
-    pntDaoStart, pntUpLimit, pntDaoEnd, pntDownLimit = pntsDao
-    
-    p1, p2 = getPntsForDaoSection(pntDaoStart, pntUpLimit, pntDaoEnd, pntDownLimit, pntFocus, k)
-    sectionPlane = getSectionPlane(p1, p2)
-    
-    pnt0, pnt1 =  getPntsEdgesFacesIntersect(shapeDao, sectionPlane)
-    pntUp = getPntSectionUp(pnt0, pnt1)
-    circle = GC_MakeCircle(pnt0, pntUp, pnt1).Value()
-    edge = BRepBuilderAPI_MakeEdge(circle).Edge()
-    wire =  BRepBuilderAPI_MakeWire(edge).Wire()
-    return wire
 
 def getShapeSkin(pntStart, wires, pntEnd):
     
@@ -294,9 +197,10 @@ def getShapeTranslate(shape, x,y,z):
     shape =  BRepBuilderAPI_Transform(shape, transform).Shape()
     return shape
 
-def getShapeRotate(shape, angle):
+def getShapeOZRotate(shape, angle):
     transform = gp_Trsf()
     transform.SetRotation(gp_Ax1(gp_Pnt(0,0,0), gp_Dir(0,0,1)), angle)
+    #transform.SetRotation(gp_OZ(), angle)
     shape =  BRepBuilderAPI_Transform(shape, transform).Shape()
     return shape
 
@@ -306,7 +210,90 @@ def getShapeZScale(shape, s):
     shape =  BRepBuilderAPI_GTransform(shape, transform).Shape()
     return shape
 
+'''
+**************************************************'
+**************************************************'
+**************************************************'
 
+'''
+
+def getPntsBase(r):
+    
+    r2 = r/2
+    
+    gpPntMinC = gp_Pnt(0,r2,0)
+    
+    p0 = gp_Pnt(0,0,0)      
+    #p1 = anglePnt(gpPntMinC , r2, 1.25*pi)      
+    p1 = getPntRotate(gpPntMinC , p0, -pi/4)      
+    p2 = gp_Pnt(-r2,r2,0)      
+    #p3 = anglePnt(gpPntMinC , r2, 0.75*pi)      
+    p3 = getPntRotate(gpPntMinC , p0, -pi/4*3)      
+    p4 = gp_Pnt(0,r,0)      
+    p5 = gp_Pnt(r,0,0)      
+    p6 = gp_Pnt(0,-r,0)      
+    p7 = gp_Pnt(r2,-r2,0)      
+    
+    return p0, p1, p2, p3, p4, p5, p6, p7
+
+def getPntDaoFocus(r):
+    return gp_Pnt(0,-r/4,0)
+
+def getWireDaoClassic(ppBase):
+    
+    p0, p1, p2, p3, p4, p5, p6, p7  = ppBase
+    
+    # base dao
+    arc1 =  GC_MakeArcOfCircle(p0,p1,p2).Value()
+    arc2 =  GC_MakeArcOfCircle(p2,p3,p4).Value()
+    arc3 =  GC_MakeArcOfCircle(p4,p5,p6).Value()
+    arc4 =  GC_MakeArcOfCircle(p6,p7,p0).Value()
+ 
+    edge1 = BRepBuilderAPI_MakeEdge(arc1).Edge()
+    edge2 = BRepBuilderAPI_MakeEdge(arc2).Edge()
+    edge3 = BRepBuilderAPI_MakeEdge(arc3).Edge()
+    edge4 = BRepBuilderAPI_MakeEdge(arc4).Edge()
+  
+    shape =  BRepBuilderAPI_MakeWire(edge1, edge2, edge3, edge4).Wire()
+    
+    return shape
+
+def getPntsForDaoSec(pntDaoStart, pntUpLimit, pntDaoEnd, pntDownLimit, pntFocus, k):
+    angleLimit = 0
+    pntLimit = getPntScale(pntFocus, pntUpLimit, 1.2)
+    angleStart = getAngle(pntFocus, pntLimit, pntDaoStart)
+    angleEnd = getAngle(pntFocus, pntLimit, pntDaoEnd)
+    kLimit = (angleLimit - angleStart)/(angleEnd - angleStart)
+    if k < kLimit: #head
+        kHead = (k - 0) / (kLimit- 0)
+        xStart = pntUpLimit.X()
+        xEnd = pntDaoStart.X()
+        dx = (xEnd-xStart)*(1 - kHead)
+        pnt0 = getPntTranslate(pntFocus, dx, 0, 0)
+        pnt1 = getPntTranslate(pntLimit, dx, 0, 0)
+    else: #tail    
+        kTail = (k - kLimit) / (1 - kLimit)
+        angle = -angleEnd*kTail
+        pnt0 = pntFocus
+        pnt1 = getPntRotate(pntFocus, pntLimit, angle)
+    return pnt0, pnt1
+
+
+def getWireDaoSec(shapeDao, pntFocus, k):
+    
+    pntsDao = getPntsOfShape(shapeDao)
+    pntDownLimit, pntDaoStart, pntUpLimit, pntDaoEnd = pntsDao
+    
+    p1, p2 = getPntsForDaoSec(pntDaoStart, pntUpLimit, pntDaoEnd, pntDownLimit, pntFocus, k)
+    sectionPlane = getFacePlane(p1, p2, 3)
+    
+    pnt0, pnt1 =  getPntsEdgesFacesIntersect(shapeDao, sectionPlane)
+    pntUp = getPntSectionUp(pnt0, pnt1)
+    circle = GC_MakeCircle(pnt0, pntUp, pnt1).Value()
+    edge = BRepBuilderAPI_MakeEdge(circle).Edge()
+    wire =  BRepBuilderAPI_MakeWire(edge).Wire()
+    return wire
+  
 def getDaoCase(r, bevel, decor, h):
     r2 = r*2                                    
     h2 = h/2
@@ -326,35 +313,265 @@ def getDaoCase(r, bevel, decor, h):
     case = BRepAlgoAPI_Cut(case, bevelTool).Shape()
     return case
   
+'''
+******************************************************************************
+******************************************************************************
+******************************************************************************
+******************************************************************************
+'''
+def drawPoints(objNamePrefix, pnts):
+    if isinstance(pnts, list) or isinstance(pnts, tuple):
+       i = 0 
+       for pnt in pnts:
+          drawPoints(objNamePrefix + '_' + str(i), pnt)
+          i+=1
+    else:    
+       SceneDrawPoint(objNamePrefix, pnts)
+       SceneDrawLabel(objNamePrefix)
+
+
+def drawCircle(r):
+    
+    SceneDrawCircle('c#', gp_Pnt(r,0,0), gp_Pnt(0,r,0), gp_Pnt(-r,0,0) )
+ 
+def slide_01_DaoClassic(r):
+    
+    drawCircle(r)
+    pntsBase = getPntsBase(r)
+    drawPoints('b', pntsBase)
+    shapeDaoClassic = getWireDaoClassic(pntsBase)
+    SceneDrawShape('daoClassic', shapeDaoClassic)
+
+def slide_02_DaoConcept(r, bevel):
+    
+    drawCircle(r + bevel)
+    pntsBase = getPntsBase(r)
+    wireDaoClassic = getWireDaoClassic(pntsBase)
+    wireDao0 = getShapeOffset(wireDaoClassic, -bevel)
+    SceneDrawShape('wireDao1', wireDao0)
   
+    pntsDao0 = getPntsOfShape(wireDao0)
+    drawPoints('d',pntsDao0)
+  
+    wireDao1 = getShapeOZRotate(wireDao0, pi)
+    SceneDrawShape('wireDao2', wireDao1)
+   
+def slide_03_DaoSecPrincipe(r, bevel, k, h):
+    
+    drawCircle(r + bevel)
+    pntsBase = getPntsBase(r)
+    wireDaoClassic = getWireDaoClassic(pntsBase)
+    wireDao0 = getShapeOffset(wireDaoClassic, -bevel)
+    SceneDrawShape('wireDao1', wireDao0)
+    
+    # for oure goal we need divide Dao on Head and Tail
+    # Head sections is parallell
+    # Tail sections is focused on focus point
+    pntsDao0 = getPntsOfShape(wireDao0)
+    pntDownLimit, pntDaoStart, pntUpLimit, pntDaoEnd  = pntsDao0
+    
+    # we need focus to determine tail sections 
+    pntFocus = getPntDaoFocus(r)
+    SceneDrawPoint('pntFocus', pntFocus)
+    SceneDrawLabel('pntFocus','f')
+  
+    # we need two points to determine section
+    pnt1, pnt2 = getPntsForDaoSec(pntDaoStart, pntUpLimit, pntDaoEnd, pntDownLimit, pntFocus, k)
+    SceneDrawLine('lineSec',pnt1, pnt2)
+    
+    # !!! we need use plane to detect intercsect (not line) becouse 3D
+    planeSec = getFacePlane(pnt1, pnt2, h)
+    SceneDrawShape('planeSec', planeSec)
+
+    pntSec0, pntSec1 =  getPntsEdgesFacesIntersect(wireDao0, planeSec)
+    SceneDrawPoint('pntSec0', pntSec0)
+    SceneDrawPoint('pntSec1', pntSec1)
+
+def slide_03_DaoSectionsTest(r, bevel, k, h):
+    
+    drawCircle(r + bevel)
+    pntsBase = getPntsBase(r)
+    wireDaoClassic = getWireDaoClassic(pntsBase)
+    wireDao0 = getShapeOffset(wireDaoClassic, -bevel)
+    SceneDrawShape('wireDao1', wireDao0)
+    
+    # for oure goal we need divide Dao on Head and Tail
+    # Head sections is parallell
+    # Tail sections is focused on focus point
+    pntsDao0 = getPntsOfShape(wireDao0)
+    pntDownLimit, pntDaoStart, pntUpLimit, pntDaoEnd  = pntsDao0
+    
+    # we need focus to determine tail sections 
+    pntFocus = getPntDaoFocus(r)
+    SceneDrawPoint('pntFocus', pntFocus)
+    SceneDrawLabel('pntFocus','f')
+  
+    # we need two points to determine section
+    pnt1, pnt2 = getPntsForDaoSec(pntDaoStart, pntUpLimit, pntDaoEnd, pntDownLimit, pntFocus, k)
+    SceneDrawLine('lineSec',pnt1, pnt2)
+    
+    # !!! we need use plane to detect intercsect (not line) becouse 3D
+    planeSec = getFacePlane(pnt1, pnt2, h)
+    SceneDrawShape('planeSec', planeSec)
+
+    pntSec0, pntSec1 =  getPntsEdgesFacesIntersect(wireDao0, planeSec)
+    SceneDrawPoint('pntSec0', pntSec0)
+    SceneDrawPoint('pntSec1', pntSec1)
+
+
+def slide_04_DaoManySec(r, bevel, kStart, kEnd, cnt):
+    
+    drawCircle(r + bevel)
+    pntsBase = getPntsBase(r)
+    wireDaoClassic = getWireDaoClassic(pntsBase)
+    wireDao0 = getShapeOffset(wireDaoClassic, -bevel)
+    SceneDrawShape('wireDao1', wireDao0)
+    
+    pntsDao0 = getPntsOfShape(wireDao0)
+    pntDownLimit, pntDaoStart, pntUpLimit, pntDaoEnd  = pntsDao0
+    
+    pntFocus = getPntDaoFocus(r)
+    SceneDrawPoint('pntFocus', pntFocus)
+    SceneDrawLabel('pntFocus','f')
+ 
+ 
+    for i in range(cnt+1):
+        k = i/cnt
+        kkScale = kEnd - kStart
+        kk = kStart + k* kkScale
+        p0,p1 = getPntsForDaoSec(pntDaoStart, pntUpLimit, pntDaoEnd, pntDownLimit, pntFocus, kk)
+        #SceneDrawLine('line#', p0, p1)
+        wireSec = getWireDaoSec(wireDao0, pntFocus, kk)
+        SceneDrawShape('wireSec#', wireSec) 
+        
+def slide_05_DaoSkinning (r, bevel):
+    
+    drawCircle(r + bevel)
+    pntsBase = getPntsBase(r)
+    wireDaoClassic = getWireDaoClassic(pntsBase)
+    wireDao0 = getShapeOffset(wireDaoClassic, -bevel)
+    SceneDrawShape('wireDao1', wireDao0)
+    
+    pntsDao0 = getPntsOfShape(wireDao0)
+    pntDownLimit, pntDaoStart, pntUpLimit, pntDaoEnd  = pntsDao0
+    
+    pntFocus = getPntDaoFocus(r)
+    SceneDrawPoint('pntFocus', pntFocus)
+    SceneDrawLabel('pntFocus','f')
+ 
+    ks = [ 3, 9 , 16, 24, 35, 50, 70, 85] 
+    wiresSec = []
+ 
+    for k in  ks:
+       wireSec = getWireDaoSec(wireDao0, pntFocus, k/100)
+       SceneDrawShape('wireSec#', wireSec)
+       wiresSec += [wireSec]    
+    
+    solidDao0 = getShapeSkin(pntDaoStart, wiresSec, pntDaoEnd)
+    SceneDrawShape('solidDao0', solidDao0)
+   
+def slide_06_DaoComplete (r, bevel):
+    
+    drawCircle(r + bevel)
+    pntsBase = getPntsBase(r)
+    wireDaoClassic = getWireDaoClassic(pntsBase)
+    wireDao0 = getShapeOffset(wireDaoClassic, -bevel)
+    SceneDrawShape('wireDao1', wireDao0)
+    
+    pntsDao0 = getPntsOfShape(wireDao0)
+    pntDownLimit, pntDaoStart, pntUpLimit, pntDaoEnd  = pntsDao0
+    
+    pntFocus = getPntDaoFocus(r)
+   
+    ks = [ 3, 9 , 16, 24, 35, 50, 70, 85] 
+    wiresSec = []
+ 
+    for k in  ks:
+       wireSec = getWireDaoSec(wireDao0, pntFocus, k/100)
+       wiresSec += [wireSec]    
+    
+    solidDao0 = getShapeSkin(pntDaoStart, wiresSec, pntDaoEnd)
+    SceneDrawShape('solidDao0', solidDao0)
+    solidDao0 = getShapeZScale(solidDao0, 0.7)
+    SceneDrawShape('solidDao0', solidDao0)
+    solidDao1  = getShapeOZRotate(solidDao0, pi)
+    SceneDrawShape('solidDao1', solidDao1)
+    
+def slide_06_DaoWithCase (r, bevel, caseDecor, caseH, caseDown):
+    
+    pntsBase = getPntsBase(r)
+    wireDaoClassic = getWireDaoClassic(pntsBase)
+    wireDao0 = getShapeOffset(wireDaoClassic, -bevel)
+    SceneDrawShape('wireDao1', wireDao0)
+    
+    pntsDao0 = getPntsOfShape(wireDao0)
+    pntDownLimit, pntDaoStart, pntUpLimit, pntDaoEnd  = pntsDao0
+    
+    pntFocus = getPntDaoFocus(r)
+   
+    ks = [ 3, 9 , 16, 24, 35, 50, 70, 85] 
+    wiresSec = []
+ 
+    for k in  ks:
+       wireSec = getWireDaoSec(wireDao0, pntFocus, k/100)
+       wiresSec += [wireSec]    
+    
+    solidDao0 = getShapeSkin(pntDaoStart, wiresSec, pntDaoEnd)
+    SceneDrawShape('solidDao0', solidDao0)
+    solidDao0 = getShapeZScale(solidDao0, 0.7)
+    # !!! Boolean not work if not small rotate (its a bus)
+    solidDao0  = getShapeOZRotate(solidDao0, pi*0.2)
+    SceneDrawShape('solidDao0', solidDao0)
+    solidDao1  = getShapeOZRotate(solidDao0, pi)
+    SceneDrawShape('solidDao1', solidDao1)
+    
+    case = getDaoCase(r, bevel, caseDecor, caseH)
+    case = BRepAlgoAPI_Cut(case, solidDao0).Shape()
+    case = BRepAlgoAPI_Cut(case, solidDao1).Shape()
+    
+    case = getShapeTranslate(case, 0,0, caseDown)
+    SceneDrawShape('case', case)
+        
+    
+if __name__ == '__main__':
+    
+    SceneScreenInit()
+    
+    SceneDrawAxis('axis')
+    
+    r = 5
+    bevel = 0.3
+    #slide_01_DaoClassic(r)
+    #slide_02_DaoConcept(r, bevel)
+    #slide_03_DaoSecPrincipe(r, bevel, 0.5, 3)
+    #slide_04_DaoManySec(r, bevel, 0.03, 0.97, 40)
+    #slide_05_DaoSkinning (r, bevel)
+    #slide_06_DaoComplete (r, bevel)
+    slide_06_DaoWithCase (r, bevel, 0.3, 3, -3)
+    
+    
+    SceneScreenStart()
+
+
+'''
+******************************************************************************
+******************************************************************************
+******************************************************************************
+******************************************************************************
+'''
+'''
 def PaintDao(r, bevel):
     
     
-    pntsBase = getPntsBase(r)
     pntFocus = getPntDaoFocus(r)    
-    #SceneLayer('info')
-    #drawPoints(pntsBase, 'b')
     #drawPoints(pntFocus, 'f')
-    #SceneDrawCircle('c', pntsBase[4], pntsBase[5], pntsBase[6])
     
     
-    shapeDaoClassic = getShapeDaoClassic(pntsBase)
-    #SceneLayer('base')
-    #SceneDrawShape('daoClassic', shapeDaoClassic)
-    
-    shapeDao = getShapeOffset(shapeDaoClassic,-bevel)
-    #SceneLayer('base')
-    #SceneDrawShape('dao', shapeDao)
-    
-    pntsDao = getPntsOfShapeDao(shapeDao)
     pntDaoStart, pntUpLimit, pntDaoEnd, pntDownLimit = pntsDao
-    #drawPoints(pntsDao,'d')
-    
     #SceneLayer('base')
     #p0,p1 = getPntsForDaoSection(pntDaoStart, pntUpLimit, pntDownLimit, pntDaoEnd, pntFocus, 1)
     #SceneDrawLine('line', p0, p1)
     
-    '''
     kStart = 0.03
     kEnd = 0.97
     cnt = 20
@@ -366,36 +583,17 @@ def PaintDao(r, bevel):
         p0,p1 = getPntsForDaoSection(pntDaoStart, pntUpLimit, pntDaoEnd, pntDownLimit, pntFocus, kk)
         SceneDrawLine('line#', p0, p1)
        #wires += [ getWireDaoSection(shapeDao, pntFocus, k) ]
-    '''
-
-    '''
+  
     p0,p1 = getPntsForDaoSection(pntDaoStart, pntUpLimit, pntDaoEnd, pntDownLimit, pntFocus, kk)
     SceneDrawLine('line#', p0, p1)
-    '''
-    kk = [ 3, 9 , 16, 24, 35, 50, 70, 85] 
-    wires = []
- 
-    #SceneLayer('main')
-    for k in  kk:
-       wire = getWireDaoSection(shapeDao, pntFocus, k/100)
-       #SceneDrawShape('wire#', wire)
-       wires += [wire]    
     
     
-    SceneLayer('pres')
     skin = getShapeSkin(pntDaoStart, wires, pntDaoEnd)
     skin  = getShapeZScale(skin,0.7)
     skin  = getShapeRotate(skin, pi*0.2)
-    #SceneLayer('pres')
-    SceneSetStyle('color', (0.7,0,0))
-    #SceneSetStyle('transparency', 0)
     SceneDrawShape('skin', skin)
     skin2  = getShapeRotate(skin, pi)
-    SceneSetStyle('color', (0,0.7,0))
-    #SceneSetStyle('material', 'WATER, GLASS')
-    #SceneSetStyle('transparency', 0.5)
     SceneDrawShape('skin2', skin2)
-    #SceneApplyStyle('skin2','transparency', 0.5)
     
     
     case = getDaoCase(r,bevel, 0.3, 3)
@@ -403,11 +601,8 @@ def PaintDao(r, bevel):
     case = BRepAlgoAPI_Cut(case, skin2).Shape()
     
     case = getShapeTranslate(case, 0,0, -3)
-    SceneSetStyle('color', (0.7,0.7,0))
-    #SceneSetStyle('material', 'OBSIDIAN')
     SceneDrawShape('case', case)
     
-    '''
     
     SceneDrawLabel('prjC')
     for pnt in pntsPrjEnds:
@@ -416,22 +611,5 @@ def PaintDao(r, bevel):
     SceneLayer('main')
     SceneDrawShape('dao', shapeDao)
     drawPoints(pntsDao, 'd')
-  
-    SceneLayer('info')
-    shapeDaoMirr = getShapeMirror(shapeDao,gp_Pnt(0,0,0))
-    SceneDrawShape('daoMirr', shapeDaoMirr)
-    '''
-
-    
-    
-if __name__ == '__main__':
-    
-    SceneScreenInit()
-    
-    #SceneDrawAxis('axis')
-    
-    PaintDao(5, 0.3)
-    
-    
-    SceneScreenStart()
+'''  
 
