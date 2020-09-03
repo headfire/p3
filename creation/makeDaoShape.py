@@ -4,10 +4,7 @@
 import sys
 sys.path.insert(0, "../scene")
 
-from scene import (SceneScreenInit, SceneDrawAxis,
-                   SceneDrawPoint, SceneDrawLine, SceneDrawCircle, SceneDrawShape, SceneDrawLabel,
-                   SceneScreenStart)
-
+from scene import ScInit, ScPoint, ScLine, ScCircle, ScShape, ScLabel, ScStart, ScStyle
 
 from OCC.Core.gp import gp_Pnt, gp_Trsf, gp_Dir, gp_Vec, gp_Ax1, gp_Ax2, gp_GTrsf, gp_OZ
 from OCC.Core.Geom import Geom_CartesianPoint, Geom_Line, Geom_Plane, Geom_TrimmedCurve
@@ -319,42 +316,49 @@ def getDaoCase(r, bevel, decor, h):
 ******************************************************************************
 ******************************************************************************
 '''
-def drawPoints(objNamePrefix, pnts):
+
+stInfo = ScStyle( (0.5,0.5,0.5), None,  None, None, None)
+stMain = ScStyle((0.1,0.1,0.9),  None,  None,    4,    None )
+stBase = ScStyle((0.9,0.1,0.1),  None,  None, None, None)
+stGold = ScStyle((0.9,0.9,0.1),  None,  None, 4 ,'GOLD')
+stFog = ScStyle((0.1,0.9,0.1),  0.7, None, None ,'GOLD')
+
+def drawPoints(objNamePrefix, pnts, style):
     if isinstance(pnts, list) or isinstance(pnts, tuple):
        i = 0 
        for pnt in pnts:
-          drawPoints(objNamePrefix + '_' + str(i), pnt)
+          drawPoints(objNamePrefix + '_' + str(i), pnt, style)
           i+=1
     else:    
-       SceneDrawPoint(objNamePrefix, pnts)
-       SceneDrawLabel(objNamePrefix)
+       ScPoint(pnts, style)
+       ScLabel(pnts, objNamePrefix, style)
 
 
-def drawCircle(r):
+def drawCircle(r, style):
     
-    SceneDrawCircle('c#', gp_Pnt(r,0,0), gp_Pnt(0,r,0), gp_Pnt(-r,0,0) )
+    ScCircle(gp_Pnt(r,0,0), gp_Pnt(0,r,0), gp_Pnt(-r,0,0), style )
  
 def slide_01_DaoClassic(r):
     
-    drawCircle(r)
+    drawCircle(r, stInfo)
     pntsBase = getPntsBase(r)
-    drawPoints('b', pntsBase)
+    drawPoints('b', pntsBase, stBase)
     shapeDaoClassic = getWireDaoClassic(pntsBase)
-    SceneDrawShape('daoClassic', shapeDaoClassic)
+    ScShape(shapeDaoClassic, stMain)
 
 def slide_02_DaoConcept(r, bevel):
     
-    drawCircle(r + bevel)
+    drawCircle(r + bevel, stInfo)
     pntsBase = getPntsBase(r)
     wireDaoClassic = getWireDaoClassic(pntsBase)
     wireDao0 = getShapeOffset(wireDaoClassic, -bevel)
-    SceneDrawShape('wireDao1', wireDao0)
+    ScShape(wireDao0, stMain)
   
     pntsDao0 = getPntsOfShape(wireDao0)
-    drawPoints('d',pntsDao0)
+    drawPoints('d',pntsDao0, stBase)
   
     wireDao1 = getShapeOZRotate(wireDao0, pi)
-    SceneDrawShape('wireDao2', wireDao1)
+    ScShape(wireDao1, stInfo)
    
 def slide_03_DaoSecPrincipe(r, bevel, k, h):
     
@@ -534,21 +538,19 @@ def slide_06_DaoWithCase (r, bevel, caseDecor, caseH, caseDown):
     
 if __name__ == '__main__':
     
-    SceneScreenInit()
-    
-    SceneDrawAxis('axis')
+    ScInit()
     
     r = 5
     bevel = 0.3
     #slide_01_DaoClassic(r)
-    #slide_02_DaoConcept(r, bevel)
+    slide_02_DaoConcept(r, bevel)
     #slide_03_DaoSecPrincipe(r, bevel, 0.5, 3)
     #slide_04_DaoManySec(r, bevel, 0.03, 0.97, 40)
     #slide_05_DaoSkinning (r, bevel)
     #slide_06_DaoComplete (r, bevel)
-    slide_06_DaoWithCase (r, bevel, 0.3, 3, -3)
+    #slide_06_DaoWithCase (r, bevel, 0.3, 3, -3)
     
     
-    SceneScreenStart()
+    ScStart()
 
 
