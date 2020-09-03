@@ -32,6 +32,10 @@ from OCC.Core.TopLoc import TopLoc_Location
 from OCC.Core.TopAbs import (TopAbs_COMPOUND, TopAbs_COMPSOLID, TopAbs_SOLID, TopAbs_SHELL,
                       TopAbs_FACE, TopAbs_WIRE, TopAbs_EDGE, TopAbs_VERTEX, TopAbs_SHAPE)
 
+from OCC.Core.BRepPrimAPI import BRepPrimAPI_MakeSphere, BRepPrimAPI_MakeBox,  	BRepPrimAPI_MakeCylinder
+from OCC.Core.BRepAlgoAPI import BRepAlgoAPI_Common, BRepAlgoAPI_Cut
+
+
 from math import pi
 
 
@@ -266,7 +270,7 @@ def getWireDaoSection(shapeDao, pntFocus, k):
 def getShapeSkin(pntStart, wires, pntEnd):
     
     # Initialize and build
-    skiner = BRepOffsetAPI_ThruSections()
+    skiner = BRepOffsetAPI_ThruSections(True)
     skiner.SetSmoothing(True);
       #skiner.SetMaxDegree(5)
   
@@ -282,6 +286,50 @@ def getShapeSkin(pntStart, wires, pntEnd):
     skiner.Build()
     
     return skiner.Shape()
+
+
+def getShapeTranslate(shape, x,y,z):
+    transform = gp_Trsf()
+    transform.SetTranslation(gp_Vec(x,y,z))
+    shape =  BRepBuilderAPI_Transform(shape, transform).Shape()
+    return shape
+
+def getShapeRotate(shape, angle):
+    transform = gp_Trsf()
+    transform.SetRotation(gp_Ax1(gp_Pnt(0,0,0), gp_Dir(0,0,1)), angle)
+    shape =  BRepBuilderAPI_Transform(shape, transform).Shape()
+    return shape
+
+def getShapeScale(shape, sx, sy, sz):
+    transform = gp_Trsf()
+    transform.SetValues	(	
+        sx,0,sx,0,
+        0,sy,0,0,
+        sz,0,0,0
+       )		
+    shape =  BRepBuilderAPI_Transform(shape, transform).Shape()
+    return shape
+
+
+def getDaoCase(r, bevel, decor, h):
+    r2 = r*2                                    
+    h2 = h/2
+    rTop = r + 2*bevel + decor
+    rSphere = gp_Vec(0,rTop,h2).Magnitude()
+    sphere = BRepPrimAPI_MakeSphere(rSphere).Shape()
+    limit = BRepPrimAPI_MakeBox( gp_Pnt(-r2, -r2, -h2), gp_Pnt(r2, r2, h2) ).Shape()
+    case = BRepAlgoAPI_Common(sphere, limit).Shape()
+    case = getShapeTranslate(case, 0,0,-h2)
+    cylOut =  BRepPrimAPI_MakeCylinder(r+bevel+decor, decor*2).Shape()
+    #SceneDrawShape('out',cylOut)
+    cylIn =  BRepPrimAPI_MakeCylinder(r+bevel, decor*3).Shape()
+    #SceneDrawShape('in',cylIn)
+    bevelTool = BRepAlgoAPI_Cut(cylOut, cylIn).Shape()
+    bevelTool = getShapeTranslate(bevelTool,0,0,-bevel/2)
+    #SceneDrawShape('tool',bevelTool)
+    case = BRepAlgoAPI_Cut(case, bevelTool).Shape()
+    return case
+  
   
 def PaintDao(r, bevel):
     
@@ -340,7 +388,23 @@ def PaintDao(r, bevel):
     
     SceneLayer('pres')
     skin = getShapeSkin(pntDaoStart, wires, pntDaoEnd)
+    skin  = getShapeScale(skin,2,1,0.5)
+    SceneLayer('pres')
+    SceneSetStyle('color', (0.7,0,0))
     SceneDrawShape('skin', skin)
+    #skin2  = getShapeRotate(skin, pi)
+    #skin2  = getShapeScale(skin2, 1,1,0.5)
+    #SceneSetStyle('color', (0,0.7,0))
+    #SceneDrawShape('skin2', skin2)
+    
+    
+    case = getDaoCase(r,bevel, 0.3, 3)
+    #case = BRepAlgoAPI_Cut(case, skin).Shape()
+    #case = BRepAlgoAPI_Cut(case, skin2).Shape()
+    case = getShapeTranslate(case, 0,0, -3)
+    SceneLayer('main')
+    SceneSetStyle('material', 'CHROME')
+    SceneDrawShape('case', case)
     
     '''
     
@@ -365,7 +429,7 @@ if __name__ == '__main__':
     
     SceneDrawAxis('axis')
     
-    PaintDao(5, 1)
+    PaintDao(5, 0.3)
     
     
     SceneScreenStart()
