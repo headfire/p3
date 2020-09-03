@@ -502,7 +502,6 @@ def slide_06_DaoWithCase (r, bevel, caseDecor, caseH, caseDown):
     pntsBase = getPntsBase(r)
     wireDaoClassic = getWireDaoClassic(pntsBase)
     wireDao0 = getShapeOffset(wireDaoClassic, -bevel)
-    SceneDrawShape('wireDao1', wireDao0)
     
     pntsDao0 = getPntsOfShape(wireDao0)
     pntDownLimit, pntDaoStart, pntUpLimit, pntDaoEnd  = pntsDao0
@@ -552,64 +551,4 @@ if __name__ == '__main__':
     
     SceneScreenStart()
 
-
-'''
-******************************************************************************
-******************************************************************************
-******************************************************************************
-******************************************************************************
-'''
-'''
-def PaintDao(r, bevel):
-    
-    
-    pntFocus = getPntDaoFocus(r)    
-    #drawPoints(pntFocus, 'f')
-    
-    
-    pntDaoStart, pntUpLimit, pntDaoEnd, pntDownLimit = pntsDao
-    #SceneLayer('base')
-    #p0,p1 = getPntsForDaoSection(pntDaoStart, pntUpLimit, pntDownLimit, pntDaoEnd, pntFocus, 1)
-    #SceneDrawLine('line', p0, p1)
-    
-    kStart = 0.03
-    kEnd = 0.97
-    cnt = 20
-    #wires = []
-    for i in range(cnt+1):
-        k = i/cnt
-        kkScale = kEnd - kStart
-        kk = kStart + k* kkScale
-        p0,p1 = getPntsForDaoSection(pntDaoStart, pntUpLimit, pntDaoEnd, pntDownLimit, pntFocus, kk)
-        SceneDrawLine('line#', p0, p1)
-       #wires += [ getWireDaoSection(shapeDao, pntFocus, k) ]
-  
-    p0,p1 = getPntsForDaoSection(pntDaoStart, pntUpLimit, pntDaoEnd, pntDownLimit, pntFocus, kk)
-    SceneDrawLine('line#', p0, p1)
-    
-    
-    skin = getShapeSkin(pntDaoStart, wires, pntDaoEnd)
-    skin  = getShapeZScale(skin,0.7)
-    skin  = getShapeRotate(skin, pi*0.2)
-    SceneDrawShape('skin', skin)
-    skin2  = getShapeRotate(skin, pi)
-    SceneDrawShape('skin2', skin2)
-    
-    
-    case = getDaoCase(r,bevel, 0.3, 3)
-    case = BRepAlgoAPI_Cut(case, skin).Shape()
-    case = BRepAlgoAPI_Cut(case, skin2).Shape()
-    
-    case = getShapeTranslate(case, 0,0, -3)
-    SceneDrawShape('case', case)
-    
-    
-    SceneDrawLabel('prjC')
-    for pnt in pntsPrjEnds:
-       SceneDrawLine('Project_#', pntPrjCenter, pnt) 
-
-    SceneLayer('main')
-    SceneDrawShape('dao', shapeDao)
-    drawPoints(pntsDao, 'd')
-'''  
 
