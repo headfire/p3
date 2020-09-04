@@ -61,6 +61,34 @@ from OCC.Core.Bnd import Bnd_Box
 from OCC.Core.GC import  GC_MakeCircle
 from copy import deepcopy
 
+import random
+
+from OCC.Display.WebGl import threejs_renderer
+
+from OCC.Extend.ShapeFactory import translate_shp, rotate_shp_3_axis
+
+"""
+n_toruses = 100
+
+idx = 0
+for i in range(n_toruses):
+    torus_shp = BRepPrimAPI_MakeTorus(10 + random.random()*10, random.random()*10).Shape()
+    # random position and orientation and color
+    angle_x = random.random()*360
+    angle_y = random.random()*360
+    angle_z = random.random()*360
+    rotated_torus = rotate_shp_3_axis(torus_shp, angle_x, angle_y, angle_z, 'deg')
+    tr_x = random.uniform(-70, 50)
+    tr_y = random.uniform(-70, 50)
+    tr_z = random.uniform(-50, 50)
+    trans_torus = translate_shp(rotated_torus, gp_Vec(tr_x, tr_y, tr_z))
+    rnd_color = (random.random(), random.random(), random.random())
+    my_ren.DisplayShape(trans_torus, export_edges=True, color=rnd_color, transparency=random.random())
+    print("%i%%" % (idx * 100 / n_toruses), end="")
+    idx += 1
+"""
+
+
 import json
 
 
@@ -140,8 +168,8 @@ def n(val, default):
 
 class NativeLib:
     def __init__(self):
-        self.isInit = False
- 
+        self.mode = 'test'
+   
     def _drawAxis(self):
         
         style = self.getNormalStyle('stServ')
@@ -164,44 +192,80 @@ class NativeLib:
             self.drawAis(AIS_Point(Geom_CartesianPoint(gp_Pnt(0,0,i))), style, 1)
  
     
-    def isScreenInit(self):
-        return self.isInit
     
-    def initScreen(self):
-        if not self.isInit:
-           self.display, self.start_display, self.add_menu,  self.add_function_to_menu  = init_display()
-           self.isInit = True;   
-           
-    def startScreen(self):
-        if self.isInit:
+    def init(self, initMode):
+        if self.mode == 'test':
+            if initMode == 'screen':
+              self.display, self.start_display, self.add_menu,  self.add_function_to_menu  = init_display()
+              self.mode = initMode   
+            if initMode == 'web':
+              self.web = threejs_renderer.ThreejsRenderer('D:\headfire\coding\webgl')
+              self.mode = initMode   
+    
+    def start(self):
+        if self.mode == 'test':
+           print('Scene in test mode is OK')
+        if self.mode == 'screen':
            self._drawAxis()
            self.display.FitAll()
            self.start_display()
+        if self.mode == 'web':
+           self.web.render()        
+           
            
     def drawText(self, pnt, text, style, visible):
        style = self.getNormalStyle(style) 
        if visible == None:
            visible = 1       
-       if self.isInit:
+       if self.mode == 'screen':
          if visible > 0.5:
              self.display.DisplayMessage(pnt, 
                 text, 20, style.get('color',(1,1,1)), False)            
-        
+  
+    """
+    DisplayShape(self,
+                     shape,
+                     export_edges=False,
+                     color=(0.65, 0.65, 0.7),
+                     specular_color=(0.2, 0.2, 0.2),
+                     shininess=0.9,
+                     transparency=0.,
+                     line_color=(0, 0., 0.),
+                     line_width=1.,
+                     mesh_quality=1.):
+    """    
+    def drawShape(self, shape, style, visible):
+        style = self.getNormalStyle(style)
+        if self.mode == 'screen':
+            ais = AIS_Shape(shape)
+            self.drawAis(ais, style, visible)
+        if self.mode == 'web':
+            self.web.DisplayShape(shape, 
+                     False,
+                     style['color'],
+                     (0.2, 0.2, 0.2),
+                     0.9,
+                     0.,
+                     (0, 0., 0.),
+                     1.,
+                     0.2)
+    
+  
     def drawAis(self, ais, style, visible):
-         style = self.getNormalStyle(style)
-         if visible == None:
-               visible = 1       
-         if self.isInit: 
+        if self.mode == 'screen': 
                   
                #order important
+               style = self.getNormalStyle(style)
                for styleName in style:
                   self.styleAis(ais, styleName, style[styleName])                
                   
+               if visible == None:
+                       visible = 1       
                if visible > 0.5:
                       self.display.Context.Display(ais, False) 
                else:    
                       self.display.Context.Erase(ais, False)    
-               
+                      
     def styleAis(self, ais, styleName, styleValue):
         if styleName == 'color':
             r,g,b = styleValue 
@@ -278,16 +342,12 @@ class Scene:
         self.nativeLib = nativeLib
         return 
  
-    def init(self):
-       self.nativeLib.initScreen() 
+    def init(self, initMode = 'screen'):
+       self.nativeLib.init(initMode) 
        
        
     def start(self):
-       if self.nativeLib.isScreenInit() :
-          self.nativeLib.startScreen()
-       else:
-          print('Virtual run is complete')    
-          print('Use ScInit()')    
+        self.nativeLib.start()
     
     def style(self, styleVal = None):
         return self.nativeLib.getNormalStyle(styleVal)
@@ -314,8 +374,7 @@ class Scene:
         self.nativeLib.drawAis(ais, style, visible)
     
     def shape(self, shape,  style, visible):
-         ais = AIS_Shape(shape)
-         self.nativeLib.drawAis(ais, style, visible)
+         self.nativeLib.drawShape(shape, style, visible)
          
         
     
@@ -327,8 +386,8 @@ class Scene:
 
 sc = Scene(NativeLib())
     
-def ScInit():
-    return sc.init()
+def ScInit(initMode = 'screen'):
+    return sc.init(initMode)
 
 def ScStyle(styleVal = None):
     return  sc.style(styleVal)

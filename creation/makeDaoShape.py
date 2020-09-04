@@ -496,7 +496,7 @@ def slide_07_DaoWithCase (r, offset, caseH, caseDown):
     
 if __name__ == '__main__':
     
-    ScInit()
+    ScInit('web')
     
     r = 5
     offset = 0.3
