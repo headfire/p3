@@ -144,7 +144,7 @@ class NativeLib:
  
     def _drawAxis(self):
         
-        style = self.style((0.5,0.5,0.5), 0, 1.5, 1)
+        style = self.getNormalStyle('stServ')
         
         pnt = gp_Pnt(0,0,0)
         dir1 = gp_Dir(gp_Vec(0,0,1))
@@ -179,8 +179,7 @@ class NativeLib:
            self.start_display()
            
     def drawText(self, pnt, text, style, visible):
-       if style ==  None:
-           style = self.style()
+       style = self.getNormalStyle(style) 
        if visible == None:
            visible = 1       
        if self.isInit:
@@ -189,8 +188,7 @@ class NativeLib:
                 text, 20, style.get('color',(1,1,1)), False)            
         
     def drawAis(self, ais, style, visible):
-         if style ==  None:
-               style = self.style()
+         style = self.getNormalStyle(style)
          if visible == None:
                visible = 1       
          if self.isInit: 
@@ -229,19 +227,43 @@ class NativeLib:
                  ais.SetMarker(POINT_TYPES.index(styleValue))
             if styleName == 'pointSize':         
                  ais.Attributes().PointAspect().SetScale(styleValue)
-  
-    def style(self, color = None, tran = None ,
-                  pointSize = None, lineWidth = None, material = None):
+                 
+    
+    def getNormalStyle(self, styleVal):
+        
+        if isinstance(styleVal, dict):
+           return styleVal
+       
+        if styleVal == None:
+           styleVal = 'stMain' 
+           
+                   #      r%    g%     b%     op%     pnt  line   mat 
+        if styleVal == 'stServ':
+           styleVal = (   50,   50,   50,    100,      2,     1,  'PLASTIC'  )
+        elif styleVal == 'stInfo':
+           styleVal = (   50,   50,   50,     50,      3,     1,  'PLASTIC' )
+        elif styleVal == 'stMain':
+           styleVal = (   10,   10,   90,    100,      3,     4,  'PLASTIC' )
+        elif styleVal == 'stFocus':
+           styleVal = (   90,   10,   10,     30,      3,     2,  'CHROME' )
+        elif styleVal == 'stGold':
+           styleVal = (   90,   90,   10,    100,      3,     4,  'GOLD'    )
+        elif styleVal == 'stFog':
+           styleVal = (   90,   90,   90,    30,      3,     4,   'PLASTIC'  )
+           
+        r, g, b, op, ps ,lw, mat = styleVal
+        
         st = dict() 
-        st['color'] = n(color,(1,1,1))
-        st['tran'] = n(tran, 0)
+        
+        st['color'] = (r/100, g/100, b/100)
+        st['tran']  = 1-op/100
         st['pointType'] = 'BALL'                
         st['lineType'] = 'SOLID'                
-        st['pointSize'] = n(pointSize,3)
-        st['lineWidth'] = n(lineWidth,1)                
-        st['material'] = n( material, 'DEFAULT')
+        st['pointSize'] = ps
+        st['lineWidth'] = lw               
+        st['material'] = mat
+        
         return st
-  
               
      
 '''
@@ -267,8 +289,8 @@ class Scene:
           print('Virtual run is complete')    
           print('Use ScInit()')    
     
-    def style(self, color, tran ,pointSize, lineWidth, material):
-        return self.nativeLib.style(color, tran ,pointSize, lineWidth, material)
+    def style(self, styleVal = None):
+        return self.nativeLib.getNormalStyle(styleVal)
        
     def label(self, pnt, label, style, visible):
         pntLabel = gp_Pnt(pnt.X()+0.2, pnt.Y()+0.2, pnt.Z()+0.2)
@@ -308,8 +330,8 @@ sc = Scene(NativeLib())
 def ScInit():
     return sc.init()
 
-def ScStyle(color = None, tran = None, pointSize = None, lineWidth = None, material = None):
-    return  sc.style(color, tran , pointSize, lineWidth, material)
+def ScStyle(styleVal = None):
+    return  sc.style(styleVal)
 
 def ScPoint(pnt, style = None, visible = 1):
     return sc.point(pnt, style, visible)
@@ -355,36 +377,31 @@ Testing
 
 if __name__ == '__main__':
     
-    stInfo = ScStyle( (0.5,0.5,0.5), None,  None, None, None)
-    stMain = ScStyle((0.1,0.1,0.9),  None,  None,    4,    None )
-    stBase = ScStyle((0.9,0.1,0.1),  None,  None, None, None)
-    stGold = ScStyle((0.9,0.9,0.1),  None,  None, 4 ,'GOLD')
-    stFog = ScStyle((0.1,0.9,0.1),  0.7, None, None ,'GOLD')
      
     def  testPoint():
         
         pnt = gp_Pnt(3,4,5)
-        ScPoint(pnt,stInfo)
-        ScLabel(pnt, 'point', stInfo)
+        ScPoint(pnt,'stInfo')
+        ScLabel(pnt, 'point', 'stInfo')
     
 
     def testLine():
         
         gpPnt = gp_Pnt(2,3,4)
         
-        ScPoint(gpPnt, stInfo)    
-        ScLabel(gpPnt, 'pnt+', stInfo)
+        ScPoint(gpPnt, 'stInfo')    
+        ScLabel(gpPnt, 'pnt+', 'stInfo')
         
         gpPntStart = gp_Pnt(5,0,3)
         gpPntEnd = gp_Pnt(0,5,3)
         
-        ScLine(gpPntStart, gpPntEnd, stMain)
+        ScLine(gpPntStart, gpPntEnd, 'stMain')
         
-        ScPoint(gpPntStart, stMain)
-        ScLabel(gpPntStart, 'lineStart+', stMain)
+        ScPoint(gpPntStart, 'stMain')
+        ScLabel(gpPntStart, 'lineStart+', 'stMain')
         
-        ScPoint(gpPntEnd, stMain, 0)
-        ScLabel(gpPntEnd, 'NotVisibleError!!!', stMain, 0)
+        ScPoint(gpPntEnd, 'stMain', 0)
+        ScLabel(gpPntEnd, 'NotVisibleError!!!', 'stMain', 0)
     
     
     def  testCircle():
@@ -393,20 +410,33 @@ if __name__ == '__main__':
         gpPnt2 = gp_Pnt(5,2,5)
         gpPnt3 = gp_Pnt(5,-5,5)
         
-        ScCircle(gpPnt1, gpPnt2, gpPnt3, stGold)
+        ScCircle(gpPnt1, gpPnt2, gpPnt3, 'stFocus')
         
-        ScPoint(gpPnt1, stFog)
-        ScLabel(gpPnt1,'p1', stFog)
-        ScPoint(gpPnt2, stFog)
-        ScLabel(gpPnt2,'p2',stFog)
-        ScPoint(gpPnt3, stFog)
-        ScLabel(gpPnt3,'p3',stFog)
+        ScPoint(gpPnt1, 'stFog')
+        ScLabel(gpPnt1,'p1', 'stFog')
+        ScPoint(gpPnt2, 'stFog')
+        ScLabel(gpPnt2,'p2','stFog')
+        ScPoint(gpPnt3, 'stFog')
+        ScLabel(gpPnt3,'p3', 'stFog')
   
     def  testShape():
+        
         sp1 = BRepPrimAPI_MakeSphere(3).Shape()
-        ScShape(sp1, stGold)
+        ScShape(sp1, 'stGold')
+        
         sp2 = BRepPrimAPI_MakeSphere(4).Shape()
-        ScShape(sp2, stFog)
+        ScShape(sp2, 'stFog')
+        
+        
+        stCustom1   = ScStyle((  100,   35,   24,   100,   3,  3, 'GOLD'    ))
+        sp3 = BRepPrimAPI_MakeSphere(gp_Pnt(3,6,2), 2.5).Shape()
+        ScShape(sp3,  stCustom1)
+        
+        
+        stCustom2   = ScStyle((  98,  100,  12,   100,   3,  3, 'CHROME'    ))
+        sp4 = BRepPrimAPI_MakeSphere(gp_Pnt(3,3,3),2).Shape()
+        ScShape(sp4, stCustom2)
+        
   
     
     ScInit() 

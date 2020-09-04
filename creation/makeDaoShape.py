@@ -291,23 +291,15 @@ def getWireDaoSec(shapeDao, pntFocus, k):
     wire =  BRepBuilderAPI_MakeWire(edge).Wire()
     return wire
   
-def getDaoCase(r, bevel, decor, h):
+def getDaoCase(r, offset, h):
     r2 = r*2                                    
     h2 = h/2
-    rTop = r + 2*bevel + decor
+    rTop = r + offset
     rSphere = gp_Vec(0,rTop,h2).Magnitude()
     sphere = BRepPrimAPI_MakeSphere(rSphere).Shape()
     limit = BRepPrimAPI_MakeBox( gp_Pnt(-r2, -r2, -h2), gp_Pnt(r2, r2, h2) ).Shape()
     case = BRepAlgoAPI_Common(sphere, limit).Shape()
     case = getShapeTranslate(case, 0,0,-h2)
-    cylOut =  BRepPrimAPI_MakeCylinder(r+bevel+decor, decor*2).Shape()
-    #SceneDrawShape('out',cylOut)
-    cylIn =  BRepPrimAPI_MakeCylinder(r+bevel, decor*3).Shape()
-    #SceneDrawShape('in',cylIn)
-    bevelTool = BRepAlgoAPI_Cut(cylOut, cylIn).Shape()
-    bevelTool = getShapeTranslate(bevelTool,0,0,-bevel/2)
-    #SceneDrawShape('tool',bevelTool)
-    case = BRepAlgoAPI_Cut(case, bevelTool).Shape()
     return case
   
 '''
@@ -317,21 +309,26 @@ def getDaoCase(r, bevel, decor, h):
 ******************************************************************************
 '''
 
-stInfo = ScStyle( (0.5,0.5,0.5), None,  None, None, None)
-stMain = ScStyle((0.1,0.1,0.9),  None,  None,    4,    None )
-stBase = ScStyle((0.9,0.1,0.1),  None,  None, None, None)
-stGold = ScStyle((0.9,0.9,0.1),  None,  None, 4 ,'GOLD')
-stFog = ScStyle((0.1,0.9,0.1),  0.7, None, None ,'GOLD')
+#                    r%    g%     b%     op%      pnt  line   mat 
+#                    100   100   100     100       3      1  'DEFAULT'
+stDao0   = ScStyle((  100,   35,   24,   70,      3,     1, 'CHROME'    ))
+stDao1   = ScStyle((  98,   100,   12,   70,      3,     1, 'CHROME'    ))
+stCase   = ScStyle(( 52,51,100,   100,      3,     1, 'CHROME'    ))
 
-def drawPoints(objNamePrefix, pnts, style):
+def drawPoints(pnts, style, label =''):
     if isinstance(pnts, list) or isinstance(pnts, tuple):
        i = 0 
        for pnt in pnts:
-          drawPoints(objNamePrefix + '_' + str(i), pnt, style)
+          if label:
+              newLabel = label + '_' + str(i)
+          else:
+              newLabel = ''
+          drawPoints(pnt, style, newLabel)
           i+=1
     else:    
        ScPoint(pnts, style)
-       ScLabel(pnts, objNamePrefix, style)
+       if label:
+          ScLabel(pnts, label, style)
 
 
 def drawCircle(r, style):
@@ -340,33 +337,33 @@ def drawCircle(r, style):
  
 def slide_01_DaoClassic(r):
     
-    drawCircle(r, stInfo)
+    drawCircle(r, 'stInfo')
     pntsBase = getPntsBase(r)
-    drawPoints('b', pntsBase, stBase)
+    drawPoints(pntsBase, 'stFocus', 'b')
     shapeDaoClassic = getWireDaoClassic(pntsBase)
-    ScShape(shapeDaoClassic, stMain)
+    ScShape(shapeDaoClassic, 'stMain')
 
-def slide_02_DaoConcept(r, bevel):
+def slide_02_DaoConcept(r, offset):
     
-    drawCircle(r + bevel, stInfo)
+    drawCircle(r + offset, 'stInfo')
     pntsBase = getPntsBase(r)
     wireDaoClassic = getWireDaoClassic(pntsBase)
-    wireDao0 = getShapeOffset(wireDaoClassic, -bevel)
-    ScShape(wireDao0, stMain)
+    wireDao0 = getShapeOffset(wireDaoClassic, -offset)
+    ScShape(wireDao0, 'stMain')
   
     pntsDao0 = getPntsOfShape(wireDao0)
-    drawPoints('d',pntsDao0, stBase)
+    drawPoints(pntsDao0, 'stFocus', 'd')
   
     wireDao1 = getShapeOZRotate(wireDao0, pi)
-    ScShape(wireDao1, stInfo)
+    ScShape(wireDao1, 'stInfo')
    
-def slide_03_DaoSecPrincipe(r, bevel, k, h):
+def slide_03_DaoSecPrincipe(r, offset, k, h):
     
-    drawCircle(r + bevel)
+    drawCircle(r + offset,  'stInfo')
     pntsBase = getPntsBase(r)
     wireDaoClassic = getWireDaoClassic(pntsBase)
-    wireDao0 = getShapeOffset(wireDaoClassic, -bevel)
-    SceneDrawShape('wireDao1', wireDao0)
+    wireDao0 = getShapeOffset(wireDaoClassic, -offset)
+    ScShape(wireDao0, 'stMain')
     
     # for oure goal we need divide Dao on Head and Tail
     # Head sections is parallell
@@ -376,111 +373,74 @@ def slide_03_DaoSecPrincipe(r, bevel, k, h):
     
     # we need focus to determine tail sections 
     pntFocus = getPntDaoFocus(r)
-    SceneDrawPoint('pntFocus', pntFocus)
-    SceneDrawLabel('pntFocus','f')
+    ScPoint(pntFocus, 'stMain')
+    ScLabel(pntFocus, 'f0', 'stMain')
   
     # we need two points to determine section
     pnt1, pnt2 = getPntsForDaoSec(pntDaoStart, pntUpLimit, pntDaoEnd, pntDownLimit, pntFocus, k)
-    SceneDrawLine('lineSec',pnt1, pnt2)
+    ScLine(pnt1, pnt2, 'stFocus')
     
     # !!! we need use plane to detect intercsect (not line) becouse 3D
     planeSec = getFacePlane(pnt1, pnt2, h)
-    SceneDrawShape('planeSec', planeSec)
+    ScShape(planeSec, 'stFocus')
 
-    pntSec0, pntSec1 =  getPntsEdgesFacesIntersect(wireDao0, planeSec)
-    SceneDrawPoint('pntSec0', pntSec0)
-    SceneDrawPoint('pntSec1', pntSec1)
+    pntsSec =  getPntsEdgesFacesIntersect(wireDao0, planeSec)
+    drawPoints(pntsSec, 'stFocus')
 
-def slide_03_DaoSectionsTest(r, bevel, k, h):
+def slide_04_DaoManySec(r, offset, kStart, kEnd, cnt):
     
-    drawCircle(r + bevel)
+    drawCircle(r + offset, 'stInfo')
     pntsBase = getPntsBase(r)
     wireDaoClassic = getWireDaoClassic(pntsBase)
-    wireDao0 = getShapeOffset(wireDaoClassic, -bevel)
-    SceneDrawShape('wireDao1', wireDao0)
-    
-    # for oure goal we need divide Dao on Head and Tail
-    # Head sections is parallell
-    # Tail sections is focused on focus point
-    pntsDao0 = getPntsOfShape(wireDao0)
-    pntDownLimit, pntDaoStart, pntUpLimit, pntDaoEnd  = pntsDao0
-    
-    # we need focus to determine tail sections 
-    pntFocus = getPntDaoFocus(r)
-    SceneDrawPoint('pntFocus', pntFocus)
-    SceneDrawLabel('pntFocus','f')
-  
-    # we need two points to determine section
-    pnt1, pnt2 = getPntsForDaoSec(pntDaoStart, pntUpLimit, pntDaoEnd, pntDownLimit, pntFocus, k)
-    SceneDrawLine('lineSec',pnt1, pnt2)
-    
-    # !!! we need use plane to detect intercsect (not line) becouse 3D
-    planeSec = getFacePlane(pnt1, pnt2, h)
-    SceneDrawShape('planeSec', planeSec)
-
-    pntSec0, pntSec1 =  getPntsEdgesFacesIntersect(wireDao0, planeSec)
-    SceneDrawPoint('pntSec0', pntSec0)
-    SceneDrawPoint('pntSec1', pntSec1)
-
-
-def slide_04_DaoManySec(r, bevel, kStart, kEnd, cnt):
-    
-    drawCircle(r + bevel)
-    pntsBase = getPntsBase(r)
-    wireDaoClassic = getWireDaoClassic(pntsBase)
-    wireDao0 = getShapeOffset(wireDaoClassic, -bevel)
-    SceneDrawShape('wireDao1', wireDao0)
+    wireDao0 = getShapeOffset(wireDaoClassic, -offset)
+    ScShape(wireDao0, 'stMain')
     
     pntsDao0 = getPntsOfShape(wireDao0)
     pntDownLimit, pntDaoStart, pntUpLimit, pntDaoEnd  = pntsDao0
     
     pntFocus = getPntDaoFocus(r)
-    SceneDrawPoint('pntFocus', pntFocus)
-    SceneDrawLabel('pntFocus','f')
- 
+    drawPoints(pntFocus,  'stFocus', 'f0')
  
     for i in range(cnt+1):
         k = i/cnt
         kkScale = kEnd - kStart
         kk = kStart + k* kkScale
         p0,p1 = getPntsForDaoSec(pntDaoStart, pntUpLimit, pntDaoEnd, pntDownLimit, pntFocus, kk)
-        #SceneDrawLine('line#', p0, p1)
+        ScLine(p0, p1, 'stFocus')
         wireSec = getWireDaoSec(wireDao0, pntFocus, kk)
-        SceneDrawShape('wireSec#', wireSec) 
+        ScShape(wireSec, 'stMain') 
         
-def slide_05_DaoSkinning (r, bevel):
+def slide_05_DaoSkinning (r, offset):
     
-    drawCircle(r + bevel)
+    drawCircle(r + offset,  'stInfo')
     pntsBase = getPntsBase(r)
     wireDaoClassic = getWireDaoClassic(pntsBase)
-    wireDao0 = getShapeOffset(wireDaoClassic, -bevel)
-    SceneDrawShape('wireDao1', wireDao0)
+    wireDao0 = getShapeOffset(wireDaoClassic, -offset)
+    ScShape(wireDao0, 'stMain')
     
     pntsDao0 = getPntsOfShape(wireDao0)
     pntDownLimit, pntDaoStart, pntUpLimit, pntDaoEnd  = pntsDao0
     
     pntFocus = getPntDaoFocus(r)
-    SceneDrawPoint('pntFocus', pntFocus)
-    SceneDrawLabel('pntFocus','f')
- 
+    drawPoints(pntFocus, 'stMain' ,'f')
+  
     ks = [ 3, 9 , 16, 24, 35, 50, 70, 85] 
     wiresSec = []
  
     for k in  ks:
        wireSec = getWireDaoSec(wireDao0, pntFocus, k/100)
-       SceneDrawShape('wireSec#', wireSec)
+       ScShape(wireSec, 'stMain')
        wiresSec += [wireSec]    
     
     solidDao0 = getShapeSkin(pntDaoStart, wiresSec, pntDaoEnd)
-    SceneDrawShape('solidDao0', solidDao0)
+    ScShape(solidDao0, 'stFocus')
    
-def slide_06_DaoComplete (r, bevel):
+def slide_06_DaoComplete (r, offset):
     
-    drawCircle(r + bevel)
+    drawCircle(r + offset, 'stInfo')
     pntsBase = getPntsBase(r)
     wireDaoClassic = getWireDaoClassic(pntsBase)
-    wireDao0 = getShapeOffset(wireDaoClassic, -bevel)
-    SceneDrawShape('wireDao1', wireDao0)
+    wireDao0 = getShapeOffset(wireDaoClassic, -offset)
     
     pntsDao0 = getPntsOfShape(wireDao0)
     pntDownLimit, pntDaoStart, pntUpLimit, pntDaoEnd  = pntsDao0
@@ -495,17 +455,16 @@ def slide_06_DaoComplete (r, bevel):
        wiresSec += [wireSec]    
     
     solidDao0 = getShapeSkin(pntDaoStart, wiresSec, pntDaoEnd)
-    SceneDrawShape('solidDao0', solidDao0)
     solidDao0 = getShapeZScale(solidDao0, 0.7)
-    SceneDrawShape('solidDao0', solidDao0)
+    ScShape(solidDao0, stDao0)
     solidDao1  = getShapeOZRotate(solidDao0, pi)
-    SceneDrawShape('solidDao1', solidDao1)
+    ScShape(solidDao1, stDao1)
     
-def slide_06_DaoWithCase (r, bevel, caseDecor, caseH, caseDown):
+def slide_07_DaoWithCase (r, offset, caseH, caseDown):
     
     pntsBase = getPntsBase(r)
     wireDaoClassic = getWireDaoClassic(pntsBase)
-    wireDao0 = getShapeOffset(wireDaoClassic, -bevel)
+    wireDao0 = getShapeOffset(wireDaoClassic, -offset)
     
     pntsDao0 = getPntsOfShape(wireDao0)
     pntDownLimit, pntDaoStart, pntUpLimit, pntDaoEnd  = pntsDao0
@@ -520,20 +479,19 @@ def slide_06_DaoWithCase (r, bevel, caseDecor, caseH, caseDown):
        wiresSec += [wireSec]    
     
     solidDao0 = getShapeSkin(pntDaoStart, wiresSec, pntDaoEnd)
-    SceneDrawShape('solidDao0', solidDao0)
     solidDao0 = getShapeZScale(solidDao0, 0.7)
     # !!! Boolean not work if not small rotate (its a bus)
     solidDao0  = getShapeOZRotate(solidDao0, pi*0.2)
-    SceneDrawShape('solidDao0', solidDao0)
+    ScShape(solidDao0, stDao0)
     solidDao1  = getShapeOZRotate(solidDao0, pi)
-    SceneDrawShape('solidDao1', solidDao1)
+    ScShape(solidDao1, stDao1)
     
-    case = getDaoCase(r, bevel, caseDecor, caseH)
+    case = getDaoCase(r, offset, caseH)
     case = BRepAlgoAPI_Cut(case, solidDao0).Shape()
     case = BRepAlgoAPI_Cut(case, solidDao1).Shape()
     
     case = getShapeTranslate(case, 0,0, caseDown)
-    SceneDrawShape('case', case)
+    ScShape(case, stCase)
         
     
 if __name__ == '__main__':
@@ -541,14 +499,14 @@ if __name__ == '__main__':
     ScInit()
     
     r = 5
-    bevel = 0.3
+    offset = 0.3
     #slide_01_DaoClassic(r)
-    slide_02_DaoConcept(r, bevel)
-    #slide_03_DaoSecPrincipe(r, bevel, 0.5, 3)
-    #slide_04_DaoManySec(r, bevel, 0.03, 0.97, 40)
-    #slide_05_DaoSkinning (r, bevel)
-    #slide_06_DaoComplete (r, bevel)
-    #slide_06_DaoWithCase (r, bevel, 0.3, 3, -3)
+    #slide_02_DaoConcept(r, offset)
+    #slide_03_DaoSecPrincipe(r, offset, 0.5, 3)
+    #slide_04_DaoManySec(r, offset, 0.03, 0.97, 30)
+    #slide_05_DaoSkinning (r, offset)
+    #slide_06_DaoComplete (r, offset)
+    slide_07_DaoWithCase (r, offset, 3, -3)
     
     
     ScStart()
