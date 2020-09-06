@@ -63,7 +63,7 @@ from copy import deepcopy
 
 import random
 
-from OCC.Display.WebGl import threejs_renderer
+from threejs import ThreejsRenderer
 
 from OCC.Extend.ShapeFactory import translate_shp, rotate_shp_3_axis
 
@@ -199,7 +199,7 @@ class NativeLib:
               self.display, self.start_display, self.add_menu,  self.add_function_to_menu  = init_display()
               self.mode = initMode   
             if initMode == 'web':
-              self.web = threejs_renderer.ThreejsRenderer('D:\headfire\coding\webgl')
+              self.web = ThreejsRenderer('D:\headfire\coding\webgl')
               self.mode = initMode   
     
     def start(self):
@@ -247,8 +247,9 @@ class NativeLib:
                      0.9,
                      0.,
                      (0, 0., 0.),
-                     1.,
-                     0.2)
+                     5.,
+                     0.2,
+                     0.01)
     
   
     def drawAis(self, ais, style, visible):

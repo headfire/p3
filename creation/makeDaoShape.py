@@ -500,13 +500,13 @@ if __name__ == '__main__':
     
     r = 5
     offset = 0.3
-    #slide_01_DaoClassic(r)
+    slide_01_DaoClassic(r)
     #slide_02_DaoConcept(r, offset)
     #slide_03_DaoSecPrincipe(r, offset, 0.5, 3)
     #slide_04_DaoManySec(r, offset, 0.03, 0.97, 30)
     #slide_05_DaoSkinning (r, offset)
     #slide_06_DaoComplete (r, offset)
-    slide_07_DaoWithCase (r, offset, 3, -3)
+    #slide_07_DaoWithCase (r, offset, 3, -3)
     
     
     ScStart()
