@@ -290,6 +290,28 @@ def getWireDaoSec(shapeDao, pntFocus, k):
     edge = BRepBuilderAPI_MakeEdge(circle).Edge()
     wire =  BRepBuilderAPI_MakeWire(edge).Wire()
     return wire
+
+def getSolidDao(r, offset):
+    
+    pntsBase = getPntsBase(r)
+    wireDaoClassic = getWireDaoClassic(pntsBase)
+    wireDao = getShapeOffset(wireDaoClassic, -offset)
+    
+    pntsDao = getPntsOfShape(wireDao)
+    pntDownLimit, pntDaoStart, pntUpLimit, pntDaoEnd  = pntsDao
+    
+    pntFocus = getPntDaoFocus(r)
+   
+    ks = [ 3, 9 , 16, 24, 35, 50, 70, 85] 
+    wiresSec = []
+ 
+    for k in  ks:
+       wireSec = getWireDaoSec(wireDao, pntFocus, k/100)
+       wiresSec += [wireSec]    
+    
+    solidDao = getShapeSkin(pntDaoStart, wiresSec, pntDaoEnd)
+    solidDao = getShapeZScale(solidDao, 0.7)
+    return solidDao
   
 def getDaoCase(r, offset, h):
     r2 = r*2                                    
@@ -300,6 +322,14 @@ def getDaoCase(r, offset, h):
     limit = BRepPrimAPI_MakeBox( gp_Pnt(-r2, -r2, -h2), gp_Pnt(r2, r2, h2) ).Shape()
     case = BRepAlgoAPI_Common(sphere, limit).Shape()
     case = getShapeTranslate(case, 0,0,-h2)
+ 
+    
+    solidDao0 = getSolidDao(r, offset)
+    solidDao1  = getShapeOZRotate(solidDao0, pi)
+   
+    case = BRepAlgoAPI_Cut(case, solidDao0).Shape()
+    case = BRepAlgoAPI_Cut(case, solidDao1).Shape()
+  
     return case
   
 '''
@@ -311,9 +341,9 @@ def getDaoCase(r, offset, h):
 
 #                    r%    g%     b%     op%      pnt  line   mat 
 #                    100   100   100     100       3      1  'DEFAULT'
-stDao0   = ScStyle((  100,   35,   24,   70,      3,     1, 'CHROME'    ))
-stDao1   = ScStyle((  98,   100,   12,   70,      3,     1, 'CHROME'    ))
-stCase   = ScStyle(( 52,51,100,   100,      3,     1, 'CHROME'    ))
+stDao0   = ScStyle((  100,   35,   24,   100,      3,     1, 'CHROME'    ))
+stDao1   = ScStyle((  98,   100,   12,   100,      3,     1, 'CHROME'    ))
+stCase   = ScStyle((  52,     51, 100,   100,      3,     1, 'CHROME'    ))
 
 def drawPoints(pnts, style, label =''):
     if isinstance(pnts, list) or isinstance(pnts, tuple):
@@ -437,60 +467,21 @@ def slide_05_DaoSkinning (r, offset):
    
 def slide_06_DaoComplete (r, offset):
     
-    drawCircle(r + offset, 'stInfo')
-    pntsBase = getPntsBase(r)
-    wireDaoClassic = getWireDaoClassic(pntsBase)
-    wireDao0 = getShapeOffset(wireDaoClassic, -offset)
-    
-    pntsDao0 = getPntsOfShape(wireDao0)
-    pntDownLimit, pntDaoStart, pntUpLimit, pntDaoEnd  = pntsDao0
-    
-    pntFocus = getPntDaoFocus(r)
-   
-    ks = [ 3, 9 , 16, 24, 35, 50, 70, 85] 
-    wiresSec = []
- 
-    for k in  ks:
-       wireSec = getWireDaoSec(wireDao0, pntFocus, k/100)
-       wiresSec += [wireSec]    
-    
-    solidDao0 = getShapeSkin(pntDaoStart, wiresSec, pntDaoEnd)
-    solidDao0 = getShapeZScale(solidDao0, 0.7)
+    solidDao0 = getSolidDao(r, offset)
     ScShape(solidDao0, stDao0)
     solidDao1  = getShapeOZRotate(solidDao0, pi)
     ScShape(solidDao1, stDao1)
     
-def slide_07_DaoWithCase (r, offset, caseH, delta):
+def slide_07_DaoWithCase (r, offset, caseH, caseZMove ,gap):
     
-    pntsBase = getPntsBase(r)
-    wireDaoClassic = getWireDaoClassic(pntsBase)
-    wireDao0 = getShapeOffset(wireDaoClassic, -offset)
-    
-    pntsDao0 = getPntsOfShape(wireDao0)
-    pntDownLimit, pntDaoStart, pntUpLimit, pntDaoEnd  = pntsDao0
-    
-    pntFocus = getPntDaoFocus(r)
-   
-    ks = [ 3, 9 , 16, 24, 35, 50, 70, 85] 
-    wiresSec = []
- 
-    for k in  ks:
-       wireSec = getWireDaoSec(wireDao0, pntFocus, k/100)
-       wiresSec += [wireSec]    
-    
-    solidDao0 = getShapeSkin(pntDaoStart, wiresSec, pntDaoEnd)
-    solidDao0 = getShapeZScale(solidDao0, 0.7)
-    # !!! Boolean not work if not small rotate (its a bus)
-    solidDao0  = getShapeOZRotate(solidDao0, pi*0.2)
+    solidDao0 = getSolidDao(r, offset+gap)
     ScShape(solidDao0, stDao0)
     solidDao1  = getShapeOZRotate(solidDao0, pi)
     ScShape(solidDao1, stDao1)
     
     case = getDaoCase(r, offset, caseH)
-    case = BRepAlgoAPI_Cut(case, solidDao0).Shape()
-    case = BRepAlgoAPI_Cut(case, solidDao1).Shape()
     
-    case = getShapeTranslate(case, 0,0, -caseH)
+    case = getShapeTranslate(case, 0,0, caseZMove)
     ScShape(case, stCase)
         
 def step(mode, slideName, quality = 'draft'):
@@ -504,21 +495,21 @@ def step(mode, slideName, quality = 'draft'):
       
    # exportDir = 'D:/headfire/coding/webgl/doosun/'+ slideName
         
-    decoration = (True, True, 1, 50, 0, 0, -3)
+    decoration = (True, True, 1, 5, 0, 0, -60)
     
     ScInit('screen', decoration) 
     
     
-    r = 5
-    offset = 0.3
+    r = 40
+    offset = 3
 
     if slideName == 'slide_01_DaoClassic':
         slide_01_DaoClassic(r)
     elif slideName == 'slide_02_DaoConcept':
         slide_02_DaoConcept(r, offset)
-    elif slideName == 'DaoSecPrincipe':
+    elif slideName == 'slide_03_DaoSecPrincipe':
        kExample = 0.5
-       hPlane = 3
+       hPlane = 30
        slide_03_DaoSecPrincipe(r, offset, kExample, hPlane)
     elif slideName == 'slide_04_DaoManySec':
        kStart = 0.03
@@ -530,9 +521,10 @@ def step(mode, slideName, quality = 'draft'):
     elif slideName == 'slide_06_DaoComplete':
        slide_06_DaoComplete (r, offset)
     elif slideName == 'slide_07_DaoWithCase':
-       caseH = 3
-       caseGap = 0.1
-       slide_07_DaoWithCase (r, offset, caseH, caseGap)
+       caseH = 30
+       caseZMove = -20
+       gap = 1
+       slide_07_DaoWithCase (r, offset, caseH, caseZMove ,gap)
       
     ScStart()
  
@@ -542,7 +534,7 @@ if __name__ == '__main__':
     #step('screen', 'slide_01_DaoClassic')
     #step('web', 'slide_01_DaoClassic')
     
-    step('screen', 'slide_02_DaoConcept')
+    #step('screen', 'slide_02_DaoConcept')
     #step('web', 'slide_02_DaoConcept')
     
     #step('screen', 'slide_03_DaoSecPrincipe')
@@ -557,7 +549,7 @@ if __name__ == '__main__':
     #step('screen', 'slide_06_DaoComplete')
     #step('web', 'slide_06_DaoComplete')
     
-    #step('screen', 'slide_07_DaoWithCase')
+    step('screen', 'slide_07_DaoWithCase')
     #step('web', 'slide_07_DaoWithCase')
     
     #step('screen', 'slide_08_DaoWithCase')
