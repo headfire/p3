@@ -78,39 +78,44 @@ function mainSetFlags() {
   document.getElementById('drawZone').className = mainModeFlag + ' ' + mainInfoFlag;  
 }
 
+function mainSlideGetParamDefault() {
+   var param = Object();
+   param.isDesk = true; 	 
+   param.isAxis = true; 	 
+   param.scaleA = 1; 	 
+   param.scaleB = 1; 	 
+   param.deskDX = 0; 	 
+   param.deskDY = 0; 	 
+   param.deskDZ = -50;
+ return param;
+ }  
+
+function mainSlideMakeDefault() {
+}
+ 
 function mainLoadSlide(paper, slide) {
-  var filename = 'slides' + '/' + paper + '/' + slide + '/' + 'slide.js?time='+ new Date().getTime();;
-  var xmlhttp = new XMLHttpRequest();
-  xmlhttp.open('GET', filename, true);
-  xmlhttp.onreadystatechange = function() {
-  if (xmlhttp.readyState == 4) {
-     if(xmlhttp.status == 200) {
-		loaded = false 
-		try {
+   var filename = 'slides' + '/' + paper + '/' + slide + '/' + 'slide.js?time='+ new Date().getTime();;
+   var slideGetParam = mainSlideGetParamDefault;
+   var slideMake = mainSlideMakeDefault;
+   var xmlhttp = new XMLHttpRequest();
+   xmlhttp.open('GET', filename, true);
+   xmlhttp.onreadystatechange = function() {
+     if (xmlhttp.readyState == 4) {
+       if (xmlhttp.status == 200) {
+		 try {
            eval(xmlhttp.responseText);
-		   loaded = true
-		 } finally {}
-		 if (loaded) {
-		    param = loadedSlideGetParam()
-            zdeskInit(document.getElementById( 'webgl' ),'images/textures/', param);
-	        loadedSlideMake('slides'+'/'+paper+'/'+slide+'/');
-		 } else {
-		    var param;
-		    param.isDesk = true; 	 
-			param.isAxis = true; 	 
-			param.scaleA = 1; 	 
-			param.scaleB = 1; 	 
-			param.deskDX = 0; 	 
-			param.deskDY = 0; 	 
-			param.deskDZ = -50;
-            zdeskInit(document.getElementById( 'webgl' ),'images/textures/', param);			 
-		 }
-         zdeskSetRenderMode('mono-mode');  				
-		 mainOnAnimationFrame()
-       }
+	       slideGetParam = loadedSlideGetParam;
+           slideMake = loadedSlideMake;
+ 		 } catch {}
+        }
+     param = slideGetParam() 
+     zdeskInit(document.getElementById( 'webgl' ),'images/textures/', param);
+	 slideMake('slides'+'/'+paper+'/'+slide+'/');
+   	 zdeskSetRenderMode('mono-mode');  				
+	 mainOnAnimationFrame()
     }
   };
-  xmlhttp.send(null);
+ xmlhttp.send(null); 
 }
 
 
