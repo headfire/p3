@@ -39,7 +39,6 @@ def color_to_hex(rgb_color):
     """ Takes a tuple with 3 floats between 0 and 1.
     Returns a hex. Useful to convert occ colors to web color code
     """
-    print(rgb_color)
     r, g, b = rgb_color
     if not (0 <= r <= 1. and 0 <= g <= 1. and 0 <= b <= 1.):
         raise AssertionError("rgb values must be between 0.0 and 1.0")
@@ -85,6 +84,7 @@ class ThreeJsRenderer:
         self.spinning_cursor = spinning_cursor()
         self.decoration = decoration
         self.precision = precision
+        self.shapeNum = 1
         
         print("## threejs %s webgl renderer")
        
@@ -109,7 +109,8 @@ class ThreeJsRenderer:
         if is_edge(shape):
             print("discretize an edge")
             pnts = discretize_edge(shape, wire_precision)
-            edge_hash = "edg%s" % uuid.uuid4().hex
+            edge_hash = "exp_%s_edge" % str(self.shapeNum).zfill(3)
+            self.shapeNum += 1;
             str_to_write = export_edgedata_to_json(edge_hash, pnts)
             edge_full_path = os.path.join(self._path, edge_hash + '.json')
             with open(edge_full_path, "w") as edge_file:
@@ -120,7 +121,8 @@ class ThreeJsRenderer:
         elif is_wire(shape):
             print("discretize a wire")
             pnts = discretize_wire(shape, wire_precision)
-            wire_hash = "wir%s" % uuid.uuid4().hex
+            wire_hash = "exp_%s_wire" % str(self.shapeNum).zfill(3)
+            self.shapeNum += 1;
             str_to_write = export_edgedata_to_json(wire_hash, pnts)
             wire_full_path = os.path.join(self._path, wire_hash + '.json')
             with open(wire_full_path, "w") as wire_file:
@@ -129,7 +131,8 @@ class ThreeJsRenderer:
             self._3js_edges[wire_hash] = [color, line_width]
             return self._3js_shapes, self._3js_edges
         shape_uuid = uuid.uuid4().hex
-        shape_hash = "shp%s" % shape_uuid
+        shape_hash = "exp_%s_shape" % str(self.shapeNum).zfill(3)
+        self.shapeNum += 1;
         # tesselate
         tess = ShapeTesselator(shape)
         tess.Compute(compute_edges=export_edges,
@@ -199,11 +202,9 @@ class ThreeJsRenderer:
             shape_string_list.append("\t\t\t\tmesh.receiveShadow = true;\n")
             # add mesh to scene
             shape_string_list.append("\t\t\t\tzdeskScene.add(mesh);\n")
+            shape_string_list.append("\t\t\t\tzdeskRender();\n")
             # last shape, we request for a fit_to_scene
-            if shape_idx == len(self._3js_shapes) - 1:
-                shape_string_list.append("\tfit_to_scene();});\n")
-            else:
-                shape_string_list.append("\t\t\t});\n\n")
+            shape_string_list.append("\t\t\t});\n\n")
             shape_idx += 1
         # Process edges
         edge_string_list = []
@@ -231,8 +232,8 @@ class ThreeJsRenderer:
             fp.write('}\n')
             fp.write('\n')
             fp.write('function loadedSlideMake(slidePath) { \n')
-            fp.write("".join(shape_string_list))
             fp.write("".join(edge_string_list))
+            fp.write("".join(shape_string_list))
             fp.write('}\n')
           
         

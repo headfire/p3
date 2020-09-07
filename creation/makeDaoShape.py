@@ -500,7 +500,7 @@ def do(mode, slideName, quality = 'draft'):
     
     decoration = (True, True, 1, 5, 0, 0, -60)
     
-    ScInit(mode, decoration, (0.1,0.1), exportDir) 
+    ScInit(mode, decoration, (0.2, 0.2), exportDir) 
     
     
     r = 40

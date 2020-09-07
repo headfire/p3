@@ -181,7 +181,7 @@ class WebLib:
         
     def drawShape(self, shape, style):
         print('Web lib: drawShape()')
-        self.web.drawShape(shape, style['color'], style['lineWidth'])
+        self.web.drawShape(shape, style['color'], style['tran'] ,style['lineWidth'])
         
         
 

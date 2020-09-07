@@ -106,7 +106,7 @@ function mainLoadSlide(paper, slide) {
            eval(xmlhttp.responseText);
 	       slideGetParam = loadedSlideGetParam;
            slideMake = loadedSlideMake;
- 		 } catch {}
+ 		 } catch(e) { console.log(e); }
         }
      param = slideGetParam() 
      zdeskInit(document.getElementById( 'webgl' ),'images/textures/', param);
