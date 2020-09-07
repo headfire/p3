@@ -3,6 +3,7 @@
 
 import sys
 sys.path.insert(0, "../scene")
+import os
 
 from scene import ScInit, ScPoint, ScLine, ScCircle, ScShape, ScLabel, ScStart, ScStyle
 
@@ -484,7 +485,7 @@ def slide_07_DaoWithCase (r, offset, caseH, caseZMove ,gap):
     case = getShapeTranslate(case, 0,0, caseZMove)
     ScShape(case, stCase)
         
-def step(mode, slideName, quality = 'draft'):
+def do(mode, slideName, quality = 'draft'):
     
    # shapePrecision = scale/5
    # wirePrecision = scale/5
@@ -492,12 +493,14 @@ def step(mode, slideName, quality = 'draft'):
    # if quality == 'draft':
    #   shapePrecision = shapePrecision*2
    #   wirePrecision = wirePrecision*2
-      
-   # exportDir = 'D:/headfire/coding/webgl/doosun/'+ slideName
-        
+  
+    scriptDir = os.path.dirname(__file__)
+    exportDraftDir = os.path.join(scriptDir, '..', 'viewer','slides','dao', slideName)
+    exportDir = os.path.abspath(exportDraftDir)
+    
     decoration = (True, True, 1, 5, 0, 0, -60)
     
-    ScInit('screen', decoration) 
+    ScInit(mode, decoration, (0.1,0.1), exportDir) 
     
     
     r = 40
@@ -530,29 +533,34 @@ def step(mode, slideName, quality = 'draft'):
  
 if __name__ == '__main__':
     
-    #step('test', 'slide_01_DaoClassic')
-    #step('screen', 'slide_01_DaoClassic')
-    #step('web', 'slide_01_DaoClassic')
     
-    #step('screen', 'slide_02_DaoConcept')
-    #step('web', 'slide_02_DaoConcept')
+    #please, uncooment only one string
     
-    #step('screen', 'slide_03_DaoSecPrincipe')
-    #step('web', 'slide_03_DaoSecPrincipe')
+    #do('test', 'slide_01_DaoClassic')
+    #do('test', 'slide_02_DaoConcept')
+    #do('test', 'slide_03_DaoSecPrincipe')
+    #do('test', 'slide_04_DaoManySec')
+    #do('test', 'slide_05_DaoSkinning')
+    #do('test', 'slide_06_DaoComplete')
+    #do('test', 'slide_07_DaoWithCase')
+
+    #do('screen', 'slide_01_DaoClassic')
+    #do('screen', 'slide_02_DaoConcept')
+    #do('screen', 'slide_03_DaoSecPrincipe')
+    #do('screen', 'slide_04_DaoManySec')
+    #do('screen', 'slide_05_DaoSkinning')
+    #do('screen', 'slide_06_DaoComplete')
+    #do('screen', 'slide_07_DaoWithCase')
     
-    #step('screen', 'slide_04_DaoManySec')
-    #step('web', 'slide_04_DaoManySec')
+    #do('web', 'slide_01_DaoClassic')
+    #do('web', 'slide_02_DaoConcept')
+    #do('web', 'slide_03_DaoSecPrincipe')
+    #do('web', 'slide_04_DaoManySec')
+    #do('web', 'slide_05_DaoSkinning')
+    #do('web', 'slide_06_DaoComplete')
+    do('web', 'slide_07_DaoWithCase')
     
-    #step('screen', 'slide_05_DaoSkinning')
-    #step('web', 'slide_05_DaoSkinning')
+    #do('web', 'daoFine', (0.1, 0.1), path)
     
-    #step('screen', 'slide_06_DaoComplete')
-    #step('web', 'slide_06_DaoComplete')
-    
-    step('screen', 'slide_07_DaoWithCase')
-    #step('web', 'slide_07_DaoWithCase')
-    
-    #step('screen', 'slide_08_DaoWithCase')
-    #step('web', 'slide_08_DaoWithCase', 'fine')
-    #step('printer', 'slide_08_DaoWithCase', 'fine')
+    #do('obj', 'daoObj', (0.1, 0.1), path)
     

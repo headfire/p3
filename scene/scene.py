@@ -145,37 +145,42 @@ def n(val, default):
 class TestLib:
     
     def __init__(self):
-        print('Test mode: init()')
+        print('Test lib: init()')
          
     def start(self):
-        print('Test mode: start()')
+        print('Test lib: start()')
     
     def drawPoint(self, pnt, style):
-        print('Test mode: drawPoint()')
+        print('Test lib: drawPoint()')
         
         
     def drawLabel(self, pnt, text, style):
-        print('Test mode: drawLabel()')
+        print('Test lib: drawLabel()')
         
     def drawShape(self, shape, style):
-        print('Test mode: drawShape()')
+        print('Test lib: drawShape()')
 
 
 class WebLib:
     
-    def __init__(self, path, decoration, precision):
-       self.web = ThreeJsRenderer(path, decoration, precision)
+    def __init__(self, decoration, precision, path):
+       print('Web lib: init()')
+       self.web = ThreeJsRenderer(decoration, precision, path)
          
     def start(self):
-       self.web.render()
+        print('Web lib: start()')
+        self.web.render()
     
     def drawPoint(self, pnt, style):
-       self.web.drawPoint(pnt, style['color'], style['pointSize'])
+        print('Web lib: drawPoint()')
+        self.web.drawPoint(pnt, style['color'], style['pointSize'])
         
     def drawLabel(self, pnt, text, style):
-       self.web.drawLabel(pnt, text, style['color'], )
+        print('Web lib: drawLabel()')
+        self.web.drawLabel(pnt, text, style['color'])
         
     def drawShape(self, shape, style):
+        print('Web lib: drawShape()')
         self.web.drawShape(shape, style['color'], style['lineWidth'])
         
         

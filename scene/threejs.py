@@ -39,6 +39,7 @@ def color_to_hex(rgb_color):
     """ Takes a tuple with 3 floats between 0 and 1.
     Returns a hex. Useful to convert occ colors to web color code
     """
+    print(rgb_color)
     r, g, b = rgb_color
     if not (0 <= r <= 1. and 0 <= g <= 1. and 0 <= b <= 1.):
         raise AssertionError("rgb values must be between 0.0 and 1.0")
@@ -74,10 +75,11 @@ def export_edgedata_to_json(edge_hash, point_set):
 
 class ThreeJsRenderer:
     
-    def __init__(self, path, decoration, precision):
-        
+    def __init__(self, decoration, precision, path):
+        if not path:
+            raise Exception('ThreeJsRenderer need path for exported files')
         self._path = path
-        self._js_filename = os.path.join(self._path, "make_scene.js")
+        self._js_filename = os.path.join(self._path, "slide.js")
         self._3js_shapes = {}
         self._3js_edges = {}
         self.spinning_cursor = spinning_cursor()
@@ -86,7 +88,12 @@ class ThreeJsRenderer:
         
         print("## threejs %s webgl renderer")
        
+    def drawPoint(self, pnt, color, size):
+        pass
 
+    def drawLabel(self, pnt, text, style):
+        pass
+  
     def drawShape(self,
                      shape,
                      color=(0.65, 0.65, 0.7),
@@ -95,9 +102,9 @@ class ThreeJsRenderer:
                      export_edges=False,
                     ):
         # if the shape is an edge or a wire, use the related functions
-        shininess=0.9,
-        specular_color=(0.2, 0.2, 0.2),
-        line_color=(0, 0., 0.),
+        shininess=0.9
+        specular_color=(0.2, 0.2, 0.2)
+        line_color=(0, 0., 0.)
         shape_precision, wire_precision = self.precision 
         if is_edge(shape):
             print("discretize an edge")
@@ -168,7 +175,7 @@ class ThreeJsRenderer:
 
     def generate_js_file(self):
         shape_string_list = []
-        shape_string_list.append("loader = new THREE.BufferGeometryLoader();\n")
+        shape_string_list.append("\tloader = new THREE.BufferGeometryLoader();\n")
         shape_idx = 0
         for shape_hash in self._3js_shapes:
             # get properties for this shape
@@ -185,13 +192,13 @@ class ThreeJsRenderer:
             #var line_material = new THREE.LineBasicMaterial({color: 0x000000, linewidth: 2});
             shape_string_list.append('});\n')
             # load json geometry files
-            shape_string_list.append("\t\t\tloader.load('%s.json', function(geometry) {\n" % shape_hash)
+            shape_string_list.append("\t\t\tloader.load(slidePath+'%s.json', function(geometry) {\n" % shape_hash)
             shape_string_list.append("\t\t\t\tmesh = new THREE.Mesh(geometry, %s_phong_material);\n" % shape_hash)
             # enable shadows for object
             shape_string_list.append("\t\t\t\tmesh.castShadow = true;\n")
             shape_string_list.append("\t\t\t\tmesh.receiveShadow = true;\n")
             # add mesh to scene
-            shape_string_list.append("\t\t\t\tscene.add(mesh);\n")
+            shape_string_list.append("\t\t\t\tzdeskScene.add(mesh);\n")
             # last shape, we request for a fit_to_scene
             if shape_idx == len(self._3js_shapes) - 1:
                 shape_string_list.append("\tfit_to_scene();});\n")
@@ -202,17 +209,28 @@ class ThreeJsRenderer:
         edge_string_list = []
         for edge_hash in self._3js_edges:
             color, line_width = self._3js_edges[edge_hash]
-            edge_string_list.append("\tloader.load('%s.json', function(geometry) {\n" % edge_hash)
+            edge_string_list.append("\tloader.load(slidePath+'%s.json', function(geometry) {\n" % edge_hash)
             edge_string_list.append("\tline_material = new THREE.LineBasicMaterial({color: %s, linewidth: %s});\n" % ((color_to_hex(color), line_width)))
             edge_string_list.append("\tline = new THREE.Line(geometry, line_material);\n")
         # add mesh to scene
-            edge_string_list.append("\tscene.add(line);\n")
+            edge_string_list.append("\tzdeskScene.add(line);\n")
             edge_string_list.append("\t});\n")
         # write the string for the shape
-        with open(self._html_filename, "w") as fp:
-            fp.write('function makeScene(); \n')
+        with open(self._js_filename, "w") as fp:
             isDesk, isAxis, scaleA, scaleB, deskDX, deskDY, deskDZ = self.decoration
-            fp.write('/tmakeDecoration(%s,%s,%i,%i,%g,%g,%g); \n' % jsBool(isDesk), jsBool(isAxis), scaleA, scaleB, deskDX, deskDY, deskDZ)
+            fp.write('function loadedSlideGetParam() { \n')
+            fp.write('\t var param = Object(); \n')
+            fp.write('\t param.isDesk = %s; \n' % jsBool(isDesk) )
+            fp.write('\t param.isAxis = %s; \n' % jsBool(isAxis) ) 
+            fp.write('\t param.scaleA = %i; \n' % scaleA ) 
+            fp.write('\t param.scaleB = %i; \n' % scaleB ) 
+            fp.write('\t param.deskDX = %i; \n' % deskDX ) 
+            fp.write('\t param.deskDY = %i; \n' % deskDY ) 
+            fp.write('\t param.deskDZ = %i; \n' % deskDZ ) 
+            fp.write('\t return param;\n') 
+            fp.write('}\n')
+            fp.write('\n')
+            fp.write('function loadedSlideMake(slidePath) { \n')
             fp.write("".join(shape_string_list))
             fp.write("".join(edge_string_list))
             fp.write('}\n')

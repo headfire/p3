@@ -4,7 +4,6 @@
     <meta charset="UTF-8" />
     <title>Z-Desk</title>
     <link rel="shortcut icon" href="images/favicon.ico" />
-    <link href="js/codemirror/lib/codemirror.css" rel="stylesheet" type="text/css" />
     <link href="js/styles.css" rel="stylesheet" type="text/css" />
 </head>
 <body style = "">
@@ -18,18 +17,6 @@
    &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
    <a href="#" onclick='mainLoadPopup("about")'>О проекте</a>
    &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
-</div>
-
-<div style = " position:absolute; top:70px; height:100px;left:40px;width:400px;" >
-   <select id='examplesSelect' style = "width:280px;" onChange='mainOnExample();'>
-   </select>
-   &nbsp;&nbsp;&nbsp;
-   <input type="button" onclick="mainRunScript();" value="Выполнить"/>
-</div>
-
-<div id="codeArea" style = " position:absolute; top:120px; bottom:40px;left:40px;width:400px;" >
-<textarea id="codeEditor" name="code" style="width:100%;height:100%;">
-</textarea>
 </div>
 
 <div id="drawArea">
@@ -49,24 +36,6 @@
   <img class='icon-info-off' src="images/black/info.png" />
   <img class='icon-info-on' src="images/white/info.png" />
 </a>
-</td><td class='toolbar-space'>
-</td><td>
-<a href="#" title="Предыдущий кадр" onClick='mainOnFramePrev();'>
-  <img src="images/black/arrow-left.png" />
-</a>
-</td><td class='toolbar-counter'>
-<span class="frame-counter" ></span>
-</td><td>
-<a  href="#" title="Следующий кадр" onClick='mainOnFrameNext();'>
-  <img src="images/black/arrow-right.png" />
-</a>
-</td><td>
-<a  href="#" title="Старт/Пауза" onClick='mainOnPlay();'>
-  <img class='icon-play-off' src="images/black/play.png"/>
-  <img class='icon-play-on' src="images/white/play.png"/>
-</a>
-</td><td class='toolbar-space'>
-</td><td>
 <a href="#" title="3D-режимы" onClick='mainOnMode();'>
   <img src="images/3d.png"  />
 </a>
@@ -109,59 +78,28 @@
 <script type="text/javascript" src="js/three/TrackballControls.js"></script>
 <script type="text/javascript" src="js/three/CSS2DRenderer.js"></script>
 <script type="text/javascript" src="js/three/StereoEffect.js"></script>
-<script type="text/javascript" src="js/codemirror/lib/codemirror.js"></script>
-<script type="text/javascript" src="js/codemirror/addon/edit/matchbrackets.js"></script>
-<script type="text/javascript" src="js/codemirror/addon/comment/continuecomment.js"></script>
-<script type="text/javascript" src="js/codemirror/addon/comment/comment.js"></script>
-<script type="text/javascript" src="js/codemirror/mode/javascript/javascript.js"></script>
 <script type="text/javascript" src="js/zdesk.js"></script>
 <script type="text/javascript" src="js/interface.js"></script>
 <script type="text/javascript" src="js/main.js"></script>
-<script type="text/javascript" src="exampl/examples.js"></script>
 <script>
 
   // START SYSTEM
   mainSetFlags();
   mainCloneToolbar();
-  mainInitEditor(document.getElementById("codeEditor"));
-  mainLoadExamplesList(document.getElementById('examplesSelect'));
-  zdeskInit(document.getElementById( 'webgl' ),'images/textures/');
+  
+  const queryString = window.location.search;
+  console.log(queryString);
+  const urlParams = new URLSearchParams(queryString);
+  paper = 'examples'
+  slide = 'start'
+  if (urlParams.has('paper'))
+     paper = urlParams.get('paper')
+  if (urlParams.has('slide'))
+	 slide = urlParams.get('slide')
+	 
+  mainLoadSlide(paper, slide);
   window.addEventListener( 'resize', mainOnWindowResize , false );
   
-  mainLoadExample('start');
- // mainLoadExample('lesson17minmax');
-  
-  mainFrame(0);
-  mainOnAnimationFrame();
-  
 </script>
-<!-- Yandex.Metrika counter -->
-<script type="text/javascript">
-    (function (d, w, c) {
-        (w[c] = w[c] || []).push(function() {
-            try {
-                w.yaCounter32441125 = new Ya.Metrika({
-                    id:32441125,
-                    clickmap:true,
-                    trackLinks:true,
-                    accurateTrackBounce:true
-                });
-            } catch(e) { }
-        });
-
-        var n = d.getElementsByTagName("script")[0],
-            s = d.createElement("script"),
-            f = function () { n.parentNode.insertBefore(s, n); };
-        s.type = "text/javascript";
-        s.async = true;
-        s.src = "https://mc.yandex.ru/metrika/watch.js";
-
-        if (w.opera == "[object Opera]") {
-            d.addEventListener("DOMContentLoaded", f, false);
-        } else { f(); }
-    })(document, window, "yandex_metrika_callbacks");
-</script>
-<noscript><div><img src="https://mc.yandex.ru/watch/32441125" style="position:absolute; left:-9999px;" alt="" /></div></noscript>
-<!-- /Yandex.Metrika counter -->
 </body>
 </html>

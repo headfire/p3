@@ -6,6 +6,8 @@ var zdeskCamera, zdeskControls, zdeskScene, zdeskDrawing;
 var zdeskGeometryRenderer, zdeskLeftLabelRenderer, zdeskRightLabelRenderer ,zdeskStereoEffect;
 var zdeskCurrentCoord;
 
+var zdeskSlidePath;
+
 var zdeskRenderMode = 'mono-mode';
 var zdeskFrameNumber = 1;
 var zdeskFrameCount = 1;
@@ -161,14 +163,16 @@ function zdeskAdd( object ) {
 }
 
 
-function zdeskInit(container, texturePath) {
+function zdeskInit(container, texturePath, param) {
+	
+	            scale = param.scaleA/param.scaleB
 			
  			    if ( ! Detector.webgl ) Detector.addGetWebGLMessage();
 
 		        drawArea = container;
 
 				zdeskCamera = new THREE.PerspectiveCamera( 45, window.innerWidth / window.innerHeight, 1, 3000 );
-				zdeskCamera.position.set(0,-1000,1000);
+				zdeskCamera.position.set(0,-1000*scale,1000*scale);
                 zdeskCamera.lookAt(new THREE.Vector3( 0, 0, 0 ));
 
 				zdeskControls = new THREE.TrackballControls( zdeskCamera, drawArea );
@@ -186,15 +190,15 @@ function zdeskInit(container, texturePath) {
 
                 THREE.ImageUtils.crossOrigin = '';
 				
-			    var deskGeometry = new THREE.BoxGeometry( 1500, 1000, 40 );
+			    var deskGeometry = new THREE.BoxGeometry( 1500*scale, 1000*scale, 40*scale );
 		        var deskTexture = THREE.ImageUtils.loadTexture( texturePath + 'wood.jpg', undefined, zdeskRender);
 				deskTexture.minFilter = THREE.LinearFilter;
                 var deskMaterial = new THREE.MeshBasicMaterial( {  map: deskTexture } );
                 deskMesh = new THREE.Mesh( deskGeometry, deskMaterial );
-				deskMesh.position.z = -22;
+				deskMesh.position.set(param.deskDX, param.deskDY, param.deskDZ-22*scale); 
 				zdeskScene.add( deskMesh );
 				
-				var paperGeometry = new THREE.BoxGeometry( 1189, 841, 2);
+				var paperGeometry = new THREE.BoxGeometry( 1189*scale, 841*scale, 2*scale);
 		        paperTexture = THREE.ImageUtils.loadTexture(texturePath + 'paper.jpg', undefined, zdeskRender);
 				paperTexture.minFilter = THREE.LinearFilter;
 				paperTexture.wrapS = THREE.RepeatWrapping;
@@ -202,29 +206,29 @@ function zdeskInit(container, texturePath) {
                 paperTexture.repeat.set( 4, 4 );
                 var paperMaterial = new THREE.MeshBasicMaterial( {  map: paperTexture } );
                 paperMesh = new THREE.Mesh( paperGeometry, paperMaterial );
-				paperMesh.position.z = -1.9; // not 2 for flat surfaces visible
+				paperMesh.position.set(param.deskDX, param.deskDY, param.deskDZ-1.9*scale); // not 2 for flat surfaces visible
 				zdeskScene.add( paperMesh );
 		
-				var cnopGeometry = new THREE.CylinderGeometry( 10, 10, 6, 12, 1 );
+				var cnopGeometry = new THREE.CylinderGeometry( 10*scale, 10*scale, 6*scale, 12, 1 );
 				var cnopMaterial =  new THREE.MeshLambertMaterial( { color:0x707070 } ); // shading: THREE.FlatShading
 
                 cnopMesh = new THREE.Mesh( cnopGeometry, cnopMaterial );
-				cnopMesh.position.set(564,390,0);
+				cnopMesh.position.set(param.deskDX+564*scale,param.deskDY+390*scale,param.deskDZ+0);
 				cnopMesh.rotation.x = Math.PI/2;
 				zdeskScene.add( cnopMesh );
 				
                 cnopMesh = new THREE.Mesh( cnopGeometry, cnopMaterial );
-				cnopMesh.position.set(-564,390,0);
+				cnopMesh.position.set(param.deskDX-564*scale,param.deskDX+390*scale,param.deskDZ);
 				cnopMesh.rotation.x = Math.PI/2;
 				zdeskScene.add( cnopMesh );
 
                 cnopMesh = new THREE.Mesh( cnopGeometry, cnopMaterial );
-				cnopMesh.position.set(564,-390,0);
+				cnopMesh.position.set(param.deskDX+564*scale,param.deskDY-390*scale,param.deskDZ);
 				cnopMesh.rotation.x = Math.PI/2;
 				zdeskScene.add( cnopMesh );
 
                 cnopMesh = new THREE.Mesh( cnopGeometry, cnopMaterial );
-				cnopMesh.position.set(-564,-390,0);
+				cnopMesh.position.set(param.deskDX-564*scale,param.deskDY-390*scale,param.deskDZ);
 				cnopMesh.rotation.x = Math.PI/2;
 				zdeskScene.add( cnopMesh );
 				
@@ -234,7 +238,7 @@ function zdeskInit(container, texturePath) {
 				// lights
 
 				light = new THREE.DirectionalLight( 0xffffff );
-				light.position.set( -300, -200, 1000 );
+				light.position.set( -300*scale, -200*scale, 1000*scale );
 				zdeskScene.add( light );
 
 				light = new THREE.AmbientLight( 0x999999 );
@@ -267,9 +271,9 @@ function zdeskInit(container, texturePath) {
 				drawArea.appendChild( zdeskLeftLabelRenderer.domElement );
 				drawArea.appendChild( zdeskRightLabelRenderer.domElement );
 				
-				zdeskStereoEffect = new THREE.zdeskStereoEffect( zdeskGeometryRenderer, zdeskLeftLabelRenderer, zdeskRightLabelRenderer, 1200 );
+				zdeskStereoEffect = new THREE.zdeskStereoEffect( zdeskGeometryRenderer, zdeskLeftLabelRenderer, zdeskRightLabelRenderer, 1200*scale );
 				
-                zdeskSetRenderMode('mono-mode');  				
+				
 }
 
 
