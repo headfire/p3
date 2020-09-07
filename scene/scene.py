@@ -48,7 +48,9 @@ from OCC.Core.Quantity import Quantity_Color, Quantity_TOC_RGB
 from OCC.Core.Aspect import Aspect_TOM_BALL
 from OCC.Core.TopExp import TopExp_Explorer
 from OCC.Core.Graphic3d import Graphic3d_MaterialAspect
-from OCC.Core.BRepPrimAPI import BRepPrimAPI_MakeSphere
+from OCC.Core.BRepBuilderAPI import BRepBuilderAPI_MakeEdge
+
+from OCC.Core.BRepPrimAPI import BRepPrimAPI_MakeSphere, BRepPrimAPI_MakeBox
 
 
 #from OCC.Core.TopAbs import (TopAbs_COMPOUND, TopAbs_COMPSOLID, TopAbs_SOLID, TopAbs_SHELL,
@@ -63,30 +65,9 @@ from copy import deepcopy
 
 import random
 
-from threejs import ThreejsRenderer
+from threejs import ThreeJsRenderer
 
 from OCC.Extend.ShapeFactory import translate_shp, rotate_shp_3_axis
-
-"""
-n_toruses = 100
-
-idx = 0
-for i in range(n_toruses):
-    torus_shp = BRepPrimAPI_MakeTorus(10 + random.random()*10, random.random()*10).Shape()
-    # random position and orientation and color
-    angle_x = random.random()*360
-    angle_y = random.random()*360
-    angle_z = random.random()*360
-    rotated_torus = rotate_shp_3_axis(torus_shp, angle_x, angle_y, angle_z, 'deg')
-    tr_x = random.uniform(-70, 50)
-    tr_y = random.uniform(-70, 50)
-    tr_z = random.uniform(-50, 50)
-    trans_torus = translate_shp(rotated_torus, gp_Vec(tr_x, tr_y, tr_z))
-    rnd_color = (random.random(), random.random(), random.random())
-    my_ren.DisplayShape(trans_torus, export_edges=True, color=rnd_color, transparency=random.random())
-    print("%i%%" % (idx * 100 / n_toruses), end="")
-    idx += 1
-"""
 
 
 import json
@@ -107,13 +88,6 @@ SHAPE_TYPES = ['COMPOUND', 'COMPSOLID', 'SOLID', 'SHELL',
   
 TOPO_TYPES = ['TopAbs_COMPOUND', 'TopAbs_COMPSOLID', 'TopAbs_SOLID', 'TopAbs_SHELL',
                       'TopAbs_FACE', 'TopAbs_WIRE', 'TopAbs_EDGE', 'TopAbs_VERTEX', 'TopAbs_SHAPE']
-
-'''
-def printShapeItems(shape):
-    for TYPE in TOPO_TYPES:
-        items = getShapeItems(shape, TOPO_TYPES.index(TYPE))  
-        print(TYPE +':'+str(len(items)))   
-'''
 
 
 def objToStr(obj) :
@@ -166,108 +140,94 @@ def n(val, default):
 *****************************************************
 '''
 
-class NativeLib:
+
+
+class TestLib:
+    
     def __init__(self):
-        self.mode = 'test'
-   
-    def _drawAxis(self):
-        
-        style = self.getNormalStyle('stServ')
-        
-        pnt = gp_Pnt(0,0,0)
-        dir1 = gp_Dir(gp_Vec(0,0,1))
-        dir2 = gp_Dir(gp_Vec(1,0,0))
-        geomAxis = Geom_Axis2Placement(pnt, dir1, dir2)
-        
-        trih = AIS_Trihedron(geomAxis)
-        trih.SetSize(11)
-        
-        self.drawAis(trih, style, 1)
-        
-        self.drawAis(AIS_Point(Geom_CartesianPoint(gp_Pnt(0,0,0))), style, 1)
-        
-        for i in range (1,10):
-            self.drawAis(AIS_Point(Geom_CartesianPoint(gp_Pnt(i,0,0))), style, 1)
-            self.drawAis(AIS_Point(Geom_CartesianPoint(gp_Pnt(0,i,0))), style, 1)
-            self.drawAis(AIS_Point(Geom_CartesianPoint(gp_Pnt(0,0,i))), style, 1)
- 
-    
-    
-    def init(self, initMode):
-        if self.mode == 'test':
-            if initMode == 'screen':
-              self.display, self.start_display, self.add_menu,  self.add_function_to_menu  = init_display()
-              self.mode = initMode   
-            if initMode == 'web':
-              self.web = ThreejsRenderer('D:\headfire\coding\webgl')
-              self.mode = initMode   
-    
+        print('Test mode: init()')
+         
     def start(self):
-        if self.mode == 'test':
-           print('Scene in test mode is OK')
-        if self.mode == 'screen':
-           self._drawAxis()
-           self.display.FitAll()
-           self.start_display()
-        if self.mode == 'web':
-           self.web.render()        
-           
-           
-    def drawText(self, pnt, text, style, visible):
-       style = self.getNormalStyle(style) 
-       if visible == None:
-           visible = 1       
-       if self.mode == 'screen':
-         if visible > 0.5:
-             self.display.DisplayMessage(pnt, 
-                text, 20, style.get('color',(1,1,1)), False)            
-  
-    """
-    DisplayShape(self,
-                     shape,
-                     export_edges=False,
-                     color=(0.65, 0.65, 0.7),
-                     specular_color=(0.2, 0.2, 0.2),
-                     shininess=0.9,
-                     transparency=0.,
-                     line_color=(0, 0., 0.),
-                     line_width=1.,
-                     mesh_quality=1.):
-    """    
-    def drawShape(self, shape, style, visible):
-        style = self.getNormalStyle(style)
-        if self.mode == 'screen':
-            ais = AIS_Shape(shape)
-            self.drawAis(ais, style, visible)
-        if self.mode == 'web':
-            self.web.DisplayShape(shape, 
-                     False,
-                     style['color'],
-                     (0.2, 0.2, 0.2),
-                     0.9,
-                     0.,
-                     (0, 0., 0.),
-                     5.,
-                     0.2,
-                     0.01)
+        print('Test mode: start()')
     
-  
-    def drawAis(self, ais, style, visible):
-        if self.mode == 'screen': 
-                  
-               #order important
-               style = self.getNormalStyle(style)
-               for styleName in style:
-                  self.styleAis(ais, styleName, style[styleName])                
-                  
-               if visible == None:
-                       visible = 1       
-               if visible > 0.5:
-                      self.display.Context.Display(ais, False) 
-               else:    
-                      self.display.Context.Erase(ais, False)    
-                      
-    def styleAis(self, ais, styleName, styleValue):
+    def drawPoint(self, pnt, style):
+        print('Test mode: drawPoint()')
+        
+        
+    def drawLabel(self, pnt, text, style):
+        print('Test mode: drawLabel()')
+        
+    def drawShape(self, shape, style):
+        print('Test mode: drawShape()')
+
+
+class WebLib:
+    
+    def __init__(self, path, decoration, precision):
+       self.web = ThreeJsRenderer(path, decoration, precision)
+         
+    def start(self):
+       self.web.render()
+    
+    def drawPoint(self, pnt, style):
+       self.web.drawPoint(pnt, style['color'], style['pointSize'])
+        
+    def drawLabel(self, pnt, text, style):
+       self.web.drawLabel(pnt, text, style['color'], )
+        
+    def drawShape(self, shape, style):
+        self.web.drawShape(shape, style['color'], style['lineWidth'])
+        
+        
+
+class ScreenLib:
+    '''
+    backend_str=None,
+                 size=(1024, 768),
+                 display_triedron=True,
+                 background_gradient_color1=[206, 215, 222],
+                 background_gradient_color2=[128, 128, 128]
+   ''' 
+    def __init__(self, decoration):
+        self.display, self.start_display, self.add_menu,  self.add_function_to_menu  = init_display(
+            None, (1024, 768), True, [128, 128, 128], [128, 128, 128]
+            #background_gradient_color1=[206, 215, 222],
+            #background_gradient_color2=[128, 128, 128]
+            #background_gradient_color1=[206, 215, 222],
+            #background_gradient_color2=[206, 215, 222]
+          )
+        isDesk, isAxis, scaleA, scaleB, deskDX, deskDY, deskDZ = decoration
+        self.dLabel = 20 * scaleA/scaleB
+        self._decoration(isDesk, isAxis, scaleA, scaleB, deskDX, deskDY, deskDZ)
+
+    def _axisStyle(self):
+        
+        st = dict()
+        st['color'] = (40/100, 40/100, 40/100)
+        st['tran']  = 0
+        st['pointType'] = 'BALL'                
+        st['lineType'] = 'SOLID'                
+        st['pointSize'] = 2
+        st['lineWidth'] = 1               
+        st['material'] = 'PLASTIC'
+        
+        return st 
+ 
+    def _deskStyle(self):
+        
+        st = dict()
+        st['color'] = (70/100, 70/100, 70/100)
+        st['tran']  = 0
+        st['pointType'] = 'BALL'                
+        st['lineType'] = 'SOLID'                
+        st['pointSize'] = 2
+        st['lineWidth'] = 1               
+        st['material'] = 'PLASTIC'
+        
+        return st 
+ 
+
+    def _styleAis(self, ais, styleName, styleValue):
         if styleName == 'color':
             r,g,b = styleValue 
             color =  Quantity_Color(r, g, b, Quantity_TOC_RGB)
@@ -293,8 +253,107 @@ class NativeLib:
             if styleName == 'pointSize':         
                  ais.Attributes().PointAspect().SetScale(styleValue)
                  
+    def _drawLabel(self, pnt, text, style):
+       pntLabel = gp_Pnt(pnt.X()+self.dLabel,pnt.Y()+self.dLabel,pnt.Z()+self.dLabel) 
+       self.display.DisplayMessage(pntLabel, 
+                text, 20, style['color'], False)            
+       
+    def _drawPoint(self, pnt, style):
+        ais = AIS_Point(Geom_CartesianPoint(pnt))
+        self._drawAis(ais, style)
     
-    def getNormalStyle(self, styleVal):
+    def _drawShape(self, shape, style):
+        ais = AIS_Shape(shape)
+        self._drawAis(ais, style)
+            
+    def _drawAis(self, ais, style):
+        for styleName in style:
+           self._styleAis(ais, styleName, style[styleName])                
+           
+        self.display.Context.Display(ais, False) 
+        #self.display.Context.Erase(ais, False)    
+  
+    def _axis(self, size):
+        
+            style = self._axisStyle()
+          
+            step = size/10
+            ss = [1,5,10,50,100,500,1000,5000,10000]
+            for s in ss:
+               if step<s:
+                   step=s/5
+                   break
+                   
+            pnt = gp_Pnt(0,0,0)
+            dir1 = gp_Dir(gp_Vec(0,0,1))
+            dir2 = gp_Dir(gp_Vec(1,0,0))
+            geomAxis = Geom_Axis2Placement(pnt, dir1, dir2)
+            
+            trih = AIS_Trihedron(geomAxis)
+            trih.SetSize(size)
+            
+            self._drawAis(trih, style)
+            
+            self._drawPoint(gp_Pnt(0,0,0), style)
+            
+            cnt = int( size // step)
+            for i in range (1, cnt):
+                d = i* step
+                self._drawPoint(gp_Pnt(d,0,0), style)
+                self._drawPoint(gp_Pnt(0,d,0), style)
+                self._drawPoint(gp_Pnt(0,0,d), style)
+                
+     
+    def _desk(self, scaleA, scaleB, deskDX, deskDY, deskDZ): 
+            style = self._deskStyle()
+            scale = scaleA/scaleB
+            xBox, yBox, zBox = 1500*scale, 1000*scale, 40*scale
+            desk = BRepPrimAPI_MakeBox (gp_Pnt( -xBox/2+deskDX, -yBox/2+deskDY, -zBox+deskDZ), xBox, yBox, zBox)
+            self._drawShape(desk.Solid(), style)
+            scalePoint = gp_Pnt( -xBox/2+deskDX, -yBox/2+deskDY, zBox/3+deskDZ) 
+            self._drawLabel( scalePoint, 'M ' + str(scaleA) + ':' + str(scaleB), style )
+ 
+            
+    def _decoration(self, isDesk, isAxis, scaleA, scaleB, deskDX, deskDY, deskDZ):
+         
+       
+        if isDesk:
+            self._desk(scaleA, scaleB, deskDX, deskDY, deskDZ)
+            
+          
+        if isAxis:   
+            axisSize = 500*scaleA/scaleB
+            self._axis(axisSize)
+         
+        
+    def start(self):
+         self.display.FitAll()
+         self.start_display()
+           
+    def drawLabel(self, pnt, text, style):
+        self._drawLabel(pnt, text, style)
+            
+    def drawShape(self, shape, style):
+        self._drawShape(shape, style)
+            
+    def drawPoint(self, pnt, style):
+        self._drawPoint(pnt, style)
+    
+              
+     
+'''
+*****************************************************
+*****************************************************
+*****************************************************
+*****************************************************
+'''
+
+class Scene:
+ 
+    def __init__(self):
+       self.lib = TestLib()             
+     
+    def _getNormalStyle(self, styleVal):
         
         if isinstance(styleVal, dict):
            return styleVal
@@ -303,10 +362,8 @@ class NativeLib:
            styleVal = 'stMain' 
            
                    #      r%    g%     b%     op%     pnt  line   mat 
-        if styleVal == 'stServ':
-           styleVal = (   50,   50,   50,    100,      2,     1,  'PLASTIC'  )
-        elif styleVal == 'stInfo':
-           styleVal = (   50,   50,   50,     50,      3,     1,  'PLASTIC' )
+        if styleVal == 'stInfo':
+           styleVal = (   80,   80,   80,    100,      3,     1,  'PLASTIC' )
         elif styleVal == 'stMain':
            styleVal = (   10,   10,   90,    100,      3,     4,  'PLASTIC' )
         elif styleVal == 'stFocus':
@@ -329,55 +386,41 @@ class NativeLib:
         st['material'] = mat
         
         return st
-              
      
-'''
-*****************************************************
-*****************************************************
-*****************************************************
-*****************************************************
-'''
-
-class Scene:
-    def __init__(self, nativeLib):
-        self.nativeLib = nativeLib
-        return 
- 
-    def init(self, initMode = 'screen'):
-       self.nativeLib.init(initMode) 
-       
-       
-    def start(self):
-        self.nativeLib.start()
-    
-    def style(self, styleVal = None):
-        return self.nativeLib.getNormalStyle(styleVal)
-       
-    def label(self, pnt, label, style, visible):
-        pntLabel = gp_Pnt(pnt.X()+0.2, pnt.Y()+0.2, pnt.Z()+0.2)
-        self.nativeLib.drawText(pntLabel, label, style, visible)
-        
-    
-    def point(self, pnt, style, visible):
-        geomPnt = Geom_CartesianPoint(pnt)
-        ais= AIS_Point(geomPnt)
-        self.nativeLib.drawAis(ais, style, visible)
-        
-    def line(self, pnt1, pnt2, style, visible):
-        geomPnt1 = Geom_CartesianPoint(pnt1)
-        geomPnt2 = Geom_CartesianPoint(pnt2)
-        ais = AIS_Line(geomPnt1,geomPnt2)
-        self.nativeLib.drawAis(ais, style, visible)
-    
-    def circle(self, pnt1, pnt2, pnt3, style, visible):
-        geomCircle = GC_MakeCircle(pnt1, pnt2, pnt3).Value()
-        ais = AIS_Circle(geomCircle)
-        self.nativeLib.drawAis(ais, style, visible)
-    
-    def shape(self, shape,  style, visible):
-         self.nativeLib.drawShape(shape, style, visible)
+    def init(self, initMode, decoration, precision, exportDir):
+       if initMode == 'screen':
+          self.lib = ScreenLib(decoration)
+       elif  initMode == 'web': 
+         self.lib = WebLib(decoration, precision, exportDir)
          
+    def start(self):
+        self.lib.start()
+ 
+    def style(self, style):
+        return self._getNormalStyle(style)
+ 
+    def label(self, pnt, label, style):
+        style = self._getNormalStyle(style)
+        self.lib.drawLabel(pnt, label, style)
+    
+    def point(self, pnt, style):
+        style = self._getNormalStyle(style)
+        self.lib.drawPoint(pnt, style)
         
+    def line(self, pnt1, pnt2, style):
+        style = self._getNormalStyle(style)
+        edge = BRepBuilderAPI_MakeEdge(pnt1, pnt2).Edge()
+        self.lib.drawShape(edge, style)
+    
+    def circle(self, pnt1, pnt2, pnt3, style):
+        style = self._getNormalStyle(style)
+        geomCircle = GC_MakeCircle(pnt1, pnt2, pnt3).Value()
+        edge = BRepBuilderAPI_MakeEdge(geomCircle).Edge()
+        self.lib.drawShape(edge, style)
+    
+    def shape(self, shape,  style):
+        style = self._getNormalStyle(style)
+        self.lib.drawShape(shape, style)
     
 '''
 ***********************************************
@@ -385,55 +428,32 @@ class Scene:
 ***********************************************
 '''
 
-sc = Scene(NativeLib())
+sc = Scene()
     
-def ScInit(initMode = 'screen'):
-    return sc.init(initMode)
-
+def ScInit(initMode = 'screen', decoration = (True,True, 1,1,0,0,0), precision=(1.,1.), exportDir = None):
+    return sc.init(initMode, decoration, precision, exportDir)
+ 
 def ScStyle(styleVal = None):
     return  sc.style(styleVal)
 
-def ScPoint(pnt, style = None, visible = 1):
-    return sc.point(pnt, style, visible)
+def ScPoint(pnt, style = None):
+    return sc.point(pnt, style)
 
-def ScLine(pnt1, pnt2, style = None, visible = 1):
-    return sc.line(pnt1, pnt2, style, visible)
+def ScLine(pnt1, pnt2, style = None):
+    return sc.line(pnt1, pnt2, style)
 
-def ScCircle(pnt1, pnt2, pnt3, style = None, visible = 1):
-    return sc.circle(pnt1, pnt2, pnt3, style, visible = 1)
+def ScCircle(pnt1, pnt2, pnt3, style = None):
+    return sc.circle(pnt1, pnt2, pnt3, style)
 
-def ScShape(shape, style = None, visible = 1):
-    return sc.shape(shape, style, visible)
+def ScShape(shape, style = None):
+    return sc.shape(shape, style)
 
-def ScLabel(pnt, text, style = None, visible = 1):
-    return sc.label(pnt, text, style, visible)
+def ScLabel(pnt, text, style = None):
+    return sc.label(pnt, text, style)
 
 def ScStart():
     return sc.start()
 
-'''
-Todo
-
-ScFace
-ScLineArray
-ScArcArray
-ScLineMark
-ScAngleMark
-ScSphere
-ScCone
-ScCyl
-ScBox
-ScTor
-
-ScDo (virtual mashine command)
-'''
-
-'''
-
-***********************************************
-Testing
-***********************************************
-'''
 
 if __name__ == '__main__':
     
@@ -460,8 +480,8 @@ if __name__ == '__main__':
         ScPoint(gpPntStart, 'stMain')
         ScLabel(gpPntStart, 'lineStart+', 'stMain')
         
-        ScPoint(gpPntEnd, 'stMain', 0)
-        ScLabel(gpPntEnd, 'NotVisibleError!!!', 'stMain', 0)
+        ScPoint(gpPntEnd, 'stMain')
+        ScLabel(gpPntEnd, 'lineEnd', 'stMain')
     
     
     def  testCircle():
@@ -498,8 +518,9 @@ if __name__ == '__main__':
         ScShape(sp4, stCustom2)
         
   
+    decoration = (True, True, 1, 50, 0, 0, -3)
     
-    ScInit() 
+    ScInit('screen', decoration) 
     
     testPoint()
     testLine()

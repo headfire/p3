@@ -17,7 +17,6 @@
 
 import os
 import sys
-import tempfile
 import uuid
 import json
 
@@ -29,6 +28,12 @@ def spinning_cursor():
     while True:
         for cursor in '|/-\\':
             yield cursor
+            
+def jsBool(bool):          
+  if bool:
+      return 'true'
+  else:
+      return 'false'
 
 def color_to_hex(rgb_color):
     """ Takes a tuple with 3 floats between 0 and 1.
@@ -67,33 +72,36 @@ def export_edgedata_to_json(edge_hash, point_set):
     return json.dumps(edges_data)
 
 
-class ThreejsRenderer:
-    def __init__(self, path=None):
-        if not path:
-            self._path = tempfile.mkdtemp()
-        else:
-            self._path = tempfile.mkdtemp('scene','00',path)
-        self._html_filename = os.path.join(self._path, "index.html")
+class ThreeJsRenderer:
+    
+    def __init__(self, path, decoration, precision):
+        
+        self._path = path
+        self._js_filename = os.path.join(self._path, "make_scene.js")
         self._3js_shapes = {}
         self._3js_edges = {}
         self.spinning_cursor = spinning_cursor()
+        self.decoration = decoration
+        self.precision = precision
+        
         print("## threejs %s webgl renderer")
+       
 
-    def DisplayShape(self,
+    def drawShape(self,
                      shape,
-                     export_edges=False,
                      color=(0.65, 0.65, 0.7),
-                     specular_color=(0.2, 0.2, 0.2),
-                     shininess=0.9,
                      transparency=0.,
-                     line_color=(0, 0., 0.),
                      line_width=1.,
-                     mesh_quality=1.,
-                     wire_quality = 1.):
+                     export_edges=False,
+                    ):
         # if the shape is an edge or a wire, use the related functions
+        shininess=0.9,
+        specular_color=(0.2, 0.2, 0.2),
+        line_color=(0, 0., 0.),
+        shape_precision, wire_precision = self.precision 
         if is_edge(shape):
             print("discretize an edge")
-            pnts = discretize_edge(shape, wire_quality)
+            pnts = discretize_edge(shape, wire_precision)
             edge_hash = "edg%s" % uuid.uuid4().hex
             str_to_write = export_edgedata_to_json(edge_hash, pnts)
             edge_full_path = os.path.join(self._path, edge_hash + '.json')
@@ -104,7 +112,7 @@ class ThreejsRenderer:
             return self._3js_shapes, self._3js_edges
         elif is_wire(shape):
             print("discretize a wire")
-            pnts = discretize_wire(shape, wire_quality)
+            pnts = discretize_wire(shape, wire_precision)
             wire_hash = "wir%s" % uuid.uuid4().hex
             str_to_write = export_edgedata_to_json(wire_hash, pnts)
             wire_full_path = os.path.join(self._path, wire_hash + '.json')
@@ -118,7 +126,7 @@ class ThreejsRenderer:
         # tesselate
         tess = ShapeTesselator(shape)
         tess.Compute(compute_edges=export_edges,
-                     mesh_quality=mesh_quality,
+                     mesh_quality=shape_precision,
                      parallel=True)
         # update spinning cursor
         sys.stdout.write("\r%s mesh shape %s, %i triangles     " % (next(self.spinning_cursor),
@@ -158,7 +166,7 @@ class ThreejsRenderer:
         return self._3js_shapes, self._3js_edges
 
 
-    def generate_html_file(self):
+    def generate_js_file(self):
         shape_string_list = []
         shape_string_list.append("loader = new THREE.BufferGeometryLoader();\n")
         shape_idx = 0
@@ -202,11 +210,16 @@ class ThreejsRenderer:
             edge_string_list.append("\t});\n")
         # write the string for the shape
         with open(self._html_filename, "w") as fp:
+            fp.write('function makeScene(); \n')
+            isDesk, isAxis, scaleA, scaleB, deskDX, deskDY, deskDZ = self.decoration
+            fp.write('/tmakeDecoration(%s,%s,%i,%i,%g,%g,%g); \n' % jsBool(isDesk), jsBool(isAxis), scaleA, scaleB, deskDX, deskDY, deskDZ)
             fp.write("".join(shape_string_list))
             fp.write("".join(edge_string_list))
+            fp.write('}\n')
+          
         
     def render(self, addr="localhost", server_port=8080, open_webbrowser=False):
-        self.generate_html_file()
+        self.generate_js_file()
 
 if __name__ == "__main__":
     

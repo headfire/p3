@@ -495,41 +495,40 @@ def slide_07_DaoWithCase (r, offset, caseH, delta):
         
 def step(mode, slideName, quality = 'draft'):
     
-   # shapePrecision = scale/5
-   # wirePrecision = scale/5
+    scale = 1/20 
+    origin = (0,0,4)
+    shapePrecision = scale/5
+    wirePrecision = scale/5
     
-   # if quality == 'draft':
-   #   shapePrecision = shapePrecision*2
-   #   wirePrecision = wirePrecision*2
+    if quality == draft :
+      shapePrecision = shapePrecision*2
+      wirePrecision = wirePrecision*2
       
-   # exportDir = 'D:/headfire/coding/webgl/doosun/'+ slideName
+    exportDir = 'D:/headfire/coding/webgl/doosun/'+ slideName
         
-    decoration = (True, True, 1, 50, 0, 0, -3)
-    
-    ScInit('screen', decoration) 
-    
+    ScInit(mode, scale, origin, wirePrecision, shapePrecision,  exportDir)
     
     r = 5
     offset = 0.3
 
-    if slideName == 'slide_01_DaoClassic':
+    if slideName = 'slide_01_DaoClassic'
         slide_01_DaoClassic(r)
-    elif slideName == 'slide_02_DaoConcept':
+    elif slideName = 'slide_02_DaoConcept'
         slide_02_DaoConcept(r, offset)
-    elif slideName == 'DaoSecPrincipe':
+    elif slideName = 'DaoSecPrincipe'
        kExample = 0.5
        hPlane = 3
        slide_03_DaoSecPrincipe(r, offset, kExample, hPlane)
-    elif slideName == 'slide_04_DaoManySec':
+    elif slideName = 'slide_04_DaoManySec'
        kStart = 0.03
        kEnd = 0.97
        cntSec = 30
        slide_04_DaoManySec(r, offset, kStart, kEnd, cntSec)
-    elif slideName == 'slide_05_DaoSkinning':
+    elif slideName = 'slide_05_DaoSkinning'
        slide_05_DaoSkinning (r, offset)
-    elif slideName == 'slide_06_DaoComplete':
+    elif slideName = 'slide_06_DaoComplete'
        slide_06_DaoComplete (r, offset)
-    elif slideName == 'slide_07_DaoWithCase':
+    elif slideName = 'slide_07_DaoWithCase'
        caseH = 3
        caseGap = 0.1
        slide_07_DaoWithCase (r, offset, caseH, caseGap)
@@ -538,11 +537,10 @@ def step(mode, slideName, quality = 'draft'):
  
 if __name__ == '__main__':
     
-    #step('test', 'slide_01_DaoClassic')
-    #step('screen', 'slide_01_DaoClassic')
+    #step('screen', 'slide_01_DaoClassic', )
     #step('web', 'slide_01_DaoClassic')
     
-    step('screen', 'slide_02_DaoConcept')
+    #step('screen', 'slide_02_DaoConcept')
     #step('web', 'slide_02_DaoConcept')
     
     #step('screen', 'slide_03_DaoSecPrincipe')
@@ -564,3 +562,22 @@ if __name__ == '__main__':
     #step('web', 'slide_08_DaoWithCase', 'fine')
     #step('printer', 'slide_08_DaoWithCase', 'fine')
     
+    
+    
+    step = 1
+    if slide = 1:
+      slideName =  'slide_01_DaoClassic'
+      slide_01_DaoClassic(r)
+    elif slide = 2:
+    #slide_02_DaoConcept(r, offset)
+    #slide_03_DaoSecPrincipe(r, offset, 0.5, 3)
+    #slide_04_DaoManySec(r, offset, 0.03, 0.97, 30)
+    #slide_05_DaoSkinning (r, offset)
+    #slide_06_DaoComplete (r, offset)
+    #slide_07_DaoWithCase (r, offset, 3, -3)
+    #slide_08_DaoWithCase (r, offset, 3, -3)
+    
+    
+    ScStart(slideName)
+
+
