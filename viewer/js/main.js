@@ -128,7 +128,7 @@ function mainLoadSlideInfo(paper, slide) {
      if (xmlhttp.readyState == 4) {
        if (xmlhttp.status == 200) {
 	       var slideInfo = JSON.parse(xmlhttp.responseText);
-		   var slideName = 'Проект "Точка сборки". ' + slideInfo.slideName;
+		   var slideName = 'Точка сборки - 3D. ' + slideInfo.slideName;
 		   mainSetHtmlByClass('slide-name', slideName)
 	    }
 	 }
