@@ -111,9 +111,9 @@ function mainLoadSlide(paper, slide) {
      param = slideGetParam() 
      zdeskInit(document.getElementById( 'webgl' ),'images/textures/', param);
 	 slideMake('slides'+'/'+paper+'/'+slide+'/');
+     mainOnAnimationFrame()
    	 zdeskSetRenderMode('mono-mode');  				
-	 mainOnAnimationFrame()
-    }
+	  }
   };
  xmlhttp.send(null); 
 }

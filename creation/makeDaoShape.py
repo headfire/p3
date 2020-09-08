@@ -556,9 +556,9 @@ if __name__ == '__main__':
     #do('web', 'slide_02_DaoConcept')
     #do('web', 'slide_03_DaoSecPrincipe')
     #do('web', 'slide_04_DaoManySec')
-    #do('web', 'slide_05_DaoSkinning')
+    do('web', 'slide_05_DaoSkinning')
     #do('web', 'slide_06_DaoComplete')
-    do('web', 'slide_07_DaoWithCase')
+    #do('web', 'slide_07_DaoWithCase')
     
     #do('web', 'daoFine', (0.1, 0.1), path)
     

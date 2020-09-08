@@ -26,6 +26,45 @@ var zdeskVisibleEndFrame;
 var zdeskObjects = Array();
 var zdeskMessages = Array();
 
+function zdeskCurve(pJsonPath, pColor, pLineWidth) {
+	zdeskLoader.load(pJsonPath, function(geometry) {
+	line_material = new THREE.LineBasicMaterial({color: pColor, linewidth: pLineWidth});
+	line = new THREE.Line(geometry, line_material);
+	zdeskScene.add(line);
+	zdeskRender();
+	});
+}	
+
+function zdeskShape(pJsonPath, pColor, pSpecular, pShininess, pOpacity) {
+    var shape_phong_material;
+    if (pOpacity == 1) {
+			shape_phong_material = new THREE.MeshPhongMaterial( {
+			   color:pColor,
+			   specular:pSpecular,
+			   shininess:pShininess,
+			   side: THREE.DoubleSide,
+			   });
+		} else {		   
+			shape_phong_material = new THREE.MeshPhongMaterial( {
+			   color:pColor,
+			   //specular:pSpecular,
+			   //shininess:pShininess,
+			   side: THREE.DoubleSide,
+			   transparent: true, 
+			   premultipliedAlpha: true, 
+			   opacity:pOpacity
+		   });
+		 }  
+    	zdeskLoader.load(pJsonPath, function(geometry) {
+				mesh = new THREE.Mesh(geometry, shape_phong_material);
+				mesh.castShadow = true;
+				mesh.receiveShadow = true;
+				zdeskScene.add(mesh);
+				zdeskRender();
+			});
+}			
+
+
 function zdeskGetFrameInfo() {
  return  zdeskFrameNumber + ' / ' + zdeskFrameCount;
 }
@@ -187,6 +226,8 @@ function zdeskInit(container, texturePath, param) {
 				zdeskControls.addEventListener( 'change', zdeskRender );
 
 				zdeskScene = new THREE.Scene();
+				zdeskLoader = new THREE.BufferGeometryLoader();
+
 
                 THREE.ImageUtils.crossOrigin = '';
 				
