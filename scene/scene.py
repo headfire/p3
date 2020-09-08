@@ -1,73 +1,22 @@
-"""
-#  TEMPLATE START
-
-from scene import (SceneIsObj, SceneGetObj, SceneApply, SceneRegObj,
-SceneMakeColor, SceneLayer, SceneSetStyle, SceneGetStyle ,SceneLevelUp, SceneLevelDown,
-SceneDebug, SceneStart, SceneEnd)
-
-from scene import DrawAxis
-
-
-def PaintMyObject(name, size)
-    SceneLevelDown(name)
-    SceneDrawPoint(gp_Pnt(1,1,1))
-    SceneLevelUp()
-
-if __name__ == '__main__':
-    
-    # may comment this line for debug
-    SceneScreenInitDebug()
-    
-    
-    DrawAxis('axis')
-    
-    PaintMyOnject('object', 10)
-    
-    SceneScreenStart()
-  
-#  TEMPLATE END
-    
-"""
-
-"""
-To do  
-
-color object dump
-SceneRegisterCreation
-SceneRegisterAnimation
-SceneRegisterMenu
-
-"""
-
 from OCC.Display.SimpleGui import init_display
     
 from OCC.Core.gp import gp_Pnt, gp_Dir, gp_Vec
 from OCC.Core.Geom import Geom_Axis2Placement, Geom_CartesianPoint, Geom_Point
-from OCC.Core.AIS import AIS_Point, AIS_InteractiveObject, AIS_Trihedron, AIS_Shape, AIS_Line, AIS_Circle
+from OCC.Core.AIS import AIS_Point, AIS_Trihedron, AIS_Shape, AIS_Line
 from OCC.Core.Quantity import Quantity_Color, Quantity_TOC_RGB
-from OCC.Core.Aspect import Aspect_TOM_BALL
 from OCC.Core.TopExp import TopExp_Explorer
 from OCC.Core.Graphic3d import Graphic3d_MaterialAspect
 from OCC.Core.BRepBuilderAPI import BRepBuilderAPI_MakeEdge
 
 from OCC.Core.BRepPrimAPI import BRepPrimAPI_MakeSphere, BRepPrimAPI_MakeBox
 
-
-#from OCC.Core.TopAbs import (TopAbs_COMPOUND, TopAbs_COMPSOLID, TopAbs_SOLID, TopAbs_SHELL,
-#                      TopAbs_FACE, TopAbs_WIRE, TopAbs_EDGE, TopAbs_VERTEX, TopAbs_SHAPE)
-
 from OCC.Core.TopAbs import TopAbs_EDGE, TopAbs_VERTEX
 
 from OCC.Core.TopoDS import TopoDS_Shape
-from OCC.Core.Bnd import Bnd_Box
 from OCC.Core.GC import  GC_MakeCircle
-from copy import deepcopy
 
-import random
 
 from threejs import ThreeJsRenderer, StlRenderer
-
-from OCC.Extend.ShapeFactory import translate_shp, rotate_shp_3_axis
 
 
 import json
@@ -207,20 +156,10 @@ class WebLib:
         
 
 class ScreenLib:
-    '''
-    backend_str=None,
-                 size=(1024, 768),
-                 display_triedron=True,
-                 background_gradient_color1=[206, 215, 222],
-                 background_gradient_color2=[128, 128, 128]
-   ''' 
+    
     def __init__(self, decoration):
         self.display, self.start_display, self.add_menu,  self.add_function_to_menu  = init_display(
             None, (1024, 768), True, [128, 128, 128], [128, 128, 128]
-            #background_gradient_color1=[206, 215, 222],
-            #background_gradient_color2=[128, 128, 128]
-            #background_gradient_color1=[206, 215, 222],
-            #background_gradient_color2=[206, 215, 222]
           )
         isDesk, isAxis, scaleA, scaleB, deskDX, deskDY, deskDZ = decoration
         self.dLabel = 20 * scaleA/scaleB
@@ -337,7 +276,7 @@ class ScreenLib:
             desk = BRepPrimAPI_MakeBox (gp_Pnt( -xBox/2+deskDX, -yBox/2+deskDY, -zBox+deskDZ), xBox, yBox, zBox)
             self._drawShape(desk.Solid(), style)
             scalePoint = gp_Pnt( -xBox/2+deskDX, -yBox/2+deskDY, zBox/3+deskDZ) 
-            self._drawLabel( scalePoint, 'M ' + str(scaleA) + ':' + str(scaleB), style )
+            self._drawLabel( scalePoint, 'A0 M' + str(scaleB) + ':' + str(scaleA), style )
  
             
     def _decoration(self, isDesk, isAxis, scaleA, scaleB, deskDX, deskDY, deskDZ):
@@ -389,15 +328,15 @@ class Scene:
            
                    #      r%    g%     b%     op%     pnt  line   mat 
         if styleVal == 'stInfo':
-           styleVal = (   80,   80,   80,    100,      6,     1,  'PLASTIC' )
+           styleVal = (   30,   30,   30,    100,     3,     2,  'PLASTIC' )
         elif styleVal == 'stMain':
-           styleVal = (   10,   10,   90,    100,      6,     4,  'PLASTIC' )
+           styleVal = (   10,   10,   90,    100,      3,     4,  'PLASTIC' )
         elif styleVal == 'stFocus':
-           styleVal = (   90,   10,   10,     30,      6,     2,  'CHROME' )
+           styleVal = (   90,   10,   10,     30,      3,     2,  'CHROME' )
         elif styleVal == 'stGold':
-           styleVal = (   90,   90,   10,    100,      6,     4,  'GOLD'    )
+           styleVal = (   90,   90,   10,    100,      3,     4,  'GOLD'    )
         elif styleVal == 'stFog':
-           styleVal = (   90,   90,   90,    30,      6,     4,   'PLASTIC'  )
+           styleVal = (   90,   90,   90,    30,       3,      4,   'PLASTIC'  )
            
         r, g, b, op, ps ,lw, mat = styleVal
         

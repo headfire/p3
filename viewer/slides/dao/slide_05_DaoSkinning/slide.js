@@ -11,9 +11,10 @@ function loadedSlideGetParam() {
 }
 
 function loadedSlideMake(slidePath) { 
-	zdeskXCurve(slidePath+'exp_001_edge.json', 0xcccccc, 1);
+	zdeskXCurve(slidePath+'exp_001_edge.json', 0x4c4c4c, 2);
 	zdeskXCurve(slidePath+'exp_002_wire.json', 0x1919e5, 4);
-	zdeskXPoint(0, -10, 0, 0x1919e5, 6);
+	zdeskXPoint(0, -10, 0, 0x1919e5, 3);
+	zdeskXLabel(0, -10, 0, 'f', 0x1919e5);
 	zdeskXCurve(slidePath+'exp_003_wire.json', 0x1919e5, 4);
 	zdeskXCurve(slidePath+'exp_004_wire.json', 0x1919e5, 4);
 	zdeskXCurve(slidePath+'exp_005_wire.json', 0x1919e5, 4);

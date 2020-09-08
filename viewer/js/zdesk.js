@@ -63,15 +63,41 @@ function zdeskXLabel(x,y,z, txt, color) {
 
 
 function zdeskXPoint(x,y,z, color, size) {
-	var sphereGeometry = new THREE.IcosahedronGeometry( size * zdeskScaleA/zdeskScaleB, 2 );
+	var sphereGeometry = new THREE.IcosahedronGeometry( size * zdeskScaleA/zdeskScaleB*2, 2 );
     var material = zdeskGetMaterial(color);
 	var mesh = new THREE.Mesh( sphereGeometry, material );
       mesh.position.copy(new THREE.Vector3 (x, y, z));
 	zdeskScene.add(mesh);
 }
 
+function zdeskXLine(startPlace, endPlace, pColor, pLineWidth) {
+    var geometry = new THREE.CylinderGeometry( 1, 1, 1 );
+    var object = new THREE.Mesh( geometry, zdeskGetMaterial(pColor) );
+	object.position.copy(startPlace);
+	object.position.lerp( endPlace, 0.5 );
+	object.scale.set( pLineWidth*zdeskScaleA/zdeskScaleB/1.5, startPlace.distanceTo( endPlace ), pLineWidth*zdeskScaleA/zdeskScaleB/1.5 );
+	object.lookAt( endPlace );
+	object.rotateOnAxis(new THREE.Vector3(1,0,0),Math.PI/2);
+	zdeskScene.add( object );
+}
+
 
 function zdeskXCurve(pJsonPath, pColor, pLineWidth) {
+	zdeskLoader.load(pJsonPath, function(geometry) {
+	arr = 	geometry.attributes.position.array
+	cnt = arr.length;
+    var x0 = arr[0]; var y0 = arr[1]; var z0 = arr[2];
+	var x1 = x0;  var y1 = y0; var z1 = z0;
+	for (var i = 1; i<cnt/3 ;i++) {
+		x1 = x0;  y1 = y0; z1 = z0;
+	    x0 = arr[i*3];  y0 = arr[i*3+1]; z0 = arr[i*3+2];
+		zdeskXLine(new THREE.Vector3 (x0, y0, z0), new THREE.Vector3 (x1, y1, z1), pColor, pLineWidth)
+	}	
+	zdeskRender();
+	});
+}
+	
+function zdeskXXCurve(pJsonPath, pColor, pLineWidth) {
 	zdeskLoader.load(pJsonPath, function(geometry) {
 	line_material = new THREE.LineBasicMaterial({color: pColor, linewidth: pLineWidth});
 	line = new THREE.Line(geometry, line_material);

@@ -7,47 +7,24 @@ import os
 
 from scene import ScInit, ScPoint, ScLine, ScCircle, ScShape, ScLabel, ScStart, ScStyle
 
-from OCC.Core.gp import gp_Pnt, gp_Trsf, gp_Dir, gp_Vec, gp_Ax1, gp_Ax2, gp_GTrsf, gp_OZ
-from OCC.Core.Geom import Geom_CartesianPoint, Geom_Line, Geom_Plane, Geom_TrimmedCurve
+from OCC.Core.gp import gp_Pnt, gp_Trsf, gp_Dir, gp_Vec, gp_Ax1, gp_Ax2, gp_GTrsf
+from OCC.Core.Geom import Geom_TrimmedCurve
 from OCC.Core.GeomAPI import GeomAPI_IntCS
 from OCC.Core.TopExp import TopExp_Explorer
-from OCC.Core.GeomPlate import  (GeomPlate_BuildPlateSurface, 
-                                 GeomPlate_CurveConstraint, GeomPlate_MakeApprox,
-                                 GeomPlate_PointConstraint)
-from OCC.Core.GeomAdaptor import GeomAdaptor_HCurve
+from OCC.Core.TopAbs import  TopAbs_FACE, TopAbs_EDGE, TopAbs_VERTEX
 
 from OCC.Core.GC import GC_MakeArcOfCircle, GC_MakeCircle
-from OCC.Core.AIS import AIS_Shape, AIS_Point, AIS_Circle
+
+from OCC.Core.BRep import BRep_Tool
 from OCC.Core.BRepBuilderAPI import  (BRepBuilderAPI_MakeEdge, BRepBuilderAPI_MakeWire, 
              BRepBuilderAPI_Transform, BRepBuilderAPI_GTransform, BRepBuilderAPI_MakeFace,  BRepBuilderAPI_MakeVertex)
 from OCC.Core.BRepOffsetAPI import BRepOffsetAPI_MakeOffset, BRepOffsetAPI_ThruSections
-
-from OCC.Core.TopExp import TopExp_Explorer
-from OCC.Core.BRep import BRep_Tool
-from OCC.Core.TopLoc import TopLoc_Location
-
-from OCC.Core.TopAbs import (TopAbs_COMPOUND, TopAbs_COMPSOLID, TopAbs_SOLID, TopAbs_SHELL,
-                      TopAbs_FACE, TopAbs_WIRE, TopAbs_EDGE, TopAbs_VERTEX, TopAbs_SHAPE)
-
-from OCC.Core.BRepPrimAPI import BRepPrimAPI_MakeSphere, BRepPrimAPI_MakeBox,  	BRepPrimAPI_MakeCylinder
+from OCC.Core.BRepPrimAPI import BRepPrimAPI_MakeSphere, BRepPrimAPI_MakeBox
 from OCC.Core.BRepAlgoAPI import BRepAlgoAPI_Common, BRepAlgoAPI_Cut
-
 
 from math import pi
 
 
-'''
-def delDoublePnts(pnts) :
-    iFind = 10000
-    while iFind != -1:
-        iFind = -1 
-        for i1 in range(len(pnts)):
-            for i2 in range(i1):
-               if pnts[i1].IsEqual(pnts[i2], 0.001):
-                   iFind = i2
-        if iFind != -1:           
-           pnts.pop(iFind)           
-'''
 def getXYZ(gpPnt):
     return (gpPnt.X(), gpPnt.Y(), gpPnt.Z())
 
@@ -351,7 +328,7 @@ def drawPoints(pnts, style, label =''):
        i = 0 
        for pnt in pnts:
           if label:
-              newLabel = label + '_' + str(i)
+              newLabel = label + str(i)
           else:
               newLabel = ''
           drawPoints(pnt, style, newLabel)
@@ -405,8 +382,7 @@ def slide_03_DaoSecPrincipe(r, offset, k, h):
     # we need focus to determine tail sections 
     pntFocus = getPntDaoFocus(r)
     ScPoint(pntFocus, 'stMain')
-    ScLabel(pntFocus, 'f0', 'stMain')
-  
+    
     # we need two points to determine section
     pnt1, pnt2 = getPntsForDaoSec(pntDaoStart, pntUpLimit, pntDaoEnd, pntDownLimit, pntFocus, k)
     ScLine(pnt1, pnt2, 'stFocus')
@@ -430,8 +406,7 @@ def slide_04_DaoManySec(r, offset, kStart, kEnd, cnt):
     pntDownLimit, pntDaoStart, pntUpLimit, pntDaoEnd  = pntsDao0
     
     pntFocus = getPntDaoFocus(r)
-    drawPoints(pntFocus,  'stFocus', 'f0')
- 
+    
     for i in range(cnt+1):
         k = i/cnt
         kkScale = kEnd - kStart
@@ -549,9 +524,9 @@ if __name__ == '__main__':
     #do('web', 'slide_02_DaoConcept')
     #do('web', 'slide_03_DaoSecPrincipe')
     #do('web', 'slide_04_DaoManySec')
-    #do('web', 'slide_05_DaoSkinning')
+    do('web', 'slide_05_DaoSkinning')
     #do('web', 'slide_06_DaoComplete')
     #do('web', 'slide_07_DaoWithCase')
     
-    do('stl', 'slide_07_DaoWithCase')
+    #do('stl', 'slide_07_DaoWithCase')
     
