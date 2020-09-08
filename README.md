@@ -67,4 +67,6 @@
 
 ## Контакты
 
+Официальный сайт проекта [https://headfire.github.io/crpoint/](https://headfire.github.io/crpoint/)
+
 Пишите про Ваши идеи и предложения на [headfire@yandex.ru](mailto:headfire@yandex.ru).
