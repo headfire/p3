@@ -14,7 +14,6 @@ function loadedSlideMake(slidePath) {
 	zdeskXCurve(slidePath+'exp_001_edge.json', 0xcccccc, 1);
 	zdeskXCurve(slidePath+'exp_002_wire.json', 0x1919e5, 4);
 	zdeskXPoint(0, -10, 0, 0xe51919, 6);
-	zdeskXLabel(0, -10, 0, 'f0', 0xe51919);
 	zdeskXCurve(slidePath+'exp_003_edge.json', 0xe51919, 2);
 	zdeskXCurve(slidePath+'exp_004_wire.json', 0x1919e5, 4);
 	zdeskXCurve(slidePath+'exp_005_edge.json', 0xe51919, 2);
