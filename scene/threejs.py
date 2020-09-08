@@ -16,13 +16,47 @@
 ##along with pythonOCC.  If not, see <http://www.gnu.org/licenses/>.
 
 import os
-import sys
 import uuid
 import json
 
 from OCC.Core.Tesselator import ShapeTesselator
 
 from OCC.Extend.TopologyUtils import is_edge, is_wire, discretize_edge, discretize_wire
+from OCC.Extend.DataExchange import write_stl_file
+
+
+class StlRenderer:
+    
+    def __init__(self, precision, path):
+        if not path:
+            raise Exception('StlRenderer need path for exported files')
+        self._path = path
+        self.precision = precision
+        self.shapeNum = 1
+        
+        print("Stl renderer init")
+       
+    def drawPoint(self, pnt, color, size):
+        pass
+      
+    def drawLabel(self, pnt, text, color):
+        pass
+  
+    def drawShape(self,  shape):
+        shape_precision, wire_precision = self.precision 
+        if is_edge(shape):
+            pass
+        elif is_wire(shape):
+            pass
+        else: #solid or shell
+            print("export shape %s to STL start", str(self.shapeNum).zfill(3))
+            shape_hash = "exp_%s_shape" % str(self.shapeNum).zfill(3)
+            shape_full_path = os.path.join(self._path, shape_hash + '.stl')
+            write_stl_file(shape, shape_full_path, "ascii", shape_precision/4, 0.5/4)
+            print("export shape %s to STL done", str(self.shapeNum).zfill(3))
+            self.shapeNum += 1
+         
+    
 
 def jsBool(bool):          
   if bool:
@@ -103,7 +137,7 @@ class ThreeJsRenderer:
             print("discretize an edge")
             pnts = discretize_edge(shape, wire_precision)
             edge_hash = "exp_%s_edge" % str(self.shapeNum).zfill(3)
-            self.shapeNum += 1;
+            self.shapeNum += 1
             str_to_write = export_edgedata_to_json(edge_hash, pnts)
             edge_full_path = os.path.join(self._path, edge_hash + '.json')
             with open(edge_full_path, "w") as edge_file:
@@ -116,7 +150,7 @@ class ThreeJsRenderer:
             print("discretize a wire")
             pnts = discretize_wire(shape, wire_precision)
             wire_hash = "exp_%s_wire" % str(self.shapeNum).zfill(3)
-            self.shapeNum += 1;
+            self.shapeNum += 1
             str_to_write = export_edgedata_to_json(wire_hash, pnts)
             wire_full_path = os.path.join(self._path, wire_hash + '.json')
             with open(wire_full_path, "w") as wire_file:
@@ -129,7 +163,7 @@ class ThreeJsRenderer:
             print("tesselate a shape")
             shape_uuid = uuid.uuid4().hex
             shape_hash = "exp_%s_shape" % str(self.shapeNum).zfill(3)
-            self.shapeNum += 1;
+            self.shapeNum += 1
             # tesselate
             tess = ShapeTesselator(shape)
             tess.Compute(compute_edges=False,

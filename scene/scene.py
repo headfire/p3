@@ -65,7 +65,7 @@ from copy import deepcopy
 
 import random
 
-from threejs import ThreeJsRenderer
+from threejs import ThreeJsRenderer, StlRenderer
 
 from OCC.Extend.ShapeFactory import translate_shp, rotate_shp_3_axis
 
@@ -159,6 +159,27 @@ class TestLib:
         
     def drawShape(self, shape, style):
         print('Test lib: drawShape()')
+
+
+class StlLib:
+    
+    def __init__(self, decoration, precision, path):
+       print('Stl lib: init()')
+       self.stl = StlRenderer(precision, path)
+         
+    def start(self):
+        print('Stl lib: start()')
+    
+    def drawPoint(self, pnt, style):
+        print('Stl lib: drawPoint()')
+        
+    def drawLabel(self, pnt, text, style):
+        print('Stl lib: drawLabel()')
+        
+    def drawShape(self, shape, style):
+        print('Stl lib: drawShape()')
+        self.stl.drawShape(shape)
+        
 
 
 class WebLib:
@@ -397,6 +418,8 @@ class Scene:
           self.lib = ScreenLib(decoration)
        elif  initMode == 'web': 
          self.lib = WebLib(decoration, precision, exportDir)
+       elif  initMode == 'stl': 
+         self.lib = StlLib(decoration, precision, exportDir)
          
     def start(self):
         self.lib.start()

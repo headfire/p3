@@ -485,14 +485,7 @@ def slide_07_DaoWithCase (r, offset, caseH, caseZMove ,gap):
     case = getShapeTranslate(case, 0,0, caseZMove)
     ScShape(case, stCase)
         
-def do(mode, slideName, quality = 'draft'):
-    
-   # shapePrecision = scale/5
-   # wirePrecision = scale/5
-    
-   # if quality == 'draft':
-   #   shapePrecision = shapePrecision*2
-   #   wirePrecision = wirePrecision*2
+def do(mode, slideName):
   
     scriptDir = os.path.dirname(__file__)
     exportDraftDir = os.path.join(scriptDir, '..', 'viewer','slides','dao', slideName)
@@ -558,9 +551,7 @@ if __name__ == '__main__':
     #do('web', 'slide_04_DaoManySec')
     #do('web', 'slide_05_DaoSkinning')
     #do('web', 'slide_06_DaoComplete')
-    do('web', 'slide_07_DaoWithCase')
+    #do('web', 'slide_07_DaoWithCase')
     
-    #do('web', 'daoFine', (0.1, 0.1), path)
-    
-    #do('obj', 'daoObj', (0.1, 0.1), path)
+    do('stl', 'slide_07_DaoWithCase')
     

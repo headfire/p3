@@ -38,6 +38,12 @@
 - [Слайд 06 Окончательная форма Дао ]( https://headfire.github.io/crpoint/viewer/index.html?paper=dao&slide=slide_06_DaoComplete)
 - [Слайд 07 Форма Дао с основанием ]( https://headfire.github.io/crpoint/viewer/index.html?paper=dao&slide=slide_07_DaoWithCase)
 
+STL файлы Дао 
+- [Инь]( https://headfire.github.io/crpoint/viewer/slides/dao/slides_07_DaoWidhCase/exp_001_shape.stl)
+- [Янь]( https://headfire.github.io/crpoint/viewer/slides/dao/slides_07_DaoWidhCase/exp_002_shape.stl)
+- [Основание]( https://headfire.github.io/crpoint/viewer/slides/dao/slides_07_DaoWidhCase/exp_003_shape.stl)
+
+Не перепутайте Инь и Янь :) (отличий нет, но мало ли чего)
 
 ## Творческтво без границ
 
