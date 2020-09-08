@@ -2,20 +2,18 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8" />
-    <title>Z-Desk</title>
+    <title>3D-Точка сборки</title>
     <link rel="shortcut icon" href="images/favicon.ico" />
     <link href="js/styles.css" rel="stylesheet" type="text/css" />
 </head>
 <body style = "">
 <div style = " position:absolute; top:10px; height:50px; left:40px; right:40px;" >
-   <h2>Z-Desk. Трехмерные геометрические построения.</h2> 
+   <h2 class='slide-name'>Проект "Точка сборки" - создание 3D-стерео-презентаций</h2> 
 </div>
 
 
-<div style = " position:absolute; top:20px; height:100px;right:240px;width:300px; text-align:right;" >
-   <a href="#" onclick='mainLoadPopup("help")'>Помощь</a>
-   &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
-   <a href="#" onclick='mainLoadPopup("about")'>О проекте</a>
+<div style = " position:absolute; top:25px; height:100px;right:40px;width:300px; text-align:right;" >
+   <a href="#" onclick='mainLoadPopup("about")'>Информация о слайде</a>
    &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
 </div>
 
@@ -32,10 +30,6 @@
   <img src="images/black/home.png" />
   </a>
 </td><td>
-<a  href="#" title="Вкл/выкл текст" onClick='mainOnInfo();'> 
-  <img class='icon-info-off' src="images/black/info.png" />
-  <img class='icon-info-on' src="images/white/info.png" />
-</a>
 <a href="#" title="3D-режимы" onClick='mainOnMode();'>
   <img src="images/3d.png"  />
 </a>
@@ -79,7 +73,6 @@
 <script type="text/javascript" src="js/three/CSS2DRenderer.js"></script>
 <script type="text/javascript" src="js/three/StereoEffect.js"></script>
 <script type="text/javascript" src="js/zdesk.js"></script>
-<script type="text/javascript" src="js/interface.js"></script>
 <script type="text/javascript" src="js/main.js"></script>
 <script>
 
@@ -98,6 +91,7 @@
 	 slide = urlParams.get('slide')
 	 
   mainLoadSlide(paper, slide);
+  mainLoadSlideInfo(paper, slide);
   window.addEventListener( 'resize', mainOnWindowResize , false );
   
 </script>

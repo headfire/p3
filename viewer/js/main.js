@@ -1,5 +1,6 @@
 var mainModeFlag = 'mono-mode';
 var mainInfoFlag = 'info-on';
+var mainErrorMessage = '';
 
 //UTIL
 function mainSetHtmlByClass(className, innerHTML) {
@@ -118,17 +119,72 @@ function mainLoadSlide(paper, slide) {
  xmlhttp.send(null); 
 }
 
+function mainLoadSlideInfo(paper, slide) {
+   var filename = 'slides' + '/' + paper + '/' + slide + '/' + 'slide_info.json?time='+ new Date().getTime();
+   var slideName = '';
+   var xmlhttp = new XMLHttpRequest();
+   xmlhttp.open('GET', filename, true);
+   xmlhttp.onreadystatechange = function() {
+     if (xmlhttp.readyState == 4) {
+       if (xmlhttp.status == 200) {
+	       var slideInfo = JSON.parse(xmlhttp.responseText);
+		   var slideName = 'Проект "Точка сборки". ' + slideInfo.slideName;
+		   mainSetHtmlByClass('slide-name', slideName)
+	    }
+	 }
+  };
+ xmlhttp.send(null); 
+}
+
+function mainAboutHTML() {
+ s= 
+`
+<h2>Поддержка 3D-телевизоров и 3D-проекторов</h2>
+<p>
+Созданные иллюстрации можно демонстрировать на 3D-телевизорах и 3D проекторов в стереорежиме без каких либо дополнительных драйверов и настроек.
+Перейдите в стерео-режим с помощью кнопки 3D в области иллюстрации. Одно нажатие - режим перекресного взгляда. Второе нажатие - режим 3D-Tv SideBySide. 
+Для получения нормального результата нужно также перейти в полноэкранный режим (крайняя правая кнопка)
+</p>
+<h2>О проекте "Точка сборки"</h2>
+<p>
+Проект "Точка сборки" позволяет делать объемные иллюстрации для различных областей научного знания:
+<ul>
+<li>3D-моделирование
+<li>Черчение, начертательная геометрия
+<li>Математика, геометрия, стереометрия, физика
+<li>Молекулярная химия и биоинженерия
+<li> 3D-графики, визуализация данных, BI-презентации
+<li>Разработка в области VR и AR
+</ul>
+</p>
+<p>
+Проект может использоваться как демонстрациолнный материал в традиционных и дистанционных обучающих курсах, при
+начальном обучении программированию, при создании демо-зон в средних и высших учебных заведениях, на кафедрах графики, математики, физики, химии.
+</p>
+<h2>Контакты</h2>
+<p>
+Сайт проекта "Точка сборки" со всеми презентациями 
+<a href="https://headfire.github.io/crpoint/">https://headfire.github.io/crpoint/</a>.
+</p>
+<p>
+По всем предложениям пишите <a href="mailto:headfire@yandex.ru">headfire@yandex.ru</a>.
+</p>
+`;
+	return s;
+}
 
 function mainLoadPopup(name) {
-  var filename ='info/' + name + '.html?time='+ new Date().getTime();;
+  var filename = 'slides' + '/' + paper + '/' + slide + '/' + 'slide_about.html?time='+ new Date().getTime();
+  var html = mainAboutHTML();
   var xmlhttp = new XMLHttpRequest();
   xmlhttp.open('GET', filename, true);
   xmlhttp.onreadystatechange = function() {
   if (xmlhttp.readyState == 4) {
      if(xmlhttp.status == 200) {
-	    document.getElementById('popupContent').innerHTML = xmlhttp.responseText;;
-		document.getElementById('popupArea').style.display = 'block';
+		 html = xmlhttp.responseText + html
 		 }
+     document.getElementById('popupContent').innerHTML = html;
+  	 document.getElementById('popupArea').style.display = 'block';
     }
   };
   xmlhttp.send(null);

@@ -74,8 +74,6 @@ class ThreeJsRenderer:
             raise Exception('ThreeJsRenderer need path for exported files')
         self._path = path
         self._js_filename = os.path.join(self._path, "slide.js")
-        self._3js_shapes = {}
-        self._3js_edges = {}
         self.decoration = decoration
         self.precision = precision
         self.shapeNum = 1
@@ -84,10 +82,12 @@ class ThreeJsRenderer:
         print("## threejs %s webgl renderer")
        
     def drawPoint(self, pnt, color, size):
-        pass
-
-    def drawLabel(self, pnt, text, style):
-        pass
+       self.stringList.append("\tzdeskXPoint(%g, %g, %g, %s, %g);\n"
+                                        % (pnt.X(), pnt.Y(), pnt.Z(), color_to_hex(color), size))
+      
+    def drawLabel(self, pnt, text, color):
+       self.stringList.append("\tzdeskXLabel(%g, %g, %g, '%s', %s);\n"
+                                        % (pnt.X(), pnt.Y(), pnt.Z(), text, color_to_hex(color)))
   
     def drawShape(self,
                      shape,
@@ -109,7 +109,7 @@ class ThreeJsRenderer:
             with open(edge_full_path, "w") as edge_file:
                 edge_file.write(str_to_write)
             # store this edge hash
-            self.stringList.append("\tzdeskCurve(slidePath+'%s.json', %s, %g);\n"
+            self.stringList.append("\tzdeskXCurve(slidePath+'%s.json', %s, %g);\n"
                                         % (edge_hash, color_to_hex(color), line_width))
             print("%s, %i segments" % (edge_hash ,len(pnts)-1))
         elif is_wire(shape):
@@ -122,7 +122,7 @@ class ThreeJsRenderer:
             with open(wire_full_path, "w") as wire_file:
                 wire_file.write(str_to_write)
             # store this edge hash
-            self.stringList.append("\tzdeskCurve(slidePath+'%s.json', %s, %g);\n"
+            self.stringList.append("\tzdeskXCurve(slidePath+'%s.json', %s, %g);\n"
                                         % (wire_hash, color_to_hex(color), line_width))
             print("%s, %i segments" % (wire_hash ,len(pnts)-1))
         else: #solid or shell
@@ -139,7 +139,7 @@ class ThreeJsRenderer:
             shape_full_path = os.path.join(self._path, shape_hash + '.json')
             with open(shape_full_path, 'w') as json_file:
                 json_file.write(tess.ExportShapeToThreejsJSONString(shape_uuid))
-            self.stringList.append("\tzdeskShape(slidePath+'%s.json', %s, %s, %g, %g);\n"
+            self.stringList.append("\tzdeskXShape(slidePath+'%s.json', %s, %s, %g, %g);\n"
                                         % (shape_hash, color_to_hex(color), color_to_hex(specular_color), shininess, 1 - transparency))
             print("%s, %i triangles\n" % (shape_hash, tess.ObjGetTriangleCount()))
        

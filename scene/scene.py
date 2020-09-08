@@ -368,15 +368,15 @@ class Scene:
            
                    #      r%    g%     b%     op%     pnt  line   mat 
         if styleVal == 'stInfo':
-           styleVal = (   80,   80,   80,    100,      3,     1,  'PLASTIC' )
+           styleVal = (   80,   80,   80,    100,      6,     1,  'PLASTIC' )
         elif styleVal == 'stMain':
-           styleVal = (   10,   10,   90,    100,      3,     4,  'PLASTIC' )
+           styleVal = (   10,   10,   90,    100,      6,     4,  'PLASTIC' )
         elif styleVal == 'stFocus':
-           styleVal = (   90,   10,   10,     30,      3,     2,  'CHROME' )
+           styleVal = (   90,   10,   10,     30,      6,     2,  'CHROME' )
         elif styleVal == 'stGold':
-           styleVal = (   90,   90,   10,    100,      3,     4,  'GOLD'    )
+           styleVal = (   90,   90,   10,    100,      6,     4,  'GOLD'    )
         elif styleVal == 'stFog':
-           styleVal = (   90,   90,   90,    30,      3,     4,   'PLASTIC'  )
+           styleVal = (   90,   90,   90,    30,      6,     4,   'PLASTIC'  )
            
         r, g, b, op, ps ,lw, mat = styleVal
         

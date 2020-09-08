@@ -11,7 +11,7 @@
 	   position:absolute; 
 	   top:70px; 
 	   bottom:40px;
-	   left:480px;
+	   left:40px;
 	   right:40px;
 	}
 
@@ -203,24 +203,12 @@
 	.half .toolbar .toolbar-counter {
 	  width:40px;
 	}
-				
-	
-/* for Code Manipulation */
-			
-    .CodeMirror {
-	     border: 1px solid black; 
-		 height:100%; }
-		 
-    .line-error {
-       background: #FBC2C4 !important;
-       color: #8a1f11 !important;
-    }
 
 /* for Label command */
 	.label {
   	  text-shadow: -2px 2px 2px rgb(50,50,50);
 	  margin-left: 25px;
-	  font-size: 25px;
+	  font-size: 20px;
 			}
 			
 	.stereo-tv-mode .label {

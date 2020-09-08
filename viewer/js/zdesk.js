@@ -19,6 +19,9 @@ var zdeskTriangleColor;
 var zdeskMarkColor;
 var zdeskLabelColor;
 
+var zdeskScaleA = 1;
+var zdeskScaleB = 1;
+
 var zdeskTransparent;
 
 var zdeskVisibleStartFrame;
@@ -26,7 +29,49 @@ var zdeskVisibleEndFrame;
 var zdeskObjects = Array();
 var zdeskMessages = Array();
 
-function zdeskCurve(pJsonPath, pColor, pLineWidth) {
+function zdeskXLabel(x,y,z, txt, color) {
+	
+    var r = Math.floor( color / (256*256) ) % 256;
+    var g = Math.floor( color / 256 ) % 256;
+    var b = color % 256;
+	clr = 'rgb(' + r + ',' + g + ',' + b + ')';
+	
+	dLabel = 15 * zdeskScaleA/zdeskScaleB;
+
+    place = new THREE.Vector3 (x+dLabel, y+dLabel, z+dLabel);
+  
+	var div = document.createElement( 'div' );
+	div.className = 'label';
+	div.style.color = clr;
+	//div.style.opacity = zdeskTransparent;
+	div.textContent = txt;
+	var label = new THREE.CSS2DObject( div , 'left');
+	label.position.copy(place);
+	//zdeskAdd( label );
+	zdeskScene.add(label);
+
+	var div = document.createElement( 'div' );
+	div.className = 'label';
+	div.style.color = clr
+	//div.style.opacity = ''+zdeskTransparent;
+	div.textContent = txt;
+	var label = new THREE.CSS2DObject( div , 'right');
+	label.position.copy(place);
+	//zdeskAdd( label );
+	zdeskScene.add(label);
+}
+
+
+function zdeskXPoint(x,y,z, color, size) {
+	var sphereGeometry = new THREE.IcosahedronGeometry( size * zdeskScaleA/zdeskScaleB, 2 );
+    var material = zdeskGetMaterial(color);
+	var mesh = new THREE.Mesh( sphereGeometry, material );
+      mesh.position.copy(new THREE.Vector3 (x, y, z));
+	zdeskScene.add(mesh);
+}
+
+
+function zdeskXCurve(pJsonPath, pColor, pLineWidth) {
 	zdeskLoader.load(pJsonPath, function(geometry) {
 	line_material = new THREE.LineBasicMaterial({color: pColor, linewidth: pLineWidth});
 	line = new THREE.Line(geometry, line_material);
@@ -35,7 +80,7 @@ function zdeskCurve(pJsonPath, pColor, pLineWidth) {
 	});
 }	
 
-function zdeskShape(pJsonPath, pColor, pSpecular, pShininess, pOpacity) {
+function zdeskXShape(pJsonPath, pColor, pSpecular, pShininess, pOpacity) {
     var shape_phong_material;
     if (pOpacity == 1) {
 			shape_phong_material = new THREE.MeshPhongMaterial( {
@@ -204,7 +249,9 @@ function zdeskAdd( object ) {
 
 function zdeskInit(container, texturePath, param) {
 	
-	            scale = param.scaleA/param.scaleB
+	            zdeskScaleA = param.scaleA
+				zdeskScaleB = param.scaleB
+	            scale = zdeskScaleA/zdeskScaleB
 			
  			    if ( ! Detector.webgl ) Detector.addGetWebGLMessage();
 
@@ -238,6 +285,9 @@ function zdeskInit(container, texturePath, param) {
                 deskMesh = new THREE.Mesh( deskGeometry, deskMaterial );
 				deskMesh.position.set(param.deskDX, param.deskDY, param.deskDZ-22*scale); 
 				zdeskScene.add( deskMesh );
+
+		        zdeskXLabel((-1500/2 + 20)*scale + param.deskDX, (1000/2 + 20)*scale + param.deskDY, param.deskDZ, 'A0 M'+zdeskScaleB+':'+zdeskScaleA, 0xbbbbbb);
+
 				
 				var paperGeometry = new THREE.BoxGeometry( 1189*scale, 841*scale, 2*scale);
 		        paperTexture = THREE.ImageUtils.loadTexture(texturePath + 'paper.jpg', undefined, zdeskRender);
@@ -313,6 +363,8 @@ function zdeskInit(container, texturePath, param) {
 				drawArea.appendChild( zdeskRightLabelRenderer.domElement );
 				
 				zdeskStereoEffect = new THREE.zdeskStereoEffect( zdeskGeometryRenderer, zdeskLeftLabelRenderer, zdeskRightLabelRenderer, 1200*scale );
+				
+
 				
 				
 }
