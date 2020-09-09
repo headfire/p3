@@ -284,10 +284,12 @@ function zdeskInit(container, texturePath, param) {
 		        drawArea = container;
 
 				zdeskCamera = new THREE.PerspectiveCamera( 45, window.innerWidth / window.innerHeight, 1, 3000 );
-				zdeskCamera.position.set(0,-1000*scale,1000*scale);
-                zdeskCamera.lookAt(new THREE.Vector3( 0, 0, 0 ));
-
-				zdeskControls = new THREE.TrackballControls( zdeskCamera, drawArea );
+				zdeskCamera.up.set(0,0,1); // задает правильную систему координат ВАЖНО!!!
+		        zdeskCamera.position.set(300*scale,-400*scale,700*scale);
+                //zdeskCamera.lookAt(new THREE.Vector3( 0*scale,0*scale, -100));
+				
+				zdeskControls = new THREE.OrbitControls( zdeskCamera, drawArea );
+				zdeskControls.target = new THREE.Vector3( 0*scale,0*scale, param.deskDZ/2);
 				zdeskControls.rotateSpeed = 1.0;
 				zdeskControls.zoomSpeed = 1.2;
 				zdeskControls.panSpeed = 0.8;
@@ -424,7 +426,7 @@ function zdeskHandleResize() {
 	   zdeskLeftLabelRenderer.setSize( drawArea.clientWidth/2, drawArea.clientHeight );
 	   zdeskStereoEffect.setSize( drawArea.clientWidth, drawArea.clientHeight );
   } 
-    zdeskControls.handleResize();
+  //  zdeskControls.handleResize();
 	zdeskRender();
 }
 

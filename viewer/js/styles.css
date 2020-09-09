@@ -206,9 +206,9 @@
 
 /* for Label command */
 	.label {
-  	  text-shadow: -2px 2px 2px rgb(50,50,50);
-	  margin-left: 25px;
-	  font-size: 20px;
+  	  text-shadow: -1px 1px 1px rgb(80,80,80);
+	  margin-left: 0px;
+	  font-size: 35px;
 			}
 			
 	.stereo-tv-mode .label {

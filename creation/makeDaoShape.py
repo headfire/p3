@@ -432,7 +432,7 @@ def slide_05_DaoSkinning (r, offset):
     pntDownLimit, pntDaoStart, pntUpLimit, pntDaoEnd  = pntsDao0
     
     pntFocus = getPntDaoFocus(r)
-    drawPoints(pntFocus, 'stMain' ,'f')
+    drawPoints(pntFocus, 'stMain')
   
     ks = [ 3, 9 , 16, 24, 35, 50, 70, 85] 
     wiresSec = []
@@ -526,9 +526,9 @@ if __name__ == '__main__':
     
     #do('web', 'slide_01_DaoClassic')
     #do('web', 'slide_02_DaoConcept')
-    do('web', 'slide_03_DaoSecPrincipe')
+    #do('web', 'slide_03_DaoSecPrincipe')
     #do('web', 'slide_04_DaoManySec')
-    #do('web', 'slide_05_DaoSkinning')
+    do('web', 'slide_05_DaoSkinning')
     #do('web', 'slide_06_DaoComplete')
     #do('web', 'slide_07_DaoWithCase')
     
