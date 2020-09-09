@@ -393,6 +393,10 @@ def slide_03_DaoSecPrincipe(r, offset, k, h):
 
     pntsSec =  getPntsEdgesFacesIntersect(wireDao0, planeSec)
     drawPoints(pntsSec, 'stFocus')
+    
+    wireSec = getWireDaoSec(wireDao0, pntFocus, k)
+    ScShape(wireSec, 'stFocus') 
+      
 
 def slide_04_DaoManySec(r, offset, kStart, kEnd, cnt):
     
@@ -522,9 +526,9 @@ if __name__ == '__main__':
     
     #do('web', 'slide_01_DaoClassic')
     #do('web', 'slide_02_DaoConcept')
-    #do('web', 'slide_03_DaoSecPrincipe')
+    do('web', 'slide_03_DaoSecPrincipe')
     #do('web', 'slide_04_DaoManySec')
-    do('web', 'slide_05_DaoSkinning')
+    #do('web', 'slide_05_DaoSkinning')
     #do('web', 'slide_06_DaoComplete')
     #do('web', 'slide_07_DaoWithCase')
     

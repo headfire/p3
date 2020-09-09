@@ -18,4 +18,5 @@ function loadedSlideMake(slidePath) {
 	zdeskXShape(slidePath+'exp_004_shape.json', 0xe51919, 0x333333, 0.9, 0.3);
 	zdeskXPoint(33.7486, 15.1669, 0, 0xe51919, 3);
 	zdeskXPoint(12.4894, -0.686428, 0, 0xe51919, 3);
+	zdeskXCurve(slidePath+'exp_005_wire.json', 0xe51919, 2);
 }
