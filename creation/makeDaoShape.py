@@ -1,8 +1,6 @@
 # OpenCascade tutorial by headfire (headfire@yandex.ru)
 # point and line attributes
 
-import sys
-sys.path.insert(0, "../scene")
 import os
 
 from scene import ScInit, ScPoint, ScLine, ScCircle, ScShape, ScLabel, ScStart, ScStyle
