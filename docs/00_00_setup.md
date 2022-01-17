@@ -59,7 +59,7 @@ python makeDaoShape.py
 
 ## Полезные ссылки
 
-* [https://www.opencascade.com/](https://www.opencascade.com/) 
+* [https://www.opencascade.com/](https://www.opencascade.com/)  
 * [https://www.opencascade.com/doc/occt-6.9.1/refman/html/index.html](https://www.opencascade.com/doc/occt-6.9.1/refman/html/index.html)
 * [https://docs.conda.io/en/latest/miniconda.html](https://docs.conda.io/en/latest/miniconda.html)
 * [https://github.com/tpaviot/pythonocc-core](https://github.com/tpaviot/pythonocc-core)
