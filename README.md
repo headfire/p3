@@ -70,6 +70,6 @@ STL файлы Дао
 
 ## Контакты
 
-Официальный сайт проекта [https://headfire.github.io/crpoint](https://headfire.github.io/crpoint)
-
-Пишите про Ваши идеи и предложения на [headfire@yandex.ru](mailto:headfire@yandex.ru)
+Cайт проекта [https://headfire.github.io/point](https://headfire.github.io/point)
+Репозиторий проекта [https://github.com/headfire/point](https://github.com/headfire/point)
+E-mail автора: [headfire@yandex.ru](mailto:headfire@yandex.ru)
