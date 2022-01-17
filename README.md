@@ -71,5 +71,7 @@ STL файлы Дао
 ## Контакты
 
 Cайт проекта [https://headfire.github.io/point](https://headfire.github.io/point)
+
 Репозиторий проекта [https://github.com/headfire/point](https://github.com/headfire/point)
+
 E-mail автора: [headfire@yandex.ru](mailto:headfire@yandex.ru)
