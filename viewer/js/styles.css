@@ -9,10 +9,10 @@
 	
 	#drawArea {
 	   position:absolute; 
-	   top:70px; 
-	   bottom:40px;
-	   left:40px;
-	   right:40px;
+	   top:60px; 
+	   bottom:20px;
+	   left:20px;
+	   right:20px;
 	}
 
 	#drawZone {
