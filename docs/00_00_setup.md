@@ -9,7 +9,7 @@
 
 Скачиваем установщик: [https://repo.anaconda.com/miniconda/Miniconda3-py37_4.10.3-Windows-x86_64.exe](https://repo.anaconda.com/miniconda/Miniconda3-py37_4.10.3-Windows-x86_64.exe)
 
-Выбираем опцию *For All* и папку *с:/conda*.
+Выбираем опцию **All Users** и папку **d:\conda** (например).
 
 В списке программ кнопки `Пуск` появилось меню `Anaconda3`. Копируем из него ярлык `Anaconda Prompt` на рабочий стол
 
