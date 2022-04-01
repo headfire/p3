@@ -1,1 +1,1 @@
-start http://localhost:9000/viewer/?slide=dao_01
+start http://localhost:9000/v.htm?s=dao_01
