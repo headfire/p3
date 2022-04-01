@@ -6,7 +6,7 @@ var zdeskCamera, zdeskControls, zdeskScene, zdeskDrawing;
 var zdeskGeometryRenderer, zdeskLeftLabelRenderer, zdeskRightLabelRenderer ,zdeskStereoEffect;
 var zdeskCurrentCoord;
 
-var zdeskSlidePath;
+var zdeskSlidePath = "";
 
 var zdeskRenderMode = 'mono-mode';
 var zdeskFrameNumber = 1;
@@ -82,23 +82,25 @@ function zdeskXLine(startPlace, endPlace, pColor, pLineWidth) {
 }
 
 
-function zdeskXCurve(pJsonPath, pColor, pLineWidth) {
-	zdeskLoader.load(pJsonPath, function(geometry) {
-	arr = 	geometry.attributes.position.array
+function zdeskXCurve(pObjName, pColor, pLineWidth) {
+	var jsonPath = zdeskSlidePath + pObjName + '.json';
+	zdeskLoader.load(jsonPath, function(geometry) {
+	arr = 	geometry.attributes.position.array;
 	cnt = arr.length;
     var x0 = arr[0]; var y0 = arr[1]; var z0 = arr[2];
 	var x1 = x0;  var y1 = y0; var z1 = z0;
 	for (var i = 1; i<cnt/3 ;i++) {
 		x1 = x0;  y1 = y0; z1 = z0;
 	    x0 = arr[i*3];  y0 = arr[i*3+1]; z0 = arr[i*3+2];
-		zdeskXLine(new THREE.Vector3 (x0, y0, z0), new THREE.Vector3 (x1, y1, z1), pColor, pLineWidth)
+		zdeskXLine(new THREE.Vector3 (x0, y0, z0), new THREE.Vector3 (x1, y1, z1), pColor, pLineWidth);
 	}	
 	zdeskRender();
 	});
 }
 	
-function zdeskXXCurve(pJsonPath, pColor, pLineWidth) {
-	zdeskLoader.load(pJsonPath, function(geometry) {
+function zdeskXXCurve(pObjName, pColor, pLineWidth) {
+	var jsonPath = zdeskSlidePath + pObjName + '.json';
+	zdeskLoader.load(jsonPath, function(geometry) {
 	line_material = new THREE.LineBasicMaterial({color: pColor, linewidth: pLineWidth});
 	line = new THREE.Line(geometry, line_material);
 	zdeskScene.add(line);
@@ -106,7 +108,8 @@ function zdeskXXCurve(pJsonPath, pColor, pLineWidth) {
 	});
 }	
 
-function zdeskXShape(pJsonPath, pColor, pSpecular, pShininess, pOpacity) {
+function zdeskXShape(pObjName, pColor, pSpecular, pShininess, pOpacity) {
+	var jsonPath = zdeskSlidePath + pObjName + '.json';
     var shape_phong_material;
     if (pOpacity == 1) {
 			shape_phong_material = new THREE.MeshPhongMaterial( {
@@ -126,7 +129,7 @@ function zdeskXShape(pJsonPath, pColor, pSpecular, pShininess, pOpacity) {
 			   opacity:pOpacity
 		   });
 		 }  
-    	zdeskLoader.load(pJsonPath, function(geometry) {
+    	zdeskLoader.load(jsonPath, function(geometry) {
 				mesh = new THREE.Mesh(geometry, shape_phong_material);
 				mesh.castShadow = true;
 				mesh.receiveShadow = true;
@@ -273,11 +276,13 @@ function zdeskAdd( object ) {
 }
 
 
-function zdeskInit(container, texturePath, param) {
+function zdeskInit(container, texturePath, slidePath, param) {
 	
-	            zdeskScaleA = param.scaleA
-				zdeskScaleB = param.scaleB
-	            scale = zdeskScaleA/zdeskScaleB
+	            zdeskSlidePath = slidePath;
+				
+	            zdeskScaleA = param.scaleA;
+				zdeskScaleB = param.scaleB;
+	            scale = zdeskScaleA/zdeskScaleB;
 			
  			    if ( ! Detector.webgl ) Detector.addGetWebGLMessage();
 

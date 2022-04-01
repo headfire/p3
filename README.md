@@ -23,21 +23,21 @@
 ## Пример 1: Построение символа Дао в 3D
 
 Статьи (PDF)
-- [Построение символа Дао в 3D](https://headfire.github.io/point/docs/dao.pdf)
+- [Построение символа Дао в 3D](https://headfire.github.io/p3/docs/dao/dao_aticle.pdf)
 
 Слайды (WebGL)
-- [Слайд 01 Контур классического Дао]( https://headfire.github.io/point/viewer/index.html?paper=dao&slide=slide_01_DaoClassic)
-- [Слайд 02 Контур Дао с отступом ]( https://headfire.github.io/point/viewer/index.html?paper=dao&slide=slide_02_DaoConcept)
-- [Слайд 03 Принцип построения сечений ]( https://headfire.github.io/point/viewer/index.html?paper=dao&slide=slide_03_DaoSecPrincipe)
-- [Слайд 04 Форма Дао из сечений ]( https://headfire.github.io/point/viewer/index.html?paper=dao&slide=slide_04_DaoManySec)
-- [Слайд 05 Протягивание поверхности через сечения ]( https://headfire.github.io/point/viewer/index.html?paper=dao&slide=slide_05_DaoSkinning)
-- [Слайд 06 Окончательная форма Дао ]( https://headfire.github.io/point/viewer/index.html?paper=dao&slide=slide_06_DaoComplete)
-- [Слайд 07 Форма Дао с основанием ]( https://headfire.github.io/point/viewer/index.html?paper=dao&slide=slide_07_DaoWithCase)
+- [Слайд 01 Контур классического Дао](https://headfire.github.io/p3/v.htm?s=dao_01)
+- [Слайд 02 Контур Дао с отступом](https://headfire.github.io/p3/v.htm?s=dao_02)
+- [Слайд 03 Принцип построения сечений ](https://headfire.github.io/p3/v.htm/?s=dao_03)
+- [Слайд 04 Форма Дао из сечений](https://headfire.github.io/p3/v.htm/?s=dao_04)
+- [Слайд 05 Протягивание поверхности через сечения](https://headfire.github.io/p3/v.htm/?s=dao_05)
+- [Слайд 06 Окончательная форма Дао](https://headfire.github.io/p3/v.htm?s=dao_06)
+- [Слайд 07 Форма Дао с основанием](https://headfire.github.io/p3/v.htm?s=dao_07)
 
 Файлы моделей (STL) 
-- [Инь]( https://headfire.github.io/crpoint/viewer/slides/dao/slide_07_DaoWithCase/exp_001_shape.stl)
-- [Янь]( https://headfire.github.io/crpoint/viewer/slides/dao/slide_07_DaoWithCase/exp_002_shape.stl)
-- [Основание]( https://headfire.github.io/crpoint/viewer/slides/dao/slide_07_DaoWithCase/exp_003_shape.stl)
+- [Инь]( https://headfire.github.io/p3/models/dao/exp_001_shape.stl)
+- [Янь]( https://headfire.github.io/p3/models/dao/exp_002_shape.stl)
+- [Основание]( https://headfire.github.io/p3/models/dao/exp_003_shape.stl)
 
 Не перепутайте Инь и Янь :) (отличий нет, но мало ли чего)
 

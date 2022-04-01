@@ -10,17 +10,17 @@ function loadedSlideGetParam() {
 	 return param;
 }
 
-function loadedSlideMake(slidePath) { 
-	zdeskXCurve(slidePath+'exp_001_edge.json', 0x4c4c4c, 2);
-	zdeskXCurve(slidePath+'exp_002_wire.json', 0x1919e5, 4);
+function loadedSlideMake() { 
+	zdeskXCurve('exp_001_edge.json', 0x4c4c4c, 2);
+	zdeskXCurve('exp_002_wire.json', 0x1919e5, 4);
 	zdeskXPoint(0, -10, 0, 0x1919e5, 3);
-	zdeskXCurve(slidePath+'exp_003_wire.json', 0x1919e5, 4);
-	zdeskXCurve(slidePath+'exp_004_wire.json', 0x1919e5, 4);
-	zdeskXCurve(slidePath+'exp_005_wire.json', 0x1919e5, 4);
-	zdeskXCurve(slidePath+'exp_006_wire.json', 0x1919e5, 4);
-	zdeskXCurve(slidePath+'exp_007_wire.json', 0x1919e5, 4);
-	zdeskXCurve(slidePath+'exp_008_wire.json', 0x1919e5, 4);
-	zdeskXCurve(slidePath+'exp_009_wire.json', 0x1919e5, 4);
-	zdeskXCurve(slidePath+'exp_010_wire.json', 0x1919e5, 4);
-	zdeskXShape(slidePath+'exp_011_shape.json', 0xe51919, 0x333333, 0.9, 0.3);
+	zdeskXCurve('exp_003_wire', 0x1919e5, 4);
+	zdeskXCurve('exp_004_wire', 0x1919e5, 4);
+	zdeskXCurve('exp_005_wire', 0x1919e5, 4);
+	zdeskXCurve('exp_006_wire', 0x1919e5, 4);
+	zdeskXCurve('exp_007_wire', 0x1919e5, 4);
+	zdeskXCurve('exp_008_wire', 0x1919e5, 4);
+	zdeskXCurve('exp_009_wire', 0x1919e5, 4);
+	zdeskXCurve('exp_010_wire', 0x1919e5, 4);
+	zdeskXShape('exp_011_shape', 0xe51919, 0x333333, 0.9, 0.3);
 }

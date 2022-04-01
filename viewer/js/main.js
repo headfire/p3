@@ -94,8 +94,8 @@ function mainSlideGetParamDefault() {
 function mainSlideMakeDefault() {
 }
  
-function mainLoadSlide(paper, slide) {
-   var filename = 'slides' + '/' + paper + '/' + slide + '/' + 'slide.js?time='+ new Date().getTime();;
+function mainLoadSlide(slide) {
+   var filename = 'slides' + '/' + slide + '/' + 'slide.js?time='+ new Date().getTime();;
    var slideGetParam = mainSlideGetParamDefault;
    var slideMake = mainSlideMakeDefault;
    var xmlhttp = new XMLHttpRequest();
@@ -110,84 +110,13 @@ function mainLoadSlide(paper, slide) {
  		 } catch(e) { console.log(e); }
         }
      param = slideGetParam() 
-     zdeskInit(document.getElementById( 'webgl' ),'images/textures/', param);
-	 slideMake('slides'+'/'+paper+'/'+slide+'/');
+     zdeskInit(document.getElementById( 'webgl' ),'images/textures/', 'slides'+'/'+slide+'/', param);
+	 slideMake();
      mainOnAnimationFrame()
    	 zdeskSetRenderMode('mono-mode');  				
 	  }
   };
  xmlhttp.send(null); 
-}
-
-function mainLoadSlideInfo(paper, slide) {
-   var filename = 'slides' + '/' + paper + '/' + slide + '/' + 'slide_info.json?time='+ new Date().getTime();
-   var slideName = '';
-   var xmlhttp = new XMLHttpRequest();
-   xmlhttp.open('GET', filename, true);
-   xmlhttp.onreadystatechange = function() {
-     if (xmlhttp.readyState == 4) {
-       if (xmlhttp.status == 200) {
-	       var slideInfo = JSON.parse(xmlhttp.responseText);
-		   var slideName = '<font color=gray>Точка сборки - 3D</font>&nbsp;&nbsp;&nbsp;&nbsp;' + slideInfo.slideName;
-		   mainSetHtmlByClass('slide-name', slideName)
-	    }
-	 }
-  };
- xmlhttp.send(null); 
-}
-
-function mainAboutHTML() {
- s= 
-`
-<h2>Поддержка 3D-телевизоров и 3D-проекторов и Перекрестного взгляда</h2>
-<p>
-Созданные иллюстрации можно демонстрировать на 3D-телевизорах и 3D проекторов в стереорежиме без каких либо дополнительных драйверов и настроек.
-Перейдите в стерео-режим с помощью кнопки 3D в области иллюстрации. Одно нажатие - режим <b>перекресного взгляда</b>. Второе нажатие - <b>режим 3D-TV SideBySide</b>. 
-Для получения нормального результата нужно также перейти в <b>полноэкранный режим</b> (крайняя правая кнопка)
-</p>
-<h2>О проекте "Точка сборки"</h2>
-<p>
-Проект "Точка сборки" позволяет делать объемные иллюстрации для различных областей научного знания:
-<ul>
-<li>3D-моделирование
-<li>Черчение, начертательная геометрия
-<li>Математика, геометрия, стереометрия, физика
-<li>Молекулярная химия и биоинженерия
-<li> 3D-графики, визуализация данных, BI-презентации
-<li>Разработка в области VR и AR
-</ul>
-</p>
-<p>
-Проект может использоваться как демонстрациолнный материал в традиционных и дистанционных обучающих курсах, при
-начальном обучении программированию, при создании демо-зон в средних и высших учебных заведениях, на кафедрах графики, математики, физики, химии.
-</p>
-<h2>Контакты</h2>
-<p>
-Сайт проекта "Точка сборки" со всеми презентациями 
-<a href="https://headfire.github.io/crpoint/">https://headfire.github.io/crpoint/</a>.
-</p>
-<p>
-По всем предложениям пишите <a href="mailto:headfire@yandex.ru">headfire@yandex.ru</a>.
-</p>
-`;
-	return s;
-}
-
-function mainLoadPopup(name) {
-  var filename = 'slides' + '/' + paper + '/' + slide + '/' + 'slide_about.html?time='+ new Date().getTime();
-  var html = mainAboutHTML();
-  var xmlhttp = new XMLHttpRequest();
-  xmlhttp.open('GET', filename, true);
-  xmlhttp.onreadystatechange = function() {
-  if (xmlhttp.readyState == 4) {
-     if(xmlhttp.status == 200) {
-		 html = xmlhttp.responseText + html
-		 }
-     document.getElementById('popupContent').innerHTML = html;
-  	 document.getElementById('popupArea').style.display = 'block';
-    }
-  };
-  xmlhttp.send(null);
 }
 
 function mainOnHome() {

@@ -5,7 +5,7 @@
     <meta content='width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=0' name='viewport' />
     <title>Точка сборки - 3D</title>
     <link rel="shortcut icon" href="images/logo.png" />
-    <link href="js/styles.css" rel="stylesheet" type="text/css" />
+    <link href="css/styles.css" rel="stylesheet" type="text/css" />
 </head>
 <body style = "">
 
@@ -74,13 +74,10 @@
   const urlParams = new URLSearchParams(queryString);
   paper = 'examples'
   slide = 'start'
-  if (urlParams.has('paper'))
-     paper = urlParams.get('paper')
   if (urlParams.has('slide'))
 	 slide = urlParams.get('slide')
 	 
-  mainLoadSlide(paper, slide);
-  mainLoadSlideInfo(paper, slide);
+  mainLoadSlide(slide);
   window.addEventListener( 'resize', mainOnWindowResize , false );
   
 </script>

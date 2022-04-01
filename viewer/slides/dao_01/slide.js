@@ -10,8 +10,8 @@ function loadedSlideGetParam() {
 	 return param;
 }
 
-function loadedSlideMake(slidePath) { 
-	zdeskXCurve(slidePath+'exp_001_edge.json', 0x4c4c4c, 2);
+function loadedSlideMake() { 
+	zdeskXCurve('exp_001_edge', 0x4c4c4c, 2);
 	zdeskXPoint(0, 0, 0, 0xe51919, 3);
 	zdeskXLabel(0, 0, 0, 'b0', 0xe51919);
 	zdeskXPoint(-14.1421, 5.85786, 0, 0xe51919, 3);
@@ -28,5 +28,5 @@ function loadedSlideMake(slidePath) {
 	zdeskXLabel(0, -40, 0, 'b6', 0xe51919);
 	zdeskXPoint(20, -20, 0, 0xe51919, 3);
 	zdeskXLabel(20, -20, 0, 'b7', 0xe51919);
-	zdeskXCurve(slidePath+'exp_002_wire.json', 0x1919e5, 4);
+	zdeskXCurve('exp_002_wire', 0x1919e5, 4);
 }
