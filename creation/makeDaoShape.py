@@ -514,13 +514,13 @@ if __name__ == '__main__':
     #do('test', 'slide_06_DaoComplete')
     #do('test', 'slide_07_DaoWithCase')
 
-    #do('screen', 'slide_01_DaoClassic')
+    do('screen', 'slide_01_DaoClassic')
     #do('screen', 'slide_02_DaoConcept')
     #do('screen', 'slide_03_DaoSecPrincipe')
     #do('screen', 'slide_04_DaoManySec')
     #do('screen', 'slide_05_DaoSkinning')
     #do('screen', 'slide_06_DaoComplete')
-    do('screen', 'slide_07_DaoWithCase')
+    #do('screen', 'slide_07_DaoWithCase')
     
     #do('web', 'slide_01_DaoClassic')
     #do('web', 'slide_02_DaoConcept')
