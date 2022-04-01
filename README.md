@@ -1,11 +1,11 @@
-# Точка сборки - 3D / Point of assambly - 3D 
+# Точка сборки - 3D / Creation point - 3D 
 
  <img src="images/logo.png" style="zoom:50%;" />
 
-Cистема для создания 3D стерео иллюстраций. 
+Cистема для создания 3D стерео иллюстраций.   
 3D stereo illustration system. 
 
-Для знакомства с системой прочитайте Руководство.pdf
+Для знакомства с системой прочитайте Руководство.pdf  
 For more info read Manual.pdf
 
 Система полезна для создания иллюстраций по темам:
@@ -28,7 +28,8 @@ For more info read Manual.pdf
 Если Вы владеете режимом Перекрестного взгляда - он тоже есть.
 
 Перечень работ в проекте
-- [Построение символа Дао в 3D] (https://headfire.github.io/point/docs/dao.pdf) 
+[Построение символа Дао в 3D] (https://headfire.github.io/point/docs/dao.pdf) 
+
 Слайды 
 [01]( https://headfire.github.io/point/viewer/index.html?paper=dao&slide=slide_01_DaoClassic)
 [02]( https://headfire.github.io/point/viewer/index.html?paper=dao&slide=slide_02_DaoConcept)
@@ -37,6 +38,7 @@ For more info read Manual.pdf
 [05]( https://headfire.github.io/point/viewer/index.html?paper=dao&slide=slide_05_DaoSkinning)
 [06]( https://headfire.github.io/point/viewer/index.html?paper=dao&slide=slide_06_DaoComplete)
 [07]( https://headfire.github.io/point/viewer/index.html?paper=dao&slide=slide_07_DaoWithCase)
+
 STL файлы моделей 
 [Инь]( https://headfire.github.io/crpoint/viewer/slides/dao/slide_07_DaoWithCase/exp_001_shape.stl)
 [Янь]( https://headfire.github.io/crpoint/viewer/slides/dao/slide_07_DaoWithCase/exp_002_shape.stl)
