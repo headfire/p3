@@ -65,22 +65,22 @@
 
 ## Контакты
 
-Cайт проекта: [https://headfire.github.io/point](https://headfire.github.io/point)  
-Репозиторий проекта: [https://github.com/headfire/point](https://github.com/headfire/point)  
+Cайт проекта: [https://headfire.github.io/p3](https://headfire.github.io/p3)  
+Репозиторий проекта: [https://github.com/headfire/p3](https://github.com/headfire/p3)  
 E-mail автора: [headfire@yandex.ru](mailto:headfire@yandex.ru)
 
-Спонсор проекта: - - - - -
+Спонсор проекта:
 
 ## Путь
 
 *Как проповедь ни хороша*  
-*Я б все же предпочел*  
+*Я б все же предпочел,*  
 *Чтоб объяснивший верный путь*  
-*Со мной тот путь прошел*  
+*Со мной тот путь прошел.*  
 
-*Пусть что угодно говорят*  
+*Пусть что угодно говорят,*  
 *Хочу я видеть как*  
 *Рука творит, а не слова*  
-*Слетают с языка*
+*Слетают с языка.*
 
 
