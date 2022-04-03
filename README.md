@@ -28,9 +28,9 @@
 Слайды (WebGL)
 - [Слайд 01 Контур классического Дао](https://headfire.github.io/p3/v.htm?s=dao_01)
 - [Слайд 02 Контур Дао с отступом](https://headfire.github.io/p3/v.htm?s=dao_02)
-- [Слайд 03 Принцип построения сечений ](https://headfire.github.io/p3/v.htm/?s=dao_03)
-- [Слайд 04 Форма Дао из сечений](https://headfire.github.io/p3/v.htm/?s=dao_04)
-- [Слайд 05 Протягивание поверхности через сечения](https://headfire.github.io/p3/v.htm/?s=dao_05)
+- [Слайд 03 Принцип построения сечений ](https://headfire.github.io/p3/v.htm?s=dao_03)
+- [Слайд 04 Форма Дао из сечений](https://headfire.github.io/p3/v.htm?s=dao_04)
+- [Слайд 05 Протягивание поверхности через сечения](https://headfire.github.io/p3/v.htm?s=dao_05)
 - [Слайд 06 Окончательная форма Дао](https://headfire.github.io/p3/v.htm?s=dao_06)
 - [Слайд 07 Форма Дао с основанием](https://headfire.github.io/p3/v.htm?s=dao_07)
 
