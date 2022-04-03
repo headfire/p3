@@ -1,6 +1,6 @@
 # Точка сборки - 3D
 
-<img src="images/logo.png" style="zoom:50%;" />
+<img src="assets/images/logo.png" style="zoom:50%;" />
 
 ## Cистема для создания 3D стерео иллюстраций   
 
