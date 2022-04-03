@@ -2,25 +2,43 @@
 
 <img src="assets/images/logo.png" style="zoom:50%;" />
 
-## Cистема для создания 3D стерео иллюстраций   
+## Cистема для создания объемных стереоскопических иллюстраций   
 
-Система полезна для создания иллюстраций по темам:
-- 3D-моделирование
-- Черчение, начертательная геометрия
+Проект предназначен для создания объемных стереоскопических иллюстраций 
+и презентационных материалов научной направленности:
+- 3D-моделирование, черчение, начертательная геометрия
 - Математика, геометрия, стереометрия, физика
-- Молекулярная химия и биоинженерия
-- Анимированные 3D- графики, визуализация данных, BI-презентации
-- Разработка в области VR и AR
+- Молекулярная химия и биоинформатика
+- Визуализация данных, BI-презентации, VR, AR
 
-Для создания иллюстраций используется открытое конструкторское ядро **OpenCascade**. 
-Программирование выполняется с помощью языка **Python 3**. 
-Просматривать иллюстрации можно в любом современном браузере, поддерживающем **WebGL**.
-При просмотре поддерживаются различные **стереоскопические режимы**. 
-Вы можете подключить компьютер к **3D телевизору**, **3D проектору** или **Очкам виртуальной реальности** 
-и прямо в браузере запустить иллюстрацию в **стерео-режиме**. 
-Если Вы владеете режимом Перекрестного взгляда - он тоже есть.
+При просмотре презентационных материалов поддерживаются различные
+3D режимы, которые работают прямо в браузере без каких-либо драйверов и утилит. 
+Вы можете подключить компьютер напрямую (например, по HDMI интерфейсу) к
+3D-телевизору, 3D-проектору или VR-шлему, поддерживающим режим 3D Side-By-Side.
 
-## Пример 1: Построение символа Дао в 3D
+<img src="assets/images/3d_modes.png" />
+
+В проекте использованы следующие технологии: 
+- [OpenCascade](https://ru.wikipedia.org/wiki/Open_Cascade_Technology) - конструкторское ядро с открытым кодом,
+используется для 3D-моделирования, геометрических построений, численного решения геометрических задач.
+- [Python OCC](https://github.com/tpaviot/pythonocc-core) - надстройка над OpenCascade, позволяющее работать с ней 
+при помощи языка Python.
+- [Three.js](https://ru.wikipedia.org/wiki/Three.js) - JavaScript библиотека, позволяющая отображать
+в браузере трехмерные сцены. Основана на технологии WebGL.
+- А также [HTML](https://ru.wikipedia.org/wiki/HTML),
+[CSS](https://ru.wikipedia.org/wiki/CSS),
+[JavaScript](https://ru.wikipedia.org/wiki/JavaScript),
+[WebGL](https://ru.wikipedia.org/wiki/WebGL),
+[Python](https://ru.wikipedia.org/wiki/Python),
+[Markdown](https://ru.wikipedia.org/wiki/Markdown),
+[PDF](https://ru.wikipedia.org/wiki/Portable_Document_Format),
+[QR-code](https://ru.wikipedia.org/wiki/QR-%D0%BA%D0%BE%D0%B4),
+[STL](https://ru.wikipedia.org/wiki/STL_(%D1%84%D0%BE%D1%80%D0%BC%D0%B0%D1%82_%D1%84%D0%B0%D0%B9%D0%BB%D0%B0)),
+[PNG](https://ru.wikipedia.org/wiki/PNG),
+[Git](https://ru.wikipedia.org/wiki/Git),
+[GitHub](https://ru.wikipedia.org/wiki/GitHub)
+
+## Пример 1: Построение символа Дао в объеме
 
 Статьи (PDF)
 - [Построение символа Дао в 3D](https://headfire.github.io/p3/docs/dao_article.pdf)
@@ -47,16 +65,22 @@
 
 ## Контакты
 
-Cайт проекта: [https://headfire.github.io/point](https://headfire.github.io/point)
-
-Репозиторий проекта: [https://github.com/headfire/point](https://github.com/headfire/point)
-
+Cайт проекта: [https://headfire.github.io/point](https://headfire.github.io/point)  
+Репозиторий проекта: [https://github.com/headfire/point](https://github.com/headfire/point)  
 E-mail автора: [headfire@yandex.ru](mailto:headfire@yandex.ru)
 
+Спонсор проекта: - - - - -
+
+## Путь
+
+*Как проповедь ни хороша*  
+*Я б все же предпочел*  
+*Чтоб объяснивший верный путь*  
+*Со мной тот путь прошел*  
+
+*Пусть что угодно говорят*  
+*Хочу я видеть как*  
+*Рука творит, а не слова*  
+*Слетают с языка*
 
 
-# Creation point - 3D  / English version
-
-<img src="images/logo.png" style="zoom:50%;" />
-
-## 3D stereo illustration system
