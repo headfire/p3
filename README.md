@@ -23,7 +23,7 @@
 ## Пример 1: Построение символа Дао в 3D
 
 Статьи (PDF)
-- [Построение символа Дао в 3D](https://headfire.github.io/p3/docs/dao/dao_article.pdf)
+- [Построение символа Дао в 3D](https://headfire.github.io/p3/docs/dao_article.pdf)
 
 Слайды (WebGL)
 - [Слайд 01 Контур классического Дао](https://headfire.github.io/p3/v.htm?s=dao_01)
