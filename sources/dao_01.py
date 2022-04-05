@@ -3,9 +3,7 @@
 
 import os
 
-from scene import ScInit, ScPoint, ScLine, ScCircle, ScShape, ScLabel, ScStart, ScStyle
-
-
+from scene import Scene
 
 
 from OCC.Core.gp import gp_Pnt, gp_Trsf, gp_Dir, gp_Vec, gp_Ax1, gp_Ax2, gp_GTrsf
