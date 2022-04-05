@@ -472,7 +472,6 @@ def do(mode, slideName):
     
     ScInit(mode, decoration, (0.2, 0.2), exportDir) 
     
-    
     r = 40
     offset = 3
 

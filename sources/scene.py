@@ -316,6 +316,16 @@ class ScreenLib:
 class Scene:
  
     def __init__(self):
+    
+       scriptDir = os.path.dirname(__file__)
+       exportDraftDir = os.path.join(scriptDir, '..', 'viewer','slides','dao', slideName)
+       exportDir = os.path.abspath(exportDraftDir)
+    
+       decoration = (True, True, 1, 5, 0, 0, -60)
+       precision = (0.2, 0.2)
+    
+       ScInit(mode, decoration, precision, exportDir) 
+
        self.lib = TestLib()             
      
     def _getNormalStyle(self, styleVal):
@@ -379,13 +389,14 @@ class Scene:
         edge = BRepBuilderAPI_MakeEdge(pnt1, pnt2).Edge()
         self.lib.drawShape(edge, style)
     
-    def circle(self, pnt1, pnt2, pnt3, style):
+    def Circle(self, label, pnt1, pnt2, pnt3, style):
         style = self._getNormalStyle(style)
         geomCircle = GC_MakeCircle(pnt1, pnt2, pnt3).Value()
-        edge = BRepBuilderAPI_MakeEdge(geomCircle).Edge()
+        shape = BRepBuilderAPI_MakeEdge(geomCircle).Edge()
+        objs[label] = shape
         self.lib.drawShape(edge, style)
     
-    def shape(self, shape,  style):
+    def Shape(self, shape,  style):
         style = self._getNormalStyle(style)
         self.lib.drawShape(shape, style)
     
