@@ -319,7 +319,7 @@ function zdeskInit(container, texturePath, slidePath, param) {
 				deskMesh.position.set(param.deskDX, param.deskDY, param.deskDZ-22*scale); 
 				zdeskScene.add( deskMesh );
 
-		        zdeskXLabel((-1500/2 + 20)*scale + param.deskDX, (1000/2 + 20)*scale + param.deskDY, param.deskDZ, 'A0 M'+zdeskScaleB+':'+zdeskScaleA, 0xbbbbbb);
+		        // zdeskXLabel((-1500/2 + 20)*scale + param.deskDX, (1000/2 + 20)*scale + param.deskDY, param.deskDZ, 'A0 M'+zdeskScaleB+':'+zdeskScaleA, 0xbbbbbb);
 
 				
 				var paperGeometry = new THREE.BoxGeometry( 1189*scale, 841*scale, 2*scale);
