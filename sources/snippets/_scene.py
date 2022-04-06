@@ -15,7 +15,6 @@ from OCC.Core.TopAbs import TopAbs_EDGE, TopAbs_VERTEX
 from OCC.Core.TopoDS import TopoDS_Shape
 from OCC.Core.GC import  GC_MakeCircle
 
-
 from threejs import ThreeJsRenderer, StlRenderer
 
 
@@ -165,6 +164,7 @@ class ScreenLib:
         self.dLabel = 20 * scaleA/scaleB
         self._decoration(isDesk, isAxis, scaleA, scaleB, deskDX, deskDY, deskDZ)
 
+
     def _axisStyle(self):
         
         st = dict()
@@ -191,37 +191,36 @@ class ScreenLib:
         
         return st 
  
+    def setAisStyle(self, ais, r,g,b,a, materialKey, lineTypeKey, lineWidth)
+        color =  Quantity_Color(r, g, b, Quantity_TOC_RGB)
+        ais.SetColor(color)
+		if isinstance(ais, AIS_Trihedron):  
+			ais.SetArrowColor(color)
+			ais.SetTextColor(color)
+        ais.SetTransparency(a)
 
-    def _styleAis(self, ais, styleName, styleValue):
-        if styleName == 'color':
-            r,g,b = styleValue 
-            color =  Quantity_Color(r, g, b, Quantity_TOC_RGB)
-            ais.SetColor(color)
-            if isinstance(ais, AIS_Trihedron):  
-                ais.SetArrowColor(color)
-                ais.SetTextColor(color)
-        elif styleName == 'tran':
-                ais.SetTransparency(styleValue)
-        elif styleName == 'material':
-             aspect = Graphic3d_MaterialAspect(MATERIAL_TYPES.index(styleValue))
-             ais.SetMaterial(aspect)
-        elif styleName == 'lineType':         
-             lineType = LINE_TYPES.index(styleValue)
+    def setAisMaterialStyle(self, ais, materialKey)
+             material = Graphic3d_MaterialAspect(MATERIAL_TYPES.index(materialKey))
+             ais.SetMaterial(material)
+			 
+	def setAisLineStyle(self, ais, lineTypeKey, lineWidth)
+             lineType = LINE_TYPES.index(lineType)
              ais.Attributes().WireAspect().SetTypeOfLine(lineType)
              ais.Attributes().LineAspect().SetTypeOfLine(lineType)
-        elif styleName == 'lineWidth':         
-            ais.Attributes().LineAspect().SetWidth(styleValue)
-            ais.Attributes().WireAspect().SetWidth(styleValue)
+	         ais.Attributes().LineAspect().SetWidth(lineWidth)
+             ais.Attributes().WireAspect().SetWidth(lineWidth)
+     
+    def setAisPointStyle _styleAis(self, ais, styleName, styleValue):
         if isinstance(ais, AIS_Point): 
             if styleName == 'pointType':         
                  ais.SetMarker(POINT_TYPES.index(styleValue))
             if styleName == 'pointSize':         
                  ais.Attributes().PointAspect().SetScale(styleValue)
                  
-    def _drawLabel(self, pnt, text, style):
+    def drawLabel(self, pnt, text, color):
        pntLabel = gp_Pnt(pnt.X()+self.dLabel,pnt.Y()+self.dLabel,pnt.Z()+self.dLabel) 
        self.display.DisplayMessage(pntLabel, 
-                text, 20, style['color'], False)            
+                text, 20, color, False)            
        
     def _drawPoint(self, pnt, style):
         ais = AIS_Point(Geom_CartesianPoint(pnt))
@@ -295,15 +294,6 @@ class ScreenLib:
          self.display.FitAll()
          self.start_display()
            
-    def drawLabel(self, pnt, text, style):
-        self._drawLabel(pnt, text, style)
-            
-    def drawShape(self, shape, style):
-        self._drawShape(shape, style)
-            
-    def drawPoint(self, pnt, style):
-        self._drawPoint(pnt, style)
-    
               
      
 '''
@@ -316,13 +306,51 @@ class ScreenLib:
 class Scene:
  
     def __init__(self):
+    
+       scriptDir = os.path.dirname(__file__)
+       exportDraftDir = os.path.join(scriptDir, '..', 'viewer','slides','dao', slideName)
+       exportDir = os.path.abspath(exportDraftDir)
+    
+       decoration = (True, True, 1, 5, 0, 0, -60)
+       precision = (0.2, 0.2)
+    
+       ScInit(mode, decoration, precision, exportDir) 
+
        self.lib = TestLib()             
      
-    def _getNormalStyle(self, styleVal):
-        
-        if isinstance(styleVal, dict):
-           return styleVal
+    def makeDefaultStyle(self):
        
+        st['pointR'] =
+        st['pointG'] =
+        st['pointB'] =
+        st['pointA'] =
+        st['pointTypeKey'] =
+        st['pointSize'] =
+		
+        st['lineR'] =
+        st['lineG'] =
+        st['lineB'] =
+        st['lineA'] =
+        st['lineTypeKey'] =
+        st['lineSize'] =
+
+        st['planeR'] =
+        st['planeG'] =
+        st['planeB'] =
+        st['planeA'] =
+        st['planeTypeKey'] =
+        st['planeSize'] =
+
+        st['wirePrecision']
+        st['shapePrecision']
+
+       st['tran']  = 1-op/100
+        st['pointType'] = 'BALL'                
+        st['lineType'] = 'SOLID'                
+        st['pointSize'] = ps
+        st['lineWidth'] = lw               
+        st['material'] = mat
+
         if styleVal == None:
            styleVal = 'stMain' 
            
@@ -342,29 +370,25 @@ class Scene:
         
         st = dict() 
         
-        st['color'] = (r/100, g/100, b/100)
-        st['tran']  = 1-op/100
-        st['pointType'] = 'BALL'                
-        st['lineType'] = 'SOLID'                
-        st['pointSize'] = ps
-        st['lineWidth'] = lw               
-        st['material'] = mat
         
         return st
      
     def init(self, initMode, decoration, precision, exportDir):
        if initMode == 'screen':
-          self.lib = ScreenLib(decoration)
        elif  initMode == 'web': 
          self.lib = WebLib(decoration, precision, exportDir)
        elif  initMode == 'stl': 
          self.lib = StlLib(decoration, precision, exportDir)
-         
-    def start(self):
-        self.lib.start()
- 
-    def style(self, style):
-        return self._getNormalStyle(style)
+
+    def renderToScreen() 
+         lib = ScreenLib(decoration)
+         lib.start()
+		 for obj in objList
+		    t = obj['objType']
+                self.lib.draw(obj)
+
+    def style(self, styleKey, styleParams ) 
+	    self.styleList[styleKey] = styleParams 
  
     def label(self, pnt, label, style):
         style = self._getNormalStyle(style)
@@ -372,55 +396,36 @@ class Scene:
     
     def point(self, pnt, style):
         style = self._getNormalStyle(style)
-        self.lib.drawPoint(pnt, style)
         
     def line(self, pnt1, pnt2, style):
         style = self._getNormalStyle(style)
         edge = BRepBuilderAPI_MakeEdge(pnt1, pnt2).Edge()
         self.lib.drawShape(edge, style)
     
-    def circle(self, pnt1, pnt2, pnt3, style):
+    def circle(self, label, pnt1, pnt2, pnt3, style):
         style = self._getNormalStyle(style)
         geomCircle = GC_MakeCircle(pnt1, pnt2, pnt3).Value()
-        edge = BRepBuilderAPI_MakeEdge(geomCircle).Edge()
+        shape = BRepBuilderAPI_MakeEdge(geomCircle).Edge()
+        objs[label] = shape
         self.lib.drawShape(edge, style)
     
-    def shape(self, shape,  style):
+    def shape(self, objName, shape):
+	    objSpec = dict()
+		objSpec['obj'] = shape
+		objSpec['type'] = 'shape'
+		objSpec['style'] = self.makeStyle('stMain')
+		
+		
+	    self.objList[objName] = 
+		  { 
+			'obj':shape,
+		    'type':'shape', 
+			'style': 
+		  }	
+ 		
+	def setStyle(self, objName, styleName) {
         style = self._getNormalStyle(style)
-        self.lib.drawShape(shape, style)
-    
-'''
-***********************************************
- Procedural interface
-***********************************************
-'''
-
-sc = Scene()
-    
-def ScInit(initMode = 'screen', decoration = (True,True, 1,1,0,0,0), precision=(1.,1.), exportDir = None):
-    return sc.init(initMode, decoration, precision, exportDir)
- 
-def ScStyle(styleVal = None):
-    return  sc.style(styleVal)
-
-def ScPoint(pnt, style = None):
-    return sc.point(pnt, style)
-
-def ScLine(pnt1, pnt2, style = None):
-    return sc.line(pnt1, pnt2, style)
-
-def ScCircle(pnt1, pnt2, pnt3, style = None):
-    return sc.circle(pnt1, pnt2, pnt3, style)
-
-def ScShape(shape, style = None):
-    return sc.shape(shape, style)
-
-def ScLabel(pnt, text, style = None):
-    return sc.label(pnt, text, style)
-
-def ScStart():
-    return sc.start()
-
+	}	
 
 if __name__ == '__main__':
     
