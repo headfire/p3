@@ -18,6 +18,7 @@ from OCC.Core.GC import  GC_MakeCircle
 
 from threejs import ThreeJsRenderer, StlRenderer
 
+import os
 
 import json
 
@@ -315,17 +316,40 @@ class ScreenLib:
 
 class Scene:
     
-    def __init__(self):
-       self.lib = TestLib()             
-       self.objs = dict()
+    def __init__(self, sceneName):
+       self.sceneName = sceneName
+       self.lib = None             
+       self.geoms = dict()
+       self.params = dict()
        self.key = 0
+       self.styles = dict
     
-    def add(self, objKey, objType, objGeometry, objStyle):
-        self.objs[objKey + str(self.key)] = (objType, objGeometry, objStyle)
+    def setGeom(self, geomKey, geomType, geomObj, geomStyle):
+        self.geoms[geomKey + str(self.key)] = (geomType, geomObj, geomStyle)
         self.key += 1
+
+    def getGeom(self, geomKey):
+        (geomType, geomObj, geomStyle) = geoms[geomKey]
+        return geomObj
+
+    def getParam(self, paramKey,defaultValue):
+        if paramKey in self.params:
+            return self.params[paramKey]
+        else:   
+            return defaultValue     
+
+    def setParam(self, paramKey, paramValue):
+        self.params[paramKey] = paramValue
+
+    def copyParams(self, copyFromPrefix, copyToPrefix):
+        if paramKey in self.params:
+            return self.params[paramKey]
+        else:   
+            return defaultValue     
+
         
     def _getNormalStyle(self, styleVal):
-        
+                
         if isinstance(styleVal, dict):
            return styleVal
        
@@ -358,15 +382,31 @@ class Scene:
         
         return st
      
-    def init(self, initMode, decoration, precision, exportDir):
-       if initMode == 'screen':
-          self.lib = ScreenLib(decoration)
-       elif  initMode == 'web': 
-         self.lib = WebLib(decoration, precision, exportDir)
-       elif  initMode == 'stl': 
-         self.lib = StlLib(decoration, precision, exportDir)
          
-    def start(self):
+    def render(self):
+
+        sysRenderTarget = self.getParam('sysRenderTarget','screen')
+        sysDecoration = self.getParam('sysDecoration',(True, True, 1, 1, 0, 0, 0))
+        sysPrecision = self.getParam('sysPrecision', (0.2, 0.2))
+    
+        slideName = self.getParam('slideName','00');
+        fullSlideName = self.sceneName + '_' + slideName + '_test'
+        scriptDir = os.path.dirname(__file__)
+        stlRelDir = os.path.join(scriptDir, '..', 'models', fullSlideName)
+        stlDir = os.path.abspath(stlRelDir)
+        webRelDir = os.path.join(scriptDir, '..','slides', fullSlideName)
+        webDir = os.path.abspath(webRelDir)
+        
+        if sysRenderTarget == 'test':    
+          self.lib = TestLib(sysDecoration, sysPrecision, webDir, stlDir)
+        elif sysRenderTarget == 'screen':
+          self.lib = ScreenLib(sysDecoration)
+        elif  sysRenderTarget == 'web': 
+            self.lib = WebLib(sysDecoration, sysPrecision, webDir)
+        elif  sysRenderTarget == 'stl': 
+            self.lib = StlLib(sysDecoration, sysPrecision, stlDir)
+    
+    
         for objKey in self.objs:
             (objType, objGeometry, objStyle) = self.objs[objKey]
             style = self._getNormalStyle(objStyle)
@@ -415,103 +455,74 @@ class Scene:
 ***********************************************
 '''
 
-sc = Scene()
-    
-def ScInit(initMode = 'screen', decoration = (True,True, 1,1,0,0,0), precision=(1.,1.), exportDir = None):
-    return sc.init(initMode, decoration, precision, exportDir)
- 
-def ScStyle(styleVal = None):
-    return  sc.style(styleVal)
-
-def ScPoint(pnt, style = None):
-    return sc.point(pnt, style)
-
-def ScLine(pnt1, pnt2, style = None):
-    return sc.line(pnt1, pnt2, style)
-
-def ScCircle(pnt1, pnt2, pnt3, style = None):
-    return sc.circle(pnt1, pnt2, pnt3, style)
-
-def ScShape(shape, style = None):
-    return sc.shape(shape, style)
-
-def ScLabel(pnt, text, style = None):
-    return sc.label(pnt, text, style)
-
-def ScStart():
-    return sc.start()
-
-
 if __name__ == '__main__':
     
      
-    def  testPoint():
+    def  testPoint(sc):
         
         pnt = gp_Pnt(3,4,5)
-        ScPoint(pnt,'stInfo')
-        ScLabel(pnt, 'point', 'stInfo')
+        sc.point(pnt,'stInfo')
+        sc.label(pnt, 'point', 'stInfo')
     
 
-    def testLine():
+    def testLine(sc):
         
         gpPnt = gp_Pnt(2,3,4)
         
-        ScPoint(gpPnt, 'stInfo')    
-        ScLabel(gpPnt, 'pnt+', 'stInfo')
+        sc.point(gpPnt, 'stInfo')    
+        sc.label(gpPnt, 'pnt+', 'stInfo')
         
         gpPntStart = gp_Pnt(5,0,3)
         gpPntEnd = gp_Pnt(0,5,3)
         
-        ScLine(gpPntStart, gpPntEnd, 'stMain')
+        sc.line(gpPntStart, gpPntEnd, 'stMain')
         
-        ScPoint(gpPntStart, 'stMain')
-        ScLabel(gpPntStart, 'lineStart+', 'stMain')
+        sc.point(gpPntStart, 'stMain')
+        sc.label(gpPntStart, 'lineStart+', 'stMain')
         
-        ScPoint(gpPntEnd, 'stMain')
-        ScLabel(gpPntEnd, 'lineEnd', 'stMain')
+        sc.point(gpPntEnd, 'stMain')
+        sc.label(gpPntEnd, 'lineEnd', 'stMain')
     
-    
-    def  testCircle():
+    def  testCircle(sc):
         
         gpPnt1 = gp_Pnt(1,1,10)
         gpPnt2 = gp_Pnt(5,2,5)
         gpPnt3 = gp_Pnt(5,-5,5)
         
-        ScCircle(gpPnt1, gpPnt2, gpPnt3, 'stFocus')
+        sc.circle(gpPnt1, gpPnt2, gpPnt3, 'stFocus')
         
-        ScPoint(gpPnt1, 'stFog')
-        ScLabel(gpPnt1,'p1', 'stFog')
-        ScPoint(gpPnt2, 'stFog')
-        ScLabel(gpPnt2,'p2','stFog')
-        ScPoint(gpPnt3, 'stFog')
-        ScLabel(gpPnt3,'p3', 'stFog')
+        sc.point(gpPnt1, 'stFog')
+        sc.label(gpPnt1,'p1', 'stFog')
+        sc.point(gpPnt2, 'stFog')
+        sc.label(gpPnt2,'p2','stFog')
+        sc.point(gpPnt3, 'stFog')
+        sc.label(gpPnt3,'p3', 'stFog')
   
-    def  testShape():
+    def  testShape(sc):
         
         sp1 = BRepPrimAPI_MakeSphere(3).Shape()
-        ScShape(sp1, 'stGold')
+        sc.shape(sp1, 'stGold')
         
         sp2 = BRepPrimAPI_MakeSphere(4).Shape()
-        ScShape(sp2, 'stFog')
+        sc.shape(sp2, 'stFog')
         
         
-        stCustom1   = ScStyle((  100,   35,   24,   100,   3,  3, 'GOLD'    ))
+        stCustom1   = sc.style((  100,   35,   24,   100,   3,  3, 'GOLD'    ))
         sp3 = BRepPrimAPI_MakeSphere(gp_Pnt(3,6,2), 2.5).Shape()
-        ScShape(sp3,  stCustom1)
+        sc.shape(sp3,  stCustom1)
         
         
-        stCustom2   = ScStyle((  98,  100,  12,   100,   3,  3, 'CHROME'    ))
+        stCustom2   = sc.style((  98,  100,  12,   100,   3,  3, 'CHROME'    ))
         sp4 = BRepPrimAPI_MakeSphere(gp_Pnt(3,3,3),2).Shape()
-        ScShape(sp4, stCustom2)
+        sc.shape(sp4, stCustom2)
         
   
-    decoration = (True, True, 1, 50, 0, 0, -3)
+    sc = Scene('Test');
+    sc.setParam('sysDecoration',(True, True, 1, 50, 0, 0, -3))
     
-    ScInit('screen', decoration) 
+    testPoint(sc)
+    testLine(sc)
+    testCircle(sc)
+    testShape(sc)
     
-    testPoint()
-    testLine()
-    testCircle()
-    testShape()
-    
-    ScStart()
+    sc.render()
