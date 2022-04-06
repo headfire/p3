@@ -314,10 +314,16 @@ class ScreenLib:
 '''
 
 class Scene:
- 
+    
     def __init__(self):
        self.lib = TestLib()             
-     
+       self.objs = dict()
+       self.key = 0
+    
+    def add(self, objKey, objType, objGeometry, objStyle):
+        self.objs[objKey + str(self.key)] = (objType, objGeometry, objStyle)
+        self.key += 1
+        
     def _getNormalStyle(self, styleVal):
         
         if isinstance(styleVal, dict):
@@ -361,33 +367,47 @@ class Scene:
          self.lib = StlLib(decoration, precision, exportDir)
          
     def start(self):
+        for objKey in self.objs:
+            (objType, objGeometry, objStyle) = self.objs[objKey]
+            style = self._getNormalStyle(objStyle)
+            if objType == 'point':
+                (pnt) = objGeometry;
+                self.lib.drawPoint(pnt, style)
+            elif objType == 'line':   
+                (pnt1,pnt2) = objGeometry;
+                edge = BRepBuilderAPI_MakeEdge(pnt1, pnt2).Edge()
+                self.lib.drawShape(edge, style)
+            elif objType == 'circle':
+                (pnt1,pnt2,pnt3) = objGeometry;
+                geomCircle = GC_MakeCircle(pnt1, pnt2, pnt3).Value()
+                edge = BRepBuilderAPI_MakeEdge(geomCircle).Edge()
+                self.lib.drawShape(edge, style)
+            elif objType == 'shape':
+                shape = objGeometry
+                self.lib.drawShape(shape, style)
+            elif objType == 'label':
+                (pntPlace, strTitle) = objGeometry
+                self.lib.drawLabel(pntPlace, strTitle, style)
         self.lib.start()
+             
  
     def style(self, style):
         return self._getNormalStyle(style)
  
-    def label(self, pnt, label, style):
-        style = self._getNormalStyle(style)
-        self.lib.drawLabel(pnt, label, style)
+    def label(self, pntPlace, strTitle, style):
+        self.add('label', 'label',(pntPlace, strTitle), style)
     
     def point(self, pnt, style):
-        style = self._getNormalStyle(style)
-        self.lib.drawPoint(pnt, style)
+        self.add('point','point', (pnt), style)
         
     def line(self, pnt1, pnt2, style):
-        style = self._getNormalStyle(style)
-        edge = BRepBuilderAPI_MakeEdge(pnt1, pnt2).Edge()
-        self.lib.drawShape(edge, style)
+        self.add('line','line', (pnt1, pnt2), style)
     
     def circle(self, pnt1, pnt2, pnt3, style):
-        style = self._getNormalStyle(style)
-        geomCircle = GC_MakeCircle(pnt1, pnt2, pnt3).Value()
-        edge = BRepBuilderAPI_MakeEdge(geomCircle).Edge()
-        self.lib.drawShape(edge, style)
+        self.add('circle','circle', (pnt1, pnt2, pnt3), style)
     
     def shape(self, shape,  style):
-        style = self._getNormalStyle(style)
-        self.lib.drawShape(shape, style)
+        self.add('shape','shape', shape, style)
     
 '''
 ***********************************************

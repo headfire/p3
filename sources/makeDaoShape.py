@@ -464,6 +464,7 @@ def slide_07_DaoWithCase (r, offset, caseH, caseZMove ,gap):
         
 def do(mode, slideName):
   
+    
     scriptDir = os.path.dirname(__file__)
     exportDraftDir = os.path.join(scriptDir, '..', 'viewer','slides','dao', slideName)
     exportDir = os.path.abspath(exportDraftDir)
@@ -502,7 +503,6 @@ def do(mode, slideName):
     ScStart()
  
 if __name__ == '__main__':
-    
     
     #please, uncooment only one string
     
