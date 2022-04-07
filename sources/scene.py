@@ -26,7 +26,7 @@ import json
 POINT_TYPES = [ 'POINT', 'PLUS', 'STAR', 'X',  'O', 'O_POINT', 'O_PLUS', 'O_STAR',  'O_X', 
   'RING1', 'RING2', 'RING3', 'BALL' ] 
 
-LINE_TYPES = ['SOLID', 'DASH', 'DOT', 'DOTDASH' ]
+LINE_TYPES = { 'EMPTY':-1, 'SOLID':0, 'DASH':1, 'DOT':2, 'DOTDASH':3 }
 
 MATERIAL_TYPES = [ 'BRASS', 'BRONZE', 'COPPER', 'GOLD',  'PEWTER', 'PLASTER', 'PLASTIC', 
   'SILVER',  'STEEL', 'STONE', 'SHINY_PLASTIC', 'SATIN',  'METALIZED', 'NEON_GNC',
@@ -158,7 +158,9 @@ class WebLib:
 
 class ScreenLib:
     
-    def __init__(self, decors):
+    def __init__(self, decors, StyleDesk, StyleAxis):
+        self.StyleDesk = StyleDesk
+        self.StyleAxis = StyleAxis
         self.display, self.start_display, self.add_menu,  self.add_function_to_menu  = init_display(
             None, (1024, 768), True, [128, 128, 128], [128, 128, 128]
           )
@@ -169,53 +171,28 @@ class ScreenLib:
         deskDX = decors['DeskDX']
         deskDY = decors['DeskDY']
         deskDZ = decors['DeskDZ']
-        self.dLabel = 50 * scaleA/scaleB
+        self.dLabel = 20 * scaleA/scaleB
         self._decoration(isDesk, isAxis, scaleA, scaleB, deskDX, deskDY, deskDZ)
-
-    def _axisStyle(self):
         
-        st = dict()
-        st['color'] = (40/100, 40/100, 40/100)
-        st['tran']  = 0
-        st['pointType'] = 'BALL'                
-        st['lineType'] = 'SOLID'                
-        st['pointSize'] = 2
-        st['lineWidth'] = 1               
-        st['material'] = 'PLASTIC'
-        
-        return st 
- 
-    def _deskStyle(self):
-        
-        st = dict()
-        st['color'] = (70/100, 70/100, 70/100)
-        st['tran']  = 0
-        st['pointType'] = 'BALL'                
-        st['lineType'] = 'SOLID'                
-        st['pointSize'] = 2
-        st['lineWidth'] = 1               
-        st['material'] = 'PLASTIC'
-        
-        return st 
  
 
     def _styleAis(self, ais, styleName, styleValue):
         if styleName == 'color':
             r,g,b = styleValue 
-            color =  Quantity_Color(r, g, b, Quantity_TOC_RGB)
+            color =  Quantity_Color(r/100, g/100, b/100, Quantity_TOC_RGB)
             ais.SetColor(color)
             if isinstance(ais, AIS_Trihedron):  
                 ais.SetArrowColor(color)
                 ais.SetTextColor(color)
         elif styleName == 'tran':
-                ais.SetTransparency(styleValue)
+                ais.SetTransparency(styleValue/100)
         elif styleName == 'material':
              aspect = Graphic3d_MaterialAspect(MATERIAL_TYPES.index(styleValue))
              ais.SetMaterial(aspect)
-        elif styleName == 'lineType':         
-             lineType = LINE_TYPES.index(styleValue)
-             ais.Attributes().WireAspect().SetTypeOfLine(lineType)
-             ais.Attributes().LineAspect().SetTypeOfLine(lineType)
+        elif styleName == 'lineType':    
+             #print(LINE_TYPES[styleValue])        
+             ais.Attributes().LineAspect().SetTypeOfLine(LINE_TYPES[styleValue])
+             ais.Attributes().WireAspect().SetTypeOfLine(LINE_TYPES[styleValue])
         elif styleName == 'lineWidth':         
             ais.Attributes().LineAspect().SetWidth(styleValue)
             ais.Attributes().WireAspect().SetWidth(styleValue)
@@ -228,12 +205,12 @@ class ScreenLib:
     def _drawLabel(self, pnt, text, style):
        pntLabel = gp_Pnt(pnt.X()+self.dLabel,pnt.Y()+self.dLabel,pnt.Z()+self.dLabel) 
        self.display.DisplayMessage(pntLabel, 
-                text, style['LabelS'], (style['LabelR'],style['LabelG'],style['LabelB']), False)            
+                text, style['LabelS'], (style['LabelR']/100,style['LabelG']/100,style['LabelB']/100), False)            
        
     def _drawPoint(self, pnt, style):
         ais = AIS_Point(Geom_CartesianPoint(pnt))
         self._styleAis(ais, 'color', (style['PointR'],style['PointG'], style['PointB']))                
-        self._styleAis(ais, 'tran', style['PointA'])                
+        self._styleAis(ais, 'tran', 1-style['PointA']/100)                
         self._styleAis(ais, 'material', style['PointM'])                
         self._styleAis(ais, 'pointType', style['PointT'])                
         self._styleAis(ais, 'pointSize', style['PointS'])                
@@ -241,15 +218,30 @@ class ScreenLib:
     
     def _drawShape(self, shape, style):
         ais = AIS_Shape(shape)
-        self._styleAis(ais, 'color', (style['ShapeR'],style['ShapeG'], style['ShapeB']))                
-        self._styleAis(ais, 'tran', style['ShapeA'])                
-        self._styleAis(ais, 'material', style['ShapeM'])                
+        #print(style)
+        self._styleAis(ais, 'color', (style['SurfaceR'],style['SurfaceG'], style['SurfaceB']))                
+        self._styleAis(ais, 'tran', 1-style['SurfaceA']/100)                
+        self._styleAis(ais, 'material', style['SurfaceM'])                
+        self._styleAis(ais, 'pointType', style['PointT'])                
+        self._styleAis(ais, 'pointSize', style['PointS'])                
+        self._styleAis(ais, 'lineType', style['WireT'])                
+        self._styleAis(ais, 'lineWidth', style['WireS'])                
+        self.display.Context.Display(ais, False) 
+
+    def _drawTrihAis(self, ais, style):
+        self._styleAis(ais, 'color', (style['SurfaceR'],style['SurfaceG'], style['SurfaceB']))                
+        self._styleAis(ais, 'tran', 1-style['SurfaceA']/100)                
+        self._styleAis(ais, 'material', style['SurfaceM'])                
+        self._styleAis(ais, 'pointType', style['PointT'])                
+        self._styleAis(ais, 'pointSize', style['PointS'])                
+        self._styleAis(ais, 'lineType', style['WireT'])                
+        self._styleAis(ais, 'lineSize', style['WireS'])                
         self.display.Context.Display(ais, False) 
             
   
     def _axis(self, size):
         
-            style = self._axisStyle()
+            style = self.StyleAxis
           
             step = size/10
             ss = [1,5,10,50,100,500,1000,5000,10000]
@@ -263,10 +255,10 @@ class ScreenLib:
             dir2 = gp_Dir(gp_Vec(1,0,0))
             geomAxis = Geom_Axis2Placement(pnt, dir1, dir2)
             
-            trih = AIS_Trihedron(geomAxis)
-            trih.SetSize(size)
+            trihAis = AIS_Trihedron(geomAxis)
+            trihAis.SetSize(size)
             
-            self._drawAis(trih, style)
+            self._drawTrihAis(trihAis, style)
             
             self._drawPoint(gp_Pnt(0,0,0), style)
             
@@ -279,7 +271,7 @@ class ScreenLib:
                 
      
     def _desk(self, scaleA, scaleB, deskDX, deskDY, deskDZ): 
-            style = self._deskStyle()
+            style = self.StyleDesk
             scale = scaleA/scaleB
             xBox, yBox, zBox = 1500*scale, 1000*scale, 40*scale
             desk = BRepPrimAPI_MakeBox (gp_Pnt( -xBox/2+deskDX, -yBox/2+deskDY, -zBox+deskDZ), xBox, yBox, zBox)
@@ -304,14 +296,33 @@ class ScreenLib:
          self.display.FitAll()
          self.start_display()
            
-    def drawLabel(self, pnt, text, style):
+    def drawLabel(self, pnt, text, style, color):
+        if color != None:
+            r,g,b,a = color
+            style['LabelR'] = r
+            style['LabelG'] = g
+            style['LabelB'] = b
+            style['LabelA'] = a
         self._drawLabel(pnt, text, style)
             
-    def drawShape(self, shape, style):
+    def drawShape(self, shape, style, color):
+        if color != None:
+            r,g,b,a = color
+            style['SurfaceR'] = r
+            style['SurfaceG'] = g
+            style['SurfaceB'] = b
+            style['SurfaceA'] = a
         self._drawShape(shape, style)
             
-    def drawPoint(self, pnt, style):
+    def drawPoint(self, pnt, style, color):
+        if color != None:
+            r,g,b,a = color
+            style['PointR'] = r
+            style['PointG'] = g
+            style['PointB'] = b
+            style['PointA'] = a
         self._drawPoint(pnt, style)
+    
     
               
      
@@ -330,17 +341,50 @@ class Scene:
         self.lib = None             
         self.geoms = dict()
         self.params = dict()
-        self.key = 0
+        
         # todo get arguments and init params
 
-    
-    def setGeom(self, geomKey, geomType, geomObj, geomStyle):
-        self.geoms[geomKey + str(self.key)] = (geomType, geomObj, geomStyle)
-        self.key += 1
+        self.initRGBASMT('TemplStyleInfoPoint', 30,30,30,100,3,'PLASTIC','BALL')
+        self.initRGBASMT('TemplStyleInfoWire', 30,30,30,100,2,'PLASTIC','SOLID')
+        self.initRGBASMT('TemplStyleInfoSurface', 30,30,30,100,1,'PLASTIC','SOLID')
+        self.initRGBASMT('TemplStyleInfoLabel', 30,30,30,100,20,'PLASTIC','SOLID')
 
-    def getGeom(self, geomKey):
-        (geomType, geomObj, geomStyle) = geoms[geomKey]
-        return geomObj
+        self.initRGBASMT('TemplStyleMainPoint', 90,90,10,100,4,'PLASTIC','BALL')
+        self.initRGBASMT('TemplStyleMainWire', 10,10,90,100, 8,'PLASTIC','SOLID')
+        self.initRGBASMT('TemplStyleMainSurface',10,10,90,100,2,'PLASTIC','SOLID')
+        self.initRGBASMT('TemplStyleMainLabel', 90,10,10,100,20,'PLASTIC','SOLID')
+
+        self.initRGBASMT('TemplStyleFocusPoint', 90,10,10,100,4,'PLASTIC','BALL')
+        self.initRGBASMT('TemplStyleFocusWire', 90,10,10,100,3,'PLASTIC','SOLID')
+        self.initRGBASMT('TemplStyleFocusSurface', 90,10,10,100,2,'PLASTIC','SOLID')
+        self.initRGBASMT('TemplStyleFocusLabel', 90,10,10,100,20,'PLASTIC','SOLID')
+
+        self.initRGBASMT('TemplStyleChromePoint', 10,10,10,100,4,'PLASTIC','EMPTY')
+        self.initRGBASMT('TemplStyleChromeWire', 10,10,10,100,3,'PLASTIC','DASH')
+        self.initRGBASMT('TemplStyleChromeSurface', 10,10,10,100,2,'PLASTIC','SOLID')
+        self.initRGBASMT('TemplStyleChromeLabel', 10,10,10,100,20,'PLASTIC','SOLID')
+
+        self.initRGBASMT('TemplStyleDeskPoint', 30,30,30,100,4,'PLASTIC','BALL')
+        self.initRGBASMT('TemplStyleDeskWire', 30,30,30,100,3,'PLASTIC','SOLID')
+        self.initRGBASMT('TemplStyleDeskSurface', 30,30,30,100,2,'PLASTIC','SOLID')
+        self.initRGBASMT('TemplStyleDeskLabel', 30,30,30,100,20,'PLASTIC','SOLID')
+
+        self.initRGBASMT('TemplStyleAxisPoint', 30,30,30,100,2,'PLASTIC','BALL')
+        self.initRGBASMT('TemplStyleAxisWire', 30,30,30,100,1,'PLASTIC','SOLID')
+        self.initRGBASMT('TemplStyleAxisSurface', 30,30,30,100,1,'PLASTIC','SOLID')
+        self.initRGBASMT('TemplStyleAxisLabel', 30,30,30,100,20,'PLASTIC','SOLID')
+    
+    def setGeom(self, key, geomType, geomObj):
+        self.geoms[key] = {'type':geomType, 'geom':geomObj, 'style':'Main', 'color':None }
+
+    def getGeom(self, key):
+        return  self.geoms[key][geom]
+
+    def setStyle(self, key, style):
+        self.geoms[key]['style'] = style
+
+    def setColor(self, key, RGBA):
+        self.geoms[key]['color'] = RGBA
 
     def getParam(self, paramKey):
         return self.params[paramKey]
@@ -349,6 +393,18 @@ class Scene:
         if not (paramKey in self.params):
             self.params[paramKey] = paramValue
         return self.params[paramKey]
+
+    def initParams(self, keyPrefix ,params):
+        for key in params:
+           self.initParam(keyPrefix+key, params[key])
+
+    def getParams(self, keyPrefix):
+        ret = dict()
+        for key in self.params: 
+            if key.startswith(keyPrefix): 
+               sStart,sPrefix, sEnd = key.partition(keyPrefix)
+               ret[sEnd] = self.params[key] 
+        return ret       
 
     def initRGBASMT(self, paramKeyPrefix, r,g,b,a,s,m,t):
         self.initParam(paramKeyPrefix+'R',r)
@@ -364,49 +420,13 @@ class Scene:
         self.initParam(paramKeyPrefix+'Y',y)
         self.initParam(paramKeyPrefix+'Z',z)
         
-    def getParams(self, keyPrefix):
-
-        ret = dict()
            
-        for key in self.params: 
-            if key.startswith(keyPrefix): 
-               sStart,sPrefix, sEnd = key.partition(keyPrefix)
-               ret[sEnd] = self.params[key] 
-               
-        return ret       
-           
-        '''   
-                   #      r%    g%     b%     op%     pnt  line   mat 
-        if styleVal == 'stInfo':
-           styleVal = (   30,   30,   30,    100,     3,     2,  'PLASTIC' )
-        elif styleVal == 'stMain':
-           styleVal = (   10,   10,   90,    100,      3,     4,  'PLASTIC' )
-        elif styleVal == 'stFocus':
-           styleVal = (   90,   10,   10,     30,      3,     2,  'CHROME' )
-        elif styleVal == 'stGold':
-           styleVal = (   90,   90,   10,    100,      3,     4,  'GOLD'    )
-        elif styleVal == 'stFog':
-           styleVal = (   90,   90,   90,    30,       3,      4,   'PLASTIC'  )
-           
-        r, g, b, op, ps ,lw, mat = styleVal
-        
-        st = dict() 
-        
-        st['color'] = (r/100, g/100, b/100)
-        st['tran']  = 1-op/100
-        st['pointType'] = 'BALL'                
-        st['lineType'] = 'SOLID'                
-        st['pointSize'] = ps
-        st['lineWidth'] = lw               
-        st['material'] = mat
-        '''
-        
-        return st
      
          
     def render(self):
 
         SysRenderTarget = self.initParam('SysRenderTarget', 'screen')
+        SysSlideNumLenght = self.initParam('SysSlideNumLenght', 5)
 
         self.initParam('SysDecorIsDesk', True)
         self.initParam('SysDecorIsAxis', True)
@@ -419,76 +439,93 @@ class Scene:
         self.initParam('SysPrecisionWire', 0.2)
         SysPrecisions = self.getParams('SysPrecision')
 
-        self.initRGBASMT('stInfoPoint', 30,30,30,100,3,'PLASTIC','BALL')
-        self.initRGBASMT('stInfoWire', 30,30,30,100,2,'PLASTIC','SOLID')
-        self.initRGBASMT('stInfoShape', 30,30,30,100,1,'PLASTIC','SOLID')
-        self.initRGBASMT('stInfoLabel', 30,30,30,100,20,'PLASTIC','SOLID')
+        self.initParams('Style', self.getParams('TemplStyle'))
 
-        self.initRGBASMT('stMainPoint', 90,90,10,100,4,'PLASTIC','BALL')
-        self.initRGBASMT('stMainWire', 10,10,90,100,3,'PLASTIC','SOLID')
-        self.initRGBASMT('stMainShape', 70,10,70,100,2,'PLASTIC','SOLID')
-        self.initRGBASMT('stMainLabel', 90,10,10,100,20,'PLASTIC','SOLID')
+        StyleDesk = self.getParams('StyleDesk')
+        StyleAxis = self.getParams('StyleAxis')
 
-        self.initRGBASMT('stFocusPoint', 90,10,10,100,4,'PLASTIC','BALL')
-        self.initRGBASMT('stFocusWire', 90,10,10,100,3,'PLASTIC','SOLID')
-        self.initRGBASMT('stFocusShape', 90,10,10,100,2,'PLASTIC','SOLID')
-        self.initRGBASMT('stFocusLabel', 90,10,10,100,20,'PLASTIC','SOLID')
-
-    
-        fullSlideName = self.sceneName + '_' + self.getParam('SlideName') + '_test'
+        SysSlideNLenght = self.initParam('SysSlideNLenght', 2)
+        SlideN = self.initParam('SlideN',0)
+        SlideNStr = ('{:0'+str(SysSlideNLenght)+'}').format(SlideN)
+        
+        fullSlideName = self.sceneName + '_' + SlideNStr + '_test'
         scriptDir = os.path.dirname(__file__)
         stlRelDir = os.path.join(scriptDir, '..', 'models', fullSlideName)
         stlDir = os.path.abspath(stlRelDir)
         webRelDir = os.path.join(scriptDir, '..','slides', fullSlideName)
         webDir = os.path.abspath(webRelDir)
         
+        #for key in self.params:
+          #print(key,'=',self.params[key])
+        
         if SysRenderTarget == 'test':    
           self.lib = TestLib(SysDecors, SysPrecisions, ebDir, stlDir)
         elif SysRenderTarget == 'screen':
-          self.lib = ScreenLib(SysDecors)
+          self.lib = ScreenLib(SysDecors, StyleDesk, StyleAxis)
         elif  SysRenderTarget == 'web': 
             self.lib = WebLib(SysDecors, SysPrecisions, webDir)
         elif  SysRenderTarget == 'stl': 
             self.lib = StlLib(SysDecors, SysPrecisions, stlDir)
+
+        #for key in self.geoms:
+            #print(key, self.geoms[key]) 
     
-        for objKey in self.objs:
-            (objType, objGeometry, objStyle) = self.objs[objKey]
-            style = self.getParams(objStyle)
-            if objType == 'point':
-                (pnt) = objGeometry;
-                self.lib.drawPoint(pnt, style)
-            elif objType == 'line':   
-                (pnt1,pnt2) = objGeometry;
+        for key in self.geoms:
+            geomObj = self.geoms[key]
+            #print(geomObj['style'])
+            style = self.getParams('Style'+geomObj['style'])
+            #print(style)
+            color = geomObj['color']
+            geom = geomObj['geom']
+            t = geomObj['type'] 
+            if t == 'point':
+                pnt = geom;
+                self.lib.drawPoint(pnt, style, color)
+            elif t == 'line':   
+                pnt1,pnt2 = geom;
                 edge = BRepBuilderAPI_MakeEdge(pnt1, pnt2).Edge()
-                self.lib.drawShape(edge, style)
-            elif objType == 'circle':
-                (pnt1,pnt2,pnt3) = objGeometry;
+                self.lib.drawShape(edge, style, color)
+            elif t == 'circle':
+                pnt1,pnt2,pnt3 = geom;
                 geomCircle = GC_MakeCircle(pnt1, pnt2, pnt3).Value()
                 edge = BRepBuilderAPI_MakeEdge(geomCircle).Edge()
-                self.lib.drawShape(edge, style)
-            elif objType == 'shape':
-                shape = objGeometry
-                self.lib.drawShape(shape, style)
-            elif objType == 'label':
-                (pntPlace, strTitle) = objGeometry
-                self.lib.drawLabel(pntPlace, strTitle, style)
+                self.lib.drawShape(edge, style, color)
+            elif t == 'shape':
+                shape = geom
+                #print(style)
+                self.lib.drawShape(shape, style, color)
+            elif t == 'label':
+                pntPlace, strTitle = geom
+                self.lib.drawLabel(pntPlace, strTitle, style, color)
                 
         self.lib.start()
  
-    def label(self, pntPlace, strTitle, style):
-        self.setGeom('label', 'label',(pntPlace, strTitle), style)
+    def label(self, key, pntPlace, strTitle):
+        self.setGeom(key, 'label', (pntPlace, strTitle))
+
+    def labels(self, key, pnts, label):
+        index = 0
+        for pnt in pnts:
+           self.label(key+str(index+1), pnt, label+str(index+1))
+           index += 1
     
-    def point(self, pnt, style):
-        self.setGeom('point','point', (pnt), style)
+    def point(self, key, pnt):
+        self.setGeom(key, 'point', (pnt))
+
+    def points(self, key, pnts):
+        index = 0
+        for pnt in pnts:
+           self.point(key+str(index+1), pnt)
+           index += 1
         
-    def line(self, pnt1, pnt2, style):
-        self.setGeom('line','line', (pnt1, pnt2), style)
+    def line(self, key, pnt1, pnt2):
+        self.setGeom(key,'line', (pnt1, pnt2))
     
-    def circle(self, pnt1, pnt2, pnt3, style):
-        self.setGeom('circle','circle', (pnt1, pnt2, pnt3), style)
+    def circle(self, key, pnt1, pnt2, pnt3):
+        self.setGeom(key, 'circle', (pnt1, pnt2, pnt3))
     
-    def shape(self, shape,  style):
-        self.setGeom('shape','shape', shape, style)
+    def shape(self, key, shape):
+        self.setGeom(key, 'shape', shape)
     
 '''
 ***********************************************
@@ -498,6 +535,11 @@ class Scene:
 
 if __name__ == '__main__':
     
+    def testParams(sc):
+        sc.initParam('PrefixS01',1)
+        sc.initParam('PrefixS02',2)
+        Prefixes = sc.getParams('Prefix')
+        print(Prefixes)
      
     def  testPoint(sc):
         
@@ -559,11 +601,42 @@ if __name__ == '__main__':
         
   
     sc = Scene('Test');
-    sc.setParam('sysDecoration',(True, True, 1, 50, 0, 0, -3))
+    sc.initParam('SysDecorScaleB',50)
+    sc.initParam('SysDecorDeskDZ',-3)
     
-    testPoint(sc)
-    testLine(sc)
-    testCircle(sc)
-    testShape(sc)
+    testParams(sc)
+
+    #testPoint(sc)
+    #testLine(sc)
+    #testCircle(sc)
+    #testShape(sc)
     
-    sc.render()
+    #sc.render()
+    
+    '''   
+               #      r%    g%     b%     op%     pnt  line   mat 
+    if styleVal == 'stInfo':
+       styleVal = (   30,   30,   30,    100,     3,     2,  'PLASTIC' )
+    elif styleVal == 'stMain':
+       styleVal = (   10,   10,   90,    100,      3,     4,  'PLASTIC' )
+    elif styleVal == 'stFocus':
+       styleVal = (   90,   10,   10,     30,      3,     2,  'CHROME' )
+    elif styleVal == 'stGold':
+       styleVal = (   90,   90,   10,    100,      3,     4,  'GOLD'    )
+    elif styleVal == 'stFog':
+       styleVal = (   90,   90,   90,    30,       3,      4,   'PLASTIC'  )
+       
+    r, g, b, op, ps ,lw, mat = styleVal
+    
+    st = dict() 
+    
+    st['color'] = (r/100, g/100, b/100)
+    st['tran']  = 1-op/100
+    st['pointType'] = 'BALL'                
+    st['lineType'] = 'SOLID'                
+    st['pointSize'] = ps
+    st['lineWidth'] = lw               
+    st['material'] = mat
+    
+    return st
+    '''

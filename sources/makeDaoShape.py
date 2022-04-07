@@ -205,7 +205,7 @@ def getPntsBase(r):
     p6 = gp_Pnt(0,-r,0)      
     p7 = gp_Pnt(r2,-r2,0)      
     
-    return p0, p1, p2, p3, p4, p5, p6, p7
+    return [ p0, p1, p2, p3, p4, p5, p6, p7 ]
 
 def getPntDaoFocus(r):
     return gp_Pnt(0,-r/4,0)
@@ -327,58 +327,59 @@ def drawPoints(sc, pnts, style, label =''):
           drawPoints(sc, pnt, style, newLabel)
           i+=1
     else:    
-       sc.point(pnts, style)
+       sc.point(label, pnts, style)
        if label:
-          sc.label(pnts, label, style)
+          sc.label(label, pnts, label, style)
 
 
-def drawCircle(sc, r, style):
+def drawCircle(sc, key, r, style):
     
-    sc.circle(gp_Pnt(r,0,0), gp_Pnt(0,r,0), gp_Pnt(-r,0,0), style )
+    sc.circle(key, gp_Pnt(r,0,0), gp_Pnt(0,r,0), gp_Pnt(-r,0,0), style )
+
  
 def slide_01_DaoClassic(sc, r):
     
-    drawCircle(sc, r, 'StyleInfo')
+    drawCircle(sc, 'base', r, 'StyleInfo')
     pntsBase = getPntsBase(r)
     drawPoints(sc, pntsBase, 'StyleFocus', 'b')
-    shapeDaoClassic = getWireDaoClassic(pntsBase)
-    sc.shape(shapeDaoClassic, 'StyleMain')
+    wireDaoClassic = getWireDaoClassic(pntsBase)
+    sc.shape('wireDaoClassic', wireDaoClassic, 'StyleMain')
 
 def slide_02_DaoConcept(sc, r, offset):
     
-    drawCircle(sc, r + offset, 'StyleInfo')
+    drawCircle(sc, 'baseOffset', r + offset, 'StyleInfo')
     pntsBase = getPntsBase(r)
     wireDaoClassic = getWireDaoClassic(pntsBase)
-    wireDao0 = getShapeOffset(wireDaoClassic, -offset)
-    sc.shape(wireDao0, 'StyleMain')
+    wireDaoIng = getShapeOffset(wireDaoClassic, -offset)
+    sc.shape('wireDaoIng', wireDaoIng, 'StyleMain')
 
-    pntsDao0 = getPntsOfShape(wireDao0)
+    pntsDaoIng = getPntsOfShape(wireDaoIng)
     drawPoints(sc, pntsDao0, 'StyleFocus', 'd')
   
-    wireDao1 = getShapeOZRotate(wireDao0, pi)
-    sc.shape(wireDao1, 'StyleInfo')
+    wireDaoYang = getShapeOZRotate(wireDaoIng, pi)
+    sc.shape('wireDaoYang', wireDaoYang, 'StyleInfo')
 
 def slide_03_DaoSecPrincipe(sc, r, offset, k, h):
     
-    drawCircle(sc, r + offset,  'StyleInfo')
+    drawCircle(sc, 'baseOffset', r + offset, 'StyleInfo')
     pntsBase = getPntsBase(r)
     wireDaoClassic = getWireDaoClassic(pntsBase)
-    wireDao0 = getShapeOffset(wireDaoClassic, -offset)
-    sc.shape(wireDao0, 'StyleMain')
+    wireDaoIng = getShapeOffset(wireDaoClassic, -offset)
+    sc.shape('wireDaoIng', wireDaoIng, 'StyleMain')
     
     # for oure goal we need divide Dao on Head and Tail
     # Head sections is parallell
     # Tail sections is focused on focus point
-    pntsDao0 = getPntsOfShape(wireDao0)
+    pntsDaoIng = getPntsOfShape(wireDaoIng)
     pntDownLimit, pntDaoStart, pntUpLimit, pntDaoEnd  = pntsDao0
     
     # we need focus to determine tail sections 
     pntFocus = getPntDaoFocus(r)
-    sc.point(pntFocus, 'StyleMain')
+    sc.point('f', pntFocus, 'StyleMain')
     
     # we need two points to determine section
     pnt1, pnt2 = getPntsForDaoSec(pntDaoStart, pntUpLimit, pntDaoEnd, pntDownLimit, pntFocus, k)
-    sc.line(pnt1, pnt2, 'StyleFocus')
+    sc.line('lineDiv', pnt1, pnt2, 'StyleFocus')
     
     # !!! we need use plane to detect intercsect (not line) becouse 3D
     planeSec = getFacePlane(pnt1, pnt2, h)
@@ -388,12 +389,12 @@ def slide_03_DaoSecPrincipe(sc, r, offset, k, h):
     drawPoints(sc, pntsSec, 'StyleFocus')
     
     wireSec = getWireDaoSec(wireDao0, pntFocus, k)
-    sc.shape(wireSec, 'StyleFocus') 
+    sc.shape('wireSec', wireSec, 'StyleFocus') 
       
 
 def slide_04_DaoManySec(sc, r, offset, kStart, kEnd, cnt):
     
-    drawCircle(sc, r + offset, 'StyleInfo')
+    drawCircle(sc, 'baseOffset', r + offset, 'StyleInfo')
     pntsBase = getPntsBase(r)
     wireDaoClassic = getWireDaoClassic(pntsBase)
     wireDao0 = getShapeOffset(wireDaoClassic, -offset)
@@ -415,7 +416,7 @@ def slide_04_DaoManySec(sc, r, offset, kStart, kEnd, cnt):
         
 def slide_05_DaoSkinning (sc, r, offset):
     
-    drawCircle(sc, r + offset,  'StyleInfo')
+    drawCircle(sc, 'baseOffset', r + offset, 'StyleInfo')
     pntsBase = getPntsBase(r)
     wireDaoClassic = getWireDaoClassic(pntsBase)
     wireDao0 = getShapeOffset(wireDaoClassic, -offset)
@@ -457,10 +458,12 @@ def slide_07_DaoWithCase (sc, r, offset, caseH, caseZMove,gap):
     case = getShapeTranslate(case, 0,0, caseZMove)
     sc.shape(case, 'StyleDaoCase')
 
+def getPlanarCirclePoints(r):
+    return gp_Pnt(r,0,0), gp_Pnt(0,r,0), gp_Pnt(-r,0,0)
 
 def daoMakeSlide(sc): 
 
-    SlideName = sc.initParam('SlideName','07')
+    SlideN = sc.initParam('SlideN',7)
     
     SlideR = sc.initParam('SlideR',40)
     SlideOffset = sc.initParam('SlideOffset',3)
@@ -474,20 +477,37 @@ def daoMakeSlide(sc):
     SlideCaseH = sc.initParam('SlideCaseH',30)
     SlideCaseZMove = sc.initParam('SlideCaseZMove', -20)
     SlideGap = sc.initParam('SlideGap', 1)
-       
-    if  SlideName == '01':
-        slide_01_DaoClassic(sc, SlideR)
-    elif SlideName == '02':
+    
+    
+    if  SlideN == 0:
+        return;
+    
+    pnt1, pnt2, pnt3 = getPlanarCirclePoints(SlideR)
+    sc.circle('circleBase', pnt1, pnt2, pnt3)
+    sc.setStyle('circleBase', 'Info')
+
+    pntsBase = getPntsBase(SlideR)
+    print(pntsBase)
+    sc.points('pntBase', pntsBase)
+    sc.labels('pntBaseLabel', pntsBase, 'a')
+    wireDaoClassic = getWireDaoClassic(pntsBase)
+    sc.shape('wireDaoClassic', wireDaoClassic)
+    
+    if  SlideN == 1:
+        return;
+        
+        
+    elif SlideN == 2:
         slide_02_DaoConcept(sc, SlideR, SlideOffset)
-    elif SlideName == '03':
+    elif SlideN == 3:
        slide_03_DaoSecPrincipe(sc, SlideR, SlideOffset, SlideKExample, SlideHPlane)
-    elif SlideName == '04':
+    elif SlideN == 4:
        slide_04_DaoManySec(sc, SlideR, SlideOffset, SlideKStart, SlideKEnd, SlideCntSec)
-    elif SlideName == '05':
+    elif SlideN == 5:
        slide_05_DaoSkinning (sc, SlideR, SlideOffset)
-    elif SlideName == '06':
+    elif SlideN == 6:
        slide_06_DaoComplete (sc, SlideR, SlideOffset)
-    elif SlideName == '07':
+    elif SlideN == 7:
        slide_07_DaoWithCase (sc, SlideR, SlideOffset, SlideCaseH, SlideCaseZMove ,SlideGap)
 
 
@@ -516,6 +536,8 @@ def dao_styles(sc):
            styleVal = (   90,   10,   10,     30,      3,     2,  'CHROME' )
         elif styleVal == 'stGold':
            styleVal = (   90,   90,   10,    100,      3,     4,  'GOLD'    )
+        elif styleVal == 'stGold':
+           styleVal = (   90,   90,   10,    100,      3,     4,  'GOLD'    )
         elif styleVal == 'stFog':
            styleVal = (   90,   90,   90,    30,       3,      4,   'PLASTIC'  )
         '''
@@ -530,9 +552,19 @@ if __name__ == '__main__':
     sc.initParam('SysDecorScaleB', 5)
     sc.initXYZ('SysDecorDeskD', 0, 0, -60)
 
-    sc.initRGBASMT('StyleDaoIngShape',  100,  35,  24, 100, 3, 'CHROME', 'SOLID' )
-    sc.initRGBASMT('StyleDaoYangShape',  98, 100,  12, 100, 3, 'CHROME', 'SOLID' )
-    sc.initRGBASMT('StyleDaoCaseShape',  52,  51, 100, 100, 3, 'CHROME', 'SOLID' )
+    st = sc.getParams('TemplStyleChrome')
+    st['SurfaceR'] = 100;  st['SurfaceG'] = 35;  st['SurfaceB'] = 24
+    sc.initParams('StyleDaoIng',st)
+    
+    st = sc.getParams('TemplStyleChrome')
+    st['SurfaceR'] = 98;  st['SurfaceG'] = 100;  st['SurfaceB'] = 12
+    sc.initParams('StyleDaoYang',st)
+
+    st = sc.getParams('TemplStyleChrome')
+    st['SurfaceR'] = 52;  st['SurfaceG'] = 51;  st['SurfaceB'] = 100;
+    sc.initParams('StyleDaoCase',st)
+    
+    sc.initParam('SlideN',1)
     
     daoMakeSlide(sc)
     sc.render()
