@@ -322,8 +322,6 @@ class ScreenLib:
             style['PointB'] = b
             style['PointA'] = a
         self._drawPoint(pnt, style)
-    
-    
               
      
 '''
@@ -509,22 +507,25 @@ class Scene:
            self.label(key+str(index+1), pnt, label+str(index+1))
            index += 1
     
-    def point(self, key, pnt):
+    def drawPoint(self, key, pnt):
         self.setGeom(key, 'point', (pnt))
 
-    def points(self, key, pnts):
+    def drawPoints(self, key, pnts):
         index = 0
         for pnt in pnts:
            self.point(key+str(index+1), pnt)
            index += 1
         
-    def line(self, key, pnt1, pnt2):
+    def drawLine(self, key, pnt1, pnt2):
         self.setGeom(key,'line', (pnt1, pnt2))
     
-    def circle(self, key, pnt1, pnt2, pnt3):
+    def drawCircle(self, key, pnt1, pnt2, pnt3):
         self.setGeom(key, 'circle', (pnt1, pnt2, pnt3))
     
-    def shape(self, key, shape):
+    def drawSolid(self, key, shape):
+        self.setGeom(key, 'shape', shape)
+
+    def drawWire(self, key, shape):
         self.setGeom(key, 'shape', shape)
     
 '''
