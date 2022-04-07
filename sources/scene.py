@@ -158,12 +158,18 @@ class WebLib:
 
 class ScreenLib:
     
-    def __init__(self, decoration):
+    def __init__(self, decors):
         self.display, self.start_display, self.add_menu,  self.add_function_to_menu  = init_display(
             None, (1024, 768), True, [128, 128, 128], [128, 128, 128]
           )
-        isDesk, isAxis, scaleA, scaleB, deskDX, deskDY, deskDZ = decoration
-        self.dLabel = 20 * scaleA/scaleB
+        isDesk = decors['IsDesk']
+        isAxis = decors['IsAxis']
+        scaleA = decors['ScaleA']
+        scaleB = decors['ScaleB']
+        deskDX = decors['DeskDX']
+        deskDY = decors['DeskDY']
+        deskDZ = decors['DeskDZ']
+        self.dLabel = 50 * scaleA/scaleB
         self._decoration(isDesk, isAxis, scaleA, scaleB, deskDX, deskDY, deskDZ)
 
     def _axisStyle(self):
@@ -222,22 +228,24 @@ class ScreenLib:
     def _drawLabel(self, pnt, text, style):
        pntLabel = gp_Pnt(pnt.X()+self.dLabel,pnt.Y()+self.dLabel,pnt.Z()+self.dLabel) 
        self.display.DisplayMessage(pntLabel, 
-                text, 20, style['color'], False)            
+                text, style['LabelS'], (style['LabelR'],style['LabelG'],style['LabelB']), False)            
        
     def _drawPoint(self, pnt, style):
         ais = AIS_Point(Geom_CartesianPoint(pnt))
-        self._drawAis(ais, style)
+        self._styleAis(ais, 'color', (style['PointR'],style['PointG'], style['PointB']))                
+        self._styleAis(ais, 'tran', style['PointA'])                
+        self._styleAis(ais, 'material', style['PointM'])                
+        self._styleAis(ais, 'pointType', style['PointT'])                
+        self._styleAis(ais, 'pointSize', style['PointS'])                
+        self.display.Context.Display(ais, False) 
     
     def _drawShape(self, shape, style):
         ais = AIS_Shape(shape)
-        self._drawAis(ais, style)
-            
-    def _drawAis(self, ais, style):
-        for styleName in style:
-           self._styleAis(ais, styleName, style[styleName])                
-           
+        self._styleAis(ais, 'color', (style['ShapeR'],style['ShapeG'], style['ShapeB']))                
+        self._styleAis(ais, 'tran', style['ShapeA'])                
+        self._styleAis(ais, 'material', style['ShapeM'])                
         self.display.Context.Display(ais, False) 
-        #self.display.Context.Erase(ais, False)    
+            
   
     def _axis(self, size):
         
@@ -317,12 +325,14 @@ class ScreenLib:
 class Scene:
     
     def __init__(self, sceneName):
-       self.sceneName = sceneName
-       self.lib = None             
-       self.geoms = dict()
-       self.params = dict()
-       self.key = 0
-       self.styles = dict
+    
+        self.sceneName = sceneName
+        self.lib = None             
+        self.geoms = dict()
+        self.params = dict()
+        self.key = 0
+        # todo get arguments and init params
+
     
     def setGeom(self, geomKey, geomType, geomObj, geomStyle):
         self.geoms[geomKey + str(self.key)] = (geomType, geomObj, geomStyle)
@@ -332,30 +342,40 @@ class Scene:
         (geomType, geomObj, geomStyle) = geoms[geomKey]
         return geomObj
 
-    def getParam(self, paramKey,defaultValue):
-        if paramKey in self.params:
-            return self.params[paramKey]
-        else:   
-            return defaultValue     
+    def getParam(self, paramKey):
+        return self.params[paramKey]
 
-    def setParam(self, paramKey, paramValue):
-        self.params[paramKey] = paramValue
+    def initParam(self, paramKey, paramValue):
+        if not (paramKey in self.params):
+            self.params[paramKey] = paramValue
+        return self.params[paramKey]
 
-    def copyParams(self, copyFromPrefix, copyToPrefix):
-        if paramKey in self.params:
-            return self.params[paramKey]
-        else:   
-            return defaultValue     
+    def initRGBASMT(self, paramKeyPrefix, r,g,b,a,s,m,t):
+        self.initParam(paramKeyPrefix+'R',r)
+        self.initParam(paramKeyPrefix+'G',g)
+        self.initParam(paramKeyPrefix+'B',b)
+        self.initParam(paramKeyPrefix+'A',a)
+        self.initParam(paramKeyPrefix+'S',s)
+        self.initParam(paramKeyPrefix+'M',m)
+        self.initParam(paramKeyPrefix+'T',t)
 
+    def initXYZ(self, paramKeyPrefix, x,y,z):
+        self.initParam(paramKeyPrefix+'X',x)
+        self.initParam(paramKeyPrefix+'Y',y)
+        self.initParam(paramKeyPrefix+'Z',z)
         
-    def _getNormalStyle(self, styleVal):
-                
-        if isinstance(styleVal, dict):
-           return styleVal
-       
-        if styleVal == None:
-           styleVal = 'stMain' 
+    def getParams(self, keyPrefix):
+
+        ret = dict()
            
+        for key in self.params: 
+            if key.startswith(keyPrefix): 
+               sStart,sPrefix, sEnd = key.partition(keyPrefix)
+               ret[sEnd] = self.params[key] 
+               
+        return ret       
+           
+        '''   
                    #      r%    g%     b%     op%     pnt  line   mat 
         if styleVal == 'stInfo':
            styleVal = (   30,   30,   30,    100,     3,     2,  'PLASTIC' )
@@ -379,37 +399,61 @@ class Scene:
         st['pointSize'] = ps
         st['lineWidth'] = lw               
         st['material'] = mat
+        '''
         
         return st
      
          
     def render(self):
 
-        sysRenderTarget = self.getParam('sysRenderTarget','screen')
-        sysDecoration = self.getParam('sysDecoration',(True, True, 1, 1, 0, 0, 0))
-        sysPrecision = self.getParam('sysPrecision', (0.2, 0.2))
+        SysRenderTarget = self.initParam('SysRenderTarget', 'screen')
+
+        self.initParam('SysDecorIsDesk', True)
+        self.initParam('SysDecorIsAxis', True)
+        self.initParam('SysDecorScaleA', 1)
+        self.initParam('SysDecorScaleB', 1)
+        self.initXYZ('SysDecorDeskD', 0, 0, 0)
+        SysDecors = self.getParams('SysDecor')
+
+        self.initParam('SysPrecisionShape', 0.2)
+        self.initParam('SysPrecisionWire', 0.2)
+        SysPrecisions = self.getParams('SysPrecision')
+
+        self.initRGBASMT('stInfoPoint', 30,30,30,100,3,'PLASTIC','BALL')
+        self.initRGBASMT('stInfoWire', 30,30,30,100,2,'PLASTIC','SOLID')
+        self.initRGBASMT('stInfoShape', 30,30,30,100,1,'PLASTIC','SOLID')
+        self.initRGBASMT('stInfoLabel', 30,30,30,100,20,'PLASTIC','SOLID')
+
+        self.initRGBASMT('stMainPoint', 90,90,10,100,4,'PLASTIC','BALL')
+        self.initRGBASMT('stMainWire', 10,10,90,100,3,'PLASTIC','SOLID')
+        self.initRGBASMT('stMainShape', 70,10,70,100,2,'PLASTIC','SOLID')
+        self.initRGBASMT('stMainLabel', 90,10,10,100,20,'PLASTIC','SOLID')
+
+        self.initRGBASMT('stFocusPoint', 90,10,10,100,4,'PLASTIC','BALL')
+        self.initRGBASMT('stFocusWire', 90,10,10,100,3,'PLASTIC','SOLID')
+        self.initRGBASMT('stFocusShape', 90,10,10,100,2,'PLASTIC','SOLID')
+        self.initRGBASMT('stFocusLabel', 90,10,10,100,20,'PLASTIC','SOLID')
+
     
-        slideName = self.getParam('slideName','00');
-        fullSlideName = self.sceneName + '_' + slideName + '_test'
+        fullSlideName = self.sceneName + '_' + self.getParam('SlideName') + '_test'
         scriptDir = os.path.dirname(__file__)
         stlRelDir = os.path.join(scriptDir, '..', 'models', fullSlideName)
         stlDir = os.path.abspath(stlRelDir)
         webRelDir = os.path.join(scriptDir, '..','slides', fullSlideName)
         webDir = os.path.abspath(webRelDir)
         
-        if sysRenderTarget == 'test':    
-          self.lib = TestLib(sysDecoration, sysPrecision, webDir, stlDir)
-        elif sysRenderTarget == 'screen':
-          self.lib = ScreenLib(sysDecoration)
-        elif  sysRenderTarget == 'web': 
-            self.lib = WebLib(sysDecoration, sysPrecision, webDir)
-        elif  sysRenderTarget == 'stl': 
-            self.lib = StlLib(sysDecoration, sysPrecision, stlDir)
-    
+        if SysRenderTarget == 'test':    
+          self.lib = TestLib(SysDecors, SysPrecisions, ebDir, stlDir)
+        elif SysRenderTarget == 'screen':
+          self.lib = ScreenLib(SysDecors)
+        elif  SysRenderTarget == 'web': 
+            self.lib = WebLib(SysDecors, SysPrecisions, webDir)
+        elif  SysRenderTarget == 'stl': 
+            self.lib = StlLib(SysDecors, SysPrecisions, stlDir)
     
         for objKey in self.objs:
             (objType, objGeometry, objStyle) = self.objs[objKey]
-            style = self._getNormalStyle(objStyle)
+            style = self.getParams(objStyle)
             if objType == 'point':
                 (pnt) = objGeometry;
                 self.lib.drawPoint(pnt, style)
@@ -428,26 +472,23 @@ class Scene:
             elif objType == 'label':
                 (pntPlace, strTitle) = objGeometry
                 self.lib.drawLabel(pntPlace, strTitle, style)
+                
         self.lib.start()
-             
- 
-    def style(self, style):
-        return self._getNormalStyle(style)
  
     def label(self, pntPlace, strTitle, style):
-        self.add('label', 'label',(pntPlace, strTitle), style)
+        self.setGeom('label', 'label',(pntPlace, strTitle), style)
     
     def point(self, pnt, style):
-        self.add('point','point', (pnt), style)
+        self.setGeom('point','point', (pnt), style)
         
     def line(self, pnt1, pnt2, style):
-        self.add('line','line', (pnt1, pnt2), style)
+        self.setGeom('line','line', (pnt1, pnt2), style)
     
     def circle(self, pnt1, pnt2, pnt3, style):
-        self.add('circle','circle', (pnt1, pnt2, pnt3), style)
+        self.setGeom('circle','circle', (pnt1, pnt2, pnt3), style)
     
     def shape(self, shape,  style):
-        self.add('shape','shape', shape, style)
+        self.setGeom('shape','shape', shape, style)
     
 '''
 ***********************************************
