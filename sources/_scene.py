@@ -16,7 +16,7 @@ from OCC.Core.TopoDS import TopoDS_Shape
 from OCC.Core.GC import  GC_MakeCircle
 
 
-from threejs import ThreeJsRenderer, StlRenderer
+from _threejs import ThreeJsRenderer, StlRenderer
 
 import os
 
@@ -333,24 +333,24 @@ class ScreenLib:
 
 class Scene:
     
-    def __init__(self, sceneName):
+    def __init__(self):
     
-        self.sceneName = sceneName
         self.lib = None             
         self.geoms = dict()
         self.params = dict()
         
         # todo get arguments and init params
 
+        self.initRGBASMT('TemplStyleDefaultPoint', 90,90,10,100,4,'PLASTIC','BALL')
+        self.initRGBASMT('TemplStyleDefaultWire', 10,10,90,100, 8,'PLASTIC','SOLID')
+        self.initRGBASMT('TemplStyleDefaultSurface',10,10,90,100,2,'PLASTIC','SOLID')
+        self.initRGBASMT('TemplStyleDefaultLabel', 90,10,10,100,20,'PLASTIC','SOLID')
+        
         self.initRGBASMT('TemplStyleInfoPoint', 30,30,30,100,3,'PLASTIC','BALL')
         self.initRGBASMT('TemplStyleInfoWire', 30,30,30,100,2,'PLASTIC','SOLID')
         self.initRGBASMT('TemplStyleInfoSurface', 30,30,30,100,1,'PLASTIC','SOLID')
         self.initRGBASMT('TemplStyleInfoLabel', 30,30,30,100,20,'PLASTIC','SOLID')
 
-        self.initRGBASMT('TemplStyleMainPoint', 90,90,10,100,4,'PLASTIC','BALL')
-        self.initRGBASMT('TemplStyleMainWire', 10,10,90,100, 8,'PLASTIC','SOLID')
-        self.initRGBASMT('TemplStyleMainSurface',10,10,90,100,2,'PLASTIC','SOLID')
-        self.initRGBASMT('TemplStyleMainLabel', 90,10,10,100,20,'PLASTIC','SOLID')
 
         self.initRGBASMT('TemplStyleFocusPoint', 90,10,10,100,4,'PLASTIC','BALL')
         self.initRGBASMT('TemplStyleFocusWire', 90,10,10,100,3,'PLASTIC','SOLID')
@@ -373,19 +373,26 @@ class Scene:
         self.initRGBASMT('TemplStyleAxisLabel', 30,30,30,100,20,'PLASTIC','SOLID')
     
     def setGeom(self, key, geomType, geomObj):
-        self.geoms[key] = {'type':geomType, 'geom':geomObj, 'style':'Main', 'color':None }
+        self.geoms[key] = {'type':geomType, 'geom':geomObj, 'style':None, 'color':None }
 
     def getGeom(self, key):
         return  self.geoms[key][geom]
 
-    def setStyle(self, key, style):
-        self.geoms[key]['style'] = style
+    def setToGeoms(self, geomKeyPrefix, paramName, paramValue):
+        for geomKey in self.geoms:
+          if geomKey.startswith(geomKeyPrefix):
+             self.geoms[geomKey][paramName] = paramValue
 
-    def setColor(self, key, RGBA):
-        self.geoms[key]['color'] = RGBA
+    def setStyle(self, geomKeyPrefix, styleName):
+        self.setToGeoms(geomKeyPrefix, 'style', styleName)
 
-    def getParam(self, paramKey):
-        return self.params[paramKey]
+    def setColor(self, geomKeyPrefix, RGBA100):
+        self.setToGeoms(geomKeyPrefix, 'color', RGBA100)
+
+    def getParam(self, paramKey, defValue):
+        if (paramKey in self.params):
+            return self.params[paramKey]
+        return defValue
 
     def initParam(self, paramKey, paramValue):
         if not (paramKey in self.params):
@@ -417,11 +424,8 @@ class Scene:
         self.initParam(paramKeyPrefix+'X',x)
         self.initParam(paramKeyPrefix+'Y',y)
         self.initParam(paramKeyPrefix+'Z',z)
-        
-           
-     
          
-    def render(self):
+    def render(self, slideName):
 
         SysRenderTarget = self.initParam('SysRenderTarget', 'screen')
         SysSlideNumLenght = self.initParam('SysSlideNumLenght', 5)
@@ -446,11 +450,10 @@ class Scene:
         SlideN = self.initParam('SlideN',0)
         SlideNStr = ('{:0'+str(SysSlideNLenght)+'}').format(SlideN)
         
-        fullSlideName = self.sceneName + '_' + SlideNStr + '_test'
         scriptDir = os.path.dirname(__file__)
-        stlRelDir = os.path.join(scriptDir, '..', 'models', fullSlideName)
+        stlRelDir = os.path.join(scriptDir, '..', 'models', slideName)
         stlDir = os.path.abspath(stlRelDir)
-        webRelDir = os.path.join(scriptDir, '..','slides', fullSlideName)
+        webRelDir = os.path.join(scriptDir, '..','slides', slideName)
         webDir = os.path.abspath(webRelDir)
         
         #for key in self.params:
@@ -470,8 +473,11 @@ class Scene:
     
         for key in self.geoms:
             geomObj = self.geoms[key]
+            style = geomObj['style']
+            if style == None:
+               style = 'Default'
             #print(geomObj['style'])
-            style = self.getParams('Style'+geomObj['style'])
+            style = self.getParams('Style'+style)
             #print(style)
             color = geomObj['color']
             geom = geomObj['geom']
@@ -498,35 +504,44 @@ class Scene:
                 
         self.lib.start()
  
-    def label(self, key, pntPlace, strTitle):
+    def drawLabel(self, key, pntPlace, strTitle):
         self.setGeom(key, 'label', (pntPlace, strTitle))
 
-    def labels(self, key, pnts, label):
-        index = 0
-        for pnt in pnts:
-           self.label(key+str(index+1), pnt, label+str(index+1))
-           index += 1
+    def drawLabels(self, keyPrefix, thePoints, titlePrefix):
+        i = 1
+        for thePoint in thePoints:
+           self.drawLabel(keyPrefix + str(i), thePoint, titlePrefix + str(i))
+           i += 1
     
     def drawPoint(self, key, pnt):
         self.setGeom(key, 'point', (pnt))
 
-    def drawPoints(self, key, pnts):
-        index = 0
-        for pnt in pnts:
-           self.point(key+str(index+1), pnt)
-           index += 1
+    def drawPoints(self, keyPrefix, thePoints):
+        i = 1
+        for thePoint in thePoints:
+           self.drawPoint(keyPrefix+str(i), thePoint)
+           i += 1
         
-    def drawLine(self, key, pnt1, pnt2):
-        self.setGeom(key,'line', (pnt1, pnt2))
+    def drawLine(self, key, the2Points):
+        self.setGeom(key,'line', the2Points)
     
-    def drawCircle(self, key, pnt1, pnt2, pnt3):
-        self.setGeom(key, 'circle', (pnt1, pnt2, pnt3))
+    def drawCircle(self, key, the3Points):
+        self.setGeom(key, 'circle', the3Points)
     
     def drawSolid(self, key, shape):
         self.setGeom(key, 'shape', shape)
 
     def drawWire(self, key, shape):
         self.setGeom(key, 'shape', shape)
+
+    def drawDesk(self, key, x,y,z):
+        return
+
+    def drawAxis(self, key, x,y,z):
+        return
+
+    def setScale(self, a, b):
+        return
     
 '''
 ***********************************************
