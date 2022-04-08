@@ -171,7 +171,7 @@ class ScreenLib:
         deskDX = decors['DeskDX']
         deskDY = decors['DeskDY']
         deskDZ = decors['DeskDZ']
-        self.dLabel = 20 * scaleA/scaleB
+        self.dLabel = 10 * scaleA/scaleB
         self._decoration(isDesk, isAxis, scaleA, scaleB, deskDX, deskDY, deskDZ)
         
  

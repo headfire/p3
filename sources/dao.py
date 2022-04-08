@@ -53,7 +53,7 @@ def getPntScale(pCenter,  p, scale):
    return pnt
 
 def getTranslatedPoint(thePoint, deltaX, deltaY, deltaZ):
-   translatedPoint = gp_Pnt(p.XYZ())
+   translatedPoint = gp_Pnt(thePoint.XYZ())
    translatedPoint.Translate(gp_Vec(deltaX, deltaY, deltaZ))
    return translatedPoint
 
@@ -89,14 +89,58 @@ def getShapeMirror(shape, p0):
     shape =  BRepBuilderAPI_Transform(shape, transform).Shape()
     return shape
 
-def getPntSectionUp(pnt1, pnt2):
-    v1 = gp_Vec(pnt1, pnt2)
-    v1.Scale(0.5)
-    v2 = gp_Vec(0,0,v1.Magnitude())
-    pnt = gp_Pnt(pnt1.XYZ())
-    pnt.Translate(v1)
-    pnt.Translate(v2)
-    return pnt
+
+
+
+
+
+def getShapeTranslate(shape, x,y,z):
+    transform = gp_Trsf()
+    transform.SetTranslation(gp_Vec(x,y,z))
+    shape =  BRepBuilderAPI_Transform(shape, transform).Shape()
+    return shape
+
+
+def getShapeZScale(shape, s):
+    transform = gp_GTrsf()
+    transform.SetAffinity(gp_Ax2(gp_Pnt(0,0,0), gp_Dir(0,0,1),gp_Dir(0,1,0)), s)
+    shape =  BRepBuilderAPI_GTransform(shape, transform).Shape()
+    return shape
+
+# *******************************************************************************
+# *******************************************************************************
+# *******************************************************************************
+# *******************************************************************************
+
+def makeSkinSolid(pntStart, wires, pntEnd):
+    
+    skiner = BRepOffsetAPI_ThruSections(True)
+    skiner.SetSmoothing(True);
+  
+    vstart = BRepBuilderAPI_MakeVertex(pntStart).Vertex()
+    skiner.AddVertex(vstart)
+  
+    for wire in wires:
+          skiner.AddWire( wire)
+          
+    vend = BRepBuilderAPI_MakeVertex(pntEnd).Vertex()
+    skiner.AddVertex(vend)
+
+    skiner.Build()
+    
+    return skiner.Shape()
+
+
+def makeSectionCircle3Points(intersectPoints):
+    firstPoint = intersectPoints[0]
+    secondPoint = intersectPoints[1]
+    directionVector = gp_Vec(firstPoint, secondPoint)
+    directionVector.Scale(0.5)
+    upVector = gp_Vec(0,0,directionVector.Magnitude())
+    upPoint = gp_Pnt(firstPoint.XYZ())
+    upPoint.Translate(directionVector)
+    upPoint.Translate(upVector)
+    return firstPoint, upPoint, secondPoint
 
 def makeVerticalPlaneFace(baseLine2Points, h):
 
@@ -118,66 +162,29 @@ def makeVerticalPlaneFace(baseLine2Points, h):
     face = BRepBuilderAPI_MakeFace(wire).Face()
     return face
 
-def getPntsCurveSurfaceIntersect(curve, surface):
-    pnts = []
-    tool = GeomAPI_IntCS(curve, surface)
-    pCount = tool.NbPoints();
-    for i in range(pCount):
-       pnts += [tool.Point(1)]
-    return pnts   
-
-def getPntsEdgesFacesIntersect(edgesShape, facesShape):
-    pnts = []
-    faces = getShapeItems(facesShape, TopAbs_FACE)
-    edges = getShapeItems(edgesShape, TopAbs_EDGE)
-    for edge in edges:
-        for face in faces:
-            curve3 = BRep_Tool.Curve(edge)
-            curve = Geom_TrimmedCurve(curve3[0],curve3[1],curve3[2])
-            surface = BRep_Tool.Surface(face)
-            pntsToAdd = getPntsCurveSurfaceIntersect(curve, surface)       
-            pnts += pntsToAdd
-    return pnts   
-
-def getShapeSkin(pntStart, wires, pntEnd):
-    
-    # Initialize and build
-    skiner = BRepOffsetAPI_ThruSections(True)
-    skiner.SetSmoothing(True);
-      #skiner.SetMaxDegree(5)
-  
-    vstart = BRepBuilderAPI_MakeVertex(pntStart).Vertex()
-    skiner.AddVertex(vstart)
-  
-    for wire in wires:
-          skiner.AddWire( wire)
-          
-    vend = BRepBuilderAPI_MakeVertex(pntEnd).Vertex()
-    skiner.AddVertex(vend)
-
-    skiner.Build()
-    
-    return skiner.Shape()
 
 
-def getShapeTranslate(shape, x,y,z):
-    transform = gp_Trsf()
-    transform.SetTranslation(gp_Vec(x,y,z))
-    shape =  BRepBuilderAPI_Transform(shape, transform).Shape()
-    return shape
+def makeEdgesFacesIntersectPoints(edgesShape, facesShape):
 
+    def findIntersectPoints(curve, surface):
+        pnts = []
+        tool = GeomAPI_IntCS(curve, surface)
+        pCount = tool.NbPoints();
+        for i in range(1,pCount+1):
+           pnts += [tool.Point(i)]
+        return pnts   
 
-def getShapeZScale(shape, s):
-    transform = gp_GTrsf()
-    transform.SetAffinity(gp_Ax2(gp_Pnt(0,0,0), gp_Dir(0,0,1),gp_Dir(0,1,0)), s)
-    shape =  BRepBuilderAPI_GTransform(shape, transform).Shape()
-    return shape
-
-'''
-**************************************************'
-**************************************************'
-**************************************************'
-'''
+    intersectPoints = []
+    theEdges = getShapeItems(edgesShape, TopAbs_EDGE)
+    theFaces = getShapeItems(facesShape, TopAbs_FACE)
+    for theEdge in theEdges:
+        for theFace in theFaces:
+            edgeCurves = BRep_Tool.Curve(theEdge)
+            edgeTrimmedCurve = Geom_TrimmedCurve(edgeCurves[0],edgeCurves[1],edgeCurves[2])
+            faceSurface = BRep_Tool.Surface(theFace)
+            findedIntersectPoints = findIntersectPoints(edgeTrimmedCurve, faceSurface)       
+            intersectPoints += findedIntersectPoints
+    return intersectPoints   
 
 def makeShapePoints(shape):
     shapeVertexes = getShapeItems(shape, TopAbs_VERTEX)
@@ -257,27 +264,13 @@ def makeDaoSectionLine2Points(daoStartPoint, daoEndPoint, daoLeftPoint, daoRight
         startLinePoint = getTranslatedPoint(focusPoint, deltaX, 0, 0)
         endLinePoint = getTranslatedPoint(limitPoint, deltaX, 0, 0)
     else: #tail    
-        tailKoef = (sectionKoef - limitKoef) / (sectionKoef - limitKoef)
+        tailKoef = (sectionKoef - limitKoef) / (1 - limitKoef)
         tailAngle = -(endAngle * tailKoef)
         startLinePoint = focusPoint
         endLinePoint = getPntRotate(focusPoint, limitPoint, tailAngle)
     return startLinePoint, endLinePoint
 
 
-def getWireDaoSec(shapeDao, pntFocus, k):
-    
-    pntsDao = getPntsOfShape(shapeDao)
-    pntDownLimit, pntDaoStart, pntUpLimit, pntDaoEnd = pntsDao
-    
-    p1, p2 = getPntsForDaoSec(pntDaoStart, pntUpLimit, pntDaoEnd, pntDownLimit, pntFocus, k)
-    sectionPlane = getFacePlane(p1, p2, 3)
-    
-    pnt0, pnt1 =  getPntsEdgesFacesIntersect(shapeDao, sectionPlane)
-    pntUp = getPntSectionUp(pnt0, pnt1)
-    circle = GC_MakeCircle(pnt0, pntUp, pnt1).Value()
-    edge = BRepBuilderAPI_MakeEdge(circle).Edge()
-    wire =  BRepBuilderAPI_MakeWire(edge).Wire()
-    return wire
 
 def getSolidDao(r, offset):
     
@@ -395,18 +388,21 @@ if __name__ == '__main__':
     GEOM_BASE_RADIUS = 40
     GEOM_OFFSET = 3
     GEOM_SECTION_EXAMPLE_KOEF = 0.5
-    GEOM_SECTION_PLANE_HEGIHT = 30
+    GEOM_SECTION_PLANE_HEIGHT = 30
     GEOM_SECTIONS_START_KOEF = 0.03
     GEOM_SECTIONS_END_KOEF = 0.97
-    GEOM_SECTIONS_COUNT = 30
+    GEOM_SECTIONS_COUNT = 20
+    GEOM_SKINING_KOEFS = [3, 9 , 16, 24, 35, 50, 70, 85] 
     GEOM_CASE_HEIGHT = 30
     GEOM_CASE_DELTA_Z = -20
     GEOM_CASE_GAP = 1
 
-    SLIDE_CLASSIC_DAO_NUM = 1
-    SLIDE_OFFSET_DAO_NUM = 2
-    SLIDE_EXAMPLE_SECTION_NUM = 3
-    SLIDE_DEFAULT_NUM = 3
+    CLASSIC_DAO_SLIDE_NUM = 1
+    OFFSET_DAO_SLIDE_NUM = 2
+    EXAMPLE_SECTION_SLIDE_NUM = 3
+    MANY_SECTIONS_SLIDE_NUM = 4
+    DAO_SKINNING_SLIDE_NUM = 5
+    DEFAULT_SLIDE_NUM = 5
 
     SCENE_SCALE_A = 1
     SCENE_SCALE_B = 5
@@ -436,80 +432,150 @@ if __name__ == '__main__':
     st['SurfaceR'] = 52;  st['SurfaceG'] = 51;  st['SurfaceB'] = 100;
     sc.initParams('StyleDaoCase',st)
 
-    SlideNum = sc.getParam('SlideNum',SLIDE_DEFAULT_NUM)
+    SlideNum = sc.getParam('SlideNum', DEFAULT_SLIDE_NUM)
 
-    if SlideNum == SLIDE_CLASSIC_DAO_NUM:
+    if SlideNum == CLASSIC_DAO_SLIDE_NUM:
 
         daoCircle3Points = makeGorizontalCircle3Points(GEOM_BASE_RADIUS)
-        dao8Points = makeDao8Points(GEOM_BASE_RADIUS)
-        daoWire = makeDaoWire(dao8Points)
-
         sc.drawCircle('daoCircle', daoCircle3Points)
+        
+        dao8Points = makeDao8Points(GEOM_BASE_RADIUS)
         sc.drawPoints('daoPoints', dao8Points)
         sc.drawLabels('daoLabels', dao8Points, 'a')
+
+        daoWire = makeDaoWire(dao8Points)
         sc.drawWire('daoWire', daoWire)
 
         sc.setStyle('daoCircle', 'Info')
         
-    elif SlideNum == SLIDE_OFFSET_DAO_NUM:
+    elif SlideNum == OFFSET_DAO_SLIDE_NUM:
+        
+        offsetCirclePoints = makeGorizontalCircle3Points(GEOM_BASE_RADIUS + GEOM_OFFSET)
+        sc.drawCircle('offsetCircle', offsetCirclePoints)
 
         dao8Points = makeDao8Points(GEOM_BASE_RADIUS)
         daoWire = makeDaoWire(dao8Points)
-        offsetCirclePoints = makeGorizontalCircle3Points(GEOM_BASE_RADIUS + GEOM_OFFSET)
         ingWire = makeOffsetWire(daoWire, -GEOM_OFFSET)
-        ingWirePoints = makeShapePoints(ingWire)
-        yangWire = makeZRotatedShape(ingWire, pi)
-
-        sc.drawCircle('offsetCircle', offsetCirclePoints)
         sc.drawWire('ingWire', ingWire)
+        
+        ingWirePoints = makeShapePoints(ingWire)
         sc.drawPoints('ingWirePoints', ingWirePoints)
-        sc.drawLabels('ingWireLabels', ingWirePoints,  'b')
+        sc.drawLabels('ingWirePointsLabels', ingWirePoints,  'b')
+        
+        yangWire = makeZRotatedShape(ingWire, pi)
         sc.drawWire('yangWire', yangWire)
 
         sc.setStyle('offsetCircle', 'Info')
         sc.setStyle('yangWire', 'Info')
 
-    elif SlideNum == SLIDE_EXAMPLE_SECTION_NUM:
+    elif SlideNum == EXAMPLE_SECTION_SLIDE_NUM:
     
+        offsetCirclePoints = makeGorizontalCircle3Points(GEOM_BASE_RADIUS + GEOM_OFFSET)
+        sc.drawCircle('offsetCircle', offsetCirclePoints)
+
         dao8Points = makeDao8Points(GEOM_BASE_RADIUS)
         daoWire = makeDaoWire(dao8Points)
-        offsetCirclePoints = makeGorizontalCircle3Points(GEOM_BASE_RADIUS + GEOM_OFFSET)
         ingWire = makeOffsetWire(daoWire, -GEOM_OFFSET)
-    
-        # for oure goal we need divide Dao on Head and Tail
-        # Head sections is parallell
-        # Tail sections is focused on focus point
-        ingWirePoints = makeShapePoints(ingWire)
-        daoLeftPoint, daoStartPoint, daoRirgtPoint, daoEndPoint  = ingWirePoints
-        
-        # we need focus to determine tail sections 
-        daoFocusPoint = makeDaoFocusPoint(GEOM_BASE_RADIUS)
-        
-        # we need two points to determine section
-        sectionLine2Points = makeDaoSectionLine2Points(daoStartPoint, daoEndPoint, daoLeftPoint, daoRirgtPoint, daoFocusPoint, GEOM_SECTION_EXAMPLE_KOEF)
-        
-        # !!! we need use plane to detect intercsect (not line) becouse 3D
-        sectionPlaneFace = getVerticalPlaneFace(sectionLine2Points, GEOM_SECTION_PLANE_HEGIHT)
-
-        pntsSec =  getPntsEdgesFacesIntersect(wireDao0, planeSec)
-        drawPoints(sc, pntsSec, 'StyleFocus')
-        
-        wireSec = getWireDaoSec(wireDao0, pntFocus, k)
-        sc.shape('wireSec', wireSec, 'StyleFocus') 
-
-        sc.drawCircle('offsetCircle', offsetCirclePoints)
         sc.drawWire('ingWire', ingWire)
+        
+        ingWirePoints = makeShapePoints(ingWire)
+        daoLeftPoint, daoStartPoint, daoRightPoint, daoEndPoint  = ingWirePoints
+        daoFocusPoint = makeDaoFocusPoint(GEOM_BASE_RADIUS)
         sc.drawPoint('daoFocusPoint', daoFocusPoint)
+        sc.drawLabel('daoFocusPointLabel', daoFocusPoint,  'F')
+        
+        sectionLine2Points = makeDaoSectionLine2Points(daoStartPoint, daoEndPoint, daoLeftPoint, daoRightPoint, daoFocusPoint, GEOM_SECTION_EXAMPLE_KOEF)
         sc.drawLine('sectionLine', sectionLine2Points)
-        sc.drawShape('sectionFace', sectionPlaneFace)
+        
+        sectionPlaneFace = makeVerticalPlaneFace(sectionLine2Points, GEOM_SECTION_PLANE_HEIGHT)
+        sc.drawWire('sectionFace', sectionPlaneFace)
+
+        sectionIntersectPoints =  makeEdgesFacesIntersectPoints(ingWire, sectionPlaneFace)
+        sc.drawPoints('sectionIntersectPoints',sectionIntersectPoints)
+                
+        sectionCircle3Points = makeSectionCircle3Points(sectionIntersectPoints)
+        sc.drawCircle('sectionCircle', sectionCircle3Points) 
 
         sc.setStyle('offsetCircle', 'Info')
         sc.setStyle('yangWire', 'Info')
+        sc.setStyle('section', 'Focus')
+
+    elif SlideNum == MANY_SECTIONS_SLIDE_NUM:
+
+        offsetCirclePoints = makeGorizontalCircle3Points(GEOM_BASE_RADIUS + GEOM_OFFSET)
+        sc.drawCircle('offsetCircle', offsetCirclePoints)
+    
+        dao8Points = makeDao8Points(GEOM_BASE_RADIUS)
+        daoWire = makeDaoWire(dao8Points)
+        ingWire = makeOffsetWire(daoWire, -GEOM_OFFSET)
+        sc.drawWire('ingWire', ingWire)
+
+        ingWirePoints = makeShapePoints(ingWire)
+        daoLeftPoint, daoStartPoint, daoRightPoint, daoEndPoint  = ingWirePoints
+        
+        daoFocusPoint = makeDaoFocusPoint(GEOM_BASE_RADIUS)
+        sc.drawPoint('daoFocusPoint', daoFocusPoint)
+        sc.drawLabel('daoFocusPointLabel', daoFocusPoint,  'F')
+
+        for i in range(GEOM_SECTIONS_COUNT+1):
+        
+            sectionKoef = GEOM_SECTIONS_START_KOEF + i * (GEOM_SECTIONS_END_KOEF - GEOM_SECTIONS_START_KOEF)/GEOM_SECTIONS_COUNT
+            sectionLine2Points = makeDaoSectionLine2Points(daoStartPoint, daoEndPoint, daoLeftPoint, daoRightPoint, daoFocusPoint, sectionKoef)
+            sc.drawLine('sectionLine'+str(i), sectionLine2Points)
+            
+            sectionPlaneFace = makeVerticalPlaneFace(sectionLine2Points, GEOM_SECTION_PLANE_HEIGHT)
+            sectionIntersectPoints =  makeEdgesFacesIntersectPoints(ingWire, sectionPlaneFace)
+            sectionCircle3Points = makeSectionCircle3Points(sectionIntersectPoints)
+            sc.drawCircle('sectionCircle'+str(i), sectionCircle3Points) 
+
+        sc.setStyle('offsetCircle', 'Info')
         sc.setStyle('sectionLine', 'Focus')
-        sc.setStyle('sectionFace', 'Focus')
+
+    elif SlideNum == DAO_SKINNING_SLIDE_NUM:
+
+        offsetCirclePoints = makeGorizontalCircle3Points(GEOM_BASE_RADIUS + GEOM_OFFSET)
+        sc.drawCircle('offsetCircle', offsetCirclePoints)
+    
+        dao8Points = makeDao8Points(GEOM_BASE_RADIUS)
+        daoWire = makeDaoWire(dao8Points)
+        ingWire = makeOffsetWire(daoWire, -GEOM_OFFSET)
+        sc.drawWire('ingWire', ingWire)
+        
+        ingWirePoints = makeShapePoints(ingWire)
+        daoLeftPoint, daoStartPoint, daoRightPoint, daoEndPoint  = ingWirePoints
+        
+        daoFocusPoint = makeDaoFocusPoint(GEOM_BASE_RADIUS)
+        sc.drawPoint('daoFocusPoint', daoFocusPoint)
+        sc.drawLabel('daoFocusPointLabel', daoFocusPoint,  'F')
       
-    #styling and render
+        sectionWires = []
+     
+        for sectionKoef100 in  GEOM_SKINING_KOEFS:
+            sectionKoef = sectionKoef100/100 
+            sectionLine2Points = makeDaoSectionLine2Points(daoStartPoint, daoEndPoint, daoLeftPoint, daoRightPoint, daoFocusPoint, sectionKoef)
+            
+            sectionPlaneFace = makeVerticalPlaneFace(sectionLine2Points, GEOM_SECTION_PLANE_HEIGHT)
+            sectionIntersectPoints =  makeEdgesFacesIntersectPoints(ingWire, sectionPlaneFace)
+            sectionCircle3Points = makeSectionCircle3Points(sectionIntersectPoints)
+
+            circlePoint1, circlePoint2, circlePoint3 = sectionCircle3Points
+            sectionCircle = GC_MakeCircle(circlePoint1, circlePoint2, circlePoint3).Value()
+            sectionEdge = BRepBuilderAPI_MakeEdge(sectionCircle).Edge()
+            sectionWire =  BRepBuilderAPI_MakeWire(sectionEdge).Wire()
+            sc.drawWire('sectionWire'+str(sectionKoef100), sectionWire)
+
+            sectionWires += [sectionWire]    
+        
+        ingSolid = makeSkinSolid(daoStartPoint, sectionWires, daoEndPoint)
+        
+        sc.setStyle('offsetCircle', 'Info')
+        sc.drawSolid('ingSolid', ingSolid)
+        sc.setStyle('ingSolid', 'Focus')
+
+
+    # *******************************************************************      
     sc.render('dao_' + '{:02}'.format(SlideNum) + '_test')
+    # *******************************************************************      
 
 
     '''     
