@@ -345,9 +345,10 @@ class Scene:
         for param in sys.argv:
            key,sep,val = param.partition('=')
            if val != '':
-             try
+             try:
                self.initVal(key, int(val))
              except ValueError:
+               print('Non int param')          
     
         self.initRGBASMT('TemplStyleDefaultPoint', 90,90,10,100,4,'PLASTIC','BALL')
         self.initRGBASMT('TemplStyleDefaultWire', 10,10,90,100, 8,'PLASTIC','SOLID')
@@ -418,11 +419,11 @@ class Scene:
         self.initVal(paramKeyPrefix+'Z',z)
 
 
-    def setGeom(self, key, geomType, geomObj):
+    def initObj(self, key, geomType, geomObj):
         self.geoms[key] = {'type':geomType, 'geom':geomObj, 'style':None, 'color':None }
 
-    def getGeom(self, key):
-        return  self.geoms[key][geom]
+    def obj(self, key):
+        return  self.geoms[key]['geom']
 
     def setToGeoms(self, geomKeyPrefix, paramName, paramValue):
         for geomKey in self.geoms:
@@ -456,6 +457,7 @@ class Scene:
         self.initVals('Style', self.getVals('TemplStyle'))
 
         StyleDesk = self.getVals('StyleDesk')
+        print(self.vals)
         StyleAxis = self.getVals('StyleAxis')
 
         scriptDir = os.path.dirname(__file__)
@@ -513,7 +515,7 @@ class Scene:
         self.lib.start()
 
     def drawLabel(self, key, pntPlace, strTitle):
-        self.setGeom(key, 'label', (pntPlace, strTitle))
+        self.initObj(key, 'label', (pntPlace, strTitle))
 
     def drawLabels(self, keyPrefix, thePoints, titlePrefix):
         i = 1
@@ -522,7 +524,7 @@ class Scene:
            i += 1
 
     def drawPoint(self, key, pnt):
-        self.setGeom(key, 'point', (pnt))
+        self.initObj(key, 'point', (pnt))
 
     def drawPoints(self, keyPrefix, thePoints):
         i = 1
@@ -531,16 +533,16 @@ class Scene:
            i += 1
 
     def drawLine(self, key, the2Points):
-        self.setGeom(key,'line', the2Points)
+        self.initObj(key,'line', the2Points)
 
     def drawCircle(self, key, the3Points):
-        self.setGeom(key, 'circle', the3Points)
+        self.initObj(key, 'circle', the3Points)
 
-    def drawSolid(self, key, shape):
-        self.setGeom(key, 'shape', shape)
+    def drawSurface(self, key, shape):
+        self.initObj(key, 'shape', shape)
 
     def drawWire(self, key, shape):
-        self.setGeom(key, 'shape', shape)
+        self.initObj(key, 'shape', shape)
 
     def drawDesk(self, key, x,y,z):
         return
