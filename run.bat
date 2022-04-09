@@ -1,1 +1,1 @@
-python sources\dao.py
+python sources\dao.py SlideNum=1

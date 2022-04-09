@@ -250,25 +250,27 @@ def makeDaoWire(the8Points):
     
     return theWire
 
-def makeDaoSectionLine2Points(daoStartPoint, daoEndPoint, daoLeftPoint, daoRightPoint,  focusPoint, sectionKoef):
-    limitAngle = 0
-    limitPoint = getPntScale(focusPoint, daoRightPoint, 1.2)
-    startAngle = getAngle(focusPoint, limitPoint, daoStartPoint)
-    endAngle = getAngle(focusPoint, limitPoint, daoEndPoint)
-    limitKoef = (limitAngle - startAngle)/(endAngle - startAngle)
-    if sectionKoef < limitKoef: #head
-        headKoef = (sectionKoef - 0) / (limitKoef - 0)
-        startX = daoRightPoint.X()
-        endX = daoStartPoint.X()
-        deltaX = (endX-startX)*(1 - headKoef)
-        startLinePoint = getTranslatedPoint(focusPoint, deltaX, 0, 0)
-        endLinePoint = getTranslatedPoint(limitPoint, deltaX, 0, 0)
-    else: #tail    
-        tailKoef = (sectionKoef - limitKoef) / (1 - limitKoef)
-        tailAngle = -(endAngle * tailKoef)
-        startLinePoint = focusPoint
-        endLinePoint = getPntRotate(focusPoint, limitPoint, tailAngle)
-    return startLinePoint, endLinePoint
+def makeDaoSectionLine2Points(daoWirePoints,  focusPoint, sectionKoef):
+
+	daoLeftPoint, daoStartPoint, daoRightPoint, daoEndPoint  = ingWirePoints
+	limitAngle = 0
+	limitPoint = getPntScale(focusPoint, daoRightPoint, 1.2)
+	startAngle = getAngle(focusPoint, limitPoint, daoStartPoint)
+	endAngle = getAngle(focusPoint, limitPoint, daoEndPoint)
+	limitKoef = (limitAngle - startAngle)/(endAngle - startAngle)
+	if sectionKoef < limitKoef: #head
+		headKoef = (sectionKoef - 0) / (limitKoef - 0)
+		startX = daoRightPoint.X()
+		endX = daoStartPoint.X()
+		deltaX = (endX-startX)*(1 - headKoef)
+		startLinePoint = getTranslatedPoint(focusPoint, deltaX, 0, 0)
+		endLinePoint = getTranslatedPoint(limitPoint, deltaX, 0, 0)
+	else: #tail    
+		tailKoef = (sectionKoef - limitKoef) / (1 - limitKoef)
+		tailAngle = -(endAngle * tailKoef)
+		startLinePoint = focusPoint
+		endLinePoint = getPntRotate(focusPoint, limitPoint, tailAngle)
+	return startLinePoint, endLinePoint
 
 
 
@@ -383,226 +385,224 @@ def makeGorizontalCircle3Points(r):
     return gp_Pnt(r,0,0), gp_Pnt(0,r,0), gp_Pnt(-r,0,0)
 
 
+def makeSectionsWires(ingWire, ingWirePoints, sectionPlaneHeight, sectionsKoefs):
+
+	sectionsWires = []
+ 
+	for sectionKoef in sectonsKoefs:
+	
+		sectionLine2Points = makeDaoSectionLine2Points(daoStartPoint, daoEndPoint, daoLeftPoint, daoRightPoint, daoFocusPoint, sectionKoef)
+		
+		#todo no height
+		sectionPlaneFace = makeVerticalPlaneFace(sectionLine2Points, sectionPlaneHeight)
+		sectionIntersectPoints =  makeEdgesFacesIntersectPoints(ingWire, sectionPlaneFace)
+		sectionCircle3Points = makeSectionCircle3Points(sectionIntersectPoints)
+
+		circlePoint1, circlePoint2, circlePoint3 = sectionCircle3Points
+		sectionCircle = GC_MakeCircle(circlePoint1, circlePoint2, circlePoint3).Value()
+		sectionEdge = BRepBuilderAPI_MakeEdge(sectionCircle).Edge()
+		sectionWire =  BRepBuilderAPI_MakeWire(sectionEdge).Wire()
+		sc.drawWire('sectionWire'+str(sectionKoef100), sectionWire)
+
+		sectionsWires += [sectionWire]
+			
+	return sectionsWires
+
+def drawClassicDaoSlide(sc):		
+	daoCircle3Points = makeGorizontalCircle3Points()
+	sc.drawCircle('daoCircle', daoCircle3Points)
+	
+	dao8Points = makeDao8Points(sc.getParam('GEOM_RADIUS'))
+	sc.drawPoints('daoPoints', dao8Points)
+	sc.drawLabels('daoLabels', dao8Points, 'a')
+
+	daoWire = makeDaoWire(dao8Points)
+	sc.drawWire('daoWire', daoWire)
+
+	sc.setStyle('daoCircle', 'Info')
+
+def drawOffsetDaoSlide(sc):
+		
+	offsetCirclePoints = makeGorizontalCircle3Points(sc.get('GEOM_BASE_RADIUS') + sc.get('GEOM_OFFSET'))
+	sc.drawCircle('offsetCircle', offsetCirclePoints)
+
+	dao8Points = makeDao8Points(sc.get('GEOM_BASE_RADIUS'))
+	daoWire = makeDaoWire(dao8Points)
+	ingWire = makeOffsetWire(daoWire, sc.get('GEOM_OFFSET'))
+	sc.drawWire('ingWire', ingWire)
+	
+	ingWirePoints = makeShapePoints(ingWire)
+	sc.drawPoints('ingWirePoints', ingWirePoints)
+	sc.drawLabels('ingWirePointsLabels', ingWirePoints,  'b')
+	
+	yangWire = makeZRotatedShape(ingWire, pi)
+	sc.drawWire('yangWire', yangWire)
+
+	sc.setStyle('offsetCircle', 'Info')
+	sc.setStyle('yangWire', 'Info')
+
+def drawExampleSliceSlide(sc):
+
+	offsetCirclePoints = makeGorizontalCircle3Points(sc.get('GEOM_BASE_RADIUS') + sc.get('GEOM_OFFSET'))
+	sc.drawCircle('offsetCircle', offsetCirclePoints)
+
+	dao8Points = makeDao8Points(sc.get('GEOM_BASE_RADIUS'))
+	daoWire = makeDaoWire(dao8Points)
+	ingWire = makeOffsetWire(daoWire, -sc.get('GEOM_OFFSET'))
+	sc.drawWire('ingWire', ingWire)
+
+	ingWirePoints = makeShapePoints(ingWire)
+	daoLeftPoint, daoStartPoint, daoRightPoint, daoEndPoint  = ingWirePoints
+	daoFocusPoint = makeDaoFocusPoint(GEOM_BASE_RADIUS)
+	sc.drawPoint('daoFocusPoint', daoFocusPoint)
+	sc.drawLabel('daoFocusPointLabel', daoFocusPoint,  'F')
+
+	sectionLine2Points = makeDaoSectionLine2Points(ingWirePoints, sc.get('GEOM_SECTION_EXAMPLE_KOEF'))
+	sc.drawLine('sectionLine', sectionLine2Points)
+
+	sectionPlaneFace = makeVerticalPlaneFace(sectionLine2Points, sc.get('GEOM_SECTION_PLANE_HEIGHT'))
+	sc.drawWire('sectionFace', sectionPlaneFace)
+
+	sectionIntersectPoints =  makeEdgesFacesIntersectPoints(ingWire, sectionPlaneFace)
+	sc.drawPoints('sectionIntersectPoints',sectionIntersectPoints)
+			
+	sectionCircle3Points = makeSectionCircle3Points(sectionIntersectPoints)
+	sc.drawCircle('sectionCircle', sectionCircle3Points) 
+
+	sc.setStyle('offsetCircle', 'Info')
+	sc.setStyle('yangWire', 'Info')
+	sc.setStyle('section', 'Focus')
+
+def drawManySliceSlide(sc):
+
+	offsetCirclePoints = makeGorizontalCircle3Points(sc.get('GEOM_BASE_RADIUS') + sc.get('GEOM_OFFSET'))
+	sc.drawCircle('offsetCircle', offsetCirclePoints)
+
+	dao8Points = makeDao8Points(sc.get('GEOM_BASE_RADIUS'))
+	daoWire = makeDaoWire(dao8Points)
+	ingWire = makeOffsetWire(daoWire, -sc.get('GEOM_OFFSET'))
+	sc.drawWire('ingWire', ingWire)
+
+	ingWirePoints = makeShapePoints(ingWire)
+	daoLeftPoint, daoStartPoint, daoRightPoint, daoEndPoint  = ingWirePoints
+	
+	daoFocusPoint = makeDaoFocusPoint(sc.get('GEOM_BASE_RADIUS'))
+	sc.drawPoint('daoFocusPoint', daoFocusPoint)
+	sc.drawLabel('daoFocusPointLabel', daoFocusPoint,  'F')
+
+	for i in range(sc.get('GEOM_SECTIONS_COUNT')+1):
+	
+		sectionKoef = sc.get('GEOM_SECTIONS_START_KOEF') + i * (sc.get('GEOM_SECTIONS_END_KOEF') - sc.get('GEOM_SECTIONS_START_KOEF'))/sc.get('GEOM_SECTIONS_COUNT')
+		sectionLine2Points = makeDaoSectionLine2Points(daoStartPoint, daoEndPoint, daoLeftPoint, daoRightPoint, daoFocusPoint, sectionKoef)
+		sc.drawLine('sectionLine'+str(i), sectionLine2Points)
+		
+		sectionPlaneFace = makeVerticalPlaneFace(sectionLine2Points, sc.get('GEOM_SECTION_PLANE_HEIGHT'))
+		sectionIntersectPoints =  makeEdgesFacesIntersectPoints(ingWire, sectionPlaneFace)
+		sectionCircle3Points = makeSectionCircle3Points(sectionIntersectPoints)
+		sc.drawCircle('sectionCircle'+str(i), sectionCircle3Points) 
+
+	sc.setStyle('offsetCircle', 'Info')
+	sc.setStyle('sectionLine', 'Focus')
+
+def  drawManySliceSlide(sc):
+
+		offsetCirclePoints = makeGorizontalCircle3Points(GEOM_BASE_RADIUS + GEOM_OFFSET)
+		sc.drawCircle('offsetCircle', offsetCirclePoints)
+
+		dao8Points = makeDao8Points(GEOM_BASE_RADIUS)
+		daoWire = makeDaoWire(dao8Points)
+		ingWire = makeOffsetWire(daoWire, -GEOM_OFFSET)
+		sc.drawWire('ingWire', ingWire)
+
+		ingWirePoints = makeShapePoints(ingWire)
+
+		daoFocusPoint = makeDaoFocusPoint(GEOM_BASE_RADIUS)
+		sc.drawPoint('daoFocusPoint', daoFocusPoint)
+		sc.drawLabel('daoFocusPointLabel', daoFocusPoint,  'F')
+
+		skiningWires(ingWire, ingWirePoints, GEOM_SECTION_PLANE_HEIGHT, GEOM_SKINING_KOEFS)
+
+		daoLeftPoint, daoStartPoint, daoRightPoint, daoEndPoint  = ingWirePoints
+		ingSolid = makeSkinSolid(daoStartPoint, skiningWires, daoEndPoint)
+
 if __name__ == '__main__':
 
-    GEOM_BASE_RADIUS = 40
-    GEOM_OFFSET = 3
-    GEOM_SECTION_EXAMPLE_KOEF = 0.5
-    GEOM_SECTION_PLANE_HEIGHT = 30
-    GEOM_SECTIONS_START_KOEF = 0.03
-    GEOM_SECTIONS_END_KOEF = 0.97
-    GEOM_SECTIONS_COUNT = 20
-    GEOM_SKINING_KOEFS = [3, 9 , 16, 24, 35, 50, 70, 85] 
-    GEOM_CASE_HEIGHT = 30
-    GEOM_CASE_DELTA_Z = -20
-    GEOM_CASE_GAP = 1
+	SCENE_SCALE_A = 1
+	SCENE_SCALE_B = 5
+	SCENE_DESK_DZ = -60
 
-    CLASSIC_DAO_SLIDE_NUM = 1
-    OFFSET_DAO_SLIDE_NUM = 2
-    EXAMPLE_SECTION_SLIDE_NUM = 3
-    MANY_SECTIONS_SLIDE_NUM = 4
-    DAO_SKINNING_SLIDE_NUM = 5
-    DEFAULT_SLIDE_NUM = 5
+	sc = Scene()
 
-    SCENE_SCALE_A = 1
-    SCENE_SCALE_B = 5
-    SCENE_DESK_DZ = -60
+	sc.initVal('SLIDE_NUM',1)
 
-    
-    sc = Scene()
-    sc.setScale(SCENE_SCALE_A, SCENE_SCALE_B)
-    sc.drawDesk('mainDesk',0, 0, SCENE_DESK_DZ)
-    sc.drawAxis('mainAxis',0, 0, 0)
+	sc.initVal('GEOM_BASE_RADIUS', 40) 
+	sc.initVal('GEOM_OFFSET', 3) 
+	sc.initVal('GEOM_SECTION_EXAMPLE_KOEF', 0.5) 
+	sc.initVal('GEOM_SECTION_PLANE_HEIGHT', 30) 
+	sc.initVal('GEOM_SECTIONS_START_KOEF', 0.03) #todo eliniate 
+	sc.initVal('GEOM_SECTIONS_END_KOEF', 0.97) #todo eliniate
+	sc.initVal('GEOM_SECTIONS_COUNT', 20) 
+	sc.initVal('GEOM_SKINING_KOEFS', [0.03, 0.09 , 0.16, 0.24, 0.35, 0.50, 0.70, 0.85]) 
+	sc.initVal('GEOM_CASE_HEIGHT', 30) 
+	sc.initVal('GEOM_CASE_DELTA_Z', -20) 
+	sc.initVal('GEOM_CASE_GAP', 1) 
 
-    sc.initParam('SysDecorIsDesk', True)
-    sc.initParam('SysDecorIsAxis', True)
-    sc.initParam('SysDecorScaleA', SCENE_SCALE_A)
-    sc.initParam('SysDecorScaleB', SCENE_SCALE_B)
-    sc.initXYZ('SysDecorDeskD', 0, 0, SCENE_DESK_DZ)
+	sc.initVal('SysDecorIsDesk', True)
+	sc.initVal('SysDecorIsAxis', True)
+	sc.initVal('SysDecorScaleA', SCENE_SCALE_A)
+	sc.initVal('SysDecorScaleB', SCENE_SCALE_B)
+	sc.initXYZ('SysDecorDeskD', 0, 0, SCENE_DESK_DZ)
 
-    st = sc.getParams('TemplStyleChrome')
-    st['SurfaceR'] = 100;  st['SurfaceG'] = 35;  st['SurfaceB'] = 24
-    sc.initParams('StyleDaoIng',st)
-
-    st = sc.getParams('TemplStyleChrome')
-    st['SurfaceR'] = 98;  st['SurfaceG'] = 100;  st['SurfaceB'] = 12
-    sc.initParams('StyleDaoYang',st)
-
-    st = sc.getParams('TemplStyleChrome')
-    st['SurfaceR'] = 52;  st['SurfaceG'] = 51;  st['SurfaceB'] = 100;
-    sc.initParams('StyleDaoCase',st)
-
-    SlideNum = sc.getParam('SlideNum', DEFAULT_SLIDE_NUM)
-
-    if SlideNum == CLASSIC_DAO_SLIDE_NUM:
-
-        daoCircle3Points = makeGorizontalCircle3Points(GEOM_BASE_RADIUS)
-        sc.drawCircle('daoCircle', daoCircle3Points)
-        
-        dao8Points = makeDao8Points(GEOM_BASE_RADIUS)
-        sc.drawPoints('daoPoints', dao8Points)
-        sc.drawLabels('daoLabels', dao8Points, 'a')
-
-        daoWire = makeDaoWire(dao8Points)
-        sc.drawWire('daoWire', daoWire)
-
-        sc.setStyle('daoCircle', 'Info')
-        
-    elif SlideNum == OFFSET_DAO_SLIDE_NUM:
-        
-        offsetCirclePoints = makeGorizontalCircle3Points(GEOM_BASE_RADIUS + GEOM_OFFSET)
-        sc.drawCircle('offsetCircle', offsetCirclePoints)
-
-        dao8Points = makeDao8Points(GEOM_BASE_RADIUS)
-        daoWire = makeDaoWire(dao8Points)
-        ingWire = makeOffsetWire(daoWire, -GEOM_OFFSET)
-        sc.drawWire('ingWire', ingWire)
-        
-        ingWirePoints = makeShapePoints(ingWire)
-        sc.drawPoints('ingWirePoints', ingWirePoints)
-        sc.drawLabels('ingWirePointsLabels', ingWirePoints,  'b')
-        
-        yangWire = makeZRotatedShape(ingWire, pi)
-        sc.drawWire('yangWire', yangWire)
-
-        sc.setStyle('offsetCircle', 'Info')
-        sc.setStyle('yangWire', 'Info')
-
-    elif SlideNum == EXAMPLE_SECTION_SLIDE_NUM:
-    
-        offsetCirclePoints = makeGorizontalCircle3Points(GEOM_BASE_RADIUS + GEOM_OFFSET)
-        sc.drawCircle('offsetCircle', offsetCirclePoints)
-
-        dao8Points = makeDao8Points(GEOM_BASE_RADIUS)
-        daoWire = makeDaoWire(dao8Points)
-        ingWire = makeOffsetWire(daoWire, -GEOM_OFFSET)
-        sc.drawWire('ingWire', ingWire)
-        
-        ingWirePoints = makeShapePoints(ingWire)
-        daoLeftPoint, daoStartPoint, daoRightPoint, daoEndPoint  = ingWirePoints
-        daoFocusPoint = makeDaoFocusPoint(GEOM_BASE_RADIUS)
-        sc.drawPoint('daoFocusPoint', daoFocusPoint)
-        sc.drawLabel('daoFocusPointLabel', daoFocusPoint,  'F')
-        
-        sectionLine2Points = makeDaoSectionLine2Points(daoStartPoint, daoEndPoint, daoLeftPoint, daoRightPoint, daoFocusPoint, GEOM_SECTION_EXAMPLE_KOEF)
-        sc.drawLine('sectionLine', sectionLine2Points)
-        
-        sectionPlaneFace = makeVerticalPlaneFace(sectionLine2Points, GEOM_SECTION_PLANE_HEIGHT)
-        sc.drawWire('sectionFace', sectionPlaneFace)
-
-        sectionIntersectPoints =  makeEdgesFacesIntersectPoints(ingWire, sectionPlaneFace)
-        sc.drawPoints('sectionIntersectPoints',sectionIntersectPoints)
-                
-        sectionCircle3Points = makeSectionCircle3Points(sectionIntersectPoints)
-        sc.drawCircle('sectionCircle', sectionCircle3Points) 
-
-        sc.setStyle('offsetCircle', 'Info')
-        sc.setStyle('yangWire', 'Info')
-        sc.setStyle('section', 'Focus')
-
-    elif SlideNum == MANY_SECTIONS_SLIDE_NUM:
-
-        offsetCirclePoints = makeGorizontalCircle3Points(GEOM_BASE_RADIUS + GEOM_OFFSET)
-        sc.drawCircle('offsetCircle', offsetCirclePoints)
-    
-        dao8Points = makeDao8Points(GEOM_BASE_RADIUS)
-        daoWire = makeDaoWire(dao8Points)
-        ingWire = makeOffsetWire(daoWire, -GEOM_OFFSET)
-        sc.drawWire('ingWire', ingWire)
-
-        ingWirePoints = makeShapePoints(ingWire)
-        daoLeftPoint, daoStartPoint, daoRightPoint, daoEndPoint  = ingWirePoints
-        
-        daoFocusPoint = makeDaoFocusPoint(GEOM_BASE_RADIUS)
-        sc.drawPoint('daoFocusPoint', daoFocusPoint)
-        sc.drawLabel('daoFocusPointLabel', daoFocusPoint,  'F')
-
-        for i in range(GEOM_SECTIONS_COUNT+1):
-        
-            sectionKoef = GEOM_SECTIONS_START_KOEF + i * (GEOM_SECTIONS_END_KOEF - GEOM_SECTIONS_START_KOEF)/GEOM_SECTIONS_COUNT
-            sectionLine2Points = makeDaoSectionLine2Points(daoStartPoint, daoEndPoint, daoLeftPoint, daoRightPoint, daoFocusPoint, sectionKoef)
-            sc.drawLine('sectionLine'+str(i), sectionLine2Points)
-            
-            sectionPlaneFace = makeVerticalPlaneFace(sectionLine2Points, GEOM_SECTION_PLANE_HEIGHT)
-            sectionIntersectPoints =  makeEdgesFacesIntersectPoints(ingWire, sectionPlaneFace)
-            sectionCircle3Points = makeSectionCircle3Points(sectionIntersectPoints)
-            sc.drawCircle('sectionCircle'+str(i), sectionCircle3Points) 
-
-        sc.setStyle('offsetCircle', 'Info')
-        sc.setStyle('sectionLine', 'Focus')
-
-    elif SlideNum == DAO_SKINNING_SLIDE_NUM:
-
-        offsetCirclePoints = makeGorizontalCircle3Points(GEOM_BASE_RADIUS + GEOM_OFFSET)
-        sc.drawCircle('offsetCircle', offsetCirclePoints)
-    
-        dao8Points = makeDao8Points(GEOM_BASE_RADIUS)
-        daoWire = makeDaoWire(dao8Points)
-        ingWire = makeOffsetWire(daoWire, -GEOM_OFFSET)
-        sc.drawWire('ingWire', ingWire)
-        
-        ingWirePoints = makeShapePoints(ingWire)
-        daoLeftPoint, daoStartPoint, daoRightPoint, daoEndPoint  = ingWirePoints
-        
-        daoFocusPoint = makeDaoFocusPoint(GEOM_BASE_RADIUS)
-        sc.drawPoint('daoFocusPoint', daoFocusPoint)
-        sc.drawLabel('daoFocusPointLabel', daoFocusPoint,  'F')
-      
-        sectionWires = []
-     
-        for sectionKoef100 in  GEOM_SKINING_KOEFS:
-            sectionKoef = sectionKoef100/100 
-            sectionLine2Points = makeDaoSectionLine2Points(daoStartPoint, daoEndPoint, daoLeftPoint, daoRightPoint, daoFocusPoint, sectionKoef)
-            
-            sectionPlaneFace = makeVerticalPlaneFace(sectionLine2Points, GEOM_SECTION_PLANE_HEIGHT)
-            sectionIntersectPoints =  makeEdgesFacesIntersectPoints(ingWire, sectionPlaneFace)
-            sectionCircle3Points = makeSectionCircle3Points(sectionIntersectPoints)
-
-            circlePoint1, circlePoint2, circlePoint3 = sectionCircle3Points
-            sectionCircle = GC_MakeCircle(circlePoint1, circlePoint2, circlePoint3).Value()
-            sectionEdge = BRepBuilderAPI_MakeEdge(sectionCircle).Edge()
-            sectionWire =  BRepBuilderAPI_MakeWire(sectionEdge).Wire()
-            sc.drawWire('sectionWire'+str(sectionKoef100), sectionWire)
-
-            sectionWires += [sectionWire]    
-        
-        ingSolid = makeSkinSolid(daoStartPoint, sectionWires, daoEndPoint)
-        
-        sc.setStyle('offsetCircle', 'Info')
-        sc.drawSolid('ingSolid', ingSolid)
-        sc.setStyle('ingSolid', 'Focus')
+	sc.setScale(SCENE_SCALE_A, SCENE_SCALE_B)
+	sc.drawDesk('mainDesk',0, 0, SCENE_DESK_DZ)
+	sc.drawAxis('mainAxis',0, 0, 0)
 
 
-    # *******************************************************************      
-    sc.render('dao_' + '{:02}'.format(SlideNum) + '_test')
-    # *******************************************************************      
+	SLIDE_NUM = sc.getParam('SLIDE_NUM')
+
+	if SLIDE_NUM == 1:
+		drawClassicDaoSlide(sc)
+	elif SLIDE_NUM == 2:
+		drawOffsetDaoSlide(sc)
+	elif SLIDE_NUM == 3:
+		drawExampleSliceSlide(sc)
+	elif SLIDE_NUM == 4:
+		drawManySliceSlide(sc)
+	elif SLIDE_NUM == 5:
+		drawManySliceSlide(sc)
+
+	sc.setColor('ingSurface',(100,35,24,100)) 
+	sc.setColor('yangSurface',(98,100,12,100)) 
+	sc.setColor('caseSurface',(52,51,100,100)) 
+
+	sc.render('dao_' + '{:02}'.format(SlideNum) + '_test')
 
 
-    '''     
-               #      r%    g%     b%     op%     pnt  line   mat 
-    if styleVal == 'StyleInfo':
-       styleVal = (   30,   30,   30,    100,     3,     2,  'PLASTIC' )
-    elif styleVal == 'StyleMain':
-       styleVal = (   10,   10,   90,    100,      3,     4,  'PLASTIC' )
-    elif styleVal == 'StyleFocus':
-       styleVal = (   90,   10,   10,     30,      3,     2,  'CHROME' )
-    elif styleVal == 'stGold':
-       styleVal = (   90,   90,   10,    100,      3,     4,  'GOLD'    )
-    elif styleVal == 'stFog':
-       styleVal = (   90,   90,   90,    30,       3,      4,   'PLASTIC'  )
+	'''     
+			   #      r%    g%     b%     op%     pnt  line   mat 
+	if styleVal == 'StyleInfo':
+	   styleVal = (   30,   30,   30,    100,     3,     2,  'PLASTIC' )
+	elif styleVal == 'StyleMain':
+	   styleVal = (   10,   10,   90,    100,      3,     4,  'PLASTIC' )
+	elif styleVal == 'StyleFocus':
+	   styleVal = (   90,   10,   10,     30,      3,     2,  'CHROME' )
+	elif styleVal == 'stGold':
+	   styleVal = (   90,   90,   10,    100,      3,     4,  'GOLD'    )
+	elif styleVal == 'stFog':
+	   styleVal = (   90,   90,   90,    30,       3,      4,   'PLASTIC'  )
 
 
-               #      r%    g%     b%     op%     pnt  line   mat 
-    if styleVal == 'StyleInfo':
-       styleVal = (   30,   30,   30,    100,     3,     2,  'PLASTIC' )
-    elif styleVal == 'StyleMain':
-       styleVal = (   10,   10,   90,    100,      3,     4,  'PLASTIC' )
-    elif styleVal == 'StyleFocus':
-       styleVal = (   90,   10,   10,     30,      3,     2,  'CHROME' )
-    elif styleVal == 'stGold':
-       styleVal = (   90,   90,   10,    100,      3,     4,  'GOLD'    )
-    elif styleVal == 'stGold':
-       styleVal = (   90,   90,   10,    100,      3,     4,  'GOLD'    )
-    elif styleVal == 'stFog':
-       styleVal = (   90,   90,   90,    30,       3,      4,   'PLASTIC'  )
-    '''
+			   #      r%    g%     b%     op%     pnt  line   mat 
+	if styleVal == 'StyleInfo':
+	   styleVal = (   30,   30,   30,    100,     3,     2,  'PLASTIC' )
+	elif styleVal == 'StyleMain':
+	   styleVal = (   10,   10,   90,    100,      3,     4,  'PLASTIC' )
+	elif styleVal == 'StyleFocus':
+	   styleVal = (   90,   10,   10,     30,      3,     2,  'CHROME' )
+	elif styleVal == 'stGold':
+	   styleVal = (   90,   90,   10,    100,      3,     4,  'GOLD'    )
+	elif styleVal == 'stGold':
+	   styleVal = (   90,   90,   10,    100,      3,     4,  'GOLD'    )
+	elif styleVal == 'stFog':
+	   styleVal = (   90,   90,   90,    30,       3,      4,   'PLASTIC'  )
+	'''

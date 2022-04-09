@@ -20,6 +20,8 @@ from _threejs import ThreeJsRenderer, StlRenderer
 
 import os
 
+import sys
+
 import json
 
 
@@ -332,20 +334,24 @@ class ScreenLib:
 '''
 
 class Scene:
-    
+
     def __init__(self):
-    
+
         self.lib = None             
         self.geoms = dict()
-        self.params = dict()
-        
+        self.vals = dict()
+
         # todo get arguments and init params
+        for param in argv:
+           key,sep,val = argv.partition('=')
+           if val != '':
+               self.initVal(key, val)		
 
         self.initRGBASMT('TemplStyleDefaultPoint', 90,90,10,100,4,'PLASTIC','BALL')
         self.initRGBASMT('TemplStyleDefaultWire', 10,10,90,100, 8,'PLASTIC','SOLID')
         self.initRGBASMT('TemplStyleDefaultSurface',10,10,90,100,2,'PLASTIC','SOLID')
         self.initRGBASMT('TemplStyleDefaultLabel', 90,10,10,100,20,'PLASTIC','SOLID')
-        
+
         self.initRGBASMT('TemplStyleInfoPoint', 30,30,30,100,3,'PLASTIC','BALL')
         self.initRGBASMT('TemplStyleInfoWire', 30,30,30,100,2,'PLASTIC','SOLID')
         self.initRGBASMT('TemplStyleInfoSurface', 30,30,30,100,1,'PLASTIC','SOLID')
@@ -371,7 +377,45 @@ class Scene:
         self.initRGBASMT('TemplStyleAxisWire', 30,30,30,100,1,'PLASTIC','SOLID')
         self.initRGBASMT('TemplStyleAxisSurface', 30,30,30,100,1,'PLASTIC','SOLID')
         self.initRGBASMT('TemplStyleAxisLabel', 30,30,30,100,20,'PLASTIC','SOLID')
-    
+
+ 
+    def initVal(self, paramKey, paramValue):
+        if not (paramKey in self.params):
+            self.params[paramKey] = paramValue
+        return self.params[paramKey]
+ 
+	def val(self, paramKey, defValue):
+        if (paramKey in self.params):
+            return self.params[paramKey]
+        return defValue
+
+    def initVals(self, keyPrefix ,vals):
+        for key in params:
+           self.initVal(keyPrefix+key, vals[key])
+
+    def getVals(self, keyPrefix):
+        ret = dict()
+        for key in self.vals: 
+            if key.startswith(keyPrefix): 
+               sStart,sPrefix, sEnd = key.partition(keyPrefix)
+               ret[sEnd] = self.params[key] 
+        return ret       
+
+    def initRGBASMT(self, paramKeyPrefix, r,g,b,a,s,m,t):
+        self.initVal(paramKeyPrefix+'R',r)
+        self.initVal(paramKeyPrefix+'G',g)
+        self.initVal(paramKeyPrefix+'B',b)
+        self.initVal(paramKeyPrefix+'A',a)
+        self.initVal(paramKeyPrefix+'S',s)
+        self.initVal(paramKeyPrefix+'M',m)
+        self.initVal(paramKeyPrefix+'T',t)
+
+    def initXYZ(self, paramKeyPrefix, x,y,z):
+        self.initVal(paramKeyPrefix+'X',x)
+        self.initVal(paramKeyPrefix+'Y',y)
+        self.initVal(paramKeyPrefix+'Z',z)
+
+
     def setGeom(self, key, geomType, geomObj):
         self.geoms[key] = {'type':geomType, 'geom':geomObj, 'style':None, 'color':None }
 
@@ -389,41 +433,6 @@ class Scene:
     def setColor(self, geomKeyPrefix, RGBA100):
         self.setToGeoms(geomKeyPrefix, 'color', RGBA100)
 
-    def getParam(self, paramKey, defValue):
-        if (paramKey in self.params):
-            return self.params[paramKey]
-        return defValue
-
-    def initParam(self, paramKey, paramValue):
-        if not (paramKey in self.params):
-            self.params[paramKey] = paramValue
-        return self.params[paramKey]
-
-    def initParams(self, keyPrefix ,params):
-        for key in params:
-           self.initParam(keyPrefix+key, params[key])
-
-    def getParams(self, keyPrefix):
-        ret = dict()
-        for key in self.params: 
-            if key.startswith(keyPrefix): 
-               sStart,sPrefix, sEnd = key.partition(keyPrefix)
-               ret[sEnd] = self.params[key] 
-        return ret       
-
-    def initRGBASMT(self, paramKeyPrefix, r,g,b,a,s,m,t):
-        self.initParam(paramKeyPrefix+'R',r)
-        self.initParam(paramKeyPrefix+'G',g)
-        self.initParam(paramKeyPrefix+'B',b)
-        self.initParam(paramKeyPrefix+'A',a)
-        self.initParam(paramKeyPrefix+'S',s)
-        self.initParam(paramKeyPrefix+'M',m)
-        self.initParam(paramKeyPrefix+'T',t)
-
-    def initXYZ(self, paramKeyPrefix, x,y,z):
-        self.initParam(paramKeyPrefix+'X',x)
-        self.initParam(paramKeyPrefix+'Y',y)
-        self.initParam(paramKeyPrefix+'Z',z)
          
     def render(self, slideName):
 
