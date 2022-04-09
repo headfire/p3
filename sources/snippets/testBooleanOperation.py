@@ -6,7 +6,7 @@ sys.path.insert(0, "../scene")
 from scene import SceneScreenInit, SceneScreenStart, SceneDrawShape, SceneDrawAxis, SceneLayer
 
 from OCC.Core.gp import gp_Pnt, gp_Trsf, gp_Vec
-from OCC.Core.BRepPrimAPI import BRepPrimAPI_MakeSphere, BRepPrimAPI_MakeBox,  	BRepPrimAPI_MakeCylinder
+from OCC.Core.BRepPrimAPI import BRepPrimAPI_MakeSphere, BRepPrimAPI_MakeBox,   BRepPrimAPI_MakeCylinder
 from OCC.Core.BRepAlgoAPI import BRepAlgoAPI_Common, BRepAlgoAPI_Cut
 from OCC.Core.BRepBuilderAPI import BRepBuilderAPI_Transform
 
@@ -18,7 +18,7 @@ def getShapeTranslate(shape, x,y,z):
 
 
 def getDaoCase(r, bevel, decor, h):
-    r2 = r*2                                    
+    r2 = r*2
     h2 = h/2
     rTop = r + 2*bevel + decor
     rSphere = gp_Vec(0,rTop,h2).Magnitude()
@@ -35,15 +35,14 @@ def getDaoCase(r, bevel, decor, h):
     #SceneDrawShape('tool',bevelTool)
     case = BRepAlgoAPI_Cut(case, bevelTool).Shape()
     return case
-    
+
 if __name__ == '__main__':
-    
+
     SceneScreenInit()
     SceneDrawAxis('axis')
 
     case = getDaoCase(5,0.3,0.3,3)
     SceneLayer('pres')
     SceneDrawShape('case',case)
-   
+
     SceneScreenStart()
-  

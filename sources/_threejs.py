@@ -10,24 +10,24 @@ from OCC.Extend.DataExchange import write_stl_file
 
 
 class StlRenderer:
-    
+
     def __init__(self, precision, path):
         if not path:
             raise Exception('StlRenderer need path for exported files')
         self._path = path
         self.precision = precision
         self.shapeNum = 1
-        
+
         print("Stl renderer init")
-       
+
     def drawPoint(self, pnt, color, size):
         pass
-      
+
     def drawLabel(self, pnt, text, color):
         pass
-  
+
     def drawShape(self,  shape):
-        shape_precision, wire_precision = self.precision 
+        shape_precision, wire_precision = self.precision
         if is_edge(shape):
             pass
         elif is_wire(shape):
@@ -39,10 +39,10 @@ class StlRenderer:
             write_stl_file(shape, shape_full_path, "ascii", shape_precision/4, 0.5/4)
             print("export shape %s to STL done", str(self.shapeNum).zfill(3))
             self.shapeNum += 1
-         
-    
 
-def jsBool(bool):          
+
+
+def jsBool(bool):
   if bool:
       return 'true'
   else:
@@ -86,7 +86,7 @@ def export_edgedata_to_json(edge_hash, point_set):
 
 
 class ThreeJsRenderer:
-    
+
     def __init__(self, decoration, precision, path):
         if not path:
             raise Exception('ThreeJsRenderer need path for exported files')
@@ -96,17 +96,17 @@ class ThreeJsRenderer:
         self.precision = precision
         self.shapeNum = 1
         self.stringList = []
-        
+
         print("## threejs %s webgl renderer")
-       
+
     def drawPoint(self, pnt, color, size):
        self.stringList.append("\tzdeskXPoint(%g, %g, %g, %s, %g);\n"
                                         % (pnt.X(), pnt.Y(), pnt.Z(), color_to_hex(color), size))
-      
+
     def drawLabel(self, pnt, text, color):
        self.stringList.append("\tzdeskXLabel(%g, %g, %g, '%s', %s);\n"
                                         % (pnt.X(), pnt.Y(), pnt.Z(), text, color_to_hex(color)))
-  
+
     def drawShape(self,
                      shape,
                      color=(0.65, 0.65, 0.7),
@@ -116,7 +116,7 @@ class ThreeJsRenderer:
         # if the shape is an edge or a wire, use the related functions
         shininess=0.9
         specular_color=(0.2, 0.2, 0.2)
-        shape_precision, wire_precision = self.precision 
+        shape_precision, wire_precision = self.precision
         if is_edge(shape):
             print("discretize an edge")
             pnts = discretize_edge(shape, wire_precision)
@@ -160,7 +160,7 @@ class ThreeJsRenderer:
             self.stringList.append("\tzdeskXShape(slidePath+'%s.json', %s, %s, %g, %g);\n"
                                         % (shape_hash, color_to_hex(color), color_to_hex(specular_color), shininess, 1 - transparency))
             print("%s, %i triangles\n" % (shape_hash, tess.ObjGetTriangleCount()))
-       
+
 
     def render(self):
         with open(self._js_filename, "w") as fp:
@@ -168,19 +168,19 @@ class ThreeJsRenderer:
             fp.write('function loadedSlideGetParam() { \n')
             fp.write('\t var param = Object(); \n')
             fp.write('\t param.isDesk = %s; \n' % jsBool(isDesk) )
-            fp.write('\t param.isAxis = %s; \n' % jsBool(isAxis) ) 
-            fp.write('\t param.scaleA = %i; \n' % scaleA ) 
-            fp.write('\t param.scaleB = %i; \n' % scaleB ) 
-            fp.write('\t param.deskDX = %i; \n' % deskDX ) 
-            fp.write('\t param.deskDY = %i; \n' % deskDY ) 
-            fp.write('\t param.deskDZ = %i; \n' % deskDZ ) 
-            fp.write('\t return param;\n') 
+            fp.write('\t param.isAxis = %s; \n' % jsBool(isAxis) )
+            fp.write('\t param.scaleA = %i; \n' % scaleA )
+            fp.write('\t param.scaleB = %i; \n' % scaleB )
+            fp.write('\t param.deskDX = %i; \n' % deskDX )
+            fp.write('\t param.deskDY = %i; \n' % deskDY )
+            fp.write('\t param.deskDZ = %i; \n' % deskDZ )
+            fp.write('\t return param;\n')
             fp.write('}\n')
             fp.write('\n')
             fp.write('function loadedSlideMake(slidePath) { \n')
             fp.write("".join(self.stringList))
             fp.write('}\n')
-    
+
 if __name__ == "__main__":
-    
+
      pass

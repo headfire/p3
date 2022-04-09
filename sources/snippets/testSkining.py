@@ -13,28 +13,28 @@ from OCC.Core.BRepBuilderAPI import BRepBuilderAPI_MakeVertex
 
 
 def getShapeSkin(pntStart, wires, pntEnd):
-    
+
     # Initialize and build
     skiner = BRepOffsetAPI_ThruSections()
     skiner.SetSmoothing(True);
       #skiner.SetMaxDegree(5)
-  
+
     vstart = BRepBuilderAPI_MakeVertex(pntStart).Vertex()
     skiner.AddVertex(vstart)
-  
+
     for wire in wires:
           skiner.AddWire( wire)
-          
+
     vend = BRepBuilderAPI_MakeVertex(pntEnd).Vertex()
     skiner.AddVertex(vend)
 
     skiner.Build()
-    
+
     return skiner.Shape()
 
-    
+
 if __name__ == '__main__':
-    
+
     SceneScreenInit()
     SceneDrawAxis('axis')
 
@@ -44,6 +44,5 @@ if __name__ == '__main__':
     shape = getShapeSkin(gp_Pnt(0,0,0), [wire], gp_Pnt(0,0,8))
     SceneDrawShape('skin',shape)
 
-    
+
     SceneScreenStart()
-  

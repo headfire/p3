@@ -1,5 +1,5 @@
 from OCC.Display.SimpleGui import init_display
-    
+
 from OCC.Core.gp import gp_Pnt, gp_Dir, gp_Vec
 from OCC.Core.Geom import Geom_Axis2Placement, Geom_CartesianPoint, Geom_Point
 from OCC.Core.AIS import AIS_Point, AIS_Trihedron, AIS_Shape, AIS_Line
@@ -21,19 +21,19 @@ from threejs import ThreeJsRenderer, StlRenderer
 import json
 
 
-POINT_TYPES = [ 'POINT', 'PLUS', 'STAR', 'X',  'O', 'O_POINT', 'O_PLUS', 'O_STAR',  'O_X', 
-  'RING1', 'RING2', 'RING3', 'BALL' ] 
+POINT_TYPES = [ 'POINT', 'PLUS', 'STAR', 'X',  'O', 'O_POINT', 'O_PLUS', 'O_STAR',  'O_X',
+  'RING1', 'RING2', 'RING3', 'BALL' ]
 
 LINE_TYPES = ['SOLID', 'DASH', 'DOT', 'DOTDASH' ]
 
-MATERIAL_TYPES = [ 'BRASS', 'BRONZE', 'COPPER', 'GOLD',  'PEWTER', 'PLASTER', 'PLASTIC', 
+MATERIAL_TYPES = [ 'BRASS', 'BRONZE', 'COPPER', 'GOLD',  'PEWTER', 'PLASTER', 'PLASTIC',
   'SILVER',  'STEEL', 'STONE', 'SHINY_PLASTIC', 'SATIN',  'METALIZED', 'NEON_GNC',
   'CHROME', 'ALUMINIUM', 'OBSIDIAN', 'NEON_PHC', 'JADE, CHARCOAL',  'WATER, GLASS',
-  'DIAMOND', 'DEFAULT' ] 
+  'DIAMOND', 'DEFAULT' ]
 
 SHAPE_TYPES = ['COMPOUND', 'COMPSOLID', 'SOLID', 'SHELL',
   'FACE', 'WIRE', 'EDGE', 'VERTEX', 'SHAPE']
-  
+
 TOPO_TYPES = ['TopAbs_COMPOUND', 'TopAbs_COMPSOLID', 'TopAbs_SOLID', 'TopAbs_SHELL',
                       'TopAbs_FACE', 'TopAbs_WIRE', 'TopAbs_EDGE', 'TopAbs_VERTEX', 'TopAbs_SHAPE']
 
@@ -57,29 +57,29 @@ def objToStr(obj) :
         i = 0
         while (exp.More()):
            ret['Edge-'+str(i)] = exp.Current().__class__.__name__
-           i += 1 
+           i += 1
            exp.Next()
         exp = TopExp_Explorer(obj, TopAbs_VERTEX)
         i = 0
         while (exp.More()):
            ret['Vertex-'+str(i)] = exp.Current().__class__.__name__
-           i += 1 
+           i += 1
            exp.Next()
     #todo QuantityColor
-    elif hasattr(obj,'__dict__'): 
+    elif hasattr(obj,'__dict__'):
        return vars(obj)
-    else:       
+    else:
         ret['class'] = ' Unknown structure '
     return ret
 
-def dumpObj(obj): 
+def dumpObj(obj):
   print(json.dumps(obj, default=lambda obj: objToStr(obj), indent=5))
 
 def n(val, default):
    if val == None:
        return default
    return val
-  
+
 
 '''
 *****************************************************
@@ -91,71 +91,71 @@ def n(val, default):
 
 
 class TestLib:
-    
+
     def __init__(self):
         print('Test lib: init()')
-         
+
     def start(self):
         print('Test lib: start()')
-    
+
     def drawPoint(self, pnt, style):
         print('Test lib: drawPoint()')
-        
-        
+
+
     def drawLabel(self, pnt, text, style):
         print('Test lib: drawLabel()')
-        
+
     def drawShape(self, shape, style):
         print('Test lib: drawShape()')
 
 
 class StlLib:
-    
+
     def __init__(self, decoration, precision, path):
        print('Stl lib: init()')
        self.stl = StlRenderer(precision, path)
-         
+
     def start(self):
         print('Stl lib: start()')
-    
+
     def drawPoint(self, pnt, style):
         print('Stl lib: drawPoint()')
-        
+
     def drawLabel(self, pnt, text, style):
         print('Stl lib: drawLabel()')
-        
+
     def drawShape(self, shape, style):
         print('Stl lib: drawShape()')
         self.stl.drawShape(shape)
-        
+
 
 
 class WebLib:
-    
+
     def __init__(self, decoration, precision, path):
        print('Web lib: init()')
        self.web = ThreeJsRenderer(decoration, precision, path)
-         
+
     def start(self):
         print('Web lib: start()')
         self.web.render()
-    
+
     def drawPoint(self, pnt, style):
         print('Web lib: drawPoint()')
         self.web.drawPoint(pnt, style['color'], style['pointSize'])
-        
+
     def drawLabel(self, pnt, text, style):
         print('Web lib: drawLabel()')
         self.web.drawLabel(pnt, text, style['color'])
-        
+
     def drawShape(self, shape, style):
         print('Web lib: drawShape()')
         self.web.drawShape(shape, style['color'], style['tran'] ,style['lineWidth'])
-        
-        
+
+
 
 class ScreenLib:
-    
+
     def __init__(self, decoration):
         self.display, self.start_display, self.add_menu,  self.add_function_to_menu  = init_display(
             None, (1024, 768), True, [128, 128, 128], [128, 128, 128]
@@ -166,136 +166,136 @@ class ScreenLib:
 
 
     def _axisStyle(self):
-        
+
         st = dict()
         st['color'] = (40/100, 40/100, 40/100)
         st['tran']  = 0
-        st['pointType'] = 'BALL'                
-        st['lineType'] = 'SOLID'                
+        st['pointType'] = 'BALL'
+        st['lineType'] = 'SOLID'
         st['pointSize'] = 2
-        st['lineWidth'] = 1               
+        st['lineWidth'] = 1
         st['material'] = 'PLASTIC'
-        
-        return st 
- 
+
+        return st
+
     def _deskStyle(self):
-        
+
         st = dict()
         st['color'] = (70/100, 70/100, 70/100)
         st['tran']  = 0
-        st['pointType'] = 'BALL'                
-        st['lineType'] = 'SOLID'                
+        st['pointType'] = 'BALL'
+        st['lineType'] = 'SOLID'
         st['pointSize'] = 2
-        st['lineWidth'] = 1               
+        st['lineWidth'] = 1
         st['material'] = 'PLASTIC'
-        
-        return st 
- 
+
+        return st
+
     def setAisStyle(self, ais, r,g,b,a, materialKey, lineTypeKey, lineWidth)
         color =  Quantity_Color(r, g, b, Quantity_TOC_RGB)
         ais.SetColor(color)
-		if isinstance(ais, AIS_Trihedron):  
-			ais.SetArrowColor(color)
-			ais.SetTextColor(color)
+        if isinstance(ais, AIS_Trihedron):
+            ais.SetArrowColor(color)
+            ais.SetTextColor(color)
         ais.SetTransparency(a)
 
     def setAisMaterialStyle(self, ais, materialKey)
              material = Graphic3d_MaterialAspect(MATERIAL_TYPES.index(materialKey))
              ais.SetMaterial(material)
-			 
-	def setAisLineStyle(self, ais, lineTypeKey, lineWidth)
+
+    def setAisLineStyle(self, ais, lineTypeKey, lineWidth)
              lineType = LINE_TYPES.index(lineType)
              ais.Attributes().WireAspect().SetTypeOfLine(lineType)
              ais.Attributes().LineAspect().SetTypeOfLine(lineType)
-	         ais.Attributes().LineAspect().SetWidth(lineWidth)
+             ais.Attributes().LineAspect().SetWidth(lineWidth)
              ais.Attributes().WireAspect().SetWidth(lineWidth)
-     
+
     def setAisPointStyle _styleAis(self, ais, styleName, styleValue):
-        if isinstance(ais, AIS_Point): 
-            if styleName == 'pointType':         
+        if isinstance(ais, AIS_Point):
+            if styleName == 'pointType':
                  ais.SetMarker(POINT_TYPES.index(styleValue))
-            if styleName == 'pointSize':         
+            if styleName == 'pointSize':
                  ais.Attributes().PointAspect().SetScale(styleValue)
-                 
+
     def drawLabel(self, pnt, text, color):
-       pntLabel = gp_Pnt(pnt.X()+self.dLabel,pnt.Y()+self.dLabel,pnt.Z()+self.dLabel) 
-       self.display.DisplayMessage(pntLabel, 
-                text, 20, color, False)            
-       
+       pntLabel = gp_Pnt(pnt.X()+self.dLabel,pnt.Y()+self.dLabel,pnt.Z()+self.dLabel)
+       self.display.DisplayMessage(pntLabel,
+                text, 20, color, False)
+
     def _drawPoint(self, pnt, style):
         ais = AIS_Point(Geom_CartesianPoint(pnt))
         self._drawAis(ais, style)
-    
+
     def _drawShape(self, shape, style):
         ais = AIS_Shape(shape)
         self._drawAis(ais, style)
-            
+
     def _drawAis(self, ais, style):
         for styleName in style:
-           self._styleAis(ais, styleName, style[styleName])                
-           
-        self.display.Context.Display(ais, False) 
-        #self.display.Context.Erase(ais, False)    
-  
+           self._styleAis(ais, styleName, style[styleName])
+
+        self.display.Context.Display(ais, False)
+        #self.display.Context.Erase(ais, False)
+
     def _axis(self, size):
-        
+
             style = self._axisStyle()
-          
+
             step = size/10
             ss = [1,5,10,50,100,500,1000,5000,10000]
             for s in ss:
                if step<s:
                    step=s/5
                    break
-                   
+
             pnt = gp_Pnt(0,0,0)
             dir1 = gp_Dir(gp_Vec(0,0,1))
             dir2 = gp_Dir(gp_Vec(1,0,0))
             geomAxis = Geom_Axis2Placement(pnt, dir1, dir2)
-            
+
             trih = AIS_Trihedron(geomAxis)
             trih.SetSize(size)
-            
+
             self._drawAis(trih, style)
-            
+
             self._drawPoint(gp_Pnt(0,0,0), style)
-            
+
             cnt = int( size // step)
             for i in range (1, cnt):
                 d = i* step
                 self._drawPoint(gp_Pnt(d,0,0), style)
                 self._drawPoint(gp_Pnt(0,d,0), style)
                 self._drawPoint(gp_Pnt(0,0,d), style)
-                
-     
-    def _desk(self, scaleA, scaleB, deskDX, deskDY, deskDZ): 
+
+
+    def _desk(self, scaleA, scaleB, deskDX, deskDY, deskDZ):
             style = self._deskStyle()
             scale = scaleA/scaleB
             xBox, yBox, zBox = 1500*scale, 1000*scale, 40*scale
             desk = BRepPrimAPI_MakeBox (gp_Pnt( -xBox/2+deskDX, -yBox/2+deskDY, -zBox+deskDZ), xBox, yBox, zBox)
             self._drawShape(desk.Solid(), style)
-            scalePoint = gp_Pnt( -xBox/2+deskDX, -yBox/2+deskDY, zBox/3+deskDZ) 
+            scalePoint = gp_Pnt( -xBox/2+deskDX, -yBox/2+deskDY, zBox/3+deskDZ)
             self._drawLabel( scalePoint, 'A0 M' + str(scaleB) + ':' + str(scaleA), style )
- 
-            
+
+
     def _decoration(self, isDesk, isAxis, scaleA, scaleB, deskDX, deskDY, deskDZ):
-         
-       
+
+
         if isDesk:
             self._desk(scaleA, scaleB, deskDX, deskDY, deskDZ)
-            
-          
-        if isAxis:   
+
+
+        if isAxis:
             axisSize = 500*scaleA/scaleB
             self._axis(axisSize)
-         
-        
+
+
     def start(self):
          self.display.FitAll()
          self.start_display()
-           
-              
-     
+
+
+
 '''
 *****************************************************
 *****************************************************
@@ -304,29 +304,29 @@ class ScreenLib:
 '''
 
 class Scene:
- 
+
     def __init__(self):
-    
+
        scriptDir = os.path.dirname(__file__)
        exportDraftDir = os.path.join(scriptDir, '..', 'viewer','slides','dao', slideName)
        exportDir = os.path.abspath(exportDraftDir)
-    
+
        decoration = (True, True, 1, 5, 0, 0, -60)
        precision = (0.2, 0.2)
-    
-       ScInit(mode, decoration, precision, exportDir) 
 
-       self.lib = TestLib()             
-     
+       ScInit(mode, decoration, precision, exportDir)
+
+       self.lib = TestLib()
+
     def makeDefaultStyle(self):
-       
+
         st['pointR'] =
         st['pointG'] =
         st['pointB'] =
         st['pointA'] =
         st['pointTypeKey'] =
         st['pointSize'] =
-		
+
         st['lineR'] =
         st['lineG'] =
         st['lineB'] =
@@ -345,16 +345,16 @@ class Scene:
         st['shapePrecision']
 
        st['tran']  = 1-op/100
-        st['pointType'] = 'BALL'                
-        st['lineType'] = 'SOLID'                
+        st['pointType'] = 'BALL'
+        st['lineType'] = 'SOLID'
         st['pointSize'] = ps
-        st['lineWidth'] = lw               
+        st['lineWidth'] = lw
         st['material'] = mat
 
         if styleVal == None:
-           styleVal = 'stMain' 
-           
-                   #      r%    g%     b%     op%     pnt  line   mat 
+           styleVal = 'stMain'
+
+                   #      r%    g%     b%     op%     pnt  line   mat
         if styleVal == 'stInfo':
            styleVal = (   30,   30,   30,    100,     3,     2,  'PLASTIC' )
         elif styleVal == 'stMain':
@@ -365,138 +365,138 @@ class Scene:
            styleVal = (   90,   90,   10,    100,      3,     4,  'GOLD'    )
         elif styleVal == 'stFog':
            styleVal = (   90,   90,   90,    30,       3,      4,   'PLASTIC'  )
-           
+
         r, g, b, op, ps ,lw, mat = styleVal
-        
-        st = dict() 
-        
-        
+
+        st = dict()
+
+
         return st
-     
+
     def init(self, initMode, decoration, precision, exportDir):
        if initMode == 'screen':
-       elif  initMode == 'web': 
+       elif  initMode == 'web':
          self.lib = WebLib(decoration, precision, exportDir)
-       elif  initMode == 'stl': 
+       elif  initMode == 'stl':
          self.lib = StlLib(decoration, precision, exportDir)
 
-    def renderToScreen() 
+    def renderToScreen()
          lib = ScreenLib(decoration)
          lib.start()
-		 for obj in objList
-		    t = obj['objType']
+         for obj in objList
+            t = obj['objType']
                 self.lib.draw(obj)
 
-    def style(self, styleKey, styleParams ) 
-	    self.styleList[styleKey] = styleParams 
- 
+    def style(self, styleKey, styleParams )
+        self.styleList[styleKey] = styleParams
+
     def label(self, pnt, label, style):
         style = self._getNormalStyle(style)
         self.lib.drawLabel(pnt, label, style)
-    
+
     def point(self, pnt, style):
         style = self._getNormalStyle(style)
-        
+
     def line(self, pnt1, pnt2, style):
         style = self._getNormalStyle(style)
         edge = BRepBuilderAPI_MakeEdge(pnt1, pnt2).Edge()
         self.lib.drawShape(edge, style)
-    
+
     def circle(self, label, pnt1, pnt2, pnt3, style):
         style = self._getNormalStyle(style)
         geomCircle = GC_MakeCircle(pnt1, pnt2, pnt3).Value()
         shape = BRepBuilderAPI_MakeEdge(geomCircle).Edge()
         objs[label] = shape
         self.lib.drawShape(edge, style)
-    
+
     def shape(self, objName, shape):
-	    objSpec = dict()
-		objSpec['obj'] = shape
-		objSpec['type'] = 'shape'
-		objSpec['style'] = self.makeStyle('stMain')
-		
-		
-	    self.objList[objName] = 
-		  { 
-			'obj':shape,
-		    'type':'shape', 
-			'style': 
-		  }	
- 		
-	def setStyle(self, objName, styleName) {
+        objSpec = dict()
+        objSpec['obj'] = shape
+        objSpec['type'] = 'shape'
+        objSpec['style'] = self.makeStyle('stMain')
+
+
+        self.objList[objName] =
+          {
+            'obj':shape,
+            'type':'shape',
+            'style':
+          }
+
+    def setStyle(self, objName, styleName) {
         style = self._getNormalStyle(style)
-	}	
+    }
 
 if __name__ == '__main__':
-    
-     
+
+
     def  testPoint():
-        
+
         pnt = gp_Pnt(3,4,5)
         ScPoint(pnt,'stInfo')
         ScLabel(pnt, 'point', 'stInfo')
-    
+
 
     def testLine():
-        
+
         gpPnt = gp_Pnt(2,3,4)
-        
-        ScPoint(gpPnt, 'stInfo')    
+
+        ScPoint(gpPnt, 'stInfo')
         ScLabel(gpPnt, 'pnt+', 'stInfo')
-        
+
         gpPntStart = gp_Pnt(5,0,3)
         gpPntEnd = gp_Pnt(0,5,3)
-        
+
         ScLine(gpPntStart, gpPntEnd, 'stMain')
-        
+
         ScPoint(gpPntStart, 'stMain')
         ScLabel(gpPntStart, 'lineStart+', 'stMain')
-        
+
         ScPoint(gpPntEnd, 'stMain')
         ScLabel(gpPntEnd, 'lineEnd', 'stMain')
-    
-    
+
+
     def  testCircle():
-        
+
         gpPnt1 = gp_Pnt(1,1,10)
         gpPnt2 = gp_Pnt(5,2,5)
         gpPnt3 = gp_Pnt(5,-5,5)
-        
+
         ScCircle(gpPnt1, gpPnt2, gpPnt3, 'stFocus')
-        
+
         ScPoint(gpPnt1, 'stFog')
         ScLabel(gpPnt1,'p1', 'stFog')
         ScPoint(gpPnt2, 'stFog')
         ScLabel(gpPnt2,'p2','stFog')
         ScPoint(gpPnt3, 'stFog')
         ScLabel(gpPnt3,'p3', 'stFog')
-  
+
     def  testShape():
-        
+
         sp1 = BRepPrimAPI_MakeSphere(3).Shape()
         ScShape(sp1, 'stGold')
-        
+
         sp2 = BRepPrimAPI_MakeSphere(4).Shape()
         ScShape(sp2, 'stFog')
-        
-        
+
+
         stCustom1   = ScStyle((  100,   35,   24,   100,   3,  3, 'GOLD'    ))
         sp3 = BRepPrimAPI_MakeSphere(gp_Pnt(3,6,2), 2.5).Shape()
         ScShape(sp3,  stCustom1)
-        
-        
+
+
         stCustom2   = ScStyle((  98,  100,  12,   100,   3,  3, 'CHROME'    ))
         sp4 = BRepPrimAPI_MakeSphere(gp_Pnt(3,3,3),2).Shape()
         ScShape(sp4, stCustom2)
-        
-  
+
+
     decoration = (True, True, 1, 50, 0, 0, -3)
-    
-    ScInit('screen', decoration) 
-    
+
+    ScInit('screen', decoration)
+
     testPoint()
     testLine()
     testCircle()
     testShape()
-    
+
     ScStart()
