@@ -186,7 +186,7 @@ def makeEdgesFacesIntersectPoints(edgesShape, facesShape):
             intersectPoints += findedIntersectPoints
     return intersectPoints
 
-def makeShapePoints(shape):
+def utilGetShapePoints(shape):
     shapeVertexes = getShapeItems(shape, TopAbs_VERTEX)
     shapePoints = getPointsFromVertexes(shapeVertexes)
     return getUniquePoints(shapePoints)
@@ -199,7 +199,7 @@ def makeOffsetWire(theWire, offset):
     theOffsetWire = tool.Shape()
     return theOffsetWire
 
-def makeZRotatedShape(theShape, angle):
+def utilGetZRotatedShape(theShape, angle):
 
     theTransform = gp_Trsf()
 
@@ -409,39 +409,6 @@ def makeSlicesWires(ingWire, ingWirePoints, daoFocusPoint, slicePlaneHeight, sli
         
     return slicesWires
 
-def drawClassicDaoSlide(sc):
-    daoCircle3Points = makeGorizontalCircle3Points(sc.val('DAO_BASE_RADIUS'))
-    sc.drawCircle('daoCircle', daoCircle3Points)
-
-    dao8Points = makeDao8Points(sc.val('DAO_BASE_RADIUS'))
-    sc.drawPoints('daoPoints', dao8Points)
-    sc.drawLabels('daoLabels', dao8Points, 'a')
-
-    daoWire = makeDaoWire(dao8Points)
-    sc.drawWire('daoWire', daoWire)
-
-    sc.setStyle('daoCircle', 'Info')
-
-def drawOffsetDaoSlide(sc):
-
-    offsetCirclePoints = makeGorizontalCircle3Points(sc.val('DAO_BASE_RADIUS') + sc.val('DAO_OFFSET'))
-    sc.drawCircle('offsetCircle', offsetCirclePoints)
-
-    dao8Points = makeDao8Points(sc.val('DAO_BASE_RADIUS'))
-    daoWire = makeDaoWire(dao8Points)
-    ingWire = makeOffsetWire(daoWire, -sc.val('DAO_OFFSET'))
-    sc.drawWire('ingWire', ingWire)
-
-    ingWirePoints = makeShapePoints(ingWire)
-    sc.drawPoints('ingWirePoints', ingWirePoints)
-    sc.drawLabels('ingWirePointsLabels', ingWirePoints,  'b')
-
-    yangWire = makeZRotatedShape(ingWire, pi)
-    sc.drawWire('yangWire', yangWire)
-
-    sc.setStyle('offsetCircle', 'Info')
-    sc.setStyle('yangWire', 'Info')
-
 def drawExampleSliceSlide(sc):
 
     offsetCirclePoints = makeGorizontalCircle3Points(sc.val('DAO_BASE_RADIUS') + sc.val('DAO_OFFSET'))
@@ -527,12 +494,22 @@ def  drawSkiningSurface(sc):
         ingSurface = makeSkiningSurface(daoStartPoint, skiningWires, daoEndPoint)
         sc.drawSurface('ingSurface', ingSurface)
         
-def drawDaoBaseCircle(sc, style):
-    return , gp_Pnt(0,r,0), gp_Pnt(-r,0,0)
+def drawCenteredXYCircle(sc, style, key ,r):
 
-    circle3Points = makeGorizontalCircle3Points(sc.val('DAO_BASE_RADIUS'))
-    sc.drawCircle('daoBaseCircle', gp_Pnt(r,0,0),)
-    sc.setStyle('daoBaseCircle', style)
+    sc.drawCircle(style, key, ( gp_Pnt(r,0,0), gp_Pnt(0,r,0), gp_Pnt(-r,0,0)))
+    #todo drawCircle -> drawWire
+
+
+# *********************************************************************************
+# *********************************************************************************
+# *********************************************************************************
+
+def drawDaoBaseCircle(sc, style):
+    
+    DAO_BASE_RADIUS = sc.val('DAO_BASE_RADIUS')
+    DAO_OFFSET = sc.val('DAO_OFFSET')
+ 
+    drawCenteredXYCircle(sc, style, 'DaoOffsetCircle', DAO_BASE_RADIUS)
 
 
 def drawDaoBasePoints(sc, style):
@@ -542,31 +519,24 @@ def drawDaoBasePoints(sc, style):
 
     gpPntMinC = gp_Pnt(0,r2,0)
     
-    a = {}
-    a[0] = gp_Pnt(0,0,0)
-    a[1] = getPntRotate(gpPntMinC , a[0], -pi/4)
-    a[2] = gp_Pnt(-r2,r2,0)
-    a[3] = getPntRotate(gpPntMinC , a[0], -pi/4*3)
-    a[4] = gp_Pnt(0,r,0)
-    a[5] = gp_Pnt(r,0,0)
-    a[6] = gp_Pnt(0,-r,0)
-    a[7] = gp_Pnt(r2,-r2,0)
+    p = {}
+    p[0] = gp_Pnt(0,0,0)
+    p[1] = getPntRotate(gpPntMinC , p[0], -pi/4)
+    p[2] = gp_Pnt(-r2,r2,0)
+    p[3] = getPntRotate(gpPntMinC , p[0], -pi/4*3)
+    p[4] = gp_Pnt(0,r,0)
+    p[5] = gp_Pnt(r,0,0)
+    p[6] = gp_Pnt(0,-r,0)
+    p[7] = gp_Pnt(r2,-r2,0)
 
-    for i in range(8):
-    
-        n = str(i) 
-        
-        sc.drawPoint('daoBasePoint'+n, a[i])
-        sc.setStyle('daoBasePoint'+n, style)
-   
-        sc.drawLabel('daoBasePoint'+n+'Label', a[i], 'a'+n)
-        sc.setStyle('daoBasePoint'+n+'Label', style)
+    for key in p:
+        sc.drawPoint(style, 'DaoBasePoints'+str(key), p[key], 'p'+str(key))
 
-def drawDaoIngClassicWire(sc, style):
+def drawDaoClassicWire(sc, style):
 
     a = {}
     for i in range(8):
-       a[i] = sc.obj('daoBasePoint'+str(i))
+       a[i] = sc.obj('DaoBasePoints'+str(i))
 
     arc0 =  GC_MakeArcOfCircle(a[0],a[1],a[2]).Value()
     arc1 =  GC_MakeArcOfCircle(a[2],a[3],a[4]).Value()
@@ -580,55 +550,71 @@ def drawDaoIngClassicWire(sc, style):
 
     daoWire =  BRepBuilderAPI_MakeWire(edge0, edge1, edge2, edge3).Wire()
 
-    sc.drawWire('daoIngClassicWire', daoWire)
-    sc.setStyle('daoCircle', 'Info')
+    sc.drawWire(style, 'DaoClassicWire', daoWire)
     
-def drawDaoIngOffsetWire(sc, style):
+def drawDaoIngWire(sc, style):
 
-    offset = sc.val('DAO_OFFSET')
-    classicWire = sc.obj('daoIngClassicWire')
+    DAO_OFFSET = sc.val('DAO_OFFSET')
+    DaoClassicWire = sc.obj('DaoClassicWire')
 
     tool = BRepOffsetAPI_MakeOffset()
-    tool.AddWire(classicWire)
-    tool.Perform(-offset)
-    offsetWire = tool.Shape()
+    tool.AddWire(DaoClassicWire)
+    tool.Perform(-DAO_OFFSET)
+    DaoIngWire = tool.Shape()
 
-    ingWire = makeOffsetWire(daoWire, -sc.val('DAO_OFFSET'))
-    sc.drawWire('daoIngOffsetWire', ingWire)
+    sc.drawWire(style,'DaoIngWire', DaoIngWire)
 
-    sc.setStyle('yangWire', 'Info')
+    ''' todo
 
-    ingWirePoints = makeShapePoints(ingWire)
-    sc.drawPoints('ingWirePoints', ingWirePoints)
-    sc.drawLabels('ingWirePointsLabels', ingWirePoints,  'b')
+    '''
+def drawDaoIngPoints(sc, style):
 
-    yangWire = makeZRotatedShape(ingWire, pi)
-    sc.drawWire('yangWire', yangWire)
+    DaoIngWire = sc.obj('DaoIngWire')
 
-    sc.setStyle('offsetCircle', 'Info')
+    DaoIngPoints = utilGetShapePoints(DaoIngWire)
+    sc.drawPoint(style, 'DaoIngPointsLeft', DaoIngPoints[0], 'pL')
+    sc.drawPoint(style, 'DaoIngPointsBegin', DaoIngPoints[1], 'pB')
+    sc.drawPoint(style, 'DaoIngPointsRight', DaoIngPoints[2], 'pR')
+    sc.drawPoint(style, 'DaoIngPointsEnd', DaoIngPoints[3], 'pE')
 
-def drawDaoGorizontalCircle(sc, name, style, r):
+def drawDaoYangWire(sc, style):
 
-    r = sc.val('DAO_BASE_RADIUS')
-    offset = sc.val('DAO_OFFSET')
+    DaoIngWire = sc.obj('DaoIngWire')
+
+    DaoYangWire = utilGetZRotatedShape(DaoIngWire, pi)
+    sc.drawWire(style, 'DaoYangWire', DaoYangWire)
+
+def drawDaoOffsetCircle(sc, style):
+    
+    DAO_BASE_RADIUS = sc.val('DAO_BASE_RADIUS')
+    DAO_OFFSET = sc.val('DAO_OFFSET')
  
-    circle3Points = makeGorizontalCircle3Points(r + offset)
-    sc.drawCircle('daoBaseCircle', circle3Points)
-    sc.setStyle('daoBaseCircle', style)
+    drawCenteredXYCircle(sc, style, 'DaoOffsetCircle', DAO_BASE_RADIUS + DAO_OFFSET,)
 
+# **********************************************************************************
+# **********************************************************************************
+# **********************************************************************************
 
-if __name__ == '__main__':
+#todo style to uppercase
 
-    sc = Scene()
+def drawDaoClassicSlide(sc):
+    drawDaoBasePoints(sc, 'MAIN')
+    drawDaoIngClassicWire(sc, 'MAIN')
+    drawDaoBaseCircle(sc,'INFO')
 
-    sc.initVal('SLIDE_NUM', 2)
-    sc.initVal('SLIDE_NAME', 'dao')
+def drawDaoOffsetSlide(sc):
+    drawDaoBasePoints(sc, 'HIDE')
+    drawDaoClassicWire(sc, 'HIDE')
+    drawDaoIngWire(sc, 'MAIN')
+    drawDaoIngPoints(sc, 'MAIN')
+    drawDaoYangWire(sc, 'INFO')
+    drawDaoOffsetCircle(sc, 'INFO')
 
-    sc.initVal('SysDecorIsDesk', True)
-    sc.initVal('SysDecorIsAxis', True)
-    sc.initVal('SysDecorScale', 1)
-    sc.initVal('SysDecorScaleB', 5)
-    sc.initXYZ('SysDecorDeskD', 0, 0, -60)
+# **********************************************************************************
+# **********************************************************************************
+# **********************************************************************************
+
+def initDaoVals(sc):
 
     sc.initVal('DAO_BASE_RADIUS', 40)
     sc.initVal('DAO_OFFSET', 3)
@@ -642,14 +628,29 @@ if __name__ == '__main__':
     sc.initVal('DAO_CASE_DELTA_Z', -20)
     sc.initVal('DAO_CASE_GAP', 1)
 
+
+if __name__ == '__main__':
+
+    sc = Scene()
+
+    sc.initVal('SLIDE_NUM', 7)
+    sc.initVal('SLIDE_NAME', 'dao')
+
+    sc.initVal('SysDecorIsDesk', True)
+    sc.initVal('SysDecorIsAxis', True)
+    sc.initVal('SysDecorScale', 1)
+    sc.initVal('SysDecorScaleB', 5)
+    sc.initXYZ('SysDecorDeskD', 0, 0, -60)
+    #todo uppercase and only dz param
+    
+    initDaoVals(sc)
+    
     SLIDE_NUM = sc.val('SLIDE_NUM')
     print(SLIDE_NUM) 
     if SLIDE_NUM == 1:
-        drawDaoBaseCircle(sc, 'Info')
-        drawDaoBasePoints(sc, 'Default')
-        drawDaoIngClassicWire(sc, 'Default')
+        drawDaoClassicSlide(sc)
     elif SLIDE_NUM == 2:
-        drawOffsetDaoSlide(sc)
+        drawDaoOffsetSlide(sc)
     elif SLIDE_NUM == 3:
         drawExampleSliceSlide(sc)
     elif SLIDE_NUM == 4:

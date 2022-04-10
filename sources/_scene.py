@@ -350,21 +350,21 @@ class Scene:
              except ValueError:
                print('Non int param')          
     
-        self.initRGBASMT('TemplStyleDefaultPoint', 90,90,10,100,4,'PLASTIC','BALL')
-        self.initRGBASMT('TemplStyleDefaultWire', 10,10,90,100, 8,'PLASTIC','SOLID')
-        self.initRGBASMT('TemplStyleDefaultSurface',10,10,90,100,2,'PLASTIC','SOLID')
-        self.initRGBASMT('TemplStyleDefaultLabel', 90,10,10,100,20,'PLASTIC','SOLID')
+        self.initRGBASMT('TemplStyleMAINPoint', 90,90,10,100,4,'PLASTIC','BALL')
+        self.initRGBASMT('TemplStyleMAINWire', 10,10,90,100, 8,'PLASTIC','SOLID')
+        self.initRGBASMT('TemplStyleMAINSurface',10,10,90,100,2,'PLASTIC','SOLID')
+        self.initRGBASMT('TemplStyleMAINLabel', 90,10,10,100,20,'PLASTIC','SOLID')
 
-        self.initRGBASMT('TemplStyleInfoPoint', 30,30,30,100,3,'PLASTIC','BALL')
-        self.initRGBASMT('TemplStyleInfoWire', 30,30,30,100,2,'PLASTIC','SOLID')
-        self.initRGBASMT('TemplStyleInfoSurface', 30,30,30,100,1,'PLASTIC','SOLID')
-        self.initRGBASMT('TemplStyleInfoLabel', 30,30,30,100,20,'PLASTIC','SOLID')
+        self.initRGBASMT('TemplStyleINFOPoint', 30,30,30,100,3,'PLASTIC','BALL')
+        self.initRGBASMT('TemplStyleINFOWire', 30,30,30,100,2,'PLASTIC','SOLID')
+        self.initRGBASMT('TemplStyleINFOSurface', 30,30,30,100,1,'PLASTIC','SOLID')
+        self.initRGBASMT('TemplStyleINFOLabel', 30,30,30,100,20,'PLASTIC','SOLID')
 
 
-        self.initRGBASMT('TemplStyleFocusPoint', 90,10,10,100,4,'PLASTIC','BALL')
-        self.initRGBASMT('TemplStyleFocusWire', 90,10,10,100,3,'PLASTIC','SOLID')
-        self.initRGBASMT('TemplStyleFocusSurface', 90,10,10,100,2,'PLASTIC','SOLID')
-        self.initRGBASMT('TemplStyleFocusLabel', 90,10,10,100,20,'PLASTIC','SOLID')
+        self.initRGBASMT('TemplStyleFOCUSPoint', 90,10,10,100,4,'PLASTIC','BALL')
+        self.initRGBASMT('TemplStyleFOCUSWire', 90,10,10,100,3,'PLASTIC','SOLID')
+        self.initRGBASMT('TemplStyleFOCUSSurface', 90,10,10,100,2,'PLASTIC','SOLID')
+        self.initRGBASMT('TemplStyleFOCUSLabel', 90,10,10,100,20,'PLASTIC','SOLID')
 
         self.initRGBASMT('TemplStyleChromePoint', 10,10,10,100,4,'PLASTIC','EMPTY')
         self.initRGBASMT('TemplStyleChromeWire', 10,10,10,100,3,'PLASTIC','DASH')
@@ -419,8 +419,8 @@ class Scene:
         self.initVal(paramKeyPrefix+'Z',z)
 
 
-    def initObj(self, key, geomType, geomObj):
-        self.geoms[key] = {'type':geomType, 'geom':geomObj, 'style':None, 'color':None }
+    def initObj(self, geomType, style, key,  geomObj):
+        self.geoms[key] = {'type':geomType, 'geom':geomObj, 'style':style, 'color':None }
 
     def obj(self, key):
         return  self.geoms[key]['geom']
@@ -483,16 +483,16 @@ class Scene:
 
         for key in self.geoms:
             geomObj = self.geoms[key]
-            style = geomObj['style']
-            if style == None:
-               style = 'Default'
             #print(geomObj['style'])
-            style = self.getVals('Style'+style)
+            style = self.getVals('Style'+geomObj['style'])
             #print(style)
             color = geomObj['color']
             geom = geomObj['geom']
             t = geomObj['type']
-            if t == 'point':
+            print('===> Render'+'['+key+']',self.geoms[key])
+            if geomObj['style'] == 'HIDE':
+                pass  
+            elif t == 'point':
                 pnt = geom;
                 self.lib.drawPoint(pnt, style, color)
             elif t == 'line':
@@ -514,45 +514,23 @@ class Scene:
 
         self.lib.start()
 
-    def drawLabel(self, key, pntPlace, strTitle):
-        self.initObj(key, 'label', (pntPlace, strTitle))
+    def drawPoint(self, style, key, pnt, text):
+        self.initObj('point', style, key, pnt)
+        self.initObj('label', style, key+'Label', (pnt, text))
 
-    def drawLabels(self, keyPrefix, thePoints, titlePrefix):
-        i = 1
-        for thePoint in thePoints:
-           self.drawLabel(keyPrefix + str(i), thePoint, titlePrefix + str(i))
-           i += 1
+    def drawLine(self, style, key, the2Points):
+        self.initObj('line', style, key,  the2Points)
 
-    def drawPoint(self, key, pnt):
-        self.initObj(key, 'point', (pnt))
+    def drawCircle(self, style, key,  the3Points):
+        self.initObj('circle', style, key,  the3Points)
 
-    def drawPoints(self, keyPrefix, thePoints):
-        i = 1
-        for thePoint in thePoints:
-           self.drawPoint(keyPrefix+str(i), thePoint)
-           i += 1
+    def drawSurface(self, style, key, surface):
+        self.initObj('shape', style, key, surface)
 
-    def drawLine(self, key, the2Points):
-        self.initObj(key,'line', the2Points)
+    def drawWire(self, style, key, wire):
+        self.initObj('shape', style, key, wire)
 
-    def drawCircle(self, key, the3Points):
-        self.initObj(key, 'circle', the3Points)
-
-    def drawSurface(self, key, shape):
-        self.initObj(key, 'shape', shape)
-
-    def drawWire(self, key, shape):
-        self.initObj(key, 'shape', shape)
-
-    def drawDesk(self, key, x,y,z):
-        return
-
-    def drawAxis(self, key, x,y,z):
-        return
-
-    def setScale(self, a, b):
-        return
-
+  
 '''
 ***********************************************
  Procedural interface
@@ -615,11 +593,9 @@ if __name__ == '__main__':
         sp2 = BRepPrimAPI_MakeSphere(4).Shape()
         sc.shape(sp2, 'stFog')
 
-
         stCustom1   = sc.style((  100,   35,   24,   100,   3,  3, 'GOLD'    ))
         sp3 = BRepPrimAPI_MakeSphere(gp_Pnt(3,6,2), 2.5).Shape()
         sc.shape(sp3,  stCustom1)
-
 
         stCustom2   = sc.style((  98,  100,  12,   100,   3,  3, 'CHROME'    ))
         sp4 = BRepPrimAPI_MakeSphere(gp_Pnt(3,3,3),2).Shape()
