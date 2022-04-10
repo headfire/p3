@@ -229,8 +229,6 @@ def makeDao8Points(r):
 
     return  p1, p2, p3, p4, p5, p6, p7, p8
 
-def makeDaoFocusPoint(r):
-    return gp_Pnt(0,-r/4,0)
 
 def makeDaoWire(the8Points):
 
@@ -409,37 +407,6 @@ def makeSlicesWires(ingWire, ingWirePoints, daoFocusPoint, slicePlaneHeight, sli
         
     return slicesWires
 
-def drawExampleSliceSlide(sc):
-
-    offsetCirclePoints = makeGorizontalCircle3Points(sc.val('DAO_BASE_RADIUS') + sc.val('DAO_OFFSET'))
-    sc.drawCircle('offsetCircle', offsetCirclePoints)
-
-    dao8Points = makeDao8Points(sc.val('DAO_BASE_RADIUS'))
-    daoWire = makeDaoWire(dao8Points)
-    ingWire = makeOffsetWire(daoWire, -sc.val('DAO_OFFSET'))
-    sc.drawWire('ingWire', ingWire)
-
-    ingWirePoints = makeShapePoints(ingWire)
-    daoLeftPoint, daoStartPoint, daoRightPoint, daoEndPoint  = ingWirePoints
-    daoFocusPoint = makeDaoFocusPoint(sc.val('DAO_BASE_RADIUS'))
-    sc.drawPoint('daoFocusPoint', daoFocusPoint)
-    sc.drawLabel('daoFocusPointLabel', daoFocusPoint,  'F')
-
-    sliceLine2Points = makeDaoSliceLine2Points(ingWirePoints, daoFocusPoint, sc.val('DAO_SLICE_EXAMPLE_KOEF'))
-    sc.drawLine('sliceLine', sliceLine2Points)
-
-    slicePlaneFace = makeVerticalPlaneFace(sliceLine2Points, sc.val('DAO_SLICE_PLANE_HEIGHT'))
-    sc.drawWire('sliceFace', slicePlaneFace)
-
-    sliceIntersectPoints =  makeEdgesFacesIntersectPoints(ingWire, slicePlaneFace)
-    sc.drawPoints('sliceIntersectPoints',sliceIntersectPoints)
-
-    sliceCircle3Points = makeSliceCircle3Points(sliceIntersectPoints)
-    sc.drawCircle('sliceCircle', sliceCircle3Points)
-
-    sc.setStyle('offsetCircle', 'Info')
-    sc.setStyle('yangWire', 'Info')
-    sc.setStyle('slice', 'Focus')
 
 def drawManySliceSlide(sc):
 
@@ -595,8 +562,6 @@ def drawDaoOffsetCircle(sc, style):
 # **********************************************************************************
 # **********************************************************************************
 
-#todo style to uppercase
-
 def drawDaoClassicSlide(sc):
     drawDaoBasePoints(sc, 'MAIN')
     drawDaoIngClassicWire(sc, 'MAIN')
@@ -610,6 +575,68 @@ def drawDaoOffsetSlide(sc):
     drawDaoYangWire(sc, 'INFO')
     drawDaoOffsetCircle(sc, 'INFO')
 
+def drawFocusPoint(sc, style):
+
+    DAO_BASE_RADIUS = sc.val('DAO_BASE_RADIUS')
+    
+    DaoFocusPoint = gp_Pnt(0,-DAO_BASE_RADIUS/4,0)
+    sc.drawPoint(style, 'DaoFocusPoint', DaoFocusPoint, 'F0')
+
+def drawDaoXXXSliceLine(sc, style, XXX, sliceKoef):
+
+    DaoIngPointsLeft = sc.obj('DaoIngPointsLeft') 
+    DaoIngPointsBegin = sc.obj('DaoIngPointsBegin') 
+    DaoIngPointsRight = sc.obj('DaoIngPointsRight') 
+    DaoIngPointsEnd = sc.obj('DaoIngPointsEnd')
+
+    DaoFocusPoint = sc.obj('DaoFocusPoint')
+    
+    limitAngle = 0
+    limitPoint = getPntScale(DaoFocusPoint, DaoIngPointsRight, 1.2)
+    BeginAngle = getAngle(DaoFocusPoint, limitPoint, DaoIngPointsBegin)
+    endAngle = getAngle(DaoFocusPoint, limitPoint, DaoIngPointsEnd)
+    limitKoef = (limitAngle - BeginAngle)/(endAngle - BeginAngle)
+    if sliceKoef < limitKoef: #head
+        headKoef = (sliceKoef - 0) / (limitKoef - 0)
+        BeginX = DaoIngPointsRight.X()
+        endX = DaoIngPointsBegin.X()
+        deltaX = (endX-BeginX)*(1 - headKoef)
+        linePointsBegin = getTranslatedPoint(DaoFocusPoint, deltaX, 0, 0)
+        linePointsEnd = getTranslatedPoint(limitPoint, deltaX, 0, 0)
+    else: #tail
+        tailKoef = (sliceKoef - limitKoef) / (1 - limitKoef)
+        tailAngle = -(endAngle * tailKoef)
+        linePointsBegin = DaoFocusPoint
+        linePointsEnd = getPntRotate(DaoFocusPoint, limitPoint, tailAngle)
+
+    sc.drawLine(style, key, (Dao+'XXX'+SliceLine, linePointsEnd))
+    
+
+def drawDaoExampleSliceSlide(sc):
+
+    drawDaoBasePoints(sc, 'HIDE')
+    drawDaoClassicWire(sc, 'HIDE')
+    drawDaoIngWire(sc, 'MAIN')
+    drawDaoIngPoints(sc, 'HIDE')
+    drawFocusPoint(sc, 'MAIN')
+
+    DAO_SLICE_EXAMPLE_KOEF = sc.val('DAO_SLICE_EXAMPLE_KOEF')
+    drawDaoXXXSliceLine(sc, 'FOCUS', 'Example', DAO_SLICE_EXAMPLE_KOEF) 
+
+    ''' 
+    slicePlaneFace = makeVerticalPlaneFace(sliceLine2Points, sc.val('DAO_SLICE_PLANE_HEIGHT'))
+    sc.drawWire('sliceFace', slicePlaneFace)
+
+    sliceIntersectPoints =  makeEdgesFacesIntersectPoints(ingWire, slicePlaneFace)
+    sc.drawPoints('sliceIntersectPoints',sliceIntersectPoints)
+
+    sliceCircle3Points = makeSliceCircle3Points(sliceIntersectPoints)
+    sc.drawCircle('sliceCircle', sliceCircle3Points)
+
+    sc.setStyle('offsetCircle', 'Info')
+    sc.setStyle('yangWire', 'Info')
+    sc.setStyle('slice', 'Focus')
+    '''
 # **********************************************************************************
 # **********************************************************************************
 # **********************************************************************************
@@ -652,7 +679,7 @@ if __name__ == '__main__':
     elif SLIDE_NUM == 2:
         drawDaoOffsetSlide(sc)
     elif SLIDE_NUM == 3:
-        drawExampleSliceSlide(sc)
+        drawDaoExampleSliceSlide(sc)
     elif SLIDE_NUM == 4:
         drawManySliceSlide(sc)
     elif SLIDE_NUM == 5:

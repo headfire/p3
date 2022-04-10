@@ -457,7 +457,6 @@ class Scene:
         self.initVals('Style', self.getVals('TemplStyle'))
 
         StyleDesk = self.getVals('StyleDesk')
-        print(self.vals)
         StyleAxis = self.getVals('StyleAxis')
 
         scriptDir = os.path.dirname(__file__)
@@ -489,7 +488,9 @@ class Scene:
             color = geomObj['color']
             geom = geomObj['geom']
             t = geomObj['type']
-            print('===> Render'+'['+key+']',self.geoms[key])
+            
+            print('===> Render'+'['+key+'] =',geomObj['style']) #self.geoms[key]
+            
             if geomObj['style'] == 'HIDE':
                 pass  
             elif t == 'point':
@@ -530,20 +531,8 @@ class Scene:
     def drawWire(self, style, key, wire):
         self.initObj('shape', style, key, wire)
 
-  
-'''
-***********************************************
- Procedural interface
-***********************************************
-'''
-
 if __name__ == '__main__':
 
-    def testParams(sc):
-        sc.initVal('PrefixS01',1)
-        sc.initVal('PrefixS02',2)
-        Prefixes = sc.getVals('Prefix')
-        print(Prefixes)
 
     def  testPoint(sc):
 
