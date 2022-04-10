@@ -364,7 +364,7 @@ class Scene:
         self.initRGBASMT('TemplStyleFOCUSPoint', 90,10,10,100,4,'PLASTIC','BALL')
         self.initRGBASMT('TemplStyleFOCUSWire', 90,10,10,100,3,'PLASTIC','SOLID')
         self.initRGBASMT('TemplStyleFOCUSSurface', 90,10,10,100,2,'PLASTIC','SOLID')
-        self.initRGBASMT('TemplStyleFOCUSLabel', 90,10,10,100,20,'PLASTIC','SOLID')
+        self.initRGBASMT('TemplStyleFOCUSLabel', 90,90,90,100,20,'PLASTIC','SOLID')
 
         self.initRGBASMT('TemplStyleChromePoint', 10,10,10,100,4,'PLASTIC','EMPTY')
         self.initRGBASMT('TemplStyleChromeWire', 10,10,10,100,3,'PLASTIC','DASH')

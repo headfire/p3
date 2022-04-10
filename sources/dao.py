@@ -142,26 +142,6 @@ def makeSliceCircle3Points(intersectPoints):
     upPoint.Translate(upVector)
     return firstPoint, upPoint, secondPoint
 
-def makeVerticalPlaneFace(baseLine2Points, h):
-
-    pnt1, pnt2 = baseLine2Points
-
-    x1, y1, z1 = getXYZ(pnt1)
-    x2, y2, z2 = getXYZ(pnt2)
-    pe0 = gp_Pnt(x1, y1, -h)
-    pe1 = gp_Pnt(x1, y1, +h)
-    pe2 = gp_Pnt(x2, y2, +h)
-    pe3 = gp_Pnt(x2, y2, -h)
-
-    edge1 = BRepBuilderAPI_MakeEdge(pe0, pe1).Edge()
-    edge2 = BRepBuilderAPI_MakeEdge(pe1, pe2).Edge()
-    edge3 = BRepBuilderAPI_MakeEdge(pe2, pe3).Edge()
-    edge4 = BRepBuilderAPI_MakeEdge(pe3, pe0).Edge()
-
-    wire = BRepBuilderAPI_MakeWire(edge1, edge2, edge3, edge4).Wire()
-    face = BRepBuilderAPI_MakeFace(wire).Face()
-    return face
-
 
 
 def makeEdgesFacesIntersectPoints(edgesShape, facesShape):
@@ -539,10 +519,10 @@ def drawDaoIngPoints(sc, style):
     DaoIngWire = sc.obj('DaoIngWire')
 
     DaoIngPoints = utilGetShapePoints(DaoIngWire)
-    sc.drawPoint(style, 'DaoIngPointsLeft', DaoIngPoints[0], 'pL')
-    sc.drawPoint(style, 'DaoIngPointsBegin', DaoIngPoints[1], 'pB')
-    sc.drawPoint(style, 'DaoIngPointsRight', DaoIngPoints[2], 'pR')
-    sc.drawPoint(style, 'DaoIngPointsEnd', DaoIngPoints[3], 'pE')
+    sc.drawPoint(style, 'DaoIngPointsLeft', DaoIngPoints[0], 'pLeft')
+    sc.drawPoint(style, 'DaoIngPointsBegin', DaoIngPoints[1], 'pBegin')
+    sc.drawPoint(style, 'DaoIngPointsRight', DaoIngPoints[2], 'pRight')
+    sc.drawPoint(style, 'DaoIngPointsEnd', DaoIngPoints[3], 'pEnd')
 
 def drawDaoYangWire(sc, style):
 
@@ -601,16 +581,45 @@ def drawDaoXXXSliceLine(sc, style, XXX, sliceKoef):
         BeginX = DaoIngPointsRight.X()
         endX = DaoIngPointsBegin.X()
         deltaX = (endX-BeginX)*(1 - headKoef)
-        linePointsBegin = getTranslatedPoint(DaoFocusPoint, deltaX, 0, 0)
-        linePointsEnd = getTranslatedPoint(limitPoint, deltaX, 0, 0)
+        DaoXXXSliceLineBegin = getTranslatedPoint(DaoFocusPoint, deltaX, 0, 0)
+        DaoXXXSliceLineEnd = getTranslatedPoint(limitPoint, deltaX, 0, 0)
     else: #tail
         tailKoef = (sliceKoef - limitKoef) / (1 - limitKoef)
         tailAngle = -(endAngle * tailKoef)
-        linePointsBegin = DaoFocusPoint
-        linePointsEnd = getPntRotate(DaoFocusPoint, limitPoint, tailAngle)
+        DaoXXXSliceLineBegin = DaoFocusPoint
+        DaoXXXSliceLineEnd = getPntRotate(DaoFocusPoint, limitPoint, tailAngle)
 
-    sc.drawLine(style, key, (Dao+'XXX'+SliceLine, linePointsEnd))
+    sc.drawLine(style, 'Dao'+XXX+'SliceLine', (DaoXXXSliceLineBegin, DaoXXXSliceLineEnd))
     
+def drawDaoXXXSliceFace(sc, style, XXX):
+
+    DAO_SLICE_FACE_HEIGHT = sc.val('DAO_SLICE_FACE_HEIGHT')
+    DaoXXXSliceLineBegin, DaoXXXSliceLineEnd = sc.obj('Dao'+XXX+'SliceLine')
+
+    x1, y1, z1 = getXYZ(DaoXXXSliceLineBegin)
+    x2, y2, z2 = getXYZ(DaoXXXSliceLineEnd)
+    pe0 = gp_Pnt(x1, y1, -DAO_SLICE_FACE_HEIGHT)
+    pe1 = gp_Pnt(x1, y1, +DAO_SLICE_FACE_HEIGHT)
+    pe2 = gp_Pnt(x2, y2, +DAO_SLICE_FACE_HEIGHT)
+    pe3 = gp_Pnt(x2, y2, -DAO_SLICE_FACE_HEIGHT)
+
+    edge1 = BRepBuilderAPI_MakeEdge(pe0, pe1).Edge()
+    edge2 = BRepBuilderAPI_MakeEdge(pe1, pe2).Edge()
+    edge3 = BRepBuilderAPI_MakeEdge(pe2, pe3).Edge()
+    edge4 = BRepBuilderAPI_MakeEdge(pe3, pe0).Edge()
+
+    wire = BRepBuilderAPI_MakeWire(edge1, edge2, edge3, edge4).Wire()
+    drawDaoXXXSliceFace = BRepBuilderAPI_MakeFace(wire).Face()
+    
+    sc.drawSurface(style, 'Dao'+XXX+'SliceFace', drawDaoXXXSliceFace)    
+
+def  drawDaoXXXSlicePoints(sc, style, XXX):
+
+    theWire = sc.obj('DaoIngWire')
+    theFace = sc.obj('Dao'+XXX+'SliceFace')
+    farPoint, nearPoint =  makeEdgesFacesIntersectPoints(theWire, theFace)
+    sc.drawPoint(style, 'drawDao'+XXX+'SlicePointsNear', nearPoint, 'pNear')
+    sc.drawPoint(style, 'drawDao'+XXX+'SlicePointsFar', farPoint, 'pFar')
 
 def drawDaoExampleSliceSlide(sc):
 
@@ -620,15 +629,14 @@ def drawDaoExampleSliceSlide(sc):
     drawDaoIngPoints(sc, 'HIDE')
     drawFocusPoint(sc, 'MAIN')
 
-    DAO_SLICE_EXAMPLE_KOEF = sc.val('DAO_SLICE_EXAMPLE_KOEF')
-    drawDaoXXXSliceLine(sc, 'FOCUS', 'Example', DAO_SLICE_EXAMPLE_KOEF) 
+    k = sc.val('DAO_SLICE_EXAMPLE_KOEF')
+    drawDaoXXXSliceLine(sc, 'FOCUS', 'Example', k) 
+    drawDaoXXXSliceFace(sc, 'FOCUS', 'Example')
+    drawDaoXXXSlicePoints(sc, 'FOCUS', 'Example')
+
+    
 
     ''' 
-    slicePlaneFace = makeVerticalPlaneFace(sliceLine2Points, sc.val('DAO_SLICE_PLANE_HEIGHT'))
-    sc.drawWire('sliceFace', slicePlaneFace)
-
-    sliceIntersectPoints =  makeEdgesFacesIntersectPoints(ingWire, slicePlaneFace)
-    sc.drawPoints('sliceIntersectPoints',sliceIntersectPoints)
 
     sliceCircle3Points = makeSliceCircle3Points(sliceIntersectPoints)
     sc.drawCircle('sliceCircle', sliceCircle3Points)
@@ -646,7 +654,7 @@ def initDaoVals(sc):
     sc.initVal('DAO_BASE_RADIUS', 40)
     sc.initVal('DAO_OFFSET', 3)
     sc.initVal('DAO_SLICE_EXAMPLE_KOEF', 0.5)
-    sc.initVal('DAO_SLICE_PLANE_HEIGHT', 30)
+    sc.initVal('DAO_SLICE_FACE_HEIGHT', 30)
     sc.initVal('DAO_SLICE_START_KOEF', 0.03) #todo eliniate
     sc.initVal('DAO_SLICE_END_KOEF', 0.97) #todo eliniate
     sc.initVal('DAO_SLICE_COUNT', 20)
