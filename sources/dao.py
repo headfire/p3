@@ -23,7 +23,11 @@ from OCC.Core.BRepAlgoAPI import BRepAlgoAPI_Common, BRepAlgoAPI_Cut
 
 from math import pi
 
-
+def makeCircleWire(thePoint1, thePoint2, thePoint3):
+    theCircle = GC_MakeCircle(thePoint1, thePoint2, thePoint3).Value()
+    theEdge = BRepBuilderAPI_MakeEdge(theCircle).Edge()
+    theWire =  BRepBuilderAPI_MakeWire(theEdge).Wire()
+    return theWire
 
 def getXYZ(gpPnt):
     return (gpPnt.X(), gpPnt.Y(), gpPnt.Z())
@@ -181,13 +185,7 @@ def slide_07_DaoWithCase (sc, r, offset, caseH, caseZMove,gap):
 # *********************************************************************************
 # *********************************************************************************
 
-def drawDaoBoundCircle_XXX(sc, style, XXX ,r):
-
-    sc.drawCircle(style, 'drawDaoBoundCircle_'+XXX, ( gp_Pnt(r,0,0), gp_Pnt(0,r,0), gp_Pnt(-r,0,0)))
-    #todo drawCircle -> drawWire
-
-
-def drawDaoBasePoint_NNN(sc, style):
+def getDaoBasePoints():
 
     r = sc.val('DAO_BASE_RADIUS')
     r2 = r/2
@@ -204,21 +202,20 @@ def drawDaoBasePoint_NNN(sc, style):
     p[6] = gp_Pnt(0,-r,0)
     p[7] = gp_Pnt(r2,-r2,0)
 
-    for key in p:
-        NNN = str(key)
-        sc.drawPoint(style, 'DaoBasePoint_'+NNN, p[key], 'p'+NNN)
+    return p;
 
-def drawDaoClassicWire(sc, style):
+def getDaoBoundCircleWire(offset):
+    r = sc.val('DAO_BASE_RADIUS') + offset
+    return makeCircleWire(gp_Pnt(r,0,0), gp_Pnt(0,r,0), gp_Pnt(-r,0,0))    
 
-    a = {}
-    for i in range(8):
-       NNN = str(i)
-       a[i] = sc.obj('DaoBasePoint_'+NNN)
+def getDaoClassicWire():
 
-    arc0 =  GC_MakeArcOfCircle(a[0],a[1],a[2]).Value()
-    arc1 =  GC_MakeArcOfCircle(a[2],a[3],a[4]).Value()
-    arc2 =  GC_MakeArcOfCircle(a[4],a[5],a[6]).Value()
-    arc3 =  GC_MakeArcOfCircle(a[6],a[7],a[0]).Value()
+    p = sc.get('DaoBasePoints')
+
+    arc0 =  GC_MakeArcOfCircle(p[0],p[1],p[2]).Value()
+    arc1 =  GC_MakeArcOfCircle(p[2],p[3],p[4]).Value()
+    arc2 =  GC_MakeArcOfCircle(p[4],p[5],p[6]).Value()
+    arc3 =  GC_MakeArcOfCircle(p[6],p[7],p[0]).Value()
 
     edge0 = BRepBuilderAPI_MakeEdge(arc0).Edge()
     edge1 = BRepBuilderAPI_MakeEdge(arc1).Edge()
@@ -227,170 +224,57 @@ def drawDaoClassicWire(sc, style):
 
     theWire =  BRepBuilderAPI_MakeWire(edge0, edge1, edge2, edge3).Wire()
 
-    sc.drawWire(style, 'DaoClassicWire', theWire)
+    return theWire
     
-def drawDaoIngWire(sc, style):
+def getDaoOffsetWire(offset):
 
-    DAO_OFFSET = sc.val('DAO_OFFSET')
-    DaoClassicWire = sc.obj('DaoClassicWire')
+    classicWire = sc.get('DaoClassicWire')
 
     tool = BRepOffsetAPI_MakeOffset()
-    tool.AddWire(DaoClassicWire)
-    tool.Perform(-DAO_OFFSET)
-    DaoIngWire = tool.Shape()
+    tool.AddWire(classicWire)
+    tool.Perform(-offset)
+    offsetWire = tool.Shape()
 
-    sc.drawWire(style,'DaoIngWire', DaoIngWire)
+    return offsetWire
 
-def drawDaoIngPoint_SSS(sc, style):
+def getDaoOffsetPoints(offset):
 
-    theWire = sc.obj('DaoIngWire')
+    theWire = sc.get('DaoOffsetWire', offset)
 
-    thePoints = utilGetShapePoints(theWire)
-    sc.drawPoint(style, 'DaoIngPoint_LEFT', thePoints[0], 'pLeft')
-    sc.drawPoint(style, 'DaoIngPoint_BEGIN', thePoints[1], 'pBegin')
-    sc.drawPoint(style, 'DaoIngPoint_RIGHT', thePoints[2], 'pRight')
-    sc.drawPoint(style, 'DaoIngPoint_END', thePoints[3], 'pEnd')
-
-def drawDaoYangWire(sc, style):
-
-    DaoIngWire = sc.obj('DaoIngWire')
-
-    DaoYangWire = utilGetZRotatedShape(DaoIngWire, pi)
-    sc.drawWire(style, 'DaoYangWire', DaoYangWire)
+    countedPoints = utilGetShapePoints(theWire)
     
-def drawDaoFocusPoint(sc, style):
+    namedPoints = dict()
+    namedPoints['Left'] = countedPoints[0]
+    namedPoints['Begin'] = countedPoints[1]
+    namedPoints['Right'] = countedPoints[2]
+    namedPoints['End'] = countedPoints[3]
+    
+    return namedPoints
+
+def getDaoSecondOffsetWire(offset):
+
+    firstWire = sc.get('DaoOffsetWire', offset)
+    secondWire = utilGetZRotatedShape(firstWire, pi)
+    
+    return secondWire    
+    
+def getDaoFocusPoint():
 
     r = sc.val('DAO_BASE_RADIUS')
     focusPoint = gp_Pnt(0,-r/4,0)
-    sc.drawPoint(style, 'DaoFocusPoint', focusPoint, 'F0')
     
-def drawDaoSliceFace_XXX(sc, style, XXX):
+    return focusPoint
 
-    h = sc.val('DAO_SLICE_FACE_HEIGHT')
-    beginPoint, endPoint = sc.obj('DaoSliceLine_'+XXX)
+def getDaoSliceLine(offset, sliceKoef):
 
-    x1, y1, z1 = getXYZ(beginPoint)
-    x2, y2, z2 = getXYZ(endPoint)
-    pe0 = gp_Pnt(x1, y1, -h)
-    pe1 = gp_Pnt(x1, y1, +h)
-    pe2 = gp_Pnt(x2, y2, +h)
-    pe3 = gp_Pnt(x2, y2, -h)
+    limitPoints = sc.get('DaoOffsetPoints', offset) 
 
-    edge1 = BRepBuilderAPI_MakeEdge(pe0, pe1).Edge()
-    edge2 = BRepBuilderAPI_MakeEdge(pe1, pe2).Edge()
-    edge3 = BRepBuilderAPI_MakeEdge(pe2, pe3).Edge()
-    edge4 = BRepBuilderAPI_MakeEdge(pe3, pe0).Edge()
+    leftPoint = limitPoints['Left']
+    beginPoint = limitPoints['Begin']
+    rightPoint = limitPoints['Right']
+    endPoint = limitPoints['End']
 
-    wire = BRepBuilderAPI_MakeWire(edge1, edge2, edge3, edge4).Wire()
-    face = BRepBuilderAPI_MakeFace(wire).Face()
-    
-    sc.drawSurface(style, 'DaoSliceFace_'+XXX, face)    
-
-def  drawDaoSlicePoint_XXX_SSS(sc, style, XXX):
-
-    theWire = sc.obj('DaoIngWire')
-    theFace = sc.obj('DaoSliceFace_'+XXX)
-    
-    farPoint, nearPoint =  makeEdgesFacesIntersectPoints(theWire, theFace)
-    
-    sc.drawPoint(style, 'DaoSlicePoint_'+XXX +'_NEAR', nearPoint, 'pNear')
-    sc.drawPoint(style, 'DaoSlicePoint_'+XXX +'_FAR', farPoint, 'pFar')
-
-def drawDaoSliceWire_XXX(sc, style, XXX):
-
-    nearPoint = sc.obj('DaoSlicePoint_'+XXX+'_NEAR')
-    farPoint = sc.obj('DaoSlicePoint_'+XXX+'_FAR')
-
-    directionVector = gp_Vec(nearPoint, farPoint)
-    directionVector.Scale(0.5)
-    upVector = gp_Vec(0,0,directionVector.Magnitude())
-    upPoint = gp_Pnt(nearPoint.XYZ())
-    upPoint.Translate(directionVector)
-    upPoint.Translate(upVector)
-    
-    sliceCircle = GC_MakeCircle(nearPoint, upPoint, farPoint).Value()
-    sliceEdge = BRepBuilderAPI_MakeEdge(sliceCircle).Edge()
-    sliceWire =  BRepBuilderAPI_MakeWire(sliceEdge).Wire()
-    
-    sc.drawWire(style, 'DaoSliceWire_'+XXX, sliceWire)
-
-def drawDaoSkiningSurface(sc, style):
-    
-    skiner = BRepOffsetAPI_ThruSections(True)
-    skiner.SetSmoothing(True);
-    
-    beginPoint = sc.obj('DaoIngPoint_BEGIN')
-    beginVertex = BRepBuilderAPI_MakeVertex(beginPoint).Vertex()
-    skiner.AddVertex(beginVertex)
-
-    ks = sc.val('DAO_SKINING_SLICES_KOEFS')
-    for i in range(len(ks)):
-          skiner.AddWire(sc.obj('DaoSliceWire_'+str(i)))
-
-    endPoint = sc.obj('DaoIngPoint_END')
-    endVertex = BRepBuilderAPI_MakeVertex(endPoint).Vertex()
-    skiner.AddVertex(endVertex)
-
-    skiner.Build()
-    surface = skiner.Shape()
-   
-    sc.drawSurface(style, 'DaoSkiningSurface', surface)
-
-
-def drawDaoDropsSuface_XXX_NNN(sc, XXX, offset):
-
-    drawDaoBasePoint_NNN(sc, 'HIDE')
-    drawDaoClassicWire(sc, 'HIDE')
-    drawDaoIngWire(sc, 'HIDE', offset)
-    drawDaoIngPoint_SSS(sc, 'HIDE', offset)
-    drawDaoFocusPoint(sc, 'HIDE')
-
-    ks = sc.val('DAO_SKINING_SLICES_KOEFS')
-    for i in range(len(ks)):
-        YYY = str(i)
-        drawDaoSliceLine_XXX(sc, 'HIDE', XXX+'_'+YYY, ks[i]) 
-        drawDaoSliceFace_XXX(sc, 'HIDE', XXX+'_'+YYY)
-        drawDaoSlicePoint_XXX_SSS(sc, 'HIDE', XXX+'_'+YYY)
-        drawDaoSliceWire_XXX(sc, 'HIDE', XXX+'_'+YYY)
-        
-    drawDaoSkiningSurface(sc, 'FOCUS')
-    drawDaoIngSurface_XXX(sc, 'MAIN', XXX,(100,35,24,100))
-    drawDaoYangSurface_XXX(sc, 'MAIN', XXX ,(98,100,12,100))
-
-
-# **********************************************************************************
-# **********************************************************************************
-# **********************************************************************************
-
-def drawDaoClassicSlide(sc):
-
-    drawDaoBasePoint_NNN(sc, 'MAIN')
-    drawDaoClassicWire(sc, 'MAIN')
-
-    r = sc.val('DAO_BASE_RADIUS')
-    drawDaoBoundCircle_XXX(sc, 'INFO', 'BASE', r)
-
-def drawDaoOffsetSlide(sc):
-
-    drawDaoBasePoint_NNN(sc, 'HIDE')
-    drawDaoClassicWire(sc, 'HIDE')
-    drawDaoIngWire(sc, 'MAIN')
-    drawDaoIngPoint_SSS(sc, 'MAIN')
-    drawDaoYangWire(sc, 'INFO')
-
-    r = sc.val('DAO_BASE_RADIUS')
-    offset = sc.val('DAO_OFFSET')
-    drawDaoBoundCircle_XXX(sc, 'INFO', 'OFFSET', r + offset)
-
-
-def drawDaoSliceLine_XXX(sc, style, XXX, sliceKoef):
-
-    leftPoint = sc.obj('DaoIngPoint_LEFT') 
-    beginPoint = sc.obj('DaoIngPoint_BEGIN') 
-    rightPoint = sc.obj('DaoIngPoint_RIGHT') 
-    endPoint = sc.obj('DaoIngPoint_END')
-
-    focusPoint = sc.obj('DaoFocusPoint')
+    focusPoint = sc.get('DaoFocusPoint')
     
     limitAngle = 0
     limitPoint = getPntScale(focusPoint, rightPoint, 1.2)
@@ -410,79 +294,196 @@ def drawDaoSliceLine_XXX(sc, style, XXX, sliceKoef):
         lineBeginPoint = focusPoint
         lineEndPoint = getPntRotate(focusPoint, limitPoint, tailAngle)
 
-    sc.drawLine(style, 'DaoSliceLine_'+XXX, (lineBeginPoint, lineEndPoint))
+    return lineBeginPoint, lineEndPoint
 
+    
+def getDaoSliceSurface(offset, sliceKoef):
+
+    h = sc.val('DAO_SLICE_FACE_HEIGHT')
+    beginPoint, endPoint = sc.get('DaoSliceLine', offset, sliceKoef)
+
+    x1, y1, z1 = getXYZ(beginPoint)
+    x2, y2, z2 = getXYZ(endPoint)
+    pe0 = gp_Pnt(x1, y1, -h)
+    pe1 = gp_Pnt(x1, y1, +h)
+    pe2 = gp_Pnt(x2, y2, +h)
+    pe3 = gp_Pnt(x2, y2, -h)
+
+    edge1 = BRepBuilderAPI_MakeEdge(pe0, pe1).Edge()
+    edge2 = BRepBuilderAPI_MakeEdge(pe1, pe2).Edge()
+    edge3 = BRepBuilderAPI_MakeEdge(pe2, pe3).Edge()
+    edge4 = BRepBuilderAPI_MakeEdge(pe3, pe0).Edge()
+
+    wire = BRepBuilderAPI_MakeWire(edge1, edge2, edge3, edge4).Wire()
+    face = BRepBuilderAPI_MakeFace(wire).Face()
+    
+    return face
+
+def getDaoSlicePoints(offset, sliceKoef):
+
+    theWire = sc.get('DaoOffsetWire', offset)
+    theFace = sc.get('DaoSliceSurface', offset, sliceKoef)
+    
+    farPoint, nearPoint =  makeEdgesFacesIntersectPoints(theWire, theFace)
+    
+    return {'Near':nearPoint, 'Far':farPoint}
+
+def getDaoSliceWire(offset, sliceKoef):
+
+    slicePoints = sc.get('DaoSlicePoints', offset, sliceKoef)
+    nearPoint = slicePoints['Near']
+    farPoint = slicePoints['Far']
+
+    directionVector = gp_Vec(nearPoint, farPoint)
+    directionVector.Scale(0.5)
+    upVector = gp_Vec(0,0,directionVector.Magnitude())
+    upPoint = gp_Pnt(nearPoint.XYZ())
+    upPoint.Translate(directionVector)
+    upPoint.Translate(upVector)
+    
+    return makeCircleWire(nearPoint, upPoint, farPoint)
+
+def getDaoSkiningSurface(offset):
+
+    #todo DaoOffsetPointes to LimitPoints
+    limitPoints = sc.get('DaoOffsetPoints',offset)
+    beginPoint = limitPoints['Begin']
+    endPoint = limitPoints['End']
+    
+    skiner = BRepOffsetAPI_ThruSections(True)
+    skiner.SetSmoothing(True);
+    
+    beginVertex = BRepBuilderAPI_MakeVertex(beginPoint).Vertex()
+    skiner.AddVertex(beginVertex)
+
+    ks = sc.val('DAO_SKINING_SLICES_KOEFS')
+    for i in range(len(ks)):
+        sliceWire = sc.get('DaoSliceWire', offset, ks[i])
+        skiner.AddWire(sliceWire)
+
+    endVertex = BRepBuilderAPI_MakeVertex(endPoint).Vertex()
+    skiner.AddVertex(endVertex)
+
+    skiner.Build()
+    surface = skiner.Shape()
+   
+    return surface
+
+
+def drawDaoDropsSurface_OffsetType(sc, style, OffsetType, offset):
+
+    drawDaoBasePoint_NNN(sc, 'HIDE')
+    drawDaoClassicWire(sc, 'HIDE')
+    drawDaoIngWire_XXX(sc, 'HIDE', 'Standart' ,offset)
+    drawDaoIngPoint_XXX_SSS(sc, 'HIDE', 'Standart')
+    drawDaoFocusPoint(sc, 'HIDE')
+
+    ks = sc.val('DAO_SKINING_SLICES_KOEFS')
+    for i in range(len(ks)):
+        KoefNum = 'KoefNum'+str(i)
+        drawDaoSliceLine_OffsetType_KoefNum(sc, 'HIDE', OffsetType, KoefNum, ks[i]) 
+        drawDaoSliceFace_OffsetType_KoefNum(sc, 'HIDE', OffsetType, KoefNum)
+        drawDaoSlicePoint_OffsetType_KoefNum_SSS(sc, 'HIDE', OffsetType, KoefNum)
+        drawDaoSliceWire_OffsetType_KoefNum(sc, 'HIDE', OffsetType, KoefNum)
+        
+    drawDaoSkiningSurface(sc, 'HIDE')
+    drawDaoIngSurface_OffsetType(sc, 'MAIN', OffsetType ,(100,35,24,100))
+    drawDaoYangSurface_OffsetType(sc, 'MAIN', OffsetType ,(98,100,12,100))
+
+
+# **********************************************************************************
+# **********************************************************************************
+# **********************************************************************************
+
+def drawDaoClassicSlide(sc):
+
+    sc.setStyle('MAIN')
+    sc.draw('DaoBasePoints')
+    sc.draw('DaoClassicWire')
+    
+    sc.setStyle('INFO')
+    sc.draw('DaoBoundCircleWire', 0)
+
+def drawDaoOffsetSlide(sc):
+
+    offset = sc.val('DAO_OFFSET')
+    
+    sc.setStyle('MAIN')
+    sc.draw('DaoOffsetWire', offset)
+    sc.draw('DaoOffsetPoints', offset)
+
+    sc.setStyle('INFO')
+    sc.draw('DaoSecondOffsetWire', offset)
+    sc.draw('DaoBoundCircleWire', offset)
     
 def drawDaoExampleSliceSlide(sc):
 
-    drawDaoBasePoint_NNN(sc, 'HIDE')
-    drawDaoClassicWire(sc, 'HIDE')
-    drawDaoIngWire(sc, 'MAIN')
-    drawDaoIngPoint_SSS(sc, 'HIDE')
-    drawDaoFocusPoint(sc, 'MAIN')
+    offset = sc.val('DAO_OFFSET')
+    
+    sc.setStyle('MAIN')
+    sc.draw('DaoOffsetWire',offset)
+    sc.draw('DaoFocusPoint')
 
+    sc.setStyle('FOCUS')
     k = sc.val('DAO_SLICE_EXAMPLE_KOEF')
-    drawDaoSliceLine_XXX(sc, 'FOCUS', 'EXAMPLE', k) 
-    drawDaoSliceFace_XXX(sc, 'FOCUS', 'EXAMPLE')
-    drawDaoSlicePoint_XXX_SSS(sc, 'FOCUS', 'EXAMPLE')
-    drawDaoSliceWire_XXX(sc, 'FOCUS', 'EXAMPLE')
+    sc.draw('DaoSliceLine',offset,k)
+    sc.draw('DaoSliceSurface',offset,k)
+    sc.draw('DaoSlicePoints',offset,k)
+    sc.draw('DaoSliceWire',offset,k)
 
 def drawManySliceSlide(sc):
 
-    drawDaoBasePoint_NNN(sc, 'HIDE')
-    drawDaoClassicWire(sc, 'HIDE')
-    drawDaoIngWire(sc, 'MAIN')
-    drawDaoIngPoint_SSS(sc, 'HIDE')
-    drawDaoFocusPoint(sc, 'MAIN')
+    offset = sc.val('DAO_OFFSET')
+    
+    sc.setStyle('MAIN')
+    sc.draw('DaoOffsetWire',offset)
+    sc.draw('DaoFocusPoint')
 
     cnt = sc.val('DAO_SLICE_COUNT')
     bK = 1/(cnt+1)
     eK = 1 - 1/(cnt+1)
     for i in range(cnt):
         k = bK + i * (eK - bK)/(cnt-1)
-        XXX = str(i)
-        drawDaoSliceLine_XXX(sc, 'FOCUS', XXX, k) 
-        drawDaoSliceFace_XXX(sc, 'HIDE', XXX)
-        drawDaoSlicePoint_XXX_SSS(sc, 'HIDE', XXX)
-        drawDaoSliceWire_XXX(sc, 'MAIN', XXX)
+        sc.setStyle('FOCUS')
+        sc.draw('DaoSliceLine', offset, k) 
+        sc.setStyle('MAIN')
+        sc.draw('DaoSliceWire', offset, k)
 
 def  drawDaoSkiningSlide(sc):
 
-    drawDaoBasePoint_NNN(sc, 'HIDE')
-    drawDaoClassicWire(sc, 'HIDE')
-    drawDaoIngWire(sc, 'MAIN')
-    drawDaoIngPoint_SSS(sc, 'HIDE')
-    drawDaoFocusPoint(sc, 'MAIN')
+    offset = sc.val('DAO_OFFSET')
+    
+    sc.setStyle('MAIN')
+    sc.draw('DaoOffsetWire',offset)
+    sc.draw('DaoFocusPoint')
 
     ks = sc.val('DAO_SKINING_SLICES_KOEFS')
     for i in range(len(ks)):
-        XXX = str(i)
-        drawDaoSliceLine_XXX(sc, 'FOCUS', XXX, ks[i]) 
-        drawDaoSliceFace_XXX(sc, 'HIDE', XXX)
-        drawDaoSlicePoint_XXX_SSS(sc, 'HIDE', XXX)
-        drawDaoSliceWire_XXX(sc, 'MAIN', XXX)
+        sc.setStyle('FOCUS')
+        sc.draw('DaoSliceLine', offset, ks[i]) 
+        sc.setStyle('MAIN')
+        sc.draw('DaoSliceWire', offset, ks[i])
         
-    drawDaoSkiningSurface(sc, 'FOCUS')
-
+    sc.setStyle('FOCUS')
+    sc.draw('DaoSkiningSurface', offset)
 
 def drawDaoIngYangSlide (sc):
 
     offset = sc.val('DAO_OFFSET')
-    drawDropsSurface_XXX_SSS(sc, 'MAIN', 'Standart' , offset)    
-    sc.setColor('DaoDropSurface_STANDART_ING', (100,35,24,100))
-    sc.setColor('DaoDropSurface_STANDART_YANG', (52,51,100,100))
+    sc.setStyle('MAIN', (100,35,24,100))
+    sc.draw('DaoIngSurface', offset)    
+    sc.setStyle('MAIN', (52,51,100,100))
+    sc.draw('DaoYangSurface', offset)    
 
 def drawDaoCaseSlide (sc):
 
     offset = sc.val('DAO_OFFSET')
-    drawDropsSurface_XXX_SSS(sc, 'MAIN', 'Standart' , offset)    
-    
-    sc.setColor('DaoDropsSurface_STANDART_ING', (100,35,24,100))
-    sc.setColor('DaoDropsSurface_STANDART_YANG', (52,51,100,100))
-    
-    drawDaoCaseSurface(sc, 'MAIN')    
-    sc.SetColor('DaoCaseSurface', (52,  51, 100, 100) )    
-
+    sc.setStyle('MAIN', (100,35,24,100))
+    sc.draw('DaoIngSurface', offset)    
+    sc.setStyle('MAIN', (52,51,100,100))
+    sc.draw('DaoYangSurface', offset)    
+    sc.setStyle('MAIN', (50,50,50,100))
+    sc.draw('DaoCaseSurface')
 
 def utilShapeZScale(shape, scaleK):
     transform = gp_GTrsf()
@@ -490,23 +491,21 @@ def utilShapeZScale(shape, scaleK):
     shape =  BRepBuilderAPI_GTransform(shape, transform).Shape()
     return shape
 
-def drawDaoIngSurface(sc, style, color):
+def getDaoIngSurface(offset):
+    #todo to const
     scaleK = 0.7
-    sourceSurface = sc.obj('DaoSkiningSurface')     
+    sourceSurface = sc.get('DaoSkiningSurface', offset)     
     scaledSurface = utilShapeZScale(sourceSurface, scaleK)
-    sc.drawSurface(style,'DaoIngSurface', scaledSurface)
-    sc.setColor('DaoIngSurface',color)
+    return scaledSurface
 
-def drawDaoYangSurface(sc, style, color):
-    scaleK = 0.7
-    sourceSurface = sc.obj('DaoIngSurface')     
+def getDaoYangSurface(offset):
+    sourceSurface = sc.get('DaoIngSurface', offset)     
     rotatedSurface =  utilGetZRotatedShape(sourceSurface, pi)
-    sc.drawSurface(style,'DaoYangSurface', rotatedSurface)
-    sc.setColor('DaoYangSurface',color)
+    return rotatedSurface
 
 #todo offset to dao_gap/2
     
-def drawDaoCaseSurface(sc, style):
+def getDaoCaseSurface():
         
     r = sc.val('DAO_BASE_RADIUS')
     r2 = r*2
@@ -524,14 +523,14 @@ def drawDaoCaseSurface(sc, style):
 
     step02Surface = getShapeTranslate(step01Surface, 0,0,-h2)
 
-    drawDropsSurface_XXX_SSS(sc, 'HIDE', 'WithGap', offset+gap)    
-    step03Surface = BRepAlgoAPI_Cut(step02Surface, sc.obj('DaoIngYangSurface_WithGap_ING')).Shape()
-    step04Surface = BRepAlgoAPI_Cut(step03Surface, sc.obj('DaoIngYangSurface_WithGap_YANG')).Shape()
+    cutIngSurface =  sc.get('DaoIngSurface',offset-gap)
+    cutYangSurface =  sc.get('DaoYangSurface',offset-gap)
+    step03Surface = BRepAlgoAPI_Cut(step02Surface, cutIngSurface).Shape()
+    step04Surface = BRepAlgoAPI_Cut(step03Surface, cutYangSurface).Shape()
 
     step05Surface = getShapeTranslate(step04Surface, 0,0, -h2)
 
-    sc.drawSurface(style,'DaoCaseSurface', step05Surface)
-    sc.setColor('DaoCaseSurface',color)
+    return step05Surface
 
 
 # **********************************************************************************
@@ -552,7 +551,7 @@ def initDaoVals(sc):
 
 if __name__ == '__main__':
 
-    sc = Scene()
+    sc = Scene(globals())
 
     sc.initVal('SLIDE_NUM', 7)
     sc.initVal('SLIDE_NAME', 'dao')
@@ -567,7 +566,7 @@ if __name__ == '__main__':
     initDaoVals(sc)
     
     SLIDE_NUM = sc.val('SLIDE_NUM')
-    print(SLIDE_NUM) 
+    print('Slide',SLIDE_NUM) 
     if SLIDE_NUM == 1:
         drawDaoClassicSlide(sc)
     elif SLIDE_NUM == 2:

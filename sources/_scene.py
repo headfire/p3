@@ -335,12 +335,16 @@ class ScreenLib:
 
 class Scene:
 
-    def __init__(self):
+    def __init__(self, forGetFunctions):
 
         self.lib = None
         self.geoms = dict()
         self.vals = dict()
-
+        self.cache = dict()
+        self.objNum = 0;
+        self.forGetFunctions =  forGetFunctions
+        self.style = None
+        self.color = None
         # todo get arguments and init params
         for param in sys.argv:
            key,sep,val = param.partition('=')
@@ -419,8 +423,9 @@ class Scene:
         self.initVal(paramKeyPrefix+'Z',z)
 
 
-    def initObj(self, geomType, style, key,  geomObj):
-        self.geoms[key] = {'type':geomType, 'geom':geomObj, 'style':style, 'color':None }
+    def initObj(self, geomType, style, objName,  geomObj, color = None):
+        self.geoms[str(self.objNum)+'-'+objName] = {'type':geomType, 'geom':geomObj, 'style':style, 'color':color }
+        self.objNum += 1;
 
     def obj(self, key):
         return  self.geoms[key]['geom']
@@ -489,7 +494,7 @@ class Scene:
             geom = geomObj['geom']
             t = geomObj['type']
             
-            print('===> Render'+'['+key+'] =',geomObj['style']) #self.geoms[key]
+            print('===> Render'+'['+key+'] =',geomObj['style'],geom) #self.geoms[key]
             
             if geomObj['style'] == 'HIDE':
                 pass  
@@ -516,20 +521,67 @@ class Scene:
         self.lib.start()
 
     def drawPoint(self, style, key, pnt, text):
-        self.initObj('point', style, key, pnt)
-        self.initObj('label', style, key+'Label', (pnt, text))
+        self.initObj('point', style, key, pnt, self.color)
+        self.initObj('label', style, key+'Label', (pnt, text), self.color)
 
     def drawLine(self, style, key, the2Points):
-        self.initObj('line', style, key,  the2Points)
+        self.initObj('line', style, key,  the2Points, self.color)
 
     def drawCircle(self, style, key,  the3Points):
-        self.initObj('circle', style, key,  the3Points)
+        self.initObj('circle', style, key,  the3Points, self.color)
 
     def drawSurface(self, style, key, surface):
-        self.initObj('shape', style, key, surface)
+        self.initObj('shape', style, key, surface, self.color)
 
     def drawWire(self, style, key, wire):
-        self.initObj('shape', style, key, wire)
+        self.initObj('shape', style, key, wire, self.color)
+
+    def getCacheKey(self, objName, param1, param2):
+        params = ''
+        if param1 != None:
+          params += str(param1)
+        if param2 != None:
+          params += ',' + str(param2) 
+        return 'get' + objName+'('+ params + ')'      
+        
+    def get(self, objName, param1 = None, param2 = None):
+        cacheKey = self.getCacheKey(objName, param1, param2)
+        if  cacheKey in self.cache:  
+            print('=>Get from cache',cacheKey)         
+            return self.cache[cacheKey]
+        else:
+            if param1 == None:
+                obj = self.forGetFunctions['get'+objName]()
+            elif param2 == None:
+                obj = self.forGetFunctions['get'+objName](param1)
+            else:
+                obj = self.forGetFunctions['get'+objName](param1, param2)
+
+            print('=>Compute', cacheKey)         
+            self.cache[cacheKey] = obj
+            return obj       
+    
+    def drawObj(self, objName, key, obj):
+       if objName.endswith('Point') or objName.endswith('Points'):
+           self.drawPoint(self.style, objName, obj, key)
+       elif objName.endswith('Wire') or objName.endswith('Wires'):
+           self.drawWire(self.style, objName, obj)
+       elif objName.endswith('Surface') or objName.endswith('Surfaces'):
+           self.drawSurface(self.style, objName, obj)
+       elif objName.endswith('Line') or objName.endswith('Lines'):
+           self.drawLine(self.style, objName, obj)
+        
+    def draw(self, objName, param1 = None, param2 = None):
+       obj =  self.get(objName, param1, param2)
+       if isinstance(obj, dict): 
+           for key in obj:
+             self.drawObj(objName, key, obj[key])
+       else:    
+           self.drawObj(objName, '' ,obj)
+    
+    def setStyle(self, style, color = None): 
+        self.style = style
+        self.color = color
 
 if __name__ == '__main__':
 
