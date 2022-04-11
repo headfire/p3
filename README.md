@@ -2,8 +2,6 @@
 
 <img src="assets/images/logo.png" style="zoom:50%;" />
 
-<iframe width="560" height="315" src="https://www.youtube.com/embed/291ET6Py6H8" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
-
 ## Cистема для создания объемных стереоскопических иллюстраций   
 
 Проект предназначен для создания объемных стереоскопических иллюстраций 
