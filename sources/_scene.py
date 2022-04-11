@@ -333,27 +333,16 @@ class ScreenLib:
 *****************************************************
 '''
 
-class Scene:
+class Drawable:
 
-    def __init__(self, forGetFunctions):
-
-        self.lib = None
-        self.geoms = dict()
-        self.vals = dict()
-        self.cache = dict()
-        self.objNum = 0;
-        self.forGetFunctions =  forGetFunctions
-        self.style = None
-        self.color = None
-        # todo get arguments and init params
-        for param in sys.argv:
-           key,sep,val = param.partition('=')
-           if val != '':
-             try:
-               self.initVal(key, int(val))
-             except ValueError:
-               print('Non int param')          
+    def __init__(self, obj, tp):
     
+        self.vals = dict()
+        self.obj = obj
+        self.style = 'Main'
+        self.color = None
+        self.tp = tp
+
         self.initRGBASMT('TemplStyleMAINPoint', 90,90,10,100,4,'PLASTIC','BALL')
         self.initRGBASMT('TemplStyleMAINWire', 10,10,90,100, 8,'PLASTIC','SOLID')
         self.initRGBASMT('TemplStyleMAINSurface',10,10,90,100,2,'PLASTIC','SOLID')
@@ -385,17 +374,11 @@ class Scene:
         self.initRGBASMT('TemplStyleAxisSurface', 30,30,30,100,1,'PLASTIC','SOLID')
         self.initRGBASMT('TemplStyleAxisLabel', 30,30,30,100,20,'PLASTIC','SOLID')
 
-
-    def initVal(self, valKey, val):
-        if not (valKey in self.vals):
-            self.vals[valKey] = val
-
-    def val(self, valKey):
-        if (valKey in self.vals):
-            return self.vals[valKey]
-        else:
-            raise Exception('Non init value ' +valKey)        
-
+        
+    def setStyle(self, style, color = None):
+        self.style = style
+        self.color = color
+        
     def initVals(self, keyPrefix ,vals):
         for key in vals:
            self.initVal(keyPrefix+key, vals[key])
@@ -421,10 +404,61 @@ class Scene:
         self.initVal(paramKeyPrefix+'X',x)
         self.initVal(paramKeyPrefix+'Y',y)
         self.initVal(paramKeyPrefix+'Z',z)
+    def initVal(self, valKey, val):
+        if not (valKey in self.vals):
+            self.vals[valKey] = val
+
+    def val(self, valKey):
+        if (valKey in self.vals):
+            return self.vals[valKey]
+        else:
+            raise Exception('Non init value ' +valKey)        
+        
+
+class Point:
+    pass
+class Wire:
+    pass
+class Surface:
+    pass
+
+class Scene:
+
+    def __init__(self, forGetFunctions):
+
+        self.lib = None
+        self.geoms = dict()
+        self.vals = dict()
+        self.cache = dict()
+        self.objNum = 0;
+        self.forGetFunctions =  forGetFunctions
+        self.style = None
+        self.color = None
+        # todo get arguments and init params
+        for param in sys.argv:
+           key,sep,val = param.partition('=')
+           if val != '':
+             try:
+               self.initVal(key, int(val))
+             except ValueError:
+               print('Non int param')          
+    
+
+    def initVal(self, valKey, val):
+        if not (valKey in self.vals):
+            self.vals[valKey] = val
+
+    def val(self, valKey):
+        if (valKey in self.vals):
+            return self.vals[valKey]
+        else:
+            raise Exception('Non init value ' +valKey)        
 
 
-    def initObj(self, geomType, style, objName,  geomObj, color = None):
-        self.geoms[str(self.objNum)+'-'+objName] = {'type':geomType, 'geom':geomObj, 'style':style, 'color':color }
+    def initObj(self, tp, style, obj, color = None):
+        dr = Drawable(obj, tp)
+        dr.setStyle(style, color)
+        self.geoms[self.objNum] = dr
         self.objNum += 1;
 
     def obj(self, key):
@@ -452,7 +486,9 @@ class Scene:
         self.initVal('SysDecorIsAxis', True)
         self.initVal('SysDecorScaleA', 1)
         self.initVal('SysDecorScaleB', 1)
-        self.initXYZ('SysDecorDeskD', 0, 0, 0)
+        self.initVal('SysDecorDeskDX', 0)
+        self.initVal('SysDecorDeskDY', 0)
+        self.initVal('SysDecorDeskDZ', 0)
         SysDecors = self.getVals('SysDecor')
 
         self.initVal('SysPrecisionShape', 0.2)
@@ -486,55 +522,52 @@ class Scene:
             #print(key, self.geoms[key])
 
         for key in self.geoms:
-            geomObj = self.geoms[key]
+            dr = self.geoms[key]
             #print(geomObj['style'])
-            style = self.getVals('Style'+geomObj['style'])
+            style = self.getVals('Style' + dr.style)
             #print(style)
-            color = geomObj['color']
-            geom = geomObj['geom']
-            t = geomObj['type']
+            color = dr.color
+            geom = dr.obj
+            t = dr.tp
             
-            print('===> Render'+'['+key+'] =',geomObj['style'],geom) #self.geoms[key]
+            print('===> Render','[',key,'] =', dr.style, dr.obj) #self.geoms[key]
             
-            if geomObj['style'] == 'HIDE':
+            if dr.style == 'HIDE':
                 pass  
             elif t == 'point':
-                pnt = geom;
-                self.lib.drawPoint(pnt, style, color)
+                self.lib.drawPoint(dr.obj, style, color)
             elif t == 'line':
-                pnt1,pnt2 = geom;
+                pnt1,pnt2 = dr.obj;
                 edge = BRepBuilderAPI_MakeEdge(pnt1, pnt2).Edge()
-                self.lib.drawShape(edge, style, color)
+                self.lib.drawShape(edge, style, dr.color)
             elif t == 'circle':
-                pnt1,pnt2,pnt3 = geom;
+                pnt1,pnt2,pnt3 = dr.obj;
                 geomCircle = GC_MakeCircle(pnt1, pnt2, pnt3).Value()
                 edge = BRepBuilderAPI_MakeEdge(geomCircle).Edge()
-                self.lib.drawShape(edge, style, color)
+                self.lib.drawShape(edge, style, dr.color)
             elif t == 'shape':
-                shape = geom
-                #print(style)
-                self.lib.drawShape(shape, style, color)
+                self.lib.drawShape(dr.obj, style, dr.color)
             elif t == 'label':
-                pntPlace, strTitle = geom
-                self.lib.drawLabel(pntPlace, strTitle, style, color)
+                pntPlace, strTitle = dr.obj
+                self.lib.drawLabel(pntPlace, strTitle, style, dr.color)
 
         self.lib.start()
 
-    def drawPoint(self, style, key, pnt, text):
-        self.initObj('point', style, key, pnt, self.color)
-        self.initObj('label', style, key+'Label', (pnt, text), self.color)
+    def drawPoint(self, style, pnt, text):
+        self.initObj('point', style, pnt, self.color)
+        self.initObj('label', style, (pnt, text), self.color)
 
-    def drawLine(self, style, key, the2Points):
-        self.initObj('line', style, key,  the2Points, self.color)
+    def drawLine(self, style, the2Points):
+        self.initObj('line', style, the2Points, self.color)
 
-    def drawCircle(self, style, key,  the3Points):
-        self.initObj('circle', style, key,  the3Points, self.color)
+    def drawCircle(self, style, the3Points):
+        self.initObj('circle', style, the3Points, self.color)
 
-    def drawSurface(self, style, key, surface):
-        self.initObj('shape', style, key, surface, self.color)
+    def drawSurface(self, style, surface):
+        self.initObj('shape', style, surface, self.color)
 
-    def drawWire(self, style, key, wire):
-        self.initObj('shape', style, key, wire, self.color)
+    def drawWire(self, style, wire):
+        self.initObj('shape', style, wire, self.color)
 
     def getCacheKey(self, objName, param1, param2):
         params = ''
@@ -563,13 +596,13 @@ class Scene:
     
     def drawObj(self, objName, key, obj):
        if objName.endswith('Point') or objName.endswith('Points'):
-           self.drawPoint(self.style, objName, obj, key)
+           self.drawPoint(self.style, obj, key)
        elif objName.endswith('Wire') or objName.endswith('Wires'):
-           self.drawWire(self.style, objName, obj)
+           self.drawWire(self.style, obj)
        elif objName.endswith('Surface') or objName.endswith('Surfaces'):
-           self.drawSurface(self.style, objName, obj)
+           self.drawSurface(self.style, obj)
        elif objName.endswith('Line') or objName.endswith('Lines'):
-           self.drawLine(self.style, objName, obj)
+           self.drawLine(self.style, obj)
         
     def draw(self, objName, param1 = None, param2 = None):
        obj =  self.get(objName, param1, param2)
@@ -584,102 +617,5 @@ class Scene:
         self.color = color
 
 if __name__ == '__main__':
+    pass
 
-
-    def  testPoint(sc):
-
-        pnt = gp_Pnt(3,4,5)
-        sc.point(pnt,'stInfo')
-        sc.label(pnt, 'point', 'stInfo')
-
-
-    def testLine(sc):
-
-        gpPnt = gp_Pnt(2,3,4)
-
-        sc.point(gpPnt, 'stInfo')
-        sc.label(gpPnt, 'pnt+', 'stInfo')
-
-        gpPntStart = gp_Pnt(5,0,3)
-        gpPntEnd = gp_Pnt(0,5,3)
-
-        sc.line(gpPntStart, gpPntEnd, 'stMain')
-
-        sc.point(gpPntStart, 'stMain')
-        sc.label(gpPntStart, 'lineStart+', 'stMain')
-
-        sc.point(gpPntEnd, 'stMain')
-        sc.label(gpPntEnd, 'lineEnd', 'stMain')
-
-    def  testCircle(sc):
-
-        gpPnt1 = gp_Pnt(1,1,10)
-        gpPnt2 = gp_Pnt(5,2,5)
-        gpPnt3 = gp_Pnt(5,-5,5)
-
-        sc.circle(gpPnt1, gpPnt2, gpPnt3, 'stFocus')
-
-        sc.point(gpPnt1, 'stFog')
-        sc.label(gpPnt1,'p1', 'stFog')
-        sc.point(gpPnt2, 'stFog')
-        sc.label(gpPnt2,'p2','stFog')
-        sc.point(gpPnt3, 'stFog')
-        sc.label(gpPnt3,'p3', 'stFog')
-
-    def  testShape(sc):
-
-        sp1 = BRepPrimAPI_MakeSphere(3).Shape()
-        sc.shape(sp1, 'stGold')
-
-        sp2 = BRepPrimAPI_MakeSphere(4).Shape()
-        sc.shape(sp2, 'stFog')
-
-        stCustom1   = sc.style((  100,   35,   24,   100,   3,  3, 'GOLD'    ))
-        sp3 = BRepPrimAPI_MakeSphere(gp_Pnt(3,6,2), 2.5).Shape()
-        sc.shape(sp3,  stCustom1)
-
-        stCustom2   = sc.style((  98,  100,  12,   100,   3,  3, 'CHROME'    ))
-        sp4 = BRepPrimAPI_MakeSphere(gp_Pnt(3,3,3),2).Shape()
-        sc.shape(sp4, stCustom2)
-
-
-    sc = Scene('Test');
-    sc.initVal('SysDecorScaleB',50)
-    sc.initVal('SysDecorDeskDZ',-3)
-
-    testParams(sc)
-
-    #testPoint(sc)
-    #testLine(sc)
-    #testCircle(sc)
-    #testShape(sc)
-
-    #sc.render()
-
-    '''
-               #      r%    g%     b%     op%     pnt  line   mat
-    if styleVal == 'stInfo':
-       styleVal = (   30,   30,   30,    100,     3,     2,  'PLASTIC' )
-    elif styleVal == 'stMain':
-       styleVal = (   10,   10,   90,    100,      3,     4,  'PLASTIC' )
-    elif styleVal == 'stFocus':
-       styleVal = (   90,   10,   10,     30,      3,     2,  'CHROME' )
-    elif styleVal == 'stGold':
-       styleVal = (   90,   90,   10,    100,      3,     4,  'GOLD'    )
-    elif styleVal == 'stFog':
-       styleVal = (   90,   90,   90,    30,       3,      4,   'PLASTIC'  )
-
-    r, g, b, op, ps ,lw, mat = styleVal
-
-    st = dict()
-
-    st['color'] = (r/100, g/100, b/100)
-    st['tran']  = 1-op/100
-    st['pointType'] = 'BALL'
-    st['lineType'] = 'SOLID'
-    st['pointSize'] = ps
-    st['lineWidth'] = lw
-    st['material'] = mat
-
-    return st
-    '''

@@ -560,7 +560,9 @@ if __name__ == '__main__':
     sc.initVal('SysDecorIsAxis', True)
     sc.initVal('SysDecorScale', 1)
     sc.initVal('SysDecorScaleB', 5)
-    sc.initXYZ('SysDecorDeskD', 0, 0, -60)
+    sc.initVal('SysDecorDeskDX', 0)
+    sc.initVal('SysDecorDeskDY', 0)
+    sc.initVal('SysDecorDeskDZ', -60)
     #todo uppercase and only dz param
     
     initDaoVals(sc)
