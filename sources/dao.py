@@ -557,11 +557,7 @@ if __name__ == '__main__':
     sc.initVal('SLIDE_NAME', 'dao')
 
     sc.initVal('SCENE_SCALE', '5:1')
-    sc.initVal('SysDecorScaleB', 5)
-    sc.initVal('SysDecorDeskDX', 0)
-    sc.initVal('SysDecorDeskDY', 0)
-    sc.initVal('SysDecorDeskDZ', -60)
-    #todo uppercase and only dz param
+    sc.initVal('SCENE_ORIGIN', (0,0,60))
     
     initDaoVals(sc)
     

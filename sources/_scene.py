@@ -160,19 +160,15 @@ class WebLib:
 
 class ScreenLib:
 
-    def __init__(self, scaleStr ,decors):
+    def __init__(self, scaleStr, originXYZ):
         self.display, self.start_display, self.add_menu,  self.add_function_to_menu  = init_display(
             None, (1024, 768), True, [128, 128, 128], [128, 128, 128]
           )
           
+        self.originXYZ = originXYZ
         self.scaleStr = scaleStr
         splitted = scaleStr.split(':')
         self.scale = (int(splitted[1])/int(splitted[0]))         
-          
-        deskDX = decors['DeskDX']
-        deskDY = decors['DeskDY']
-        deskDZ = decors['DeskDZ']
-
 
 
     def _styleAis(self, ais, styleName, styleValue):
@@ -269,19 +265,20 @@ class ScreenLib:
                 self._drawPoint(gp_Pnt(0,d,0), style)
                 self._drawPoint(gp_Pnt(0,0,d), style)
 
-    def drawAxis(self, decors, style):
+    def drawAxis(self, style):
         self._axis(style)
 
-    def _desk(self, deskDX, deskDY, deskDZ, style):
+    def _desk(self, style):
+            originX, originY, originZ = self.originXYZ
             scale = self.scale
             xBox, yBox, zBox = 1500*scale, 1000*scale, 40*scale
-            desk = BRepPrimAPI_MakeBox (gp_Pnt( -xBox/2+deskDX, -yBox/2+deskDY, -zBox+deskDZ), xBox, yBox, zBox)
+            desk = BRepPrimAPI_MakeBox (gp_Pnt( -xBox/2-originX, -yBox/2-originY, -zBox-originZ), xBox, yBox, zBox)
             self._drawShape(desk.Solid(), style)
-            scalePoint = gp_Pnt( -xBox/2+deskDX, -yBox/2+deskDY, zBox/3+deskDZ)
-            self._drawLabel( scalePoint, 'A0 M' + self.scaleStr, style )
+            scaleLabelPoint = gp_Pnt( -xBox/2-originX, -yBox/2-originY, zBox/3-originZ)
+            self._drawLabel( scaleLabelPoint, 'A0 M' + self.scaleStr, style )
             
-    def drawDesk(self, decors, style):
-          self._desk(decors['DeskDX'], decors['DeskDY'], decors['DeskDZ'], style)     
+    def drawDesk(self, style):
+          self._desk(style)     
 
 
     def start(self):
@@ -500,11 +497,12 @@ class Scene:
         self.initVal('SCENE_SCALE', '1:1')
         self.initVal('SCENE_IS_DESK', True)
         self.initVal('SCENE_IS_AXIS', True)
+        self.initVal('SCENE_ORIGIN', (0,0,0))
         
         if self.val('SCENE_IS_DESK'):
-            self.initObj('desk','INFO',(0,0,0), None)        
+            self.initObj('desk','INFO',None, None)        
         if self.val('SCENE_IS_AXIS'):
-            self.initObj('axis','INFO',(0,0,0), None)        
+            self.initObj('axis','INFO',None, None)        
 
         #for key in self.params:
           #print(key,'=',self.params[key])
@@ -512,7 +510,7 @@ class Scene:
         if SysRenderTarget == 'test':
           self.lib = TestLib(SysDecors, SysPrecisions, ebDir, stlDir)
         elif SysRenderTarget == 'screen':
-          self.lib = ScreenLib(self.val('SCENE_SCALE'), SysDecors)
+          self.lib = ScreenLib(self.val('SCENE_SCALE'), self.val('SCENE_ORIGIN'))
         elif  SysRenderTarget == 'web':
             self.lib = WebLib(SysDecors, SysPrecisions, webDir)
         elif  SysRenderTarget == 'stl':
@@ -550,9 +548,9 @@ class Scene:
                 pntPlace, strTitle = dr.obj
                 self.lib.drawLabel(pntPlace, strTitle, dr.getTrueStyle(), dr.color)
             elif t == 'desk':
-                self.lib.drawDesk(SysDecors, dr.getTrueStyle())
+                self.lib.drawDesk(dr.getTrueStyle())
             elif t == 'axis':
-                self.lib.drawAxis(SysDecors, dr.getTrueStyle())
+                self.lib.drawAxis(dr.getTrueStyle())
 
         self.lib.start()
 
