@@ -556,9 +556,7 @@ if __name__ == '__main__':
     sc.initVal('SLIDE_NUM', 7)
     sc.initVal('SLIDE_NAME', 'dao')
 
-    sc.initVal('SysDecorIsDesk', True)
-    sc.initVal('SysDecorIsAxis', True)
-    sc.initVal('SysDecorScale', 1)
+    sc.initVal('SCENE_SCALE', '5:1')
     sc.initVal('SysDecorScaleB', 5)
     sc.initVal('SysDecorDeskDX', 0)
     sc.initVal('SysDecorDeskDY', 0)

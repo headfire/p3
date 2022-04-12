@@ -160,21 +160,18 @@ class WebLib:
 
 class ScreenLib:
 
-    def __init__(self, decors, StyleDesk, StyleAxis):
-        self.StyleDesk = StyleDesk
-        self.StyleAxis = StyleAxis
+    def __init__(self, scaleStr ,decors):
         self.display, self.start_display, self.add_menu,  self.add_function_to_menu  = init_display(
             None, (1024, 768), True, [128, 128, 128], [128, 128, 128]
           )
-        isDesk = decors['IsDesk']
-        isAxis = decors['IsAxis']
-        scaleA = decors['ScaleA']
-        scaleB = decors['ScaleB']
+          
+        self.scaleStr = scaleStr
+        splitted = scaleStr.split(':')
+        self.scale = (int(splitted[1])/int(splitted[0]))         
+          
         deskDX = decors['DeskDX']
         deskDY = decors['DeskDY']
         deskDZ = decors['DeskDZ']
-        self.dLabel = 10 * scaleA/scaleB
-        self._decoration(isDesk, isAxis, scaleA, scaleB, deskDX, deskDY, deskDZ)
 
 
 
@@ -205,7 +202,8 @@ class ScreenLib:
                  ais.Attributes().PointAspect().SetScale(styleValue)
 
     def _drawLabel(self, pnt, text, style):
-       pntLabel = gp_Pnt(pnt.X()+self.dLabel,pnt.Y()+self.dLabel,pnt.Z()+self.dLabel)
+       dLabel = 10 * self.scale
+       pntLabel = gp_Pnt(pnt.X()+dLabel,pnt.Y()+dLabel,pnt.Z()+dLabel)
        self.display.DisplayMessage(pntLabel,
                 text, style['LabelS'], (style['LabelR']/100,style['LabelG']/100,style['LabelB']/100), False)
 
@@ -241,9 +239,9 @@ class ScreenLib:
         self.display.Context.Display(ais, False)
 
 
-    def _axis(self, size):
+    def _axis(self, style):
 
-            style = self.StyleAxis
+            size = 500*self.scale
 
             step = size/10
             ss = [1,5,10,50,100,500,1000,5000,10000]
@@ -271,27 +269,19 @@ class ScreenLib:
                 self._drawPoint(gp_Pnt(0,d,0), style)
                 self._drawPoint(gp_Pnt(0,0,d), style)
 
+    def drawAxis(self, decors, style):
+        self._axis(style)
 
-    def _desk(self, scaleA, scaleB, deskDX, deskDY, deskDZ):
-            style = self.StyleDesk
-            scale = scaleA/scaleB
+    def _desk(self, deskDX, deskDY, deskDZ, style):
+            scale = self.scale
             xBox, yBox, zBox = 1500*scale, 1000*scale, 40*scale
             desk = BRepPrimAPI_MakeBox (gp_Pnt( -xBox/2+deskDX, -yBox/2+deskDY, -zBox+deskDZ), xBox, yBox, zBox)
             self._drawShape(desk.Solid(), style)
             scalePoint = gp_Pnt( -xBox/2+deskDX, -yBox/2+deskDY, zBox/3+deskDZ)
-            self._drawLabel( scalePoint, 'A0 M' + str(scaleB) + ':' + str(scaleA), style )
-
-
-    def _decoration(self, isDesk, isAxis, scaleA, scaleB, deskDX, deskDY, deskDZ):
-
-
-        if isDesk:
-            self._desk(scaleA, scaleB, deskDX, deskDY, deskDZ)
-
-
-        if isAxis:
-            axisSize = 500*scaleA/scaleB
-            self._axis(axisSize)
+            self._drawLabel( scalePoint, 'A0 M' + self.scaleStr, style )
+            
+    def drawDesk(self, decors, style):
+          self._desk(decors['DeskDX'], decors['DeskDY'], decors['DeskDZ'], style)     
 
 
     def start(self):
@@ -343,41 +333,44 @@ class Drawable:
         self.color = None
         self.tp = tp
 
-        self.initRGBASMT('TemplStyleMAINPoint', 90,90,10,100,4,'PLASTIC','BALL')
-        self.initRGBASMT('TemplStyleMAINWire', 10,10,90,100, 8,'PLASTIC','SOLID')
-        self.initRGBASMT('TemplStyleMAINSurface',10,10,90,100,2,'PLASTIC','SOLID')
-        self.initRGBASMT('TemplStyleMAINLabel', 90,10,10,100,20,'PLASTIC','SOLID')
+        self.initRGBASMT('StyleMAINPoint', 90,90,10,100,4,'PLASTIC','BALL')
+        self.initRGBASMT('StyleMAINWire', 10,10,90,100, 8,'PLASTIC','SOLID')
+        self.initRGBASMT('StyleMAINSurface',10,10,90,100,2,'PLASTIC','SOLID')
+        self.initRGBASMT('StyleMAINLabel', 90,10,10,100,20,'PLASTIC','SOLID')
 
-        self.initRGBASMT('TemplStyleINFOPoint', 30,30,30,100,3,'PLASTIC','BALL')
-        self.initRGBASMT('TemplStyleINFOWire', 30,30,30,100,2,'PLASTIC','SOLID')
-        self.initRGBASMT('TemplStyleINFOSurface', 30,30,30,100,1,'PLASTIC','SOLID')
-        self.initRGBASMT('TemplStyleINFOLabel', 30,30,30,100,20,'PLASTIC','SOLID')
+        self.initRGBASMT('StyleINFOPoint', 30,30,30,100,3,'PLASTIC','BALL')
+        self.initRGBASMT('StyleINFOWire', 30,30,30,100,2,'PLASTIC','SOLID')
+        self.initRGBASMT('StyleINFOSurface', 30,30,30,100,1,'PLASTIC','SOLID')
+        self.initRGBASMT('StyleINFOLabel', 30,30,30,100,20,'PLASTIC','SOLID')
 
 
-        self.initRGBASMT('TemplStyleFOCUSPoint', 90,10,10,100,4,'PLASTIC','BALL')
-        self.initRGBASMT('TemplStyleFOCUSWire', 90,10,10,100,3,'PLASTIC','SOLID')
-        self.initRGBASMT('TemplStyleFOCUSSurface', 90,10,10,100,2,'PLASTIC','SOLID')
-        self.initRGBASMT('TemplStyleFOCUSLabel', 90,90,90,100,20,'PLASTIC','SOLID')
+        self.initRGBASMT('StyleFOCUSPoint', 90,10,10,100,4,'PLASTIC','BALL')
+        self.initRGBASMT('StyleFOCUSWire', 90,10,10,100,3,'PLASTIC','SOLID')
+        self.initRGBASMT('StyleFOCUSSurface', 90,10,10,100,2,'PLASTIC','SOLID')
+        self.initRGBASMT('StyleFOCUSLabel', 90,90,90,100,20,'PLASTIC','SOLID')
 
-        self.initRGBASMT('TemplStyleChromePoint', 10,10,10,100,4,'PLASTIC','EMPTY')
-        self.initRGBASMT('TemplStyleChromeWire', 10,10,10,100,3,'PLASTIC','DASH')
-        self.initRGBASMT('TemplStyleChromeSurface', 10,10,10,100,2,'PLASTIC','SOLID')
-        self.initRGBASMT('TemplStyleChromeLabel', 10,10,10,100,20,'PLASTIC','SOLID')
+        self.initRGBASMT('StyleChromePoint', 10,10,10,100,4,'PLASTIC','EMPTY')
+        self.initRGBASMT('StyleChromeWire', 10,10,10,100,3,'PLASTIC','DASH')
+        self.initRGBASMT('StyleChromeSurface', 10,10,10,100,2,'PLASTIC','SOLID')
+        self.initRGBASMT('StyleChromeLabel', 10,10,10,100,20,'PLASTIC','SOLID')
 
-        self.initRGBASMT('TemplStyleDeskPoint', 30,30,30,100,4,'PLASTIC','BALL')
-        self.initRGBASMT('TemplStyleDeskWire', 30,30,30,100,3,'PLASTIC','SOLID')
-        self.initRGBASMT('TemplStyleDeskSurface', 30,30,30,100,2,'PLASTIC','SOLID')
-        self.initRGBASMT('TemplStyleDeskLabel', 30,30,30,100,20,'PLASTIC','SOLID')
+        self.initRGBASMT('StyleDeskPoint', 30,30,30,100,4,'PLASTIC','BALL')
+        self.initRGBASMT('StyleDeskWire', 30,30,30,100,3,'PLASTIC','SOLID')
+        self.initRGBASMT('StyleDeskSurface', 30,30,30,100,2,'PLASTIC','SOLID')
+        self.initRGBASMT('StyleDeskLabel', 30,30,30,100,20,'PLASTIC','SOLID')
 
-        self.initRGBASMT('TemplStyleAxisPoint', 30,30,30,100,2,'PLASTIC','BALL')
-        self.initRGBASMT('TemplStyleAxisWire', 30,30,30,100,1,'PLASTIC','SOLID')
-        self.initRGBASMT('TemplStyleAxisSurface', 30,30,30,100,1,'PLASTIC','SOLID')
-        self.initRGBASMT('TemplStyleAxisLabel', 30,30,30,100,20,'PLASTIC','SOLID')
+        self.initRGBASMT('StyleAxisPoint', 30,30,30,100,2,'PLASTIC','BALL')
+        self.initRGBASMT('StyleAxisWire', 30,30,30,100,1,'PLASTIC','SOLID')
+        self.initRGBASMT('StyleAxisSurface', 30,30,30,100,1,'PLASTIC','SOLID')
+        self.initRGBASMT('StyleAxisLabel', 30,30,30,100,20,'PLASTIC','SOLID')
 
         
     def setStyle(self, style, color = None):
         self.style = style
         self.color = color
+        
+    def getTrueStyle(self):
+        return self.getVals('Style' + self.style)
         
     def initVals(self, keyPrefix ,vals):
         for key in vals:
@@ -442,7 +435,7 @@ class Scene:
                self.initVal(key, int(val))
              except ValueError:
                print('Non int param')          
-    
+        
 
     def initVal(self, valKey, val):
         if not (valKey in self.vals):
@@ -475,6 +468,13 @@ class Scene:
     def setColor(self, geomKeyPrefix, RGBA100):
         self.setToGeoms(geomKeyPrefix, 'color', RGBA100)
 
+    def getVals(self, keyPrefix):
+        ret = dict()
+        for key in self.vals:
+            if key.startswith(keyPrefix):
+               sStart,sPrefix, sEnd = key.partition(keyPrefix)
+               ret[sEnd] = self.vals[key]
+        return ret
 
     def render(self):
 
@@ -482,10 +482,6 @@ class Scene:
         self.initVal('SysRenderTarget', 'screen')
         
 
-        self.initVal('SysDecorIsDesk', True)
-        self.initVal('SysDecorIsAxis', True)
-        self.initVal('SysDecorScaleA', 1)
-        self.initVal('SysDecorScaleB', 1)
         self.initVal('SysDecorDeskDX', 0)
         self.initVal('SysDecorDeskDY', 0)
         self.initVal('SysDecorDeskDZ', 0)
@@ -495,16 +491,20 @@ class Scene:
         self.initVal('SysPrecisionWire', 0.2)
         SysPrecisions = self.getVals('SysPrecision')
 
-        self.initVals('Style', self.getVals('TemplStyle'))
-
-        StyleDesk = self.getVals('StyleDesk')
-        StyleAxis = self.getVals('StyleAxis')
-
         scriptDir = os.path.dirname(__file__)
         stlRelDir = os.path.join(scriptDir, '..', 'models', slideName)
         stlDir = os.path.abspath(stlRelDir)
         webRelDir = os.path.join(scriptDir, '..','slides', slideName)
         webDir = os.path.abspath(webRelDir)
+
+        self.initVal('SCENE_SCALE', '1:1')
+        self.initVal('SCENE_IS_DESK', True)
+        self.initVal('SCENE_IS_AXIS', True)
+        
+        if self.val('SCENE_IS_DESK'):
+            self.initObj('desk','INFO',(0,0,0), None)        
+        if self.val('SCENE_IS_AXIS'):
+            self.initObj('axis','INFO',(0,0,0), None)        
 
         #for key in self.params:
           #print(key,'=',self.params[key])
@@ -512,7 +512,7 @@ class Scene:
         if SysRenderTarget == 'test':
           self.lib = TestLib(SysDecors, SysPrecisions, ebDir, stlDir)
         elif SysRenderTarget == 'screen':
-          self.lib = ScreenLib(SysDecors, StyleDesk, StyleAxis)
+          self.lib = ScreenLib(self.val('SCENE_SCALE'), SysDecors)
         elif  SysRenderTarget == 'web':
             self.lib = WebLib(SysDecors, SysPrecisions, webDir)
         elif  SysRenderTarget == 'stl':
@@ -524,7 +524,6 @@ class Scene:
         for key in self.geoms:
             dr = self.geoms[key]
             #print(geomObj['style'])
-            style = self.getVals('Style' + dr.style)
             #print(style)
             color = dr.color
             geom = dr.obj
@@ -535,21 +534,25 @@ class Scene:
             if dr.style == 'HIDE':
                 pass  
             elif t == 'point':
-                self.lib.drawPoint(dr.obj, style, color)
+                self.lib.drawPoint(dr.obj, dr.getTrueStyle(), dr.color)
             elif t == 'line':
                 pnt1,pnt2 = dr.obj;
                 edge = BRepBuilderAPI_MakeEdge(pnt1, pnt2).Edge()
-                self.lib.drawShape(edge, style, dr.color)
+                self.lib.drawShape(edge, dr.getTrueStyle(), dr.color)
             elif t == 'circle':
                 pnt1,pnt2,pnt3 = dr.obj;
                 geomCircle = GC_MakeCircle(pnt1, pnt2, pnt3).Value()
                 edge = BRepBuilderAPI_MakeEdge(geomCircle).Edge()
-                self.lib.drawShape(edge, style, dr.color)
+                self.lib.drawShape(edge, dr.getTrueStyle(), dr.color)
             elif t == 'shape':
-                self.lib.drawShape(dr.obj, style, dr.color)
+                self.lib.drawShape(dr.obj, dr.getTrueStyle(), dr.color)
             elif t == 'label':
                 pntPlace, strTitle = dr.obj
-                self.lib.drawLabel(pntPlace, strTitle, style, dr.color)
+                self.lib.drawLabel(pntPlace, strTitle, dr.getTrueStyle(), dr.color)
+            elif t == 'desk':
+                self.lib.drawDesk(SysDecors, dr.getTrueStyle())
+            elif t == 'axis':
+                self.lib.drawAxis(SysDecors, dr.getTrueStyle())
 
         self.lib.start()
 
