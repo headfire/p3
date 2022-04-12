@@ -369,55 +369,33 @@ def getDaoSkiningSurface(offset):
    
     return surface
 
-
-def drawDaoDropsSurface_OffsetType(sc, style, OffsetType, offset):
-
-    drawDaoBasePoint_NNN(sc, 'HIDE')
-    drawDaoClassicWire(sc, 'HIDE')
-    drawDaoIngWire_XXX(sc, 'HIDE', 'Standart' ,offset)
-    drawDaoIngPoint_XXX_SSS(sc, 'HIDE', 'Standart')
-    drawDaoFocusPoint(sc, 'HIDE')
-
-    ks = sc.getVal('DAO_SKINING_SLICES_KOEFS')
-    for i in range(len(ks)):
-        KoefNum = 'KoefNum'+str(i)
-        drawDaoSliceLine_OffsetType_KoefNum(sc, 'HIDE', OffsetType, KoefNum, ks[i]) 
-        drawDaoSliceFace_OffsetType_KoefNum(sc, 'HIDE', OffsetType, KoefNum)
-        drawDaoSlicePoint_OffsetType_KoefNum_SSS(sc, 'HIDE', OffsetType, KoefNum)
-        drawDaoSliceWire_OffsetType_KoefNum(sc, 'HIDE', OffsetType, KoefNum)
-        
-    drawDaoSkiningSurface(sc, 'HIDE')
-    drawDaoIngSurface_OffsetType(sc, 'MAIN', OffsetType ,(100,35,24,100))
-    drawDaoYangSurface_OffsetType(sc, 'MAIN', OffsetType ,(98,100,12,100))
-
-
 # **********************************************************************************
 # **********************************************************************************
 # **********************************************************************************
 
 def drawDaoClassicSlide(sc):
 
-    sc.setStyle('MAIN')
+    sc.style('Main')
 
     sc.label('p')
     sc.draw('DaoBasePoints')
 
     sc.draw('DaoClassicWire')
     
-    sc.setStyle('INFO')
+    sc.style('Info')
     sc.draw('DaoBoundCircleWire', 0)
 
 def drawDaoOffsetSlide(sc):
 
     offset = sc.getVal('DAO_OFFSET')
     
-    sc.setStyle('MAIN')
+    sc.style('Main')
     sc.draw('DaoOffsetWire', offset)
 
     sc.label('p')
     sc.draw('DaoOffsetPoints', offset)
 
-    sc.setStyle('INFO')
+    sc.style('Info')
     sc.draw('DaoSecondOffsetWire', offset)
     sc.draw('DaoBoundCircleWire', offset)
     
@@ -425,13 +403,13 @@ def drawDaoExampleSliceSlide(sc):
 
     offset = sc.getVal('DAO_OFFSET')
     
-    sc.setStyle('MAIN')
+    sc.style('Main')
     sc.draw('DaoOffsetWire',offset)
 
     sc.label('F')
     sc.draw('DaoFocusPoint')
 
-    sc.setStyle('FOCUS')
+    sc.style('Focus')
     k = sc.getVal('DAO_SLICE_EXAMPLE_KOEF')
     sc.draw('DaoSliceLine',offset,k)
     sc.draw('DaoSliceSurface',offset,k)
@@ -443,7 +421,7 @@ def drawManySliceSlide(sc):
 
     offset = sc.getVal('DAO_OFFSET')
     
-    sc.setStyle('MAIN')
+    sc.style('Main')
     sc.draw('DaoOffsetWire',offset)
 
     sc.label('F')
@@ -454,16 +432,16 @@ def drawManySliceSlide(sc):
     eK = 1 - 1/(cnt+1)
     for i in range(cnt):
         k = bK + i * (eK - bK)/(cnt-1)
-        sc.setStyle('FOCUS')
+        sc.style('Focus')
         sc.draw('DaoSliceLine', offset, k) 
-        sc.setStyle('MAIN')
+        sc.style('Main')
         sc.draw('DaoSliceWire', offset, k)
 
 def  drawDaoSkiningSlide(sc):
 
     offset = sc.getVal('DAO_OFFSET')
     
-    sc.setStyle('MAIN')
+    sc.style('Main')
     sc.draw('DaoOffsetWire',offset)
 
     sc.label('F')
@@ -471,30 +449,30 @@ def  drawDaoSkiningSlide(sc):
 
     ks = sc.getVal('DAO_SKINING_SLICES_KOEFS')
     for i in range(len(ks)):
-        sc.setStyle('FOCUS')
+        sc.style('Focus')
         sc.draw('DaoSliceLine', offset, ks[i]) 
-        sc.setStyle('MAIN')
+        sc.style('Main')
         sc.draw('DaoSliceWire', offset, ks[i])
         
-    sc.setStyle('FOCUS')
+    sc.style('Focus')
     sc.draw('DaoSkiningSurface', offset)
 
 def drawDaoIngYangSlide (sc):
 
     offset = sc.getVal('DAO_OFFSET')
-    sc.setStyle('MAIN', (100,35,24,100))
+    sc.style('Main', (100,35,24))
     sc.draw('DaoIngSurface', offset)    
-    sc.setStyle('MAIN', (52,51,100,100))
+    sc.style('Main', (52,51,100))
     sc.draw('DaoYangSurface', offset)    
 
 def drawDaoCaseSlide (sc):
 
     offset = sc.getVal('DAO_OFFSET')
-    sc.setStyle('MAIN', (100,35,24,100))
+    sc.style('Main', (100,35,24))
     sc.draw('DaoIngSurface', offset)    
-    sc.setStyle('MAIN', (52,51,100,100))
+    sc.style('Main', (52,51,100))
     sc.draw('DaoYangSurface', offset)    
-    sc.setStyle('MAIN', (50,50,50,100))
+    sc.style('Main', (50,50,50))
     sc.draw('DaoCaseSurface')
 
 def utilShapeZScale(shape, scaleK):
