@@ -310,6 +310,7 @@ class ScreenLib:
             style['PointG'] = g
             style['PointB'] = b
             style['PointA'] = a
+        print (pnt)    
         self._drawPoint(pnt, style)
 
 
@@ -322,13 +323,16 @@ class ScreenLib:
 
 class Drawable:
 
-    def __init__(self, obj, tp):
-    
+    def __init__(self, obj, drawSetting):
+
         self.vals = dict()
+        
         self.obj = obj
-        self.style = 'Main'
-        self.color = None
-        self.tp = tp
+        self.style = drawSetting['style']
+        self.color = drawSetting['color']
+        self.labelText = drawSetting['labelText']
+        self.labelColor = drawSetting['labelColor']
+        self.labelSize = drawSetting['labelSize']
 
         self.initRGBASMT('StyleMAINPoint', 90,90,10,100,4,'PLASTIC','BALL')
         self.initRGBASMT('StyleMAINWire', 10,10,90,100, 8,'PLASTIC','SOLID')
@@ -369,9 +373,9 @@ class Drawable:
     def getTrueStyle(self):
         return self.getVals('Style' + self.style)
         
-    def initVals(self, keyPrefix ,vals):
+    def setVals(self, keyPrefix ,vals):
         for key in vals:
-           self.initVal(keyPrefix+key, vals[key])
+           self.setVal(keyPrefix+key, vals[key])
 
     def getVals(self, keyPrefix):
         ret = dict()
@@ -382,74 +386,159 @@ class Drawable:
         return ret
 
     def initRGBASMT(self, paramKeyPrefix, r,g,b,a,s,m,t):
-        self.initVal(paramKeyPrefix+'R',r)
-        self.initVal(paramKeyPrefix+'G',g)
-        self.initVal(paramKeyPrefix+'B',b)
-        self.initVal(paramKeyPrefix+'A',a)
-        self.initVal(paramKeyPrefix+'S',s)
-        self.initVal(paramKeyPrefix+'M',m)
-        self.initVal(paramKeyPrefix+'T',t)
+        self.setVal(paramKeyPrefix+'R',r)
+        self.setVal(paramKeyPrefix+'G',g)
+        self.setVal(paramKeyPrefix+'B',b)
+        self.setVal(paramKeyPrefix+'A',a)
+        self.setVal(paramKeyPrefix+'S',s)
+        self.setVal(paramKeyPrefix+'M',m)
+        self.setVal(paramKeyPrefix+'T',t)
 
     def initXYZ(self, paramKeyPrefix, x,y,z):
-        self.initVal(paramKeyPrefix+'X',x)
-        self.initVal(paramKeyPrefix+'Y',y)
-        self.initVal(paramKeyPrefix+'Z',z)
-    def initVal(self, valKey, val):
-        if not (valKey in self.vals):
-            self.vals[valKey] = val
+        self.setVal(paramKeyPrefix+'X',x)
+        self.setVal(paramKeyPrefix+'Y',y)
+        self.setVal(paramKeyPrefix+'Z',z)
+        
+    def setVal(self, valKey, val):
+        self.vals[valKey] = val
 
-    def val(self, valKey):
-        if (valKey in self.vals):
-            return self.vals[valKey]
-        else:
-            raise Exception('Non init value ' +valKey)        
+    def getVal(self, valKey):
+        return self.vals[valKey]
         
 
-class Point:
-    pass
-class Wire:
-    pass
-class Surface:
-    pass
+class Foo(Drawable):
+    def __init__(self, obj, drawSetting):
+        super().__init__(obj, drawSetting)
+    def render(self, lib):
+        lib.drawLabel(self.obj, strTitle, self.getTrueStyle(), self.color)
+
+class Point(Drawable):
+    def __init__(self, obj, drawSetting):
+        super().__init__(obj, drawSetting)
+    def render(self, lib):
+        lib.drawPoint(self.obj, self.getTrueStyle(), self.color)
+        lib.drawLabel(self.obj, strTitle, self.getTrueStyle(), self.color)
+        
+class Points(Drawable):
+    #def __init__(self, obj, drawSetting):
+    #    super().__init__(obj, drawSetting)
+    def render(self, lib):
+        for key in self.obj:
+            lib.drawPoint(self.obj[key], self.getTrueStyle(), self.color)
+            if self.labelText != None:
+                lib.drawLabel(self.obj[key], str(key)+labelText, self.getTrueStyle(), self.color)
+        
+class Wire(Drawable):
+    def __init__(self, obj, drawSetting):
+        super().__init__(obj, drawSetting)
+    def render(self, lib):
+        lib.drawShape(self.obj, self.getTrueStyle(), self.color)
+
+class Circle(Drawable):
+    def __init__(self, obj, drawSetting):
+        super().__init__(obj, drawSetting)
+    def render(self, lib):
+        pnt1,pnt2,pnt3 = self.obj;
+        geomCircle = GC_MakeCircle(pnt1, pnt2, pnt3).Value()
+        edge = BRepBuilderAPI_MakeEdge(geomCircle).Edge()
+        lib.drawShape(edge, self.getTrueStyle(), self.color)
+
+class Line(Drawable):
+    def __init__(self, obj, drawSetting):
+        super().__init__(obj, drawSetting)
+    def render(self, lib):
+        pnt1,pnt2,pnt3 = self.obj;
+        geomCircle = GC_MakeCircle(pnt1, pnt2, pnt3).Value()
+        edge = BRepBuilderAPI_MakeEdge(geomCircle).Edge()
+        lib.drawShape(edge, self.getTrueStyle(), self.color)
+
+class Surface(Drawable):
+    def __init__(self, obj, drawSetting):
+        super().__init__(obj, drawSetting)
+    def render(self, lib):
+        lib.drawShape(self.obj, self.getTrueStyle(), self.color)
+            
+class Desk(Drawable):
+    def __init__(self, obj, drawSetting):
+        super().__init__(obj, drawSetting)
+    def render(self, lib):
+        lib.drawDesk(self.getTrueStyle())
+            
+class Axis(Drawable):
+    def __init__(self, obj, drawSetting):
+        super().__init__(obj, drawSetting)
+    def render(self, lib):
+        lib.drawAxis(self.getTrueStyle())
 
 class Scene:
 
     def __init__(self, forGetFunctions):
 
-        self.lib = None
-        self.geoms = dict()
+        self.drawables = []
+        self.drawSetting = { 'style':'MAIN','color':None,'labelText':None,'labelColor':None,'labelSize':None }
+        
         self.vals = dict()
         self.cache = dict()
-        self.objNum = 0;
         self.forGetFunctions =  forGetFunctions
         self.style = None
         self.color = None
-        # todo get arguments and init params
+        
+        self.labelText = None
+        self.labelColor = None
+        self.labelSize = None
+
+        self.setValsFromCLI()
+
+        '''
+        self.setVal('SysPrecisionShape', 0.2)
+        self.setVal('SysPrecisionWire', 0.2)
+        '''
+        
+        
+    def setValsFromCLI(self):
         for param in sys.argv:
            key,sep,val = param.partition('=')
            if val != '':
              try:
-               self.initVal(key, int(val))
+               self.setVal(key, int(val))
              except ValueError:
                print('Non int param')          
-        
 
-    def initVal(self, valKey, val):
-        if not (valKey in self.vals):
+    def initRenderLib(self):
+    
+        slideName = self.getVal('SLIDE_NAME') + str(self.getVal('SLIDE_NUM')) + "_test"
+        
+        scriptDir = os.path.dirname(__file__)
+        stlRelDir = os.path.join(scriptDir, '..', 'models', slideName)
+        stlDir = os.path.abspath(stlRelDir)
+        webRelDir = os.path.join(scriptDir, '..','slides', slideName)
+        webDir = os.path.abspath(webRelDir)
+
+        renderTarget = self.getVal('RENDER_TARGET')
+        
+        SysDecors = 'deprecated'
+        SysPrecisions = 'deprecated'
+        if renderTarget == 'test':
+            lib = TestLib(SysDecors, SysPrecisions, webDir, stlDir)
+        elif renderTarget == 'screen':
+            lib = ScreenLib(self.getVal('SCENE_SCALE'), self.getVal('SCENE_ORIGIN'))
+        elif  renderTarget == 'web':
+            lib = WebLib(SysDecors, SysPrecisions, webDir)
+        elif  renderTarget == 'stl':
+            lib = StlLib(SysDecors, SysPrecisions, stlDir)
+            
+        return lib        
+                
+   
+    def setVal(self, valKey, val):
+        if valKey not in self.vals:
             self.vals[valKey] = val
 
-    def val(self, valKey):
-        if (valKey in self.vals):
-            return self.vals[valKey]
-        else:
-            raise Exception('Non init value ' +valKey)        
+    def getVal(self, valKey):
+        return self.vals[valKey]
 
-
-    def initObj(self, tp, style, obj, color = None):
-        dr = Drawable(obj, tp)
-        dr.setStyle(style, color)
-        self.geoms[self.objNum] = dr
-        self.objNum += 1;
+    def putToRender(self, drawable):
+        self.drawables.append(drawable)
 
     def obj(self, key):
         return  self.geoms[key]['geom']
@@ -464,112 +553,66 @@ class Scene:
 
     def setColor(self, geomKeyPrefix, RGBA100):
         self.setToGeoms(geomKeyPrefix, 'color', RGBA100)
-
-    def getVals(self, keyPrefix):
-        ret = dict()
-        for key in self.vals:
-            if key.startswith(keyPrefix):
-               sStart,sPrefix, sEnd = key.partition(keyPrefix)
-               ret[sEnd] = self.vals[key]
-        return ret
-
+    
     def render(self):
 
-        slideName = self.val('SLIDE_NAME') + str(self.val('SLIDE_NUM')) + "_test"
-        self.initVal('SysRenderTarget', 'screen')
+        self.setVal('RENDER_TARGET', 'screen')
         
+        self.setVal('SCENE_SCALE', '1:1')
+        self.setVal('SCENE_IS_DESK', True)
+        self.setVal('SCENE_IS_AXIS', True)
+        self.setVal('SCENE_ORIGIN', (0,0,0))
 
-        self.initVal('SysDecorDeskDX', 0)
-        self.initVal('SysDecorDeskDY', 0)
-        self.initVal('SysDecorDeskDZ', 0)
-        SysDecors = self.getVals('SysDecor')
+        self.setVal('SLIDE_NUM', 0)
+        self.setVal('SLIDE_NAME', 'noname')
 
-        self.initVal('SysPrecisionShape', 0.2)
-        self.initVal('SysPrecisionWire', 0.2)
-        SysPrecisions = self.getVals('SysPrecision')
+        if self.getVal('SCENE_IS_DESK'):
+            self.putToRender( Desk(None, self.drawSetting) )        
+        if self.getVal('SCENE_IS_AXIS'):
+            self.putToRender( Axis(None, self.drawSetting) )         
 
-        scriptDir = os.path.dirname(__file__)
-        stlRelDir = os.path.join(scriptDir, '..', 'models', slideName)
-        stlDir = os.path.abspath(stlRelDir)
-        webRelDir = os.path.join(scriptDir, '..','slides', slideName)
-        webDir = os.path.abspath(webRelDir)
 
-        self.initVal('SCENE_SCALE', '1:1')
-        self.initVal('SCENE_IS_DESK', True)
-        self.initVal('SCENE_IS_AXIS', True)
-        self.initVal('SCENE_ORIGIN', (0,0,0))
+        lib = self.initRenderLib()
         
-        if self.val('SCENE_IS_DESK'):
-            self.initObj('desk','INFO',None, None)        
-        if self.val('SCENE_IS_AXIS'):
-            self.initObj('axis','INFO',None, None)        
+        for drawable in self.drawables:
+            print('===> Render', drawable.__class__.__name__, drawable.style, drawable.obj) #self.geoms[key]
+            drawable.render(lib)
 
-        #for key in self.params:
-          #print(key,'=',self.params[key])
-        SysRenderTarget = self.val('SysRenderTarget') 
-        if SysRenderTarget == 'test':
-          self.lib = TestLib(SysDecors, SysPrecisions, ebDir, stlDir)
-        elif SysRenderTarget == 'screen':
-          self.lib = ScreenLib(self.val('SCENE_SCALE'), self.val('SCENE_ORIGIN'))
-        elif  SysRenderTarget == 'web':
-            self.lib = WebLib(SysDecors, SysPrecisions, webDir)
-        elif  SysRenderTarget == 'stl':
-            self.lib = StlLib(SysDecors, SysPrecisions, stlDir)
+        lib.start()
 
-        #for key in self.geoms:
-            #print(key, self.geoms[key])
+    def setStyle(self, style, color = None): 
+        self.drawSetting['style'] = style
+        self.drawSetting['color'] = color
+        
+    def labelOn(self, labelText, labelColor = None, labelSize = None): 
+        self.labelText = labelText
+        self.labelColor = labelColor 
+        self.labelSize = labelSize
 
-        for key in self.geoms:
-            dr = self.geoms[key]
-            #print(geomObj['style'])
-            #print(style)
-            color = dr.color
-            geom = dr.obj
-            t = dr.tp
+    def labelOff(self): 
+        self.labelText = None
+        self.labelColor = None
+        self.labelSize = None
+
+    def draw(self, geomName, param1 = None, param2 = None):
+    
+        geom =  self.get(geomName, param1, param2)
+        
+        if geomName.endswith('Point'):
+            drawable = Point(geom, self.drawSetting)
+        elif geomName.endswith('Points'):
+            drawable = Points(geom, self.drawSetting)
+        elif geomName.endswith('Line'):
+            drawable = Line(geom, self.drawSetting)
+        elif geomName.endswith('Wire'):
+            drawable = Wire(geom, self.drawSetting)
+        elif geomName.endswith('Surface'):
+            drawable = Surface(geom, self.drawSetting)
+        else:    
+            drawable = Foo(geom)
             
-            print('===> Render','[',key,'] =', dr.style, dr.obj) #self.geoms[key]
-            
-            if dr.style == 'HIDE':
-                pass  
-            elif t == 'point':
-                self.lib.drawPoint(dr.obj, dr.getTrueStyle(), dr.color)
-            elif t == 'line':
-                pnt1,pnt2 = dr.obj;
-                edge = BRepBuilderAPI_MakeEdge(pnt1, pnt2).Edge()
-                self.lib.drawShape(edge, dr.getTrueStyle(), dr.color)
-            elif t == 'circle':
-                pnt1,pnt2,pnt3 = dr.obj;
-                geomCircle = GC_MakeCircle(pnt1, pnt2, pnt3).Value()
-                edge = BRepBuilderAPI_MakeEdge(geomCircle).Edge()
-                self.lib.drawShape(edge, dr.getTrueStyle(), dr.color)
-            elif t == 'shape':
-                self.lib.drawShape(dr.obj, dr.getTrueStyle(), dr.color)
-            elif t == 'label':
-                pntPlace, strTitle = dr.obj
-                self.lib.drawLabel(pntPlace, strTitle, dr.getTrueStyle(), dr.color)
-            elif t == 'desk':
-                self.lib.drawDesk(dr.getTrueStyle())
-            elif t == 'axis':
-                self.lib.drawAxis(dr.getTrueStyle())
-
-        self.lib.start()
-
-    def drawPoint(self, style, pnt, text):
-        self.initObj('point', style, pnt, self.color)
-        self.initObj('label', style, (pnt, text), self.color)
-
-    def drawLine(self, style, the2Points):
-        self.initObj('line', style, the2Points, self.color)
-
-    def drawCircle(self, style, the3Points):
-        self.initObj('circle', style, the3Points, self.color)
-
-    def drawSurface(self, style, surface):
-        self.initObj('shape', style, surface, self.color)
-
-    def drawWire(self, style, wire):
-        self.initObj('shape', style, wire, self.color)
-
+        self.putToRender(drawable)
+        
     def getCacheKey(self, objName, param1, param2):
         params = ''
         if param1 != None:
@@ -595,27 +638,7 @@ class Scene:
             self.cache[cacheKey] = obj
             return obj       
     
-    def drawObj(self, objName, key, obj):
-       if objName.endswith('Point') or objName.endswith('Points'):
-           self.drawPoint(self.style, obj, key)
-       elif objName.endswith('Wire') or objName.endswith('Wires'):
-           self.drawWire(self.style, obj)
-       elif objName.endswith('Surface') or objName.endswith('Surfaces'):
-           self.drawSurface(self.style, obj)
-       elif objName.endswith('Line') or objName.endswith('Lines'):
-           self.drawLine(self.style, obj)
-        
-    def draw(self, objName, param1 = None, param2 = None):
-       obj =  self.get(objName, param1, param2)
-       if isinstance(obj, dict): 
-           for key in obj:
-             self.drawObj(objName, key, obj[key])
-       else:    
-           self.drawObj(objName, '' ,obj)
     
-    def setStyle(self, style, color = None): 
-        self.style = style
-        self.color = color
 
 if __name__ == '__main__':
     pass

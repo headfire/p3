@@ -187,7 +187,7 @@ def slide_07_DaoWithCase (sc, r, offset, caseH, caseZMove,gap):
 
 def getDaoBasePoints():
 
-    r = sc.val('DAO_BASE_RADIUS')
+    r = sc.getVal('DAO_BASE_RADIUS')
     r2 = r/2
 
     gpPntMinC = gp_Pnt(0,r2,0)
@@ -205,7 +205,7 @@ def getDaoBasePoints():
     return p;
 
 def getDaoBoundCircleWire(offset):
-    r = sc.val('DAO_BASE_RADIUS') + offset
+    r = sc.getVal('DAO_BASE_RADIUS') + offset
     return makeCircleWire(gp_Pnt(r,0,0), gp_Pnt(0,r,0), gp_Pnt(-r,0,0))    
 
 def getDaoClassicWire():
@@ -260,7 +260,7 @@ def getDaoSecondOffsetWire(offset):
     
 def getDaoFocusPoint():
 
-    r = sc.val('DAO_BASE_RADIUS')
+    r = sc.getVal('DAO_BASE_RADIUS')
     focusPoint = gp_Pnt(0,-r/4,0)
     
     return focusPoint
@@ -299,7 +299,7 @@ def getDaoSliceLine(offset, sliceKoef):
     
 def getDaoSliceSurface(offset, sliceKoef):
 
-    h = sc.val('DAO_SLICE_FACE_HEIGHT')
+    h = sc.getVal('DAO_SLICE_FACE_HEIGHT')
     beginPoint, endPoint = sc.get('DaoSliceLine', offset, sliceKoef)
 
     x1, y1, z1 = getXYZ(beginPoint)
@@ -356,7 +356,7 @@ def getDaoSkiningSurface(offset):
     beginVertex = BRepBuilderAPI_MakeVertex(beginPoint).Vertex()
     skiner.AddVertex(beginVertex)
 
-    ks = sc.val('DAO_SKINING_SLICES_KOEFS')
+    ks = sc.getVal('DAO_SKINING_SLICES_KOEFS')
     for i in range(len(ks)):
         sliceWire = sc.get('DaoSliceWire', offset, ks[i])
         skiner.AddWire(sliceWire)
@@ -378,7 +378,7 @@ def drawDaoDropsSurface_OffsetType(sc, style, OffsetType, offset):
     drawDaoIngPoint_XXX_SSS(sc, 'HIDE', 'Standart')
     drawDaoFocusPoint(sc, 'HIDE')
 
-    ks = sc.val('DAO_SKINING_SLICES_KOEFS')
+    ks = sc.getVal('DAO_SKINING_SLICES_KOEFS')
     for i in range(len(ks)):
         KoefNum = 'KoefNum'+str(i)
         drawDaoSliceLine_OffsetType_KoefNum(sc, 'HIDE', OffsetType, KoefNum, ks[i]) 
@@ -406,7 +406,7 @@ def drawDaoClassicSlide(sc):
 
 def drawDaoOffsetSlide(sc):
 
-    offset = sc.val('DAO_OFFSET')
+    offset = sc.getVal('DAO_OFFSET')
     
     sc.setStyle('MAIN')
     sc.draw('DaoOffsetWire', offset)
@@ -418,14 +418,14 @@ def drawDaoOffsetSlide(sc):
     
 def drawDaoExampleSliceSlide(sc):
 
-    offset = sc.val('DAO_OFFSET')
+    offset = sc.getVal('DAO_OFFSET')
     
     sc.setStyle('MAIN')
     sc.draw('DaoOffsetWire',offset)
     sc.draw('DaoFocusPoint')
 
     sc.setStyle('FOCUS')
-    k = sc.val('DAO_SLICE_EXAMPLE_KOEF')
+    k = sc.getVal('DAO_SLICE_EXAMPLE_KOEF')
     sc.draw('DaoSliceLine',offset,k)
     sc.draw('DaoSliceSurface',offset,k)
     sc.draw('DaoSlicePoints',offset,k)
@@ -433,13 +433,13 @@ def drawDaoExampleSliceSlide(sc):
 
 def drawManySliceSlide(sc):
 
-    offset = sc.val('DAO_OFFSET')
+    offset = sc.getVal('DAO_OFFSET')
     
     sc.setStyle('MAIN')
     sc.draw('DaoOffsetWire',offset)
     sc.draw('DaoFocusPoint')
 
-    cnt = sc.val('DAO_SLICE_COUNT')
+    cnt = sc.getVal('DAO_SLICE_COUNT')
     bK = 1/(cnt+1)
     eK = 1 - 1/(cnt+1)
     for i in range(cnt):
@@ -451,13 +451,13 @@ def drawManySliceSlide(sc):
 
 def  drawDaoSkiningSlide(sc):
 
-    offset = sc.val('DAO_OFFSET')
+    offset = sc.getVal('DAO_OFFSET')
     
     sc.setStyle('MAIN')
     sc.draw('DaoOffsetWire',offset)
     sc.draw('DaoFocusPoint')
 
-    ks = sc.val('DAO_SKINING_SLICES_KOEFS')
+    ks = sc.getVal('DAO_SKINING_SLICES_KOEFS')
     for i in range(len(ks)):
         sc.setStyle('FOCUS')
         sc.draw('DaoSliceLine', offset, ks[i]) 
@@ -469,7 +469,7 @@ def  drawDaoSkiningSlide(sc):
 
 def drawDaoIngYangSlide (sc):
 
-    offset = sc.val('DAO_OFFSET')
+    offset = sc.getVal('DAO_OFFSET')
     sc.setStyle('MAIN', (100,35,24,100))
     sc.draw('DaoIngSurface', offset)    
     sc.setStyle('MAIN', (52,51,100,100))
@@ -477,7 +477,7 @@ def drawDaoIngYangSlide (sc):
 
 def drawDaoCaseSlide (sc):
 
-    offset = sc.val('DAO_OFFSET')
+    offset = sc.getVal('DAO_OFFSET')
     sc.setStyle('MAIN', (100,35,24,100))
     sc.draw('DaoIngSurface', offset)    
     sc.setStyle('MAIN', (52,51,100,100))
@@ -507,12 +507,12 @@ def getDaoYangSurface(offset):
     
 def getDaoCaseSurface():
         
-    r = sc.val('DAO_BASE_RADIUS')
+    r = sc.getVal('DAO_BASE_RADIUS')
     r2 = r*2
-    h = sc.val('DAO_CASE_HEIGHT')
+    h = sc.getVal('DAO_CASE_HEIGHT')
     h2 = h/2
-    offset = sc.val('DAO_OFFSET')
-    gap = sc.val('DAO_CASE_GAP')
+    offset = sc.getVal('DAO_OFFSET')
+    gap = sc.getVal('DAO_CASE_GAP')
     rTop = r + offset + gap
 
     rSphere = gp_Vec(0,rTop,h2).Magnitude()
@@ -539,43 +539,43 @@ def getDaoCaseSurface():
 
 def initDaoVals(sc):
 
-    sc.initVal('DAO_BASE_RADIUS', 40)
-    sc.initVal('DAO_OFFSET', 3)
-    sc.initVal('DAO_SLICE_EXAMPLE_KOEF', 0.5)
-    sc.initVal('DAO_SLICE_FACE_HEIGHT', 30)
-    sc.initVal('DAO_SLICE_COUNT', 10)
-    sc.initVal('DAO_SKINING_SLICES_KOEFS', [0.03, 0.09 , 0.16, 0.24, 0.35, 0.50, 0.70, 0.85])
-    sc.initVal('DAO_CASE_HEIGHT', 30)
-    sc.initVal('DAO_CASE_GAP', 1)
+    sc.setVal('DAO_BASE_RADIUS', 40)
+    sc.setVal('DAO_OFFSET', 3)
+    sc.setVal('DAO_SLICE_EXAMPLE_KOEF', 0.5)
+    sc.setVal('DAO_SLICE_FACE_HEIGHT', 30)
+    sc.setVal('DAO_SLICE_COUNT', 10)
+    sc.setVal('DAO_SKINING_SLICES_KOEFS', [0.03, 0.09 , 0.16, 0.24, 0.35, 0.50, 0.70, 0.85])
+    sc.setVal('DAO_CASE_HEIGHT', 30)
+    sc.setVal('DAO_CASE_GAP', 1)
 
 
 if __name__ == '__main__':
 
     sc = Scene(globals())
 
-    sc.initVal('SLIDE_NUM', 7)
-    sc.initVal('SLIDE_NAME', 'dao')
+    sc.setVal('SLIDE_NUM', 0)
+    sc.setVal('SLIDE_NAME', 'dao')
 
-    sc.initVal('SCENE_SCALE', '5:1')
-    sc.initVal('SCENE_ORIGIN', (0,0,60))
+    sc.setVal('SCENE_SCALE', '5:1')
+    sc.setVal('SCENE_ORIGIN', (0,0,60))
     
     initDaoVals(sc)
     
-    SLIDE_NUM = sc.val('SLIDE_NUM')
+    SLIDE_NUM = sc.getVal('SLIDE_NUM')
     print('Slide',SLIDE_NUM) 
-    if SLIDE_NUM == 1:
+    if SLIDE_NUM == 0:
         drawDaoClassicSlide(sc)
-    elif SLIDE_NUM == 2:
+    elif SLIDE_NUM == 1:
         drawDaoOffsetSlide(sc)
-    elif SLIDE_NUM == 3:
+    elif SLIDE_NUM == 2:
         drawDaoExampleSliceSlide(sc)
-    elif SLIDE_NUM == 4:
+    elif SLIDE_NUM == 3:
         drawManySliceSlide(sc)
-    elif SLIDE_NUM == 5:
+    elif SLIDE_NUM == 4:
         drawDaoSkiningSlide(sc)
-    elif SLIDE_NUM == 6:
+    elif SLIDE_NUM == 5:
         drawDaoIngYangSlide(sc)
-    elif SLIDE_NUM == 7:
+    elif SLIDE_NUM == 6:
         drawDaoCaseSlide(sc)
 
     sc.render()
