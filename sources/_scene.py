@@ -407,36 +407,28 @@ class Drawable:
         
 
 class Foo(Drawable):
-    def __init__(self, obj, drawSetting):
-        super().__init__(obj, drawSetting)
     def render(self, lib):
-        lib.drawLabel(self.obj, strTitle, self.getTrueStyle(), self.color)
+        if self.labelText != None:
+            lib.drawLabel(self.obj, self.labelText, self.getTrueStyle(), self.color)
 
 class Point(Drawable):
-    def __init__(self, obj, drawSetting):
-        super().__init__(obj, drawSetting)
     def render(self, lib):
         lib.drawPoint(self.obj, self.getTrueStyle(), self.color)
-        lib.drawLabel(self.obj, strTitle, self.getTrueStyle(), self.color)
+        if self.labelText != None:
+            lib.drawLabel(self.obj, self.labelText, self.getTrueStyle(), self.color)
         
 class Points(Drawable):
-    #def __init__(self, obj, drawSetting):
-    #    super().__init__(obj, drawSetting)
     def render(self, lib):
         for key in self.obj:
             lib.drawPoint(self.obj[key], self.getTrueStyle(), self.color)
             if self.labelText != None:
-                lib.drawLabel(self.obj[key], str(key)+labelText, self.getTrueStyle(), self.color)
+                lib.drawLabel(self.obj[key],self.labelText+str(key), self.getTrueStyle(), self.color)
         
 class Wire(Drawable):
-    def __init__(self, obj, drawSetting):
-        super().__init__(obj, drawSetting)
     def render(self, lib):
         lib.drawShape(self.obj, self.getTrueStyle(), self.color)
 
 class Circle(Drawable):
-    def __init__(self, obj, drawSetting):
-        super().__init__(obj, drawSetting)
     def render(self, lib):
         pnt1,pnt2,pnt3 = self.obj;
         geomCircle = GC_MakeCircle(pnt1, pnt2, pnt3).Value()
@@ -444,29 +436,20 @@ class Circle(Drawable):
         lib.drawShape(edge, self.getTrueStyle(), self.color)
 
 class Line(Drawable):
-    def __init__(self, obj, drawSetting):
-        super().__init__(obj, drawSetting)
     def render(self, lib):
-        pnt1,pnt2,pnt3 = self.obj;
-        geomCircle = GC_MakeCircle(pnt1, pnt2, pnt3).Value()
-        edge = BRepBuilderAPI_MakeEdge(geomCircle).Edge()
-        lib.drawShape(edge, self.getTrueStyle(), self.color)
+          pnt1,pnt2 = self.obj;
+          edge = BRepBuilderAPI_MakeEdge(pnt1, pnt2).Edge()
+          lib.drawShape(edge, self.getTrueStyle(), self.color)
 
 class Surface(Drawable):
-    def __init__(self, obj, drawSetting):
-        super().__init__(obj, drawSetting)
     def render(self, lib):
         lib.drawShape(self.obj, self.getTrueStyle(), self.color)
             
 class Desk(Drawable):
-    def __init__(self, obj, drawSetting):
-        super().__init__(obj, drawSetting)
     def render(self, lib):
         lib.drawDesk(self.getTrueStyle())
             
 class Axis(Drawable):
-    def __init__(self, obj, drawSetting):
-        super().__init__(obj, drawSetting)
     def render(self, lib):
         lib.drawAxis(self.getTrueStyle())
 
@@ -566,6 +549,7 @@ class Scene:
         self.setVal('SLIDE_NUM', 0)
         self.setVal('SLIDE_NAME', 'noname')
 
+        self.setStyle('INFO')
         if self.getVal('SCENE_IS_DESK'):
             self.putToRender( Desk(None, self.drawSetting) )        
         if self.getVal('SCENE_IS_AXIS'):
@@ -584,15 +568,10 @@ class Scene:
         self.drawSetting['style'] = style
         self.drawSetting['color'] = color
         
-    def labelOn(self, labelText, labelColor = None, labelSize = None): 
-        self.labelText = labelText
-        self.labelColor = labelColor 
-        self.labelSize = labelSize
-
-    def labelOff(self): 
-        self.labelText = None
-        self.labelColor = None
-        self.labelSize = None
+    def label(self, labelText, labelColor = None, labelSize = None): 
+        self.drawSetting['labelText'] = labelText
+        self.drawSetting['labelColor'] = labelColor 
+        self.drawSetting['labelSize'] = labelSize
 
     def draw(self, geomName, param1 = None, param2 = None):
     
@@ -612,6 +591,11 @@ class Scene:
             drawable = Foo(geom)
             
         self.putToRender(drawable)
+        
+        self.drawSetting['labelText'] = None
+        self.drawSetting['labelColor'] = None
+        self.drawSetting['labelSize'] = None
+
         
     def getCacheKey(self, objName, param1, param2):
         params = ''

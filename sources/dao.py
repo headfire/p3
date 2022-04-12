@@ -398,7 +398,10 @@ def drawDaoDropsSurface_OffsetType(sc, style, OffsetType, offset):
 def drawDaoClassicSlide(sc):
 
     sc.setStyle('MAIN')
+
+    sc.label('p')
     sc.draw('DaoBasePoints')
+
     sc.draw('DaoClassicWire')
     
     sc.setStyle('INFO')
@@ -410,6 +413,8 @@ def drawDaoOffsetSlide(sc):
     
     sc.setStyle('MAIN')
     sc.draw('DaoOffsetWire', offset)
+
+    sc.label('p')
     sc.draw('DaoOffsetPoints', offset)
 
     sc.setStyle('INFO')
@@ -422,6 +427,8 @@ def drawDaoExampleSliceSlide(sc):
     
     sc.setStyle('MAIN')
     sc.draw('DaoOffsetWire',offset)
+
+    sc.label('F')
     sc.draw('DaoFocusPoint')
 
     sc.setStyle('FOCUS')
@@ -429,6 +436,7 @@ def drawDaoExampleSliceSlide(sc):
     sc.draw('DaoSliceLine',offset,k)
     sc.draw('DaoSliceSurface',offset,k)
     sc.draw('DaoSlicePoints',offset,k)
+    
     sc.draw('DaoSliceWire',offset,k)
 
 def drawManySliceSlide(sc):
@@ -437,6 +445,8 @@ def drawManySliceSlide(sc):
     
     sc.setStyle('MAIN')
     sc.draw('DaoOffsetWire',offset)
+
+    sc.label('F')
     sc.draw('DaoFocusPoint')
 
     cnt = sc.getVal('DAO_SLICE_COUNT')
@@ -455,6 +465,8 @@ def  drawDaoSkiningSlide(sc):
     
     sc.setStyle('MAIN')
     sc.draw('DaoOffsetWire',offset)
+
+    sc.label('F')
     sc.draw('DaoFocusPoint')
 
     ks = sc.getVal('DAO_SKINING_SLICES_KOEFS')
@@ -579,33 +591,3 @@ if __name__ == '__main__':
         drawDaoCaseSlide(sc)
 
     sc.render()
-
-
-    '''
-               #      r%    g%     b%     op%     pnt  line   mat
-    if styleVal == 'StyleInfo':
-       styleVal = (   30,   30,   30,    100,     3,     2,  'PLASTIC' )
-    elif styleVal == 'StyleMain':
-       styleVal = (   10,   10,   90,    100,      3,     4,  'PLASTIC' )
-    elif styleVal == 'StyleFocus':
-       styleVal = (   90,   10,   10,     30,      3,     2,  'CHROME' )
-    elif styleVal == 'stGold':
-       styleVal = (   90,   90,   10,    100,      3,     4,  'GOLD'    )
-    elif styleVal == 'stFog':
-       styleVal = (   90,   90,   90,    30,       3,      4,   'PLASTIC'  )
-
-
-               #      r%    g%     b%     op%     pnt  line   mat
-    if styleVal == 'StyleInfo':
-       styleVal = (   30,   30,   30,    100,     3,     2,  'PLASTIC' )
-    elif styleVal == 'StyleMain':
-       styleVal = (   10,   10,   90,    100,      3,     4,  'PLASTIC' )
-    elif styleVal == 'StyleFocus':
-       styleVal = (   90,   10,   10,     30,      3,     2,  'CHROME' )
-    elif styleVal == 'stGold':
-       styleVal = (   90,   90,   10,    100,      3,     4,  'GOLD'    )
-    elif styleVal == 'stGold':
-       styleVal = (   90,   90,   10,    100,      3,     4,  'GOLD'    )
-    elif styleVal == 'stFog':
-       styleVal = (   90,   90,   90,    30,       3,      4,   'PLASTIC'  )
-    '''
