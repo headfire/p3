@@ -11,7 +11,7 @@ from OCC.Core.BRepBuilderAPI import BRepBuilderAPI_MakeEdge, BRepBuilderAPI_Make
 from OCC.Core.BRepOffsetAPI import BRepOffsetAPI_MakePipe, BRepOffsetAPI_MakePipeShell
 from OCC.Core.TopoDS import TopoDS_Edge
 
-from OCC.Core.BRepPrimAPI import BRepPrimAPI_MakeSphere, BRepPrimAPI_MakeBox, BRepPrimAPI_MakeCylinder
+from OCC.Core.BRepPrimAPI import BRepPrimAPI_MakeSphere, BRepPrimAPI_MakeBox, BRepPrimAPI_MakeCylinder, BRepPrimAPI_MakeCone
 
 from OCC.Core.TopAbs import TopAbs_EDGE, TopAbs_VERTEX
 
@@ -212,14 +212,37 @@ class ScreenLib:
         cylVec = gp_Vec(startPoint, endPoint)
         targetDir = gp_Dir(cylVec)
         rotateAngle = gp_Dir(0,0,1).Angle(targetDir)
-        rotateDir = gp_Dir(0,0,1)
-        rotateDir.Cross(targetDir)
+        if not gp_Dir(0,0,1).IsParallel(targetDir, 0.001):
+            rotateDir = gp_Dir(0,0,1)
+            rotateDir.Cross(targetDir)
+        else:    
+            rotateDir = gp_Dir(0,1,0)
+           
         
         transform = gp_Trsf()
         transform.SetRotation(gp_Ax1(gp_Pnt(0,0,0), rotateDir), rotateAngle)
         transform.SetTranslationPart(gp_Vec(gp_Pnt(0,0,0),startPoint))
 
         cyl = BRepPrimAPI_MakeCylinder (radius, cylVec.Magnitude()).Shape()
+        shape =  BRepBuilderAPI_Transform(cyl, transform).Shape()
+        self._renderShapeObj(shape, color, transp, material)
+
+    def renderCone(self, startPoint, endPoint, radius1, radius2, quality, color, transp, material):
+    
+        cylVec = gp_Vec(startPoint, endPoint)
+        targetDir = gp_Dir(cylVec)
+        rotateAngle = gp_Dir(0,0,1).Angle(targetDir)
+        if not gp_Dir(0,0,1).IsParallel(targetDir, 0.001):
+            rotateDir = gp_Dir(0,0,1)
+            rotateDir.Cross(targetDir)
+        else:    
+            rotateDir = gp_Dir(0,1,0)
+        
+        transform = gp_Trsf()
+        transform.SetRotation(gp_Ax1(gp_Pnt(0,0,0), rotateDir), rotateAngle)
+        transform.SetTranslationPart(gp_Vec(gp_Pnt(0,0,0),startPoint))
+
+        cyl = BRepPrimAPI_MakeCone (radius, radius2, cylVec.Magnitude()).Shape()
         shape =  BRepBuilderAPI_Transform(cyl, transform).Shape()
         self._renderShapeObj(shape, color, transp, material)
         
@@ -291,6 +314,13 @@ class Cylinder(Drawable):
         setting = self.styler.getDrawSetting('Wire')
         pnt1, pnt2, r = self.geom;
         lib.renderCylinder(pnt1,pnt2, r, 2/10, setting['GeomColor'], setting['GeomTransp'], setting['GeomMaterial'])
+        #todo label
+
+class Cone(Drawable):
+    def render(self, lib):
+        setting = self.styler.getDrawSetting('Wire')
+        pnt1, pnt2, r1, r2 = self.geom;
+        lib.renderCone(pnt1,pnt2, r1, r2, 2/10, setting['GeomColor'], setting['GeomTransp'], setting['GeomMaterial'])
         #todo label
 
 class Point(Drawable):
@@ -376,7 +406,9 @@ class Axis(Drawable):
             lib.renderTrihedron(size, setting['GeomColor'], setting['GeomTransp'], setting['GeomMaterial'])
 
             Point(gp_Pnt(0,0,0),'',self.styler).render(lib)
-
+            
+            Cone((gp_Pnt(0,0,0),gp_Pnt(0,0,10), 10, 5),'',self.styler).render(lib)
+            
             cnt = int( size // step)
             for i in range (1, cnt):
                 d = i* step
