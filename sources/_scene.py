@@ -179,52 +179,33 @@ class WebLib:
 
 class ScreenLib:
 
-    def __init__(self, scaleStr, originXYZ):
+    def __init__(self):
         self.display, self.start_display, self.add_menu,  self.add_function_to_menu  = init_display(
             None, (1024, 768), True, [128, 128, 128], [128, 128, 128]
           )
-          
-        self.originXYZ = originXYZ
-        self.scaleStr = scaleStr
-        splitted = scaleStr.split(':')
-        self.scale = (int(splitted[1])/int(splitted[0]))         
 
+    def _renderShapeObj(self, theShape, color100, transp100, materialName):
+        ais = AIS_Shape(theShape)
+        r,g,b = color100
+        aisColor =  Quantity_Color(r/100, g/100, b/100, Quantity_TOC_RGB)
+        ais.SetColor(aisColor)
+        ais.SetTransparency(transp100/100)
+        aspect = Graphic3d_MaterialAspect(MATERIAL_TYPES.index(materialName))
+        ais.SetMaterial(aspect)
+        self.display.Context.Display(ais, False)
 
-    def _styleAis(self, ais, styleName, styleValue):
-        if styleName == 'color':
-            r,g,b = styleValue
-            color =  Quantity_Color(r/100, g/100, b/100, Quantity_TOC_RGB)
-            ais.SetColor(color)
-            if isinstance(ais, AIS_Trihedron):
-                ais.SetArrowColor(color)
-                ais.SetTextColor(color)
-        elif styleName == 'transp':
-                ais.SetTransparency(styleValue/100)
-        elif styleName == 'material':
-             aspect = Graphic3d_MaterialAspect(MATERIAL_TYPES.index(styleValue))
-             ais.SetMaterial(aspect)
-        elif styleName == 'lineType':
-             ais.Attributes().LineAspect().SetTypeOfLine(LINE_TYPES[styleValue])
-             ais.Attributes().WireAspect().SetTypeOfLine(LINE_TYPES[styleValue])
-        elif styleName == 'lineWidth':
-            ais.Attributes().LineAspect().SetWidth(styleValue)
-            ais.Attributes().WireAspect().SetWidth(styleValue)
-        if isinstance(ais, AIS_Point):
-            if styleName == 'pointType':
-                 ais.SetMarker(POINT_TYPES.index(styleValue))
-            if styleName == 'pointSize':
-                 ais.Attributes().PointAspect().SetScale(styleValue)
-
-    def drawLabel(self, pnt, labelText, style):
-        dLabel = 10 * self.scale
+    def renderLabel(self, pnt, dLabel ,labelText, color, size):
         pntLabel = gp_Pnt(pnt.X()+dLabel,pnt.Y()+dLabel,pnt.Z()+dLabel)
-        r,g,b = style['LabelColor']
+        r,g,b = color 
         self.display.DisplayMessage(pntLabel,
-            labelText, style['LabelSize'], (r/100, g/100, b/100), False)
+            labelText, size, (r/100, g/100, b/100), False)
 
     def renderSphere(self, centerPoint, radius, quality, color, transp, material):
         theShape = BRepPrimAPI_MakeSphere(centerPoint, radius).Shape()
-        self.renderShapeObj(theShape, color, transp, material)
+        self._renderShapeObj(theShape, color, transp, material)
+
+    def renderSurface(self, surfaceShape, quality, color, transp, material):
+        self._renderShapeObj(surfaceShape, color, transp, material)
 
     def renderCylinder(self, startPoint, endPoint, radius, quality, color, transp, material):
     
@@ -240,7 +221,7 @@ class ScreenLib:
 
         cyl = BRepPrimAPI_MakeCylinder (radius, cylVec.Magnitude()).Shape()
         shape =  BRepBuilderAPI_Transform(cyl, transform).Shape()
-        self.renderShapeObj(shape, color, transp, material)
+        self._renderShapeObj(shape, color, transp, material)
         
     def renderPipe(self, aWire, radius, quality, color, transp, material):
     
@@ -252,87 +233,32 @@ class ScreenLib:
         pipeShell = BRepOffsetAPI_MakePipe(aWire, profileWire)
         pipeShape = pipeShell.Shape()
         
-        self.renderShapeObj(pipeShape, color, transp, material)
+        self._renderShapeObj(pipeShape, color, transp, material)
+    
+    def renderBox(self, startCornerPoint, xSize, ySize, zSize, quality, color, transp, material):
+        shape = BRepPrimAPI_MakeBox (startCornerPoint, xSize, ySize, zSize).Shape()
+        self._renderShapeObj(shape, color, transp, material)
+
+    def renderTrihedron(self, size, color, transp100, materialName):
+    
+        pnt = gp_Pnt(0,0,0)
+        dir1 = gp_Dir(gp_Vec(0,0,1))
+        dir2 = gp_Dir(gp_Vec(1,0,0))
+        geomAxis = Geom_Axis2Placement(pnt, dir1, dir2)
+
+        ais = AIS_Trihedron(geomAxis)
+        ais.SetSize(size)
         
-    def renderShapeObj(self, theShape, color100, transp100, materialName):
-        ais = AIS_Shape(theShape)
-        r,g,b = color100
+        r,g,b = color
         aisColor =  Quantity_Color(r/100, g/100, b/100, Quantity_TOC_RGB)
         ais.SetColor(aisColor)
+        ais.SetArrowColor(aisColor)
+        ais.SetTextColor(aisColor)
         ais.SetTransparency(transp100/100)
         aspect = Graphic3d_MaterialAspect(MATERIAL_TYPES.index(materialName))
         ais.SetMaterial(aspect)
+
         self.display.Context.Display(ais, False)
-
-    def drawPoint(self, pnt, style):
-        ais = AIS_Point(Geom_CartesianPoint(pnt))
-        self._styleAis(ais, 'color', style['GeomColor'])
-        self._styleAis(ais, 'transp', style['GeomTransp'])
-        self._styleAis(ais, 'material', style['GeomMaterial'])
-        self._styleAis(ais, 'pointType', 'BALL')
-        self._styleAis(ais, 'pointSize', style['GeomBoldLevel'])
-        self.display.Context.Display(ais, False)
-
-    def drawShape(self, shape, style):
-        ais = AIS_Shape(shape)
-        self._styleAis(ais, 'color', style['GeomColor'])
-        self._styleAis(ais, 'transp', style['GeomTransp'])
-        self._styleAis(ais, 'material', style['GeomMaterial'])
-        self._styleAis(ais, 'pointType', 'BALL')
-        self._styleAis(ais, 'pointSize', style['GeomBoldLevel'])
-        self._styleAis(ais, 'lineType', 'SOLID')
-        self._styleAis(ais, 'lineWidth', style['GeomBoldLevel'])
-        self.display.Context.Display(ais, False)
-
-    def drawTrihAis(self, ais, style):
-        self._styleAis(ais, 'color', style['GeomColor'])
-        self._styleAis(ais, 'transp', style['GeomTransp'])
-        self._styleAis(ais, 'material', style['GeomMaterial'])
-        self._styleAis(ais, 'pointType', 'BALL')
-        self._styleAis(ais, 'pointSize', style['GeomBoldLevel'])
-        self._styleAis(ais, 'lineType', 'SOLID')
-        self._styleAis(ais, 'lineWidth', style['GeomBoldLevel'])
-        self.display.Context.Display(ais, False)
-
-
-    def drawAxis(self, style):
-
-            size = 500*self.scale
-
-            step = size/10
-            ss = [1,5,10,50,100,500,1000,5000,10000]
-            for s in ss:
-               if step<s:
-                   step=s/5
-                   break
-
-            pnt = gp_Pnt(0,0,0)
-            dir1 = gp_Dir(gp_Vec(0,0,1))
-            dir2 = gp_Dir(gp_Vec(1,0,0))
-            geomAxis = Geom_Axis2Placement(pnt, dir1, dir2)
-
-            trihAis = AIS_Trihedron(geomAxis)
-            trihAis.SetSize(size)
-
-            self.drawTrihAis(trihAis, style)
-
-            self.drawPoint(gp_Pnt(0,0,0), style)
-
-            cnt = int( size // step)
-            for i in range (1, cnt):
-                d = i* step
-                self.drawPoint(gp_Pnt(d,0,0), style)
-                self.drawPoint(gp_Pnt(0,d,0), style)
-                self.drawPoint(gp_Pnt(0,0,d), style)
-
-    def drawDesk(self, style):
-            originX, originY, originZ = self.originXYZ
-            scale = self.scale
-            xBox, yBox, zBox = 1500*scale, 1000*scale, 40*scale
-            desk = BRepPrimAPI_MakeBox (gp_Pnt( -xBox/2-originX, -yBox/2-originY, -zBox-originZ), xBox, yBox, zBox)
-            self.drawShape(desk.Solid(), style)
-            scaleLabelPoint = gp_Pnt( -xBox/2-originX, -yBox/2-originY, zBox/3-originZ)
-            self.drawLabel( scaleLabelPoint, 'A0 M' + self.scaleStr, style )
   
     #todo start -> run
     def start(self):
@@ -360,7 +286,7 @@ class Point(Drawable):
         center = self.geom
         lib.renderSphere(center, setting['GeomBoldLevel']*self.boldFactor*2, 2/10, setting['GeomColor'], setting['GeomTransp'], setting['GeomMaterial'])
         if setting['LabelIsRender']:
-            lib.drawLabel(self.geom, self.labelText, setting)
+            lib.renderLabel(self.geom, 10 * self.styler.scale, self.labelText, setting['LabelColor'], setting['LabelSize'])
         
 class Points(Drawable):
     def render(self, lib):
@@ -391,22 +317,57 @@ class Line(Drawable):
 
 class Surface(Drawable):
     def render(self, lib):
-        lib.drawShape(self.geom, self.styler.getDrawSetting('Surface'))
+        setting = self.styler.getDrawSetting('Surface')
+        lib.renderSurface(self.geom, 2/10, setting['GeomColor'], setting['GeomTransp'], setting['GeomMaterial'])
         #todo label
             
 class Desk(Drawable):
     def render(self, lib):
-        lib.drawDesk(self.styler.getDrawSetting('Surface'))
-        #todo label
+
+        setting = self.styler.getDrawSetting('Surface')
+        
+        originX, originY, originZ = self.styler.originXYZ
+        scale = self.styler.scale
+        xBox, yBox, zBox = 1500*scale, 1000*scale, 40*scale
+        lib.renderBox(gp_Pnt( -xBox/2-originX, -yBox/2-originY, -zBox-originZ), xBox, yBox, zBox, 2/10, setting['GeomColor'], setting['GeomTransp'], setting['GeomMaterial'])
+        scaleLabelPoint = gp_Pnt( -xBox/2-originX, -yBox/2-originY, zBox/3-originZ)
+        lib.renderLabel( scaleLabelPoint, 10 * self.styler.scale, 'A0 M' + self.styler.scaleStr, setting['LabelColor'], setting['LabelSize'] )
+
             
 class Axis(Drawable):
     def render(self, lib):
-        lib.drawAxis(self.styler.getDrawSetting('Surface'))
+    
+            setting = self.styler.getDrawSetting('Surface')
+            size = 500*self.styler.scale
+
+            step = size/10
+            ss = [1,5,10,50,100,500,1000,5000,10000]
+            for s in ss:
+               if step<s:
+                   step=s/5
+                   break
+
+            lib.renderTrihedron(size, setting['GeomColor'], setting['GeomTransp'], setting['GeomMaterial'])
+
+            Point(gp_Pnt(0,0,0),'',self.styler).render(lib)
+
+            cnt = int( size // step)
+            for i in range (1, cnt):
+                d = i* step
+                Point(gp_Pnt(d,0,0),'',self.styler).render(lib)
+                Point(gp_Pnt(0,d,0),'',self.styler).render(lib)
+                Point(gp_Pnt(0,0,d),'',self.styler).render(lib)
+
         #todo label
 
 
 class Styler:
-    def __init__(self, drawStyle, drawHints = {} ):
+    def __init__(self, drawStyle, drawHints, scaleStr, originXYZ):
+
+        self.originXYZ = originXYZ
+        self.scaleStr = scaleStr
+        splitted = scaleStr.split(':')
+        self.scale = (int(splitted[1])/int(splitted[0]))         
 
         self.drawHints = drawHints.copy() 
         self.drawStyle = drawStyle 
@@ -498,7 +459,7 @@ class Scene:
         if renderTarget == 'test':
             lib = TestLib(SysDecors, SysPrecisions, webDir, stlDir)
         elif renderTarget == 'screen':
-            lib = ScreenLib(self.getVal('SCENE_SCALE'), self.getVal('SCENE_ORIGIN'))
+            lib = ScreenLib()
         elif  renderTarget == 'web':
             lib = WebLib(SysDecors, SysPrecisions, webDir)
         elif  renderTarget == 'stl':
@@ -527,10 +488,12 @@ class Scene:
         self.setVal('SLIDE_NUM', 0)
         self.setVal('SLIDE_NAME', 'noname')
 
+        styler = Styler('Info', {}, self.getVal('SCENE_SCALE'), self.getVal('SCENE_ORIGIN'))
+
         if self.getVal('SCENE_IS_DESK'):
-            self.putToRender( Desk(None, 'Desk' ,Styler('Info') ) )         
+            self.putToRender( Desk(None,'Desk',styler) )         
         if self.getVal('SCENE_IS_AXIS'):
-            self.putToRender( Axis(None, 'Axis'  ,Styler('Info') )  )        
+            self.putToRender( Axis(None,'Axis',styler) )         
 
         lib = self.initRenderLib()
         print('==> Slide', self.getVal('SLIDE_NAME'), self.getVal('SLIDE_NUM'))
@@ -555,7 +518,7 @@ class Scene:
     def draw(self, geomName, param1 = None, param2 = None):
     
         geom =  self.get(geomName, param1, param2)
-        styler = Styler(self.drawStyle, self.drawHints)
+        styler = Styler(self.drawStyle, self.drawHints, self.getVal('SCENE_SCALE'), self.getVal('SCENE_ORIGIN'))
         
         if geomName.endswith('Point'):
             drawable = Point(geom, self.drawLabelText, styler)
