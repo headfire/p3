@@ -235,8 +235,14 @@ class ScreenLib:
         
         self._renderShapeObj(pipeShape, color, transp, material)
     
-    def renderBox(self, startCornerPoint, xSize, ySize, zSize, quality, color, transp, material):
-        shape = BRepPrimAPI_MakeBox (startCornerPoint, xSize, ySize, zSize).Shape()
+    def renderBox(self, firstCornerPoint, secondCornerPoint, quality, color, transp, material):
+        x1 = firstCornerPoint.X()
+        y1 = firstCornerPoint.Y()
+        z1 = firstCornerPoint.Z()
+        x2 = secondCornerPoint.X()
+        y2 = secondCornerPoint.Y()
+        z2 = secondCornerPoint.Z()
+        shape = BRepPrimAPI_MakeBox (firstCornerPoint, x2-x1, y2-y1, z2-z1).Shape()
         self._renderShapeObj(shape, color, transp, material)
 
     def renderTrihedron(self, size, color, transp100, materialName):
@@ -280,6 +286,13 @@ class Foo(Drawable):
         setting = self.styler.getDrawSetting('Point')
         lib.drawLabel(self.geom, self.labelText, setting)
 
+class Cylinder(Drawable):
+    def render(self, lib):
+        setting = self.styler.getDrawSetting('Wire')
+        pnt1, pnt2, r = self.geom;
+        lib.renderCylinder(pnt1,pnt2, r, 2/10, setting['GeomColor'], setting['GeomTransp'], setting['GeomMaterial'])
+        #todo label
+
 class Point(Drawable):
     def render(self, lib):
         setting = self.styler.getDrawSetting('Point')
@@ -288,11 +301,6 @@ class Point(Drawable):
         if setting['LabelIsRender']:
             lib.renderLabel(self.geom, 10 * self.styler.scale, self.labelText, setting['LabelColor'], setting['LabelSize'])
         
-class Points(Drawable):
-    def render(self, lib):
-        setting = self.styler.getDrawSetting('Point')
-        for key in self.geom:
-           Point(self.geom[key], self.labelText+str(key), self.styler).render(lib)
         
 class Wire(Drawable):
     def render(self, lib):
@@ -308,19 +316,35 @@ class Circle(Drawable):
         lib.drawShape(edge, self.styler.getDrawSetting('Wire'))
         #todo label
 
-class Line(Drawable):
-    def render(self, lib):
-        setting = self.styler.getDrawSetting('Wire')
-        pnt1,pnt2 = self.geom;
-        lib.renderCylinder(pnt1,pnt2, setting['GeomBoldLevel']*self.boldFactor, 2/10, setting['GeomColor'], setting['GeomTransp'], setting['GeomMaterial'])
-        #todo label
-
 class Surface(Drawable):
     def render(self, lib):
         setting = self.styler.getDrawSetting('Surface')
         lib.renderSurface(self.geom, 2/10, setting['GeomColor'], setting['GeomTransp'], setting['GeomMaterial'])
         #todo label
-            
+
+class Box(Drawable):
+    def render(self, lib):
+        setting = self.styler.getDrawSetting('Surface')
+        firstCorner, secondCorner = self.geom
+        lib.renderBox(firstCorner, secondCorner, 2/10, setting['GeomColor'], setting['GeomTransp'], setting['GeomMaterial'])
+
+#************************************************************************
+
+class Points(Drawable):
+    def render(self, lib):
+        setting = self.styler.getDrawSetting('Point')
+        for key in self.geom:
+           Point(self.geom[key], self.labelText+str(key), self.styler).render(lib)
+
+class Line(Drawable):
+    def render(self, lib):
+        setting = self.styler.getDrawSetting('Wire')
+        pnt1,pnt2 = self.geom;
+        Cylinder((pnt1, pnt2, setting['GeomBoldLevel']*self.boldFactor),'',self.styler).render(lib)
+        #todo label
+
+
+         
 class Desk(Drawable):
     def render(self, lib):
 
@@ -329,7 +353,9 @@ class Desk(Drawable):
         originX, originY, originZ = self.styler.originXYZ
         scale = self.styler.scale
         xBox, yBox, zBox = 1500*scale, 1000*scale, 40*scale
-        lib.renderBox(gp_Pnt( -xBox/2-originX, -yBox/2-originY, -zBox-originZ), xBox, yBox, zBox, 2/10, setting['GeomColor'], setting['GeomTransp'], setting['GeomMaterial'])
+        firstCorner = gp_Pnt(-xBox/2-originX, -yBox/2-originY, -zBox-originZ)
+        secondCorner = gp_Pnt(xBox/2-originX, yBox/2-originY, -originZ)
+        Box((firstCorner, secondCorner),'',self.styler).render(lib)
         scaleLabelPoint = gp_Pnt( -xBox/2-originX, -yBox/2-originY, zBox/3-originZ)
         lib.renderLabel( scaleLabelPoint, 10 * self.styler.scale, 'A0 M' + self.styler.scaleStr, setting['LabelColor'], setting['LabelSize'] )
 
