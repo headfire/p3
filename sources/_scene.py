@@ -1,7 +1,7 @@
 from OCC.Display.SimpleGui import init_display
 
 from OCC.Core.GC import GC_MakeCircle
-from OCC.Core.gp import gp_Pnt, gp_Dir, gp_Vec, gp_XOY, gp_YOZ, gp_Trsf, gp_DX,gp_Ax1
+from OCC.Core.gp import gp_Pnt, gp_Dir, gp_Vec, gp_XOY, gp_YOZ, gp_Trsf, gp_DX,gp_Ax1, gp_Origin
 from OCC.Core.Geom import Geom_Axis2Placement, Geom_CartesianPoint, Geom_Point
 from OCC.Core.AIS import AIS_Point, AIS_Trihedron, AIS_Shape, AIS_Line
 from OCC.Core.Quantity import Quantity_Color, Quantity_TOC_RGB
@@ -242,7 +242,7 @@ class ScreenLib:
         transform.SetRotation(gp_Ax1(gp_Pnt(0,0,0), rotateDir), rotateAngle)
         transform.SetTranslationPart(gp_Vec(gp_Pnt(0,0,0),startPoint))
 
-        cyl = BRepPrimAPI_MakeCone (radius, radius2, cylVec.Magnitude()).Shape()
+        cyl = BRepPrimAPI_MakeCone (radius1, radius2, cylVec.Magnitude()).Shape()
         shape =  BRepBuilderAPI_Transform(cyl, transform).Shape()
         self._renderShapeObj(shape, color, transp, material)
         
@@ -267,27 +267,6 @@ class ScreenLib:
         z2 = secondCornerPoint.Z()
         shape = BRepPrimAPI_MakeBox (firstCornerPoint, x2-x1, y2-y1, z2-z1).Shape()
         self._renderShapeObj(shape, color, transp, material)
-
-    def renderTrihedron(self, size, color, transp100, materialName):
-    
-        pnt = gp_Pnt(0,0,0)
-        dir1 = gp_Dir(gp_Vec(0,0,1))
-        dir2 = gp_Dir(gp_Vec(1,0,0))
-        geomAxis = Geom_Axis2Placement(pnt, dir1, dir2)
-
-        ais = AIS_Trihedron(geomAxis)
-        ais.SetSize(size)
-        
-        r,g,b = color
-        aisColor =  Quantity_Color(r/100, g/100, b/100, Quantity_TOC_RGB)
-        ais.SetColor(aisColor)
-        ais.SetArrowColor(aisColor)
-        ais.SetTextColor(aisColor)
-        ais.SetTransparency(transp100/100)
-        aspect = Graphic3d_MaterialAspect(MATERIAL_TYPES.index(materialName))
-        ais.SetMaterial(aspect)
-
-        self.display.Context.Display(ais, False)
   
     #todo start -> run
     def start(self):
@@ -307,7 +286,8 @@ class Drawable:
 class Foo(Drawable):
     def render(self, lib):
         setting = self.styler.getDrawSetting('Point')
-        lib.drawLabel(self.geom, self.labelText, setting)
+        if self.labelText != None:
+            lib.renderLabel(self.geom, 10 * self.styler.scale, self.labelText, setting['LabelColor'], setting['LabelSize'])
 
 class Cylinder(Drawable):
     def render(self, lib):
@@ -328,9 +308,7 @@ class Point(Drawable):
         setting = self.styler.getDrawSetting('Point')
         center = self.geom
         lib.renderSphere(center, setting['GeomBoldLevel']*self.boldFactor*2, 2/10, setting['GeomColor'], setting['GeomTransp'], setting['GeomMaterial'])
-        if setting['LabelIsRender']:
-            lib.renderLabel(self.geom, 10 * self.styler.scale, self.labelText, setting['LabelColor'], setting['LabelSize'])
-        
+        Foo(center, self.labelText, self.styler).render(lib)
         
 class Wire(Drawable):
     def render(self, lib):
@@ -364,7 +342,11 @@ class Points(Drawable):
     def render(self, lib):
         setting = self.styler.getDrawSetting('Point')
         for key in self.geom:
-           Point(self.geom[key], self.labelText+str(key), self.styler).render(lib)
+            if self.labelText != None:
+                text = self.labelText+str(key)
+            else:
+                text = self.labelText+str(key)       
+            Point(self.geom[key], text, self.styler).render(lib)
 
 class Line(Drawable):
     def render(self, lib):
@@ -373,7 +355,24 @@ class Line(Drawable):
         Cylinder((pnt1, pnt2, setting['GeomBoldLevel']*self.boldFactor),'',self.styler).render(lib)
         #todo label
 
+class Vector(Drawable):
+    def render(self, lib):
+        setting = self.styler.getDrawSetting('Wire')
+        pnt1, pnt2 = self.geom;
 
+
+        vCone = gp_Vec(pnt1, pnt2)
+        vCone.Normalize()
+        vCone.Multiply(10)
+
+        vLine = gp_Vec(gp_Origin(), pnt2)
+        vLine.Subtract(vCone)
+        
+        middlePnt = pnt1.Translated(vLine)
+        
+        Cylinder((pnt1, middlePnt, setting['GeomBoldLevel']*self.boldFactor), '',self.styler).render(lib)
+        Cone((middlePnt, pnt2, setting['GeomBoldLevel']*self.boldFactor*3, 0), '',self.styler).render(lib)
+        #todo label
          
 class Desk(Drawable):
     def render(self, lib):
@@ -403,11 +402,18 @@ class Axis(Drawable):
                    step=s/5
                    break
 
-            lib.renderTrihedron(size, setting['GeomColor'], setting['GeomTransp'], setting['GeomMaterial'])
-
+            #lib.renderTrihedron(size, setting['GeomColor'], setting['GeomTransp'], setting['GeomMaterial'])
+  
             Point(gp_Pnt(0,0,0),'',self.styler).render(lib)
             
-            Cone((gp_Pnt(0,0,0),gp_Pnt(0,0,10), 10, 5),'',self.styler).render(lib)
+            Vector((gp_Pnt(0,0,0),gp_Pnt(size,0,0)),'',self.styler).render(lib)
+            Vector((gp_Pnt(0,0,0),gp_Pnt(0,size,0)),'',self.styler).render(lib)
+            Vector((gp_Pnt(0,0,0),gp_Pnt(0,0,size)),'',self.styler).render(lib)
+            
+            Foo(gp_Pnt(size,0,0),'X', self.styler).render(lib)
+            Foo(gp_Pnt(0,size,0),'Y', self.styler).render(lib)
+            Foo(gp_Pnt(0,0,size),'Z', self.styler).render(lib)
+            
             
             cnt = int( size // step)
             for i in range (1, cnt):
@@ -415,6 +421,7 @@ class Axis(Drawable):
                 Point(gp_Pnt(d,0,0),'',self.styler).render(lib)
                 Point(gp_Pnt(0,d,0),'',self.styler).render(lib)
                 Point(gp_Pnt(0,0,d),'',self.styler).render(lib)
+
 
         #todo label
 
@@ -436,9 +443,9 @@ class Styler:
         self.initPrimitive('MainWire', (10,10,90), 0, 5, 'PLASTIC', (70,70,70) ,30)
         self.initPrimitive('MainSurface',(10,10,90), 0, 5,'PLASTIC', (70,70,70) ,30)
      
-        self.initPrimitive('InfoPoint', (40,40,40), 0,3,'PLASTIC', (70,70,70) ,30)
-        self.initPrimitive('InfoWire', (40,40,40), 0, 3,'PLASTIC',  (70,70,70) ,30)
-        self.initPrimitive('InfoSurface', (40,40,40),0, 3,'PLASTIC', (70,70,70) ,30)
+        self.initPrimitive('InfoPoint', (40,40,40), 50,3,'PLASTIC', (70,70,70) ,30)
+        self.initPrimitive('InfoWire', (40,40,40), 50, 3,'PLASTIC',  (70,70,70) ,30)
+        self.initPrimitive('InfoSurface', (40,40,40),50, 3,'PLASTIC', (70,70,70) ,30)
       
         self.initPrimitive('FocusPoint', (90,10,10), 0, 5,'PLASTIC', (70,70,70) ,30)
         self.initPrimitive('FocusWire', (90,10,10), 0, 3,'PLASTIC', (70,70,70) ,30)
