@@ -413,6 +413,7 @@ def drawDaoExampleSliceSlide(sc):
     k = sc.getVal('DAO_SLICE_EXAMPLE_KOEF')
     sc.draw('DaoSliceLine',offset,k)
     sc.draw('DaoSliceSurface',offset,k)
+    sc.label('x')
     sc.draw('DaoSlicePoints',offset,k)
     
     sc.draw('DaoSliceWire',offset,k)
@@ -543,7 +544,7 @@ if __name__ == '__main__':
 
     sc = Scene(globals())
 
-    sc.setVal('SLIDE_NUM', 0)
+    sc.setVal('SLIDE_NUM', 2)
     sc.setVal('SLIDE_NAME', 'dao')
 
     sc.setVal('SCENE_SCALE', '5:1')
@@ -552,7 +553,6 @@ if __name__ == '__main__':
     initDaoVals(sc)
     
     SLIDE_NUM = sc.getVal('SLIDE_NUM')
-    print('Slide',SLIDE_NUM) 
     if SLIDE_NUM == 0:
         drawDaoClassicSlide(sc)
     elif SLIDE_NUM == 1:

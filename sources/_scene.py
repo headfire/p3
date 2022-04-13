@@ -1,19 +1,17 @@
 from OCC.Display.SimpleGui import init_display
 
 from OCC.Core.GC import GC_MakeCircle
-from OCC.Core.gp import gp_Pnt, gp_Dir, gp_Vec, gp_XOY, gp_YOZ
+from OCC.Core.gp import gp_Pnt, gp_Dir, gp_Vec, gp_XOY, gp_YOZ, gp_Trsf, gp_DX,gp_Ax1
 from OCC.Core.Geom import Geom_Axis2Placement, Geom_CartesianPoint, Geom_Point
 from OCC.Core.AIS import AIS_Point, AIS_Trihedron, AIS_Shape, AIS_Line
 from OCC.Core.Quantity import Quantity_Color, Quantity_TOC_RGB
 from OCC.Core.TopExp import TopExp_Explorer
 from OCC.Core.Graphic3d import Graphic3d_MaterialAspect
-from OCC.Core.BRepBuilderAPI import BRepBuilderAPI_MakeEdge, BRepBuilderAPI_MakeWire
+from OCC.Core.BRepBuilderAPI import BRepBuilderAPI_MakeEdge, BRepBuilderAPI_MakeWire, BRepBuilderAPI_Transform
 from OCC.Core.BRepOffsetAPI import BRepOffsetAPI_MakePipe, BRepOffsetAPI_MakePipeShell
 from OCC.Core.TopoDS import TopoDS_Edge
 
-import OCC.Core.BRepPrimAPI
-
-from OCC.Core.BRepPrimAPI import BRepPrimAPI_MakeSphere, BRepPrimAPI_MakeBox
+from OCC.Core.BRepPrimAPI import BRepPrimAPI_MakeSphere, BRepPrimAPI_MakeBox, BRepPrimAPI_MakeCylinder
 
 from OCC.Core.TopAbs import TopAbs_EDGE, TopAbs_VERTEX
 
@@ -225,9 +223,24 @@ class ScreenLib:
             labelText, style['LabelSize'], (r/100, g/100, b/100), False)
 
     def renderSphere(self, centerPoint, radius, quality, color, transp, material):
-        theShape = OCC.Core.BRepPrimAPI.BRepPrimAPI_MakeSphere(centerPoint, radius).Shape()
+        theShape = BRepPrimAPI_MakeSphere(centerPoint, radius).Shape()
         self.renderShapeObj(theShape, color, transp, material)
-        pass
+
+    def renderCylinder(self, startPoint, endPoint, radius, quality, color, transp, material):
+    
+        cylVec = gp_Vec(startPoint, endPoint)
+        targetDir = gp_Dir(cylVec)
+        rotateAngle = gp_Dir(0,0,1).Angle(targetDir)
+        rotateDir = gp_Dir(0,0,1)
+        rotateDir.Cross(targetDir)
+        
+        transform = gp_Trsf()
+        transform.SetRotation(gp_Ax1(gp_Pnt(0,0,0), rotateDir), rotateAngle)
+        transform.SetTranslationPart(gp_Vec(gp_Pnt(0,0,0),startPoint))
+
+        cyl = BRepPrimAPI_MakeCylinder (radius, cylVec.Magnitude()).Shape()
+        shape =  BRepBuilderAPI_Transform(cyl, transform).Shape()
+        self.renderShapeObj(shape, color, transp, material)
         
     def renderPipe(self, aWire, radius, quality, color, transp, material):
     
@@ -250,8 +263,6 @@ class ScreenLib:
         aspect = Graphic3d_MaterialAspect(MATERIAL_TYPES.index(materialName))
         ais.SetMaterial(aspect)
         self.display.Context.Display(ais, False)
-        
-        
 
     def drawPoint(self, pnt, style):
         ais = AIS_Point(Geom_CartesianPoint(pnt))
@@ -334,18 +345,22 @@ class Drawable:
         self.geom = geom
         self.styler = styler
         self.labelText = labelText
+        if self.labelText == None:
+            self.labelText = ''
+        self.boldFactor=0.2
 
 class Foo(Drawable):
     def render(self, lib):
         setting = self.styler.getDrawSetting('Point')
-        lib.drawLabel(self.geom, setting)
+        lib.drawLabel(self.geom, self.labelText, setting)
 
 class Point(Drawable):
     def render(self, lib):
         setting = self.styler.getDrawSetting('Point')
         center = self.geom
-        lib.renderSphere(center, setting['GeomBoldLevel']/10*2.5*2, 2/10, setting['GeomColor'], setting['GeomTransp'], setting['GeomMaterial'])
-        lib.drawLabel(self.geom, '', setting)
+        lib.renderSphere(center, setting['GeomBoldLevel']*self.boldFactor*2, 2/10, setting['GeomColor'], setting['GeomTransp'], setting['GeomMaterial'])
+        if setting['LabelIsRender']:
+            lib.drawLabel(self.geom, self.labelText, setting)
         
 class Points(Drawable):
     def render(self, lib):
@@ -356,9 +371,8 @@ class Points(Drawable):
 class Wire(Drawable):
     def render(self, lib):
         setting = self.styler.getDrawSetting('Wire')
-        print('**************', setting)
-        lib.drawShape(self.geom, setting)
-        lib.renderPipe(self.geom, setting['GeomBoldLevel']/10*2*1.3, 2/10,setting['GeomColor'], setting['GeomTransp'], setting['GeomMaterial'])
+        lib.renderPipe(self.geom, setting['GeomBoldLevel']*self.boldFactor, 2/10,setting['GeomColor'], setting['GeomTransp'], setting['GeomMaterial'])
+        #todo label
 
 class Circle(Drawable):
     def render(self, lib):
@@ -366,24 +380,29 @@ class Circle(Drawable):
         geomCircle = GC_MakeCircle(pnt1, pnt2, pnt3).Value()
         edge = BRepBuilderAPI_MakeEdge(geomCircle).Edge()
         lib.drawShape(edge, self.styler.getDrawSetting('Wire'))
+        #todo label
 
 class Line(Drawable):
     def render(self, lib):
-          pnt1,pnt2 = self.geom;
-          edge = BRepBuilderAPI_MakeEdge(pnt1, pnt2).Edge()
-          lib.drawShape(edge, self.styler.getDrawSetting('Wire'))
+        setting = self.styler.getDrawSetting('Wire')
+        pnt1,pnt2 = self.geom;
+        lib.renderCylinder(pnt1,pnt2, setting['GeomBoldLevel']*self.boldFactor, 2/10, setting['GeomColor'], setting['GeomTransp'], setting['GeomMaterial'])
+        #todo label
 
 class Surface(Drawable):
     def render(self, lib):
         lib.drawShape(self.geom, self.styler.getDrawSetting('Surface'))
+        #todo label
             
 class Desk(Drawable):
     def render(self, lib):
         lib.drawDesk(self.styler.getDrawSetting('Surface'))
+        #todo label
             
 class Axis(Drawable):
     def render(self, lib):
         lib.drawAxis(self.styler.getDrawSetting('Surface'))
+        #todo label
 
 
 class Styler:
@@ -402,9 +421,9 @@ class Styler:
         self.initPrimitive('InfoWire', (40,40,40), 0, 3,'PLASTIC',  (70,70,70) ,30)
         self.initPrimitive('InfoSurface', (40,40,40),0, 3,'PLASTIC', (70,70,70) ,30)
       
-        self.initPrimitive('FocusPoint', (90,10,10), 0, 3,'PLASTIC', (70,70,70) ,30)
+        self.initPrimitive('FocusPoint', (90,10,10), 0, 5,'PLASTIC', (70,70,70) ,30)
         self.initPrimitive('FocusWire', (90,10,10), 0, 3,'PLASTIC', (70,70,70) ,30)
-        self.initPrimitive('FocusSurface', (90,10,10), 0, 3,'PLASTIC', (70,70,70) ,30)
+        self.initPrimitive('FocusSurface', (90,10,10), 50, 3,'PLASTIC', (70,70,70) ,30)
      
         
     def getDrawSetting(self, primitive):
@@ -498,7 +517,6 @@ class Scene:
         self.drawables.append(drawable)
 
     def render(self):
-
         self.setVal('RENDER_TARGET', 'screen')
         
         self.setVal('SCENE_SCALE', '1:1')
@@ -514,11 +532,11 @@ class Scene:
         if self.getVal('SCENE_IS_AXIS'):
             self.putToRender( Axis(None, 'Axis'  ,Styler('Info') )  )        
 
-
         lib = self.initRenderLib()
+        print('==> Slide', self.getVal('SLIDE_NAME'), self.getVal('SLIDE_NUM'))
         
         for drawable in self.drawables:
-            print('==> Render', drawable.__class__.__name__, drawable.geom) #self.geoms[key]
+            print('==> Render', drawable.__class__.__name__, drawable.geom)
             drawable.render(lib)
 
         lib.start()
@@ -540,7 +558,7 @@ class Scene:
         styler = Styler(self.drawStyle, self.drawHints)
         
         if geomName.endswith('Point'):
-            drawable = Point(geom, self.drawLabelText, labelText, styler)
+            drawable = Point(geom, self.drawLabelText, styler)
         elif geomName.endswith('Points'):
             drawable = Points(geom, self.drawLabelText,styler)
         elif geomName.endswith('Line'):
@@ -553,9 +571,9 @@ class Scene:
             drawable = Foo(geom, self.drawLabelText, styler)
             
         self.putToRender(drawable)
-        print('PutToRender', drawable.__class__.__name__, 'drawStyle',self.drawStyle)
+        print('==> PutToRender', drawable.__class__.__name__, 'drawStyle',self.drawStyle)
         
-        self.labelText = None
+        self.drawLabelText = None
         self.drawHints['LabelIsRender'] = False
         self.drawHints['LabelColor'] = None
         self.drawHints['LabelSize'] = None
@@ -572,7 +590,7 @@ class Scene:
     def get(self, objName, param1 = None, param2 = None):
         cacheKey = self.getCacheKey(objName, param1, param2)
         if  cacheKey in self.cache:  
-            print('=>Get from cache',cacheKey)         
+            print('==> Get from cache',cacheKey)         
             return self.cache[cacheKey]
         else:
             if param1 == None:
@@ -582,54 +600,9 @@ class Scene:
             else:
                 obj = self.forGetFunctions['get'+objName](param1, param2)
 
-            print('=>Compute', cacheKey)         
+            print('==> Compute', cacheKey)         
             self.cache[cacheKey] = obj
             return obj       
-
-'''
-double parameter = 0.1;
-gp_Pnt p1 = PointonCurve(curve,parameter);
-gp_Vec v1 = getVectorTangentToCurveAtPoint(curve,parameter);
-TopoDS_Shape l1 = Lineptdir(p1,v1,0,100)
-
-use the following functions to get the point and vector at parameter.
-
-They are extracts from the openshapefactory project.
-
-https://code.google.com/p/openshapefactory/source/browse/SFMQTDLL/src/sr...
-
-
-TopoDS_Edge Lineptdir(gp_Pnt origin, gp_Vec dir, double length1, double length2)
-{
-
-Handle(Geom_Curve) spinaxis = new Geom_Line (origin,dir);
-spinaxis = new Geom_TrimmedCurve (spinaxis, length1, length2);
-double fp = spinaxis->FirstParameter();
-double ep = spinaxis->LastParameter();
-
-TopoDS_Edge Result = BRepBuilderAPI_MakeEdge(spinaxis,fp,ep);
-
-return Result;
-
-}
-
-const gp_Pnt& PointonCurve(TopoDS_Shape SupportEdge, Standard_Real uRatio)
-
-{
-gp_Pnt p1;
-if (SupportEdge.IsNull())
-{
-return p1;
-}
-const TopoDS_Edge& aEdge = TopoDS::Edge (SupportEdge);
-Standard_Real aFP, aLP, aP;
-Handle(Geom_Curve) aCurve = BRep_Tool::Curve(aEdge, aFP, aLP);
-aP = aFP + (aLP - aFP) * uRatio;
-p1 = aCurve->Value(aP);
-
-return p1;
-}    
-'''
 
 if __name__ == '__main__':
     pass
