@@ -277,44 +277,53 @@ class ScreenLib:
 class Drawable:
     def __init__(self, geom, labelText, styler):
         self.geom = geom
-        self.styler = styler
-        self.labelText = labelText
+        self.styler = styler.copy()
         if self.labelText == None:
             self.labelText = ''
         self.boldFactor=0.2
 
 class Foo(Drawable):
     def render(self, lib):
-        setting = self.styler.getDrawSetting('Point')
         if self.labelText != None:
-            lib.renderLabel(self.geom, 10 * self.styler.scale, self.labelText, setting['LabelColor'], setting['LabelSize'])
+            lib.renderLabel(self.geom, 10 * self.styler.scale, self.labelText, 
+                   styler.get('LabelColor',(60,60,60)), 
+                   styler.get('LabelSizeFactor'],20)
 
 class Cylinder(Drawable):
     def render(self, lib):
-        setting = self.styler.getDrawSetting('Wire')
         pnt1, pnt2, r = self.geom;
-        lib.renderCylinder(pnt1,pnt2, r, 2/10, setting['GeomColor'], setting['GeomTransp'], setting['GeomMaterial'])
-        #todo label
+        lib.renderCylinder(pnt1,pnt2, r, 2/10, 
+            styler.get('GeomColor',(60,60,60)), 
+            styler.get('GeomTransp',0), 
+            styler.get('GeomMaterial','PLASTIC'))
 
 class Cone(Drawable):
     def render(self, lib):
-        setting = self.styler.getDrawSetting('Wire')
         pnt1, pnt2, r1, r2 = self.geom;
-        lib.renderCone(pnt1,pnt2, r1, r2, 2/10, setting['GeomColor'], setting['GeomTransp'], setting['GeomMaterial'])
-        #todo label
+        lib.renderCone(pnt1,pnt2, r1, r2, 2/10, 
+            styler.get('GeomColor'), 
+            styler.get('GeomTransp'), 
+            styler.get('GeomMaterial'))
 
 class Point(Drawable):
     def render(self, lib):
-        setting = self.styler.getDrawSetting('Point')
         center = self.geom
-        lib.renderSphere(center, setting['GeomBoldLevel']*self.boldFactor*2, 2/10, setting['GeomColor'], setting['GeomTransp'], setting['GeomMaterial'])
+        lib.renderSphere(center, 
+            styler.get('GeomBoldLevel')*self.boldFactor*2, 2/10, 
+            styler.get('GeomColor')), 
+            styler.get('GeomTransp'), 
+            styler.get('GeomMaterial'))
         Foo(center, self.labelText, self.styler).render(lib)
         
 class Wire(Drawable):
     def render(self, lib):
         setting = self.styler.getDrawSetting('Wire')
-        lib.renderPipe(self.geom, setting['GeomBoldLevel']*self.boldFactor, 2/10,setting['GeomColor'], setting['GeomTransp'], setting['GeomMaterial'])
-        #todo label
+        lib.renderPipe(self.geom, 
+            styler.get('GeomBoldLevel')*self.boldFactor, 
+            2/10,
+            styler.get('GeomColor')), 
+            styler.get('GeomTransp')), 
+            styler.get('GeomMaterial','PLASTIC'))
 
 class Circle(Drawable):
     def render(self, lib):
@@ -322,13 +331,11 @@ class Circle(Drawable):
         geomCircle = GC_MakeCircle(pnt1, pnt2, pnt3).Value()
         edge = BRepBuilderAPI_MakeEdge(geomCircle).Edge()
         lib.drawShape(edge, self.styler.getDrawSetting('Wire'))
-        #todo label
 
 class Surface(Drawable):
     def render(self, lib):
         setting = self.styler.getDrawSetting('Surface')
         lib.renderSurface(self.geom, 2/10, setting['GeomColor'], setting['GeomTransp'], setting['GeomMaterial'])
-        #todo label
 
 class Box(Drawable):
     def render(self, lib):
@@ -425,17 +432,8 @@ class Axis(Drawable):
 
         #todo label
 
-
-class Styler:
+class Theme:
     def __init__(self, drawStyle, drawHints, scaleStr, originXYZ):
-
-        self.originXYZ = originXYZ
-        self.scaleStr = scaleStr
-        splitted = scaleStr.split(':')
-        self.scale = (int(splitted[1])/int(splitted[0]))         
-
-        self.drawHints = drawHints.copy() 
-        self.drawStyle = drawStyle 
         
         self.vals = dict()
 
@@ -450,8 +448,7 @@ class Styler:
         self.initPrimitive('FocusPoint', (90,10,10), 0, 5,'PLASTIC', (70,70,70) ,30)
         self.initPrimitive('FocusWire', (90,10,10), 0, 3,'PLASTIC', (70,70,70) ,30)
         self.initPrimitive('FocusSurface', (90,10,10), 50, 3,'PLASTIC', (70,70,70) ,30)
-     
-        
+
     def getDrawSetting(self, primitive):
         keyPrefix = self.drawStyle + primitive
         ret = dict()
@@ -472,16 +469,76 @@ class Styler:
         self.setVal(paramKeyPrefix+'LabelColor',labelColor)
         self.setVal(paramKeyPrefix+'LabelSize',labelSize)
         self.setVal(paramKeyPrefix+'LabelIsRender',False)
-        
-    def setVal(self, valKey, val):
-        self.vals[valKey] = val
 
-    def getVal(self, valKey):
-        return self.vals[valKey]
+class Styler:
+    def __init__(self, theme):
+
+        self.theme = theme
+        self.layer = 'DefaultLayer'
+        self.style = 'DefaultStyle'
+        self.gdim = 'DefaultDim'
+        self.hints = hints.copy() 
+
+        self.setBounds("1:1", (0,0,0))
+
+    def copy(self):
+        st = Styler(self.scaleStr, self.originXYZ)
+        st.hints = self.hints.copy()
+        st.layer = self.layer
+        st.style = self.style
+        st.geomRange         
+        return st
+
+    
+    def setBounds(self, scaleStr, originXYZ) {
+    
+        self.originXYZ = originXYZ
+        self.scaleStr = scaleStr
+        
+        self.originXYZ = originXYZ
+        self.scaleStr = scaleStr
+        splitted = scaleStr.split(':')
+        self.scale = (int(splitted[1])/int(splitted[0]))         
+
+    }
+
+    def setLayer(layerName):
+        self.layerName = layerName
+    
+    def setStyle(styleName): 
+        self.styleName = styleName
+
+    def setGDim(dimName):
+        self.dimName = dim
+
+    def setHint(paramName, paramValue):
+        self.hints[hintName] = hintValue
+    
+    def getParam(paramName, default):
+        if paramName in self.hint:
+            return self.hint[paramName]
+        return self.theme.getParam(layerName, styleName, dimName, default)
+
+    def setLabel(labelText, labelColor = None, labelSizeFactor = None)
+        self.labelText = labelText
+        self.setHints('LabelColor', labelColor) 
+        self.setHints('LabelSizeFactor', labelSizeFactor) 
+    def clearLabel()
+        self.labelText = None
+    def getLabelText():
+        return self.labelText
+    def isLabel():
+        return self.labelText != None
+    
+    def clearHints()
+        self.drawHints = {}
+        
+    def dump(self)
+        return self.layer+'->'+self.style+'->'+self.dim    
 
 class Scene:
 
-    def __init__(self, forGetFunctions):
+    def __init__(self, globalForGetFunctions):
 
         self.drawables = []
         self.drawHints = { }
@@ -490,9 +547,12 @@ class Scene:
         
         self.vals = dict()
         self.cache = dict()
-        self.forGetFunctions =  forGetFunctions
+        self.forGetFunctions =  globalForGetFunctions
 
         self.setValsFromCLI()
+        
+        self.styler = Styler(Theme()) 
+        
         '''
         self.setVal('SysPrecisionShape', 0.2)
         self.setVal('SysPrecisionWire', 0.2)
@@ -553,7 +613,7 @@ class Scene:
         self.setVal('SLIDE_NUM', 0)
         self.setVal('SLIDE_NAME', 'noname')
 
-        styler = Styler('Info', {}, self.getVal('SCENE_SCALE'), self.getVal('SCENE_ORIGIN'))
+        self.styler.setBounds(self.getVal('SCENE_SCALE'), self.getVal('SCENE_ORIGIN'))
 
         if self.getVal('SCENE_IS_DESK'):
             self.putToRender( Desk(None,'Desk',styler) )         
@@ -575,36 +635,35 @@ class Scene:
         self.drawHints['GeomTransp'] = transp
         
     def label(self, labelText, labelColor = None, labelSize = None): 
-        self.drawLabelText = labelText
-        self.drawHints['LabelIsRender'] = True
-        self.drawHints['LabelColor'] = labelColor 
-        self.drawHints['LabelSize'] = labelSize
+        self.setLabel(labelText, labelColor = None, labelSize = None)
 
     def draw(self, geomName, param1 = None, param2 = None):
     
         geom =  self.get(geomName, param1, param2)
-        styler = Styler(self.drawStyle, self.drawHints, self.getVal('SCENE_SCALE'), self.getVal('SCENE_ORIGIN'))
         
         if geomName.endswith('Point'):
-            drawable = Point(geom, self.drawLabelText, styler)
+            self.styler.setDim('PointDim')
+            drawable = Point(geom, self.drawLabelText, self.styler)
         elif geomName.endswith('Points'):
-            drawable = Points(geom, self.drawLabelText,styler)
+            self.styler.setDim('PointDim')
+            drawable = Points(geom, self.drawLabelText, self.styler)
         elif geomName.endswith('Line'):
-            drawable = Line(geom, self.drawLabelText,styler)
+            self.styler.setDim('LineDim')
+            drawable = Line(geom, self.drawLabelText, self.styler)
         elif geomName.endswith('Wire'):
-            drawable = Wire(geom, self.drawLabelText,styler)
+            self.styler.setDim('LineDim')
+            drawable = Wire(geom, self.drawLabelText, self.styler)
+            self.styler.setDim('SurfaceDim')
         elif geomName.endswith('Surface'):
-            drawable = Surface(geom, self.drawLabelText,styler)
+            drawable = Surface(geom, self.drawLabelText, self.styler)
         else:    
-            drawable = Foo(geom, self.drawLabelText, styler)
+            self.styler.setDim('PointDim')
+            drawable = Foo(geom, self.drawLabelText, self.styler)
             
         self.putToRender(drawable)
-        print('==> PutToRender', drawable.__class__.__name__, 'drawStyle',self.drawStyle)
+        print('==> PutToRender', drawable.__class__.__name__, self.styler.dump)
         
-        self.drawLabelText = None
-        self.drawHints['LabelIsRender'] = False
-        self.drawHints['LabelColor'] = None
-        self.drawHints['LabelSize'] = None
+        self.styler.clearLabel()
 
         
     def getCacheKey(self, objName, param1, param2):
