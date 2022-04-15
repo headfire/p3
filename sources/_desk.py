@@ -28,11 +28,11 @@ POINT_RADIUS = 2
 def getPoint(pnt):
   getSphere(pnt, POINT_RADIUS)
 
-def slide():
-  getPoint(gp_Pnt(0,0,0))
-  put('p1')
-  getPoint(gp_Pnt(10,0,0))
-  put('p2')
+sceneInit()
 
-sceneInit(globals())
+getPoint(gp_Pnt(0,0,0))
+put('p1')
+getPoint(gp_Pnt(10,0,0))
+put('p2')
+
 sceneRender('slide')

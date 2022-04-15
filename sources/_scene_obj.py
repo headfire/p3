@@ -272,6 +272,15 @@ class Drawable:
         self.styleName = 'DefaultStyle'
         self.childs = {}
         
+    def copy(self):
+        copyed = self.__class__(geometry)     
+        copyed.geometry = self.geometry
+        copyed.transforms = self.transforms.copy()
+        copyed.layerName = self.layerName
+        copyed.styleName = self.styleName
+        for key in self.childs:
+            copyed.childs[key] = self.childs[key].copy() 
+    
     def transform(transform):
         self.transforms.append(transform)
         for key in self.childs:
@@ -362,64 +371,77 @@ class Env:
 
 class Scene:
 
-    def __init__(self, globalForGetFunctions, sceneName=None, styles = None):
-
-        self.forGetFunctions =  globalForGetFunctions
-        
-        if sceneName != None:
-            self.sceneName = sceneName
-        else:    
-            self.sceneName = 'scene_test'
-        
-        self.styles = styles
-
+    def __init__(self):
         self.cache = dict()
+        self.stackArr = []
+        self.group = dict()
+
+    def initCache(self, globalForGetFunctions):
+        self.forGetFunctions =  globalForGetFunctions
+
+    def stack(self, drawable):
+        self.stackArr.append(drawable)
         
-        self.last = None
-        self.result = None         
+    def last(self):   
+        self.stackArr[-1]
+        
+    def unstack(self):
+        return self.stackArr.pop()    
 
-
-    def render(self, funcName, param1 = None, param2 = None):
+    def render(self, sceneName = None, styles = None):
     
-        lib = ScreenLib(self.styles)
-        self.get(funcName, param1, param2)
-        self.last.render(lib)
+        lib = ScreenLib(styles)
+        self.getGroup()
+        self.unstack().render(lib)
         lib.start()
         
+    def getHook(self, pnt, r) :
+        self.stack(Sphere((pnt, r)))
+
     def getLabel(self, pnt, text, size, delta): 
-        self.last = Label(pnt, text, size, delta)
+        self.stack(Label(pnt, text, size, delta))
 
     def getSphere(self, pnt, r) :
-        self.last = Sphere((pnt, r))
+        self.stack(Sphere((pnt, r)))
         
     def getCone(self, pnt1, pnt2, r1, r2):    
-        self.last = Cone(pnt1, pnt2, r1, r2)
+        self.stack(Cone(pnt1, pnt2, r1, r2))
     
     def getBox(self, pnt1, pnt2):
-        self.last = Box(pnt1,pnt2)
+        self.stack(Box(pnt1,pnt2))
 
     def getTube(self, wire, radius):
-        self.last = Tube(wire, radius)
+        self.stack(Tube(wire, radius))
 
     def getSurface(self, surface):
-        self.last = Surface(surface)
+        self.stack(Surface(surface))
 
     def translate(self, dx, dy, dz):
-        self.last.translate(dx, dy, dz)
+        self.last().translate(dx, dy, dz)
     
     def rotate(self, pnt, dir, angle):
-        self.last.rotate(pnt, dir, angle)
+        self.last().rotate(pnt, dir, angle)
 
     def style(self, styleName):
-        self.last.style(styleName)
+        self.last().style(styleName)
     
     def layer(self, styleName):
-        self.last.layer(styleName)
+        self.last().layer(styleName)
 
     def put(self, name):
-        self.result.putChild(name, self.last)
+        self.group[name] = self.unstack()
+
+    def drop(self):
+        self.unstack()
         
-    def get(self, funcName, param1 = None, param2 = None):
+    def getGroup(self):
+        dr = Drawable(None)
+        for key in self.group:
+            dr.putChild(key, self.group[key])
+        group = {}    
+        self.stack(dr)    
+          
+    def getFunc(self, funcName, param1 = None, param2 = None):
     
         params = ''
         if param1 != None:
@@ -430,16 +452,14 @@ class Scene:
         
         if  cacheKey in self.cache:  
             print('==> Get from cache',cacheKey)         
-            self.last = self.cache[cacheKey].copy()
+            self.stack(self.cache[cacheKey].copy())
         else:
-            self.result = Drawable(None)
             if param1 == None:
                 self.forGetFunctions[funcName]()
             elif param2 == None:
                 self.forGetFunctions[funcName](param1)
             else:
                 self.forGetFunctions[funcName](param1, param2)
-            self.last = self.result
             print('==> Compute', cacheKey)         
 
 if __name__ == '__main__':

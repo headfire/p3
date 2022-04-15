@@ -6,12 +6,15 @@ env = Env()
 def env(envName, envDefault):
     env.env(envName, envDefault)
 
-def sceneInit(globalForGetFunctions, sceneName=None, styles = None): 
+def sceneInit(): 
     global sc
-    sc = Scene(globalForGetFunctions, sceneName, styles)
+    sc = Scene()
 
-def sceneRender(funcName, param1 = None, param2 = None):
-    sc.render(funcName, param1 = None, param2 = None)
+def sceneInitCache(globalForGetFunctions):
+    sc.initCache(globalForGetFunctions)
+
+def sceneRender(sceneName = None, styles = None):
+    sc.render(sceneName, styles)
 
 def getLabel(pnt, text, size, delta): 
     sc.getLabel(pnt, text, size, delta)
@@ -45,6 +48,9 @@ def setLayer(styleName):
 
 def put(name):
     sc.put(name)
+
+def drop():
+    sc.drop()
     
 def get(funcName, param1 = None, param2 = None):
     sc.get(funcName, param1 = None, param2 = None)
