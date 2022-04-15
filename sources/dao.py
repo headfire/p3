@@ -569,3 +569,24 @@ if __name__ == '__main__':
         drawDaoCaseSlide(sc)
 
     sc.render()
+    
+    self.getVal('SLIDE_NAME'), self.getVal('SLIDE_NUM')
+'''        self.setVal('RENDER_TARGET', 'screen')
+        
+        self.setVal('SCENE_SCALE', '1:1')
+        self.setVal('SCENE_IS_DESK', True)
+        self.setVal('SCENE_IS_AXIS', True)
+        self.setVal('SCENE_ORIGIN', (0,0,0))
+
+        self.setVal('SLIDE_NUM', 0)
+        self.setVal('SLIDE_NAME', 'noname')
+
+        self.styler.setBounds(self.getVal('SCENE_SCALE'), self.getVal('SCENE_ORIGIN'))
+        
+        self.styler.setStyle('Info')
+
+        if self.getVal('SCENE_IS_DESK'):
+            self.putToRender( Desk(None, self.styler) )         
+        if self.getVal('SCENE_IS_AXIS'):
+            self.putToRender( Axis(None, self.styler) )         
+'''

@@ -1,1 +1,1 @@
-python sources\dao.py SLIDE_NUM=%1
+python sources\_scene.py
