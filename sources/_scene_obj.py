@@ -186,18 +186,18 @@ class ScreenLib:
             None, (1024, 768), True, [128, 128, 128], [128, 128, 128]
           )
         self.styles = styles  
-
+  
     def getStyle(self, styleName): 
         if self.styles != None:
-            if key in self.styles:
+            if styleName in self.styles:
                 return self.styles[styleName]
         return DEFAULT_STYLE
 
-    def _renderShapeObj(self, shape, styleName):
+    def renderShapeObj(self, shape, styleName):
         color, transparency, materialName = self.getStyle(styleName)
         ais = AIS_Shape(shape)
         r,g,b = color
-        aisColor =  Quantity_Color(r/100, g/100, b/100, Quantity_TOC_RGB)
+        aisColor =  Quantity_Color(r/256, g/256, b/256, Quantity_TOC_RGB)
         ais.SetColor(aisColor)
         ais.SetTransparency(transparency/100)
         aspect = Graphic3d_MaterialAspect(MATERIAL_TYPES.index(materialName))
@@ -208,7 +208,7 @@ class ScreenLib:
         color, transparency, materialName = self.getStyle(styleName)
         r, g, b =  color
         pntDelta = gp_Pnt(pnt.X()+delta,pnt.Y()+delta,pnt.Z()+delta)
-        self.display.DisplayMessage(pntDelta, text, size, (r/100, g/100, b/100), False)
+        self.display.DisplayMessage(pntDelta, text, size, (r/256, g/256, b/256), False)
 
     def renderBox(self, firstCornerPoint, secondCornerPoint, styleName, layerName):
         x1 = firstCornerPoint.X()
@@ -218,11 +218,11 @@ class ScreenLib:
         y2 = secondCornerPoint.Y()
         z2 = secondCornerPoint.Z()
         shape = BRepPrimAPI_MakeBox (firstCornerPoint, x2-x1, y2-y1, z2-z1).Shape()
-        self._renderShapeObj(shape, color, transp, material)
+        self.renderShapeObj(shape, styleName)
         
     def renderSphere(self, pnt, r, styleName, layerName):
         shape = BRepPrimAPI_MakeSphere(pnt, r).Shape()
-        self._renderShapeObj(shape, styleName)
+        self.renderShapeObj(shape, styleName)
 
     def renderCone(self, startPoint, endPoint, radius1, radius2, styleName, layerName):
     
@@ -241,7 +241,27 @@ class ScreenLib:
 
         cyl = BRepPrimAPI_MakeCone (radius1, radius2, cylVec.Magnitude()).Shape()
         shape =  BRepBuilderAPI_Transform(cyl, transform).Shape()
-        self._renderShapeObj(shape, color, transp, material)
+        self.renderShapeObj(shape, styleName)
+
+    def renderCylinder(self, startPoint, endPoint, radius, styleName, layerName):
+    
+        cylVec = gp_Vec(startPoint, endPoint)
+        targetDir = gp_Dir(cylVec)
+        rotateAngle = gp_Dir(0,0,1).Angle(targetDir)
+        if not gp_Dir(0,0,1).IsParallel(targetDir, 0.001):
+            rotateDir = gp_Dir(0,0,1)
+            rotateDir.Cross(targetDir)
+        else:    
+            rotateDir = gp_Dir(0,1,0)
+        
+        transform = gp_Trsf()
+        transform.SetRotation(gp_Ax1(gp_Pnt(0,0,0), rotateDir), rotateAngle)
+        transform.SetTranslationPart(gp_Vec(gp_Pnt(0,0,0),startPoint))
+
+        cyl = BRepPrimAPI_MakeCylinder (radius, cylVec.Magnitude()).Shape()
+        shape =  BRepBuilderAPI_Transform(cyl, transform).Shape()
+        self.renderShapeObj(shape, styleName)
+
 
     def renderTube(self, aWire, radius, styleName, layerName):
     
@@ -253,10 +273,10 @@ class ScreenLib:
         pipeShell = BRepOffsetAPI_MakePipe(aWire, profileWire)
         pipeShape = pipeShell.Shape()
         
-        self._renderShapeObj(pipeShape, color, transp, material)
+        self.renderShapeObj(pipeShape, styleName)
 
     def renderSurface(self, surfaceShape, styleName, layerName):
-        self._renderShapeObj(surfaceShape, styleName)
+        self.renderShapeObj(surfaceShape, styleName)
 
     def start(self):
          self.display.FitAll()
@@ -268,8 +288,8 @@ class Drawable:
     
         self.geometry = geometry
         self.transforms = {}
-        self.layerName = 'DefaultLayer'
-        self.styleName = 'DefaultStyle'
+        self.layerName = None
+        self.styleName = None
         self.childs = {}
         
     def copy(self):
@@ -280,24 +300,25 @@ class Drawable:
         copyed.styleName = self.styleName
         for key in self.childs:
             copyed.childs[key] = self.childs[key].copy() 
+        return copyed;
     
-    def transform(transform):
+    def makeTransform(self, transform):
         self.transforms.append(transform)
         for key in self.childs:
             self.childs[key].transform(transform)
 
-    def style(styleName):
+    def setStyle(self, styleName):
         if self.styleName == None:
             self.styleName = styleName
         for key in self.childs:
-            self.childs[key].style(styleName)
+            self.childs[key].setStyle(styleName)
             
-    def layer(layerName):
+    def setLayer(self, layerName):
         if self.layerName == None:
             self.layerName = layerName
         self.layerName = layerName
         for key in self.childs:
-            self.childs[key].layer(layerName)
+            self.childs[key].setLayer(layerName)
 
     def render(self, lib):
         self.renderSelf(lib)
@@ -309,6 +330,11 @@ class Drawable:
 
     def renderSelf(self, lib):
         pass
+    
+    def dump(self, prefix = ''):
+        print(prefix+self.__class__.__name__)
+        for key in self.childs:
+            self.childs[key].dump(prefix+'['+key+']')
 
 class Hook(Drawable):
     #pnt = self.geometry
@@ -317,7 +343,7 @@ class Hook(Drawable):
 class Label(Drawable):
     def renderSelf(self, lib):
         pnt, text, size, delta = self.geometry
-        lib.renderLabel(pnt, text, size, delta, styleName, layerName)
+        lib.renderLabel(pnt, text, size, delta, self.styleName, self.layerName)
 
 class Box(Drawable):
     def renderSelf(self, lib):
@@ -332,7 +358,12 @@ class Sphere(Drawable):
 class Cone(Drawable):
     def renderSelf(self, lib):
         pnt1, pnt2, r1, r2 = self.geometry
-        lib.renderCone(pnt1,pnt2, r1, r2, styleName, layerName)
+        lib.renderCone(pnt1,pnt2, r1, r2, self.styleName, self.layerName)
+
+class Cylinder(Drawable):
+    def renderSelf(self, lib):
+        pnt1, pnt2, r = self.geometry
+        lib.renderCylinder(pnt1,pnt2, r, self.styleName, self.layerName)
         
 class Tube(Drawable):
     def renderSelf(self, lib):
@@ -368,13 +399,20 @@ class Env:
         else:
             return envDefault        
 
+class Rotation:
+    def __init__(self, pnt, direct ,angle):
+        pass
+    
+class Translation:
+    def __init__(self, dx, dy, dz):
+        pass
 
 class Scene:
 
     def __init__(self):
         self.cache = dict()
         self.stackArr = []
-        self.group = dict()
+        self.group = Drawable(None)
 
     def initCache(self, globalForGetFunctions):
         self.forGetFunctions =  globalForGetFunctions
@@ -383,63 +421,25 @@ class Scene:
         self.stackArr.append(drawable)
         
     def last(self):   
-        self.stackArr[-1]
+        return self.stackArr[-1]
         
     def unstack(self):
         return self.stackArr.pop()    
 
     def render(self, sceneName = None, styles = None):
-    
         lib = ScreenLib(styles)
         self.getGroup()
-        self.unstack().render(lib)
+        toRender = self.unstack()
+        toRender.dump()
+        toRender.render(lib)
         lib.start()
-        
-    def getHook(self, pnt, r) :
-        self.stack(Sphere((pnt, r)))
-
-    def getLabel(self, pnt, text, size, delta): 
-        self.stack(Label(pnt, text, size, delta))
-
-    def getSphere(self, pnt, r) :
-        self.stack(Sphere((pnt, r)))
-        
-    def getCone(self, pnt1, pnt2, r1, r2):    
-        self.stack(Cone(pnt1, pnt2, r1, r2))
     
-    def getBox(self, pnt1, pnt2):
-        self.stack(Box(pnt1,pnt2))
+    def getPrimitive(self, drawable):      
+        self.stack(drawable)
 
-    def getTube(self, wire, radius):
-        self.stack(Tube(wire, radius))
-
-    def getSurface(self, surface):
-        self.stack(Surface(surface))
-
-    def translate(self, dx, dy, dz):
-        self.last().translate(dx, dy, dz)
-    
-    def rotate(self, pnt, dir, angle):
-        self.last().rotate(pnt, dir, angle)
-
-    def style(self, styleName):
-        self.last().style(styleName)
-    
-    def layer(self, styleName):
-        self.last().layer(styleName)
-
-    def put(self, name):
-        self.group[name] = self.unstack()
-
-    def drop(self):
-        self.unstack()
-        
     def getGroup(self):
-        dr = Drawable(None)
-        for key in self.group:
-            dr.putChild(key, self.group[key])
-        group = {}    
-        self.stack(dr)    
+        self.stack(self.group)    
+        self.group = Drawable(None) 
           
     def getFunc(self, funcName, param1 = None, param2 = None):
     
@@ -460,8 +460,20 @@ class Scene:
                 self.forGetFunctions[funcName](param1)
             else:
                 self.forGetFunctions[funcName](param1, param2)
-            print('==> Compute', cacheKey)         
+            print('==> Compute', cacheKey)
+            
+    def makeTransform(self, transform):
+        self.last().makeTransform(transform)
 
-if __name__ == '__main__':
-    pass
+    def setStyle(self, styleName):
+        self.last().setStyle(styleName)
+    
+    def setLayer(self, styleName):
+        self.last().setLayer(styleName)
+
+    def put(self, name):
+        self.group.putChild(name, self.unstack())
+
+    def drop(self):
+        self.unstack()
 
