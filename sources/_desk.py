@@ -4,7 +4,7 @@
 EQUAL_POINTS_PRECISION = 0.001
 
 
-from _scene import Scene
+from _scene import *
 
 from OCC.Core.gp import gp_Pnt, gp_Trsf, gp_Dir, gp_Vec, gp_Ax1, gp_Ax2, gp_GTrsf, gp_OZ
 from OCC.Core.Geom import Geom_TrimmedCurve
@@ -23,11 +23,16 @@ from OCC.Core.BRepAlgoAPI import BRepAlgoAPI_Common, BRepAlgoAPI_Cut
 
 from math import pi
 
+POINT_RADIUS = 2
 
-def slide() {
-  sc.getSphere(1,1,0)
-  sc.put()
-}
+def getPoint(pnt):
+  getSphere(pnt, POINT_RADIUS)
 
-sc = Scene(globals())
-sc.render('slide')
+def slide():
+  getPoint(gp_Pnt(0,0,0))
+  put('p1')
+  getPoint(gp_Pnt(10,0,0))
+  put('p2')
+
+sceneInit(globals())
+sceneRender('slide')
