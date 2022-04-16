@@ -46,21 +46,23 @@ SHAPE_TYPES = ['COMPOUND', 'COMPSOLID', 'SOLID', 'SHELL',
 TOPO_TYPES = ['TopAbs_COMPOUND', 'TopAbs_COMPSOLID', 'TopAbs_SOLID', 'TopAbs_SHELL',
                       'TopAbs_FACE', 'TopAbs_WIRE', 'TopAbs_EDGE', 'TopAbs_VERTEX', 'TopAbs_SHAPE']
 
+class Env:
+    def __init__(self):
+        self.envs = {}             
+        for param in sys.argv:
+           key,sep,val = param.partition('=')
+           if val != '':
+             try:
+               self.envs[key] = int(val)
+             except ValueError:
+               print('Non int param')          
+        
+    def env(self, envName, envDefault):
+        if key in self.envs:
+            return self.envs[key]
+        else:
+            return envDefault        
 
-def getWireStartPointAndTangentDir(aWire):
-    ex = BRepTools_WireExplorer(aWire)
-    edge = ex.Current()
-    vertex = ex.CurrentVertex()
-    v = getVectorTangentToCurveAtPoint(edge, 0)
-    return BRep_Tool.Pnt(vertex), gp_Dir(v)
-
-def getVectorTangentToCurveAtPoint(aEdge, uRatio):
-  aCurve, aFP, aLP = BRep_Tool.Curve(aEdge)
-  aP = aFP + (aLP - aFP) * uRatio
-  v1 = gp_Vec()
-  p1 = gp_Pnt()
-  aCurve.D1(aP,p1,v1)
-  return v1;
 
 
 def objToStr(obj) :
@@ -178,11 +180,26 @@ class WebLib:
         self.web.drawShape(shape, style['color'], style['tran'] ,style['lineWidth'])
 
 
+def getWireStartPointAndTangentDir(aWire):
+    ex = BRepTools_WireExplorer(aWire)
+    edge = ex.Current()
+    vertex = ex.CurrentVertex()
+    v = getVectorTangentToCurveAtPoint(edge, 0)
+    return BRep_Tool.Pnt(vertex), gp_Dir(v)
+
+def getVectorTangentToCurveAtPoint(aEdge, uRatio):
+  aCurve, aFP, aLP = BRep_Tool.Curve(aEdge)
+  aP = aFP + (aLP - aFP) * uRatio
+  v1 = gp_Vec()
+  p1 = gp_Pnt()
+  aCurve.D1(aP,p1,v1)
+  return v1;
+
 
 class ScreenRenderer:
 
-    def __init__(self, styles):
-        self.styles = styles  
+    def __init__(self):
+        self.styles = None  
         self.display = None
   
     def getStyle(self, styleName): 
@@ -191,16 +208,24 @@ class ScreenRenderer:
                 return self.styles[styleName]
         return DEFAULT_STYLE
         
-    def render(self, drawable):
+    def render(self, drawable, styles):
         self.display, start_display, add_menu,  add_function_to_menu  = init_display(
             None, (700, 500), True, [128, 128, 128], [128, 128, 128]
           )
+ 
+        self.styles = styles
         drawable.render(self)
+        self.styles = None
+
         self.display.FitAll()
         start_display()
 
-    def renderShapeObj(self, shape, styleName):
+    def renderShapeObj(self, shape, transforms, styleName):
         color, transparency, materialName = self.getStyle(styleName)
+        trsf = gp_Trsf()
+        for tr in transforms:
+            trsf *= tr.getTrsf()
+        shape =  BRepBuilderAPI_Transform(shape, trsf).Shape()
         ais = AIS_Shape(shape)
         r,g,b = color
         aisColor =  Quantity_Color(r/256, g/256, b/256, Quantity_TOC_RGB)
@@ -210,67 +235,38 @@ class ScreenRenderer:
         ais.SetMaterial(aspect)
         self.display.Context.Display(ais, False)
 
-    def renderLabel(self, pnt, text, size, delta, styleName, layerName):
+    def renderLabel(self, geometry, transforms, styleName, layerName):
+        pnt, text, size = geometry
         color, transparency, materialName = self.getStyle(styleName)
         r, g, b =  color
-        pntDelta = gp_Pnt(pnt.X()+delta,pnt.Y()+delta,pnt.Z()+delta)
-        self.display.DisplayMessage(pntDelta, text, size, (r/256, g/256, b/256), False)
+        trsf = gp_Trsf()
+        for tr in transforms:
+            trsf *= tr.getTrsf()
+        pntTrans = pnt.Transformed(trsf)    
+        self.display.DisplayMessage(pntTrans, text, size, (r/256, g/256, b/256), False)
 
-    def renderBox(self, firstCornerPoint, secondCornerPoint, styleName, layerName):
-        x1 = firstCornerPoint.X()
-        y1 = firstCornerPoint.Y()
-        z1 = firstCornerPoint.Z()
-        x2 = secondCornerPoint.X()
-        y2 = secondCornerPoint.Y()
-        z2 = secondCornerPoint.Z()
-        shape = BRepPrimAPI_MakeBox (firstCornerPoint, x2-x1, y2-y1, z2-z1).Shape()
-        self.renderShapeObj(shape, styleName)
+    def renderBox(self, geometry, transforms, styleName, layerName):
+        xSize, ySize, zSize = geometry 
+        shape = BRepPrimAPI_MakeBox (xSize, ySize, zSize).Shape()
+        self.renderShapeObj(shape, transforms, styleName)
         
-    def renderSphere(self, pnt, r, styleName, layerName):
+    def renderSphere(self, geometry, transforms, styleName, layerName):
+        pnt, r = geometry
         shape = BRepPrimAPI_MakeSphere(pnt, r).Shape()
-        self.renderShapeObj(shape, styleName)
+        self.renderShapeObj(shape, transforms,styleName)
 
-    def renderCone(self, startPoint, endPoint, radius1, radius2, styleName, layerName):
-    
-        cylVec = gp_Vec(startPoint, endPoint)
-        targetDir = gp_Dir(cylVec)
-        rotateAngle = gp_Dir(0,0,1).Angle(targetDir)
-        if not gp_Dir(0,0,1).IsParallel(targetDir, 0.001):
-            rotateDir = gp_Dir(0,0,1)
-            rotateDir.Cross(targetDir)
-        else:    
-            rotateDir = gp_Dir(0,1,0)
-        
-        transform = gp_Trsf()
-        transform.SetRotation(gp_Ax1(gp_Pnt(0,0,0), rotateDir), rotateAngle)
-        transform.SetTranslationPart(gp_Vec(gp_Pnt(0,0,0),startPoint))
+    def renderCone(self, geometry, transforms, styleName, layerName):
+        r1, r2, h = geometry
+        shape = BRepPrimAPI_MakeCone (r1, r2, h).Shape()
+        self.renderShapeObj(shape, transforms,styleName)
 
-        cyl = BRepPrimAPI_MakeCone (radius1, radius2, cylVec.Magnitude()).Shape()
-        shape =  BRepBuilderAPI_Transform(cyl, transform).Shape()
-        self.renderShapeObj(shape, styleName)
+    def renderCylinder(self, geometry, transforms, styleName, layerName):
+        r, h = geometry 
+        shape = BRepPrimAPI_MakeCylinder (r, h).Shape()
+        self.renderShapeObj(shape, transforms,styleName)
 
-    def renderCylinder(self, startPoint, endPoint, radius, styleName, layerName):
-    
-        cylVec = gp_Vec(startPoint, endPoint)
-        targetDir = gp_Dir(cylVec)
-        rotateAngle = gp_Dir(0,0,1).Angle(targetDir)
-        if not gp_Dir(0,0,1).IsParallel(targetDir, 0.001):
-            rotateDir = gp_Dir(0,0,1)
-            rotateDir.Cross(targetDir)
-        else:    
-            rotateDir = gp_Dir(0,1,0)
-        
-        transform = gp_Trsf()
-        transform.SetRotation(gp_Ax1(gp_Pnt(0,0,0), rotateDir), rotateAngle)
-        transform.SetTranslationPart(gp_Vec(gp_Pnt(0,0,0),startPoint))
-
-        cyl = BRepPrimAPI_MakeCylinder (radius, cylVec.Magnitude()).Shape()
-        shape =  BRepBuilderAPI_Transform(cyl, transform).Shape()
-        self.renderShapeObj(shape, styleName)
-
-
-    def renderTube(self, aWire, radius, styleName, layerName):
-    
+    def renderTube(self, geometry, transforms, styleName, layerName):
+        aWire, radius = geometry
         startPoint, tangentDir = getWireStartPointAndTangentDir(aWire)
         profileCircle = GC_MakeCircle(startPoint, tangentDir, radius).Value()
         profileEdge = BRepBuilderAPI_MakeEdge(profileCircle).Edge()
@@ -279,32 +275,74 @@ class ScreenRenderer:
         pipeShell = BRepOffsetAPI_MakePipe(aWire, profileWire)
         pipeShape = pipeShell.Shape()
         
-        self.renderShapeObj(pipeShape, styleName)
+        self.renderShapeObj(pipeShape, transforms, styleName)
 
-    def renderSurface(self, surfaceShape, styleName, layerName):
-        self.renderShapeObj(surfaceShape, styleName)
+    def renderSurface(self, geometry, styleName, layerName):
+        surfaceShape = geometry
+        self.renderShapeObj(surfaceShape, transforms, styleName)
 
-class Rotate:
-    def __init__(self, pnt, direct ,angle):
+#************************************************************
+
+class Transform():
+    def __init__(self, geometry):
+        self.geometry = geometry
+    def getTrsf():
         pass
+
+class Rotate(Transform):
+    def getTrsf(self): 
+        pnt, direct, angle = self.geometry    
+        trsf = gp_Trsf()
+        trsf.SetRotation(pnt, direct, angle)
+        return rtsf
+
     
-class Translate:
-    def __init__(self, dx, dy, dz):
-        pass
+class Translate(Transform):
+    def getTrsf(self):
+        dx, dy, dz = self.geometry    
+        trsf = gp_Trsf()
+        trsf.SetTranslation(gp_Vec(dx, dy, dz))
+        return trsf
+ 
+class Scale(Transform):
+    def getTrsf(self):    
+        kx, ky, kz = self.geometry    
+        trsf = gp_Trsf()
+        trsf.SetScale(kx, ky, kz)
+        return trsf
 
-class Scale:
-    def __init__(self, dx, dy, dz):
-        pass
+class FromPointToPoint(Transform):
+       
+    def getTrsf(self):    
+        pnt1, pnt2 = self.geometry        
+        dirVec = gp_Vec(pnt1, pnt2)
+        targetDir = gp_Dir(dirVec)
+        
+        rotateAngle = gp_Dir(0,0,1).Angle(targetDir)
+        if not gp_Dir(0,0,1).IsParallel(targetDir, 0.001):
+            rotateDir = gp_Dir(0,0,1)
+            rotateDir.Cross(targetDir)
+        else:    
+            rotateDir = gp_Dir(0,1,0)
+        
+        trsf = gp_Trsf()
+        trsf.SetRotation(gp_Ax1(gp_Pnt(0,0,0), rotateDir), rotateAngle)
+        trsf.SetTranslationPart(gp_Vec(gp_Pnt(0,0,0), pnt1))
 
+        return trsf
+
+#************************************************************
+ 
 class Drawable:
     def __init__(self, geometry):
     
         self.geometry = geometry
-        self.transforms = {}
+        self.transforms = []
         self.layerName = None
         self.styleName = None
         self.childs = {}
         self.childsCnt = 0
+
 
     def add(self, drawable, name = None):
         if name == None:
@@ -327,19 +365,23 @@ class Drawable:
             copyed.childs[key] = self.childs[key].copy() 
         return copyed;
     
-    def makeTransform(self, transform):
+    def addTransform(self, transform):
         self.transforms.append(transform)
         for key in self.childs:
-            self.childs[key].transform(transform)
+            self.childs[key].addTransform(transform)
             
     def translate(self, dx,dy,dz):
-        self.makeTransform(Translate(dx,dy,dz))
+        self.addTransform(Translate((dx,dy,dz)))
 
     def scale(self, kx,ky,kz):
-        self.makeTransform(Scale(kx,ky,kz))
+        self.addTransform(Scale((kx,ky,kz)))
 
-    def rotate(self, kx,ky,kz):
-        self.makeTransform(Rotate(kx,ky,kz))
+    def rotate(self, pnt, dir, angle):
+        self.addTransform(Rotate((pnt, dir, angle)))
+        
+    def fromPointToPoint(self, pnt1, pnt2):
+        self.addTransform(FromPointToPoint((pnt1, pnt2)))
+
 
     def setStyle(self, styleName):
         if self.styleName == None:
@@ -358,7 +400,6 @@ class Drawable:
         self.renderSelf(lib)
         for key in self.childs:
             self.childs[key].render(lib)
-            
 
     def renderSelf(self, lib):
         pass
@@ -370,62 +411,40 @@ class Hook(Drawable):
 
 class Label(Drawable):
     def renderSelf(self, lib):
-        pnt, text, size, delta = self.geometry
-        lib.renderLabel(pnt, text, size, delta, self.styleName, self.layerName)
-
+        lib.renderLabel(self.geometry, self.transforms, self.styleName, self.layerName)
+ 
 class Box(Drawable):
     def renderSelf(self, lib):
-        pnt1, pnt2 = self.geometry
-        lib.renderBox(pnt1, pnt2, self.styleName, self.layerName)
+        lib.renderBox(self.geometry, self.transforms, self.styleName, self.layerName)
 
 class Sphere(Drawable):
     def renderSelf(self, lib):
-        pnt, r = self.geometry
-        lib.renderSphere(pnt, r, self.styleName, self.layerName) 
+        lib.renderSphere(self.geometry, self.transforms, self.styleName, self.layerName) 
 
 class Cone(Drawable):
     def renderSelf(self, lib):
-        pnt1, pnt2, r1, r2 = self.geometry
-        lib.renderCone(pnt1,pnt2, r1, r2, self.styleName, self.layerName)
+        lib.renderCone(self.geometry, self.transforms,  self.styleName, self.layerName)
 
 class Cylinder(Drawable):
     def renderSelf(self, lib):
-        pnt1, pnt2, r = self.geometry
-        lib.renderCylinder(pnt1,pnt2, r, self.styleName, self.layerName)
+        lib.renderCylinder(self.geometry, self.transforms, self.styleName, self.layerName)
         
 class Tube(Drawable):
     def renderSelf(self, lib):
-        wire, r = self.geometry
-        lib.renderTube(wire, r, self.styleName, self.layerName)
+        lib.renderTube(self.geometry, self.transforms, self.styleName,  self.layerName)
 
 class Tor(Drawable):
     def renderSelf(self, lib):
         pnt1, pnt2, pnt3, r = self.geometry
         geomCircle = GC_MakeCircle(pnt1, pnt2, pnt3).Value()
         wire = BRepBuilderAPI_MakeEdge(geomCircle).Edge()
-        lib.renderTube(wire, r, self.styleName, self.layerName)
+        lib.renderTube((wire, r), self.transforms, self.styleName,  self.layerName)
 
 class Surface(Drawable):
     def renderSelf(self, lib):
-        surface =  self.geometry
-        lib.renderSurface(surface, self.styleName, self.layerName)
+        lib.renderSurface(self.geometry,  self.transforms, self.styleName, self.layerName)
 
-class Env:
-    def __init__(self):
-        self.envs = {}             
-        for param in sys.argv:
-           key,sep,val = param.partition('=')
-           if val != '':
-             try:
-               self.envs[key] = int(val)
-             except ValueError:
-               print('Non int param')          
-        
-    def env(self, envName, envDefault):
-        if key in self.envs:
-            return self.envs[key]
-        else:
-            return envDefault        
+#************************************************************
 
 
 class StandartLib:
@@ -439,23 +458,23 @@ class StandartLib:
     def getContainer(self, customData):
         return Drawable((customData))
         
-    def getHook(self, pnt, r) :
-        return Sphere((pnt, r))
+    def getHook(self, pnt) :
+        return Drawable(pnt)
 
-    def getLabel(self, pnt, text, size, delta): 
-        return Label((pnt, text, size, delta))
+    def getLabel(self, pnt, text, size ): 
+        return Label((pnt, text, size))
 
-    def getBox(self, pnt1, pnt2):
-        return Box((pnt1,pnt2))
+    def getBox(self, xSize, ySyze, zSize):
+        return Box((xSize, ySyze, zSize))
 
     def getSphere(self, pnt, r) :
         return Sphere((pnt, r))
         
-    def getCone(self, pnt1, pnt2, r1, r2):    
-        return Cone((pnt1, pnt2, r1, r2))
+    def getCone(self, r1, r2, h):    
+        return Cone((r1, r2, h))
 
-    def getCylinder(self, pnt1, pnt2, r):    
-        return Cylinder((pnt1, pnt2, r))
+    def getCylinder(self, r, h):    
+        return Cylinder((r, h))
 
     def getTube(self, wire, radius):
         return Tube((wire, radius))
