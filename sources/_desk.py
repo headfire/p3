@@ -3,8 +3,7 @@
 
 EQUAL_POINTS_PRECISION = 0.001
 
-
-from _scene import *
+from _standart import StandartLib, ScreenRend
 
 from OCC.Core.gp import gp_Pnt, gp_Trsf, gp_Dir, gp_Vec, gp_Ax1, gp_Ax2, gp_GTrsf, gp_OZ
 from OCC.Core.Geom import Geom_TrimmedCurve
@@ -23,113 +22,134 @@ from OCC.Core.BRepAlgoAPI import BRepAlgoAPI_Common, BRepAlgoAPI_Cut
 
 from math import pi
 
-BOUNDS = -50,-50, 10, 50,50, 100
-A0 = 1189, 841
-
-
-POINT_RADIUS = 2
-
+PAPER_SIZE_X, PAPER_SIZE_Y, PAPER_SIZE_Z = 1189, 841, 1 #A0
 STYLES =  { 'TableStyle': ((208,117,28),0,'PLASTIC'),   
-            'PaperStyle': ((230,230,230),0,'PLASTIC'), 
-            'InfoStyle': ((100,100,100),50,'PLASTIC'), 
-            'CnopStyle': ((100,100,100),0,'CHROME') }  
+        'PaperStyle': ((230,230,230),0,'PLASTIC'), 
+        'InfoStyle': ((100,100,100),50,'PLASTIC'), 
+        'CnopStyle': ((100,100,100),0,'CHROME') }
 
-def DEF_SCALE(bounds, a0): 
-
-    x1,y1,z1, x2,y2,z2 = bounds
-    xSize, ySize = A0
-    draftXScale = (x2-x1)/xSize
-    draftYScale = (y2-y1)/ySize
-    draftScale = max(draftXScale, draftYScale)
-    print(draftScale)    
-
-    scales = dict()
-    for i in (1,2,5):
-        for k in (1,10,100,1000,10000):
-            scales['1:'+str(i*k)] = (i*k)
-            scales[str(i*k)+':1'] = 1/(i*k)
-    
-    print(scales)    
-    minE = 10   
-    minKey = None
-    for key in scales:
-        if draftScale-scales[key] > 0:
-            curE = 1-(draftScale-scales[key])/scales[key]
-            print(key,curE)
-            if curE < minE:
-                minE = curE
-                minKey = key
-    minKey = '5:1'           
-    return minKey, scales[minKey]
-
-SCALE_STR, SCALE_K = DEF_SCALE(BOUNDS, A0) 
-INFO_LINE_WIDTH = 5*SCALE_K
-
-def putLine(nm, pnt1, pnt2):
-    getCylinder(pnt1, pnt2, INFO_LINE_WIDTH)
-    setStyle('InfoStyle')
-    put(nm)
-
-def getDesk():
-    
-    bx1,by1,bz1, bx2,by2,bz2 = BOUNDS
-    scale = 1
-    dx, dy, dz = 1500*SCALE_K, 1000*SCALE_K, 40*SCALE_K
-    paperWidth = 2*SCALE_K     
-
-    getBox(gp_Pnt(-dx/2, -dy/2, -bz2*SCALE_K-dz-paperWidth), gp_Pnt(dx/2, dy/2, -bz2*SCALE_K-paperWidth))
-    setStyle('TableStyle')
-    put('Table')
-    getLabel(gp_Pnt(-dx/2, -dy/2, 0), 'M'+SCALE_STR, 20, 10)
-    setStyle('PaperStyle')
-    put('ScaleLabel')
-
-    dx, dy, dz = 1189*SCALE_K, 841*SCALE_K, paperWidth;
-           
-    getBox(gp_Pnt(-dx/2, -dy/2, -dz), gp_Pnt(dx/2, dy/2, 0))
-    setStyle('PaperStyle')
-    put('Paper')
-   
-    dx, dy = (1189-40)*SCALE_K/2, (841-40)*SCALE_K/2
-    cr = 10*SCALE_K
-    cw = 2*SCALE_K
-    i = 0
-    for x in (-dx,+dx):
-        for y in (-dy,+dy):
-            getCylinder(gp_Pnt(x,y,0),gp_Pnt(x,y,2*SCALE_K), cr)
-            setStyle('CnopStyle')
-            put('Cnop'+str(i))
-            i += 1 
-    
-    x1,y1,z1, x2,y2,z2 = BOUNDS
-    putLine('L1',gp_Pnt(x1,y1,z1),gp_Pnt(x1,y2,z1))
-    putLine('L2',gp_Pnt(x1,y2,z1),gp_Pnt(x2,y2,z1))
-    putLine('L3',gp_Pnt(x2,y2,z1),gp_Pnt(x2,y1,z1))
-    putLine('L4',gp_Pnt(x2,y1,z1),gp_Pnt(x1,y1,z1))
-   
-    putLine('L5',gp_Pnt(x1,y1,z1),gp_Pnt(x1,y1,z2))
-    putLine('L6',gp_Pnt(x1,y2,z1),gp_Pnt(x1,y2,z2))
-    putLine('L7',gp_Pnt(x2,y1,z1),gp_Pnt(x2,y1,z2))
-    putLine('L8',gp_Pnt(x2,y2,z1),gp_Pnt(x2,y2,z2))
+class DeskLib:
  
-    putLine('L9',gp_Pnt(x1,y1,z2),gp_Pnt(x1,y2,z2))
-    putLine('L10',gp_Pnt(x1,y2,z2),gp_Pnt(x2,y2,z2))
-    putLine('L11',gp_Pnt(x2,y2,z2),gp_Pnt(x2,y1,z2))
-    putLine('L12',gp_Pnt(x2,y1,z2),gp_Pnt(x1,y1,z2))
-   
-    putLine('oX',gp_Pnt(0,0,0),gp_Pnt(x2,0,0))
-    putLine('oY',gp_Pnt(0,0,0),gp_Pnt(0,y2,0))
-    putLine('oZ',gp_Pnt(0,0,0),gp_Pnt(0,0,z2))
+    def __init__(self, boundPnt1, boundPnt2):
+        self.std = StandartLib()  
+        self.boundPnt1, self.boundPnt2 = boundPnt1,boundPnt2
+        self.scaleStr, self.scaleK = self._getFitScale()
+        print(self.scaleStr, self.scaleK)
+        
+    def _getFitScale(self): 
+        x1,y1 = self.boundPnt1.X(),self.boundPnt1.Y()
+        x2,y2 = self.boundPnt2.X(),self.boundPnt2.Y()
+        draftXScale = (x2-x1)/PAPER_SIZE_X
+        draftYScale = (y2-y1)/PAPER_SIZE_Y
+        draftScale = max(draftXScale, draftYScale)
+        print('draftXScale',draftXScale)    
+        print('draftYScale',draftYScale)    
+        print('draftScale',draftXScale)    
+
+        scales = dict()
+        for i in (1,2,5):
+            for k in (1,10,100,1000,10000):
+                scales['1:'+str(i*k)] = (i*k)
+                scales[str(i*k)+':1'] = 1/(i*k)
+
+        print(scales)    
+        minE = 10   
+        minKey = None
+        for key in scales:
+            if draftScale-scales[key] > 0:
+                curE = 1-(draftScale-scales[key])/scales[key]
+                print(key,curE)
+                if curE < minE:
+                    minE = curE
+                    minKey = key
+        minKey = '5:1'
+        return minKey, scales[minKey]
+        
+    def getStyles(self): 
+        return STYLES
+
+    def getDesk(self):
     
-    getGroup()
+        desk = self.std.getGroup()
+        return desk
+        k = self.scaleK
+        px, py, pz = PAPER_SIZE_X*k, PAPER_SIZE_Y*k, PAPER_SIZE_Z*k;
+               
+        paper = self.std.getBox(gp_Pnt(-px/2, -py/2, -pz), gp_Pnt(px/2, py/2, 0))
+        paper.setStyle('PaperStyle')
+        desk.add(paper)
+        return desk;
 
+    def getBounds(self):
+        return self.std.getFoo()
+        
+    def getAxis(self):
+        return self.std.getFoo()
 
-sceneInit()
+    def getBounds(self):
+        return self.std.getFoo()
 
-getDesk()
-put('Desk')
+    def getDemo(self):
+    
+        demo = self.std.getGroup()
+        return demo
+        demo.add(self.getDesk())
+        demo.add(self.getBounds())
+        demo.add(self.getAxis())
+        return demo
+         
+        '''          
+        scale = 1
+        dx, dy, dz = 1500*SCALE_K, 1000*SCALE_K, 40*SCALE_K
+        paperWidth = 2*SCALE_K     
 
-sceneRender('slide', STYLES)
+        getBox(gp_Pnt(-dx/2, -dy/2, -bz2*SCALE_K-dz-paperWidth), gp_Pnt(dx/2, dy/2, -bz2*SCALE_K-paperWidth))
+        setStyle('TableStyle')
+        put('Table')
+        getLabel(gp_Pnt(-dx/2, -dy/2, 0), 'M'+SCALE_STR, 20, 10)
+        setStyle('PaperStyle')
+        put('ScaleLabel')
+
+       
+        dx, dy = (1189-40)*SCALE_K/2, (841-40)*SCALE_K/2
+        cr = 10*SCALE_K
+        cw = 2*SCALE_K
+        i = 0
+        for x in (-dx,+dx):
+            for y in (-dy,+dy):
+                getCylinder(gp_Pnt(x,y,0),gp_Pnt(x,y,2*SCALE_K), cr)
+                setStyle('CnopStyle')
+                put('Cnop'+str(i))
+                i += 1 
+        
+        x1,y1,z1, x2,y2,z2 = BOUNDS
+        putLine('L1',gp_Pnt(x1,y1,z1),gp_Pnt(x1,y2,z1))
+        putLine('L2',gp_Pnt(x1,y2,z1),gp_Pnt(x2,y2,z1))
+        putLine('L3',gp_Pnt(x2,y2,z1),gp_Pnt(x2,y1,z1))
+        putLine('L4',gp_Pnt(x2,y1,z1),gp_Pnt(x1,y1,z1))
+       
+        putLine('L5',gp_Pnt(x1,y1,z1),gp_Pnt(x1,y1,z2))
+        putLine('L6',gp_Pnt(x1,y2,z1),gp_Pnt(x1,y2,z2))
+        putLine('L7',gp_Pnt(x2,y1,z1),gp_Pnt(x2,y1,z2))
+        putLine('L8',gp_Pnt(x2,y2,z1),gp_Pnt(x2,y2,z2))
+     
+        putLine('L9',gp_Pnt(x1,y1,z2),gp_Pnt(x1,y2,z2))
+        putLine('L10',gp_Pnt(x1,y2,z2),gp_Pnt(x2,y2,z2))
+        putLine('L11',gp_Pnt(x2,y2,z2),gp_Pnt(x2,y1,z2))
+        putLine('L12',gp_Pnt(x2,y1,z2),gp_Pnt(x1,y1,z2))
+       
+        putLine('oX',gp_Pnt(0,0,0),gp_Pnt(x2,0,0))
+        putLine('oY',gp_Pnt(0,0,0),gp_Pnt(0,y2,0))
+        putLine('oZ',gp_Pnt(0,0,0),gp_Pnt(0,0,z2))
+        
+        getGroup()
+        '''
+if __name__ == '__main__':
+    #demo = DeskLib(gp_Pnt(-50,-50,-60), gp_Pnt(50,50,10)).getDemo()
+    #print(demo.childs)
+    ScreenRend({})
+    #.render(demo) 
+
 
 '''
         

@@ -179,11 +179,11 @@ class WebLib:
 
 
 
-class ScreenLib:
+class ScreenRend:
 
     def __init__(self, styles):
         self.display, self.start_display, self.add_menu,  self.add_function_to_menu  = init_display(
-            None, (1024, 768), True, [128, 128, 128], [128, 128, 128]
+            None, (700, 500), True, [128, 128, 128], [128, 128, 128]
           )
         self.styles = styles  
   
@@ -192,6 +192,9 @@ class ScreenLib:
             if styleName in self.styles:
                 return self.styles[styleName]
         return DEFAULT_STYLE
+        
+    def render(self, drawable):
+        drawable.render(self)
 
     def renderShapeObj(self, shape, styleName):
         color, transparency, materialName = self.getStyle(styleName)
@@ -282,6 +285,17 @@ class ScreenLib:
          self.display.FitAll()
          self.start_display()
 
+class Rotate:
+    def __init__(self, pnt, direct ,angle):
+        pass
+    
+class Translate:
+    def __init__(self, dx, dy, dz):
+        pass
+
+class Scale:
+    def __init__(self, dx, dy, dz):
+        pass
 
 class Drawable:
     def __init__(self, geometry):
@@ -291,6 +305,18 @@ class Drawable:
         self.layerName = None
         self.styleName = None
         self.childs = {}
+        self.childsCnt = 0
+
+    def add(self, drawable, name = None):
+        if name == None:
+            name = 'Child'+str(self.childsCnt)
+        self.childs[name] = drawable
+        self.childsCnt += 1
+        
+    def dump(self, prefix = ''):
+        print(prefix+self.__class__.__name__)
+        for key in self.childs:
+            self.childs[key].dump(prefix+'['+key+']')
         
     def copy(self):
         copyed = self.__class__(geometry)     
@@ -306,6 +332,15 @@ class Drawable:
         self.transforms.append(transform)
         for key in self.childs:
             self.childs[key].transform(transform)
+            
+    def translate(self, dx,dy,dz):
+        self.makeTransform(Translate(dx,dy,dz))
+
+    def scale(self, kx,ky,kz):
+        self.makeTransform(Scale(kx,ky,kz))
+
+    def rotate(self, kx,ky,kz):
+        self.makeTransform(Rotate(kx,ky,kz))
 
     def setStyle(self, styleName):
         if self.styleName == None:
@@ -325,16 +360,10 @@ class Drawable:
         for key in self.childs:
             self.childs[key].render(lib)
             
-    def putChild(self, name, drawable):
-        self.childs[name] = drawable
 
     def renderSelf(self, lib):
         pass
     
-    def dump(self, prefix = ''):
-        print(prefix+self.__class__.__name__)
-        for key in self.childs:
-            self.childs[key].dump(prefix+'['+key+']')
 
 class Hook(Drawable):
     #pnt = self.geometry
@@ -399,81 +428,39 @@ class Env:
         else:
             return envDefault        
 
-class Rotation:
-    def __init__(self, pnt, direct ,angle):
-        pass
-    
-class Translation:
-    def __init__(self, dx, dy, dz):
-        pass
 
-class Scene:
-
-    def __init__(self):
-        self.cache = dict()
-        self.stackArr = []
-        self.group = Drawable(None)
-
-    def initCache(self, globalForGetFunctions):
-        self.forGetFunctions =  globalForGetFunctions
-
-    def stack(self, drawable):
-        self.stackArr.append(drawable)
-        
-    def last(self):   
-        return self.stackArr[-1]
-        
-    def unstack(self):
-        return self.stackArr.pop()    
-
-    def render(self, sceneName = None, styles = None):
-        lib = ScreenLib(styles)
-        self.getGroup()
-        toRender = self.unstack()
-        toRender.dump()
-        toRender.render(lib)
-        lib.start()
-    
-    def getPrimitive(self, drawable):      
-        self.stack(drawable)
+class StandartLib:
 
     def getGroup(self):
-        self.stack(self.group)    
-        self.group = Drawable(None) 
-          
-    def getFunc(self, funcName, param1 = None, param2 = None):
-    
-        params = ''
-        if param1 != None:
-          params += str(param1)
-        if param2 != None:
-          params += ',' + str(param2) 
-        cacheKey = funcName+'('+ params + ')'      
+        return Drawable(None)
+
+    def getFoo(self):
+        return Drawable(None)
+
+    def getContainer(self, customData):
+        return Drawable((customData))
         
-        if  cacheKey in self.cache:  
-            print('==> Get from cache',cacheKey)         
-            self.stack(self.cache[cacheKey].copy())
-        else:
-            if param1 == None:
-                self.forGetFunctions[funcName]()
-            elif param2 == None:
-                self.forGetFunctions[funcName](param1)
-            else:
-                self.forGetFunctions[funcName](param1, param2)
-            print('==> Compute', cacheKey)
-            
-    def makeTransform(self, transform):
-        self.last().makeTransform(transform)
+    def getHook(self, pnt, r) :
+        return Sphere((pnt, r))
 
-    def setStyle(self, styleName):
-        self.last().setStyle(styleName)
-    
-    def setLayer(self, styleName):
-        self.last().setLayer(styleName)
+    def getLabel(self, pnt, text, size, delta): 
+        return Label((pnt, text, size, delta))
 
-    def put(self, name):
-        self.group.putChild(name, self.unstack())
+    def getBox(self, pnt1, pnt2):
+        return Box((pnt1,pnt2))
 
-    def drop(self):
-        self.unstack()
+    def getSphere(self, pnt, r) :
+        return Sphere((pnt, r))
+        
+    def getCone(self, pnt1, pnt2, r1, r2):    
+        return Cone((pnt1, pnt2, r1, r2))
+
+    def getCylinder(self, pnt1, pnt2, r):    
+        return Cylinder((pnt1, pnt2, r))
+
+    def getTube(self, wire, radius):
+        return Tube((wire, radius))
+
+    def getSurface(self, surface):
+        return Surface(surface)
 

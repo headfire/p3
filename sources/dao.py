@@ -3,7 +3,6 @@
 
 EQUAL_POINTS_PRECISION = 0.001
 
-
 from _scene import Scene
 
 from OCC.Core.gp import gp_Pnt, gp_Trsf, gp_Dir, gp_Vec, gp_Ax1, gp_Ax2, gp_GTrsf, gp_OZ
@@ -94,10 +93,6 @@ def getShapeMirror(shape, p0):
     return shape
 
 
-
-
-
-
 def getShapeTranslate(shape, x,y,z):
     transform = gp_Trsf()
     transform.SetTranslation(gp_Vec(x,y,z))
@@ -156,8 +151,6 @@ def utilGetZRotatedShape(theShape, angle):
     rotatedShape =  BRepBuilderAPI_Transform(theShape, theTransform).Shape()
 
     return rotatedShape
-
-
 
 
 def slide_06_DaoComplete (sc, r, offset):
