@@ -179,13 +179,11 @@ class WebLib:
 
 
 
-class ScreenRend:
+class ScreenRenderer:
 
     def __init__(self, styles):
-        self.display, self.start_display, self.add_menu,  self.add_function_to_menu  = init_display(
-            None, (700, 500), True, [128, 128, 128], [128, 128, 128]
-          )
         self.styles = styles  
+        self.display = None
   
     def getStyle(self, styleName): 
         if self.styles != None:
@@ -194,7 +192,12 @@ class ScreenRend:
         return DEFAULT_STYLE
         
     def render(self, drawable):
+        self.display, start_display, add_menu,  add_function_to_menu  = init_display(
+            None, (700, 500), True, [128, 128, 128], [128, 128, 128]
+          )
         drawable.render(self)
+        self.display.FitAll()
+        start_display()
 
     def renderShapeObj(self, shape, styleName):
         color, transparency, materialName = self.getStyle(styleName)
@@ -280,10 +283,6 @@ class ScreenRend:
 
     def renderSurface(self, surfaceShape, styleName, layerName):
         self.renderShapeObj(surfaceShape, styleName)
-
-    def start(self):
-         self.display.FitAll()
-         self.start_display()
 
 class Rotate:
     def __init__(self, pnt, direct ,angle):
