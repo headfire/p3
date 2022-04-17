@@ -1,4 +1,4 @@
-from _standart import StandartLib, ScreenRenderer
+from _std import StdLib, ScreenRenderer
 
 from OCC.Core.gp import gp_Pnt,  gp_Vec
 
@@ -18,7 +18,7 @@ STYLES = {'BoardStyle': ((208, 117, 28), 0, 'PLASTIC'),
 class DeskLib:
  
     def __init__(self, deskLabelText='A0 M1:1', scaleK=1/1):
-        self.std = StandartLib()  
+        self.std = StdLib()
         self.deskLabelText = deskLabelText
         self.scaleK = scaleK
         self.styles = STYLES
