@@ -312,15 +312,15 @@ class Drawable:
     def fromPointToPoint(self, pnt1, pnt2):
         self.addTransform(FromPointToPoint((pnt1, pnt2)))
 
-    def render(self, lib):
-        lib.setStyle(self.getFinalStyleName())
-        lib.setLayer(self.getFinalLayerName())
-        lib.setTransObj(self.getFinalTransObj())
-        self.renderSelf(lib)
+    def render(self, renderer):
+        renderer.setStyle(self.getFinalStyleName())
+        renderer.setLayer(self.getFinalLayerName())
+        renderer.setTransObj(self.getFinalTransObj())
+        self.renderSelf(renderer)
         for key in self.children:
-            self.children[key].render(lib)
+            self.children[key].render(renderer)
 
-    def renderSelf(self, lib):
+    def renderSelf(self, renderer):
         pass
 
 
@@ -330,48 +330,76 @@ class Hook(Drawable):
 
 
 class Label(Drawable):
-    def renderSelf(self, lib):
-        lib.renderLabel(self.geometry)
+    def renderSelf(self, renderer):
+        renderer.renderLabel(self.geometry)
 
 
 class Box(Drawable):
-    def renderSelf(self, lib):
-        lib.renderBox(self.geometry)
+    def renderSelf(self, renderer):
+        renderer.renderBox(self.geometry)
 
 
 class Sphere(Drawable):
-    def renderSelf(self, lib):
-        lib.renderSphere(self.geometry)
+    def renderSelf(self, renderer):
+        renderer.renderSphere(self.geometry)
 
 
 class Cone(Drawable):
-    def renderSelf(self, lib):
-        lib.renderCone(self.geometry)
+    def renderSelf(self, renderer):
+        renderer.renderCone(self.geometry)
 
 
 class Cylinder(Drawable):
-    def renderSelf(self, lib):
-        lib.renderCylinder(self.geometry)
+    def renderSelf(self, renderer):
+        renderer.renderCylinder(self.geometry)
 
 
 class Tube(Drawable):
-    def renderSelf(self, lib):
-        lib.renderTube(self.geometry)
+    def renderSelf(self, renderer):
+        renderer.renderTube(self.geometry)
 
 
 class Tor(Drawable):
-    def renderSelf(self, lib):
+    def renderSelf(self, renderer):
         pnt1, pnt2, pnt3, r = self.geometry
         geomCircle = GC_MakeCircle(pnt1, pnt2, pnt3).Value()
         wire = BRepBuilderAPI_MakeEdge(geomCircle).Edge()
-        lib.renderTube((wire, r))
+        renderer.renderTube((wire, r))
 
 
 class Surface(Drawable):
-    def renderSelf(self, lib):
-        lib.renderSurface(self.geometry)
+    def renderSelf(self, renderer):
+        renderer.renderSurface(self.geometry)
+
 
 # ************************************************************
+
+
+class CachedLib:
+
+    def __init(self):
+        self.cache = {}
+
+    def get(self, methodName, param1=None, param2=None):
+
+        params = ''
+        if param1 is not None:
+            params += str(param1)
+        if param2 is not None:
+            params += ',' + str(param2)
+
+        cacheKey = methodName + '(' + params + ')'
+
+        method = self.__getattribute__(methodName)
+        if cacheKey in self.cache:
+            print('==> Get from cache', cacheKey)
+            return self.cache[cacheKey].copy()
+        print('==> Compute', cacheKey)
+        if param1 is None:
+            return method()
+        if param2 is None:
+            return method(param1)
+        method(param1, param2)
 
 
 class StdLib:
