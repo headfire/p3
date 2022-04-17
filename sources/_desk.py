@@ -7,11 +7,11 @@ BOARD_BORDER_SIZE, BOARD_SIZE_Z = 60, 20
 PIN_OFFSET, PIN_R, PIN_WIDTH = 30, 10, 2
 INFO_LINE_R = 3
 
-DESK_STYLES = {'BoardStyle': ((208, 117, 28), 0, 'PLASTIC'),
-               'PaperStyle': ((230, 230, 230), 0, 'PLASTIC'),
-               'InfoStyle': ((100, 100, 100), 50, 'PLASTIC'),
-               'ConeStyle': ((50, 200, 50), 0, 'CHROME'),
-               'PinStyle': ((100, 100, 100), 0, 'CHROME')
+DESK_HINTS = { 'BoardMaterial': ((208, 117, 28), 0, 'PLASTIC'),
+               'PaperMaterial': ((230, 230, 230), 0, 'PLASTIC'),
+               'InfoMaterial': ((100, 100, 100), 50, 'PLASTIC'),
+               'ConeMaterial': ((50, 200, 50), 0, 'CHROME'),
+               'PinMaterial': ((100, 100, 100), 0, 'CHROME')
                }
 
 

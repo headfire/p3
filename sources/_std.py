@@ -14,7 +14,29 @@ from OCC.Core.BRepPrimAPI import BRepPrimAPI_MakeSphere, BRepPrimAPI_MakeBox, \
 from OCC.Core.BRep import BRep_Tool
 from OCC.Core.BRepTools import BRepTools_WireExplorer
 
-DEFAULT_STYLE_VALUES = (50, 50, 50), 0, 'CHROME'
+import sys
+
+
+class EnvParamLib:
+
+    def __init__(self):
+        self.envParams = {}
+        for param in sys.argv:
+            key, sep, val = param.partition('=')
+            if val != '':
+                try:
+                    self.envParams[key] = int(val)
+                except ValueError:
+                    print('Non int param')
+
+    def get(self, paramName, defaultValue):
+        if paramName in self.envParams:
+            return self.envParams[paramName]
+        else:
+            return defaultValue
+
+
+DEFAULT_MATERIAL = (50, 50, 50), 0, 'CHROME'
 
 MATERIAL_CONSTS = {
     'BRASS': Graphic3d_NameOfMaterial.Graphic3d_NOM_BRASS,
@@ -45,24 +67,6 @@ MATERIAL_CONSTS = {
 }
 
 
-class StylesHints:
-    def __init__(self):
-        self.hints = {}
-
-    def hintStyleValues(self, styleName):
-        if self.hints is not None:
-            if styleName in self.hints:
-                return self.hints[styleName]
-        return DEFAULT_STYLE_VALUES
-
-    def addHint(self, styleName, styleValues):
-        self.hints[styleName] = styleValues
-
-    def addHints(self, hints):
-        for key in hints:
-            self.hints[key] = hints[key]
-
-
 def todoUse(varToUse):
     print('TODO use', varToUse)
 
@@ -84,33 +88,32 @@ def _getWireStartPointAndTangentDir(wire):
     return BRep_Tool.Pnt(vertex), gp_Dir(v)
 
 
-class ScreenRenderer:
+class ScreenRenderLib:
 
     def __init__(self):
         self.display = None
-        self.styleSet = StylesHints()
-        self.curStyleName = None
-        self.curLayerName = None
+        self.curMaterial = None
+        self.curLayer = None
         self.curTransObj = None
 
     def _renderText(self, pnt, text, size):
-        color, transparency, materialName = self.styleSet.hintStyleValues(self.curStyleName)
+        color, transparency, materialTypeName = self.curMaterial
         r, g, b = color
         if self.curTransObj is not None:
             pnt = pnt.Transformed(self.curTransObj)
         self.display.DisplayMessage(pnt, text, size, (r / 256, g / 256, b / 256), False)
 
-    def setStyle(self, styleName):
-        self.curStyleName = styleName
+    def setMaterial(self, material):
+        self.curMaterial = material
 
-    def setLayer(self, layerName):
-        self.curLayerName = layerName
+    def setLayer(self, layer):
+        self.curLayer = layer
 
     def setTransObj(self, transObj):
         self.curTransObj = transObj
 
     def _renderShapeObj(self, shape):
-        color, transparency, materialName = self.styleSet.hintStyleValues(self.curStyleName)
+        color, transparency, materialName = self.curMaterial
         if self.curTransObj is not None:
             shape = BRepBuilderAPI_Transform(shape, self.curTransObj).Shape()
         ais = AIS_Shape(shape)
@@ -122,9 +125,6 @@ class ScreenRenderer:
         aspect = Graphic3d_MaterialAspect(MATERIAL_CONSTS[materialName])
         ais.SetMaterial(aspect)
         self.display.Context.Display(ais, False)
-
-    def setStyleSet(self, styleSet):
-        self.styleSet = styleSet
 
     def render(self, drawable):
         self.display, start_display, add_menu, add_function_to_menu = init_display(
@@ -243,25 +243,28 @@ class Drawable:
     def __init__(self, geometry):
 
         self.parent = None
+
         self.geometry = geometry
-        self.layerName = None
-        self.styleName = None
+
+        self.layer = None
+        self.material = None
+        self.trans = None
+
         self.children = {}
         self.childrenCount = 0
-        self.transObj = None
 
-    def setStyle(self, styleName):
-        self.styleName = styleName
+    def setMaterial(self, material):
+        self.material = material
 
-    def setLayer(self, layerName):
-        self.layerName = layerName
+    def setLayer(self, layer):
+        self.layer = layer
 
     def addTransform(self, transform):
-        transObj = transform.getTransObj()
-        if self.transObj is None:
-            self.transObj = transObj
+        trans = transform.getTransObj()
+        if self.trans is None:
+            self.trans = trans
         else:
-            self.transObj *= transObj
+            self.trans *= trans
 
     def add(self, drawable, name=None):
         drawable.parent = self
@@ -270,45 +273,45 @@ class Drawable:
         self.children[name] = drawable
         self.childrenCount += 1
 
-    def getFinalTransObj(self):
+    def getFinalTrans(self):
         if self.parent is not None:
-            parentTransObj = self.parent.getFinalTransObj()
+            parentTrans = self.parent.getFinalTrans()
         else:
-            parentTransObj = None
-        if parentTransObj is not None:
-            if self.transObj is not None:
-                return self.transObj * parentTransObj
+            parentTrans = None
+        if parentTrans is not None:
+            if self.trans is not None:
+                return self.trans * parentTrans
             else:
-                return parentTransObj
+                return parentTrans
         else:
-            if self.transObj is not None:
-                return self.transObj
+            if self.trans is not None:
+                return self.trans
             else:
                 return None
 
-    def getFinalLayerName(self):
-        if self.layerName is not None:
-            return self.layerName
+    def getFinalLayer(self):
+        if self.layer is not None:
+            return self.layer
         if self.parent is not None:
-            return self.parent.getFinalLayerName()
+            return self.parent.getFinalLayer()
         return None
 
-    def getFinalStyleName(self):
-        if self.styleName is not None:
-            return self.styleName
+    def getFinalMaterial(self):
+        if self.material is not None:
+            return self.material
         if self.parent is not None:
-            return self.parent.getFinalStyleName()
+            return self.parent.getFinalMaterial()
         return None
 
     def dump(self, prefix=''):
-        print(prefix + self.__class__.__name__, self.styleName, self.getFinalStyleName())
+        print(prefix + self.__class__.__name__, self.material, self.getFinalMaterial())
         for key in self.children:
             self.children[key].dump(prefix + '[' + key + ']')
 
     def copy(self):
         copied = self.__class__(self.geometry)
-        copied.layerName = self.layerName
-        copied.styleName = self.styleName
+        copied.layer = self.layer
+        copied.material = self.material
         for key in self.children:
             copied.children[key] = self.children[key].copy()
         return copied
@@ -326,9 +329,9 @@ class Drawable:
         self.addTransform(FromPointToPoint((pnt1, pnt2)))
 
     def render(self, renderer):
-        renderer.setStyle(self.getFinalStyleName())
-        renderer.setLayer(self.getFinalLayerName())
-        renderer.setTransObj(self.getFinalTransObj())
+        renderer.setStyle(self.getFinalMaterial())
+        renderer.setLayer(self.getFinalLayer())
+        renderer.setTransObj(self.getFinalTrans())
         self.renderSelf(renderer)
         for key in self.children:
             self.children[key].render(renderer)
@@ -392,10 +395,17 @@ class DrawLib:
 
     def __init(self):
         self.cache = {}
+        self.hints = {}
 
-    @staticmethod
-    def addToStylesHints(stylesHintsToAdd):
-        pass
+    def initHints(self, hints):
+        for key in hints:
+            self.hints[key] = hints[key]
+
+    def getHint(self, hintName):
+        return self.hints[hintName]
+
+    def setHint(self, hintName, hintValue):
+        self.hints[hintName] = hintValue
 
     def getCached(self, methodName, param1=None, param2=None):
 
