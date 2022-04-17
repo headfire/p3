@@ -1,9 +1,10 @@
 # OpenCascade tutorial by headfire (headfire@yandex.ru)
 # point and line attributes
 
-EQUAL_POINTS_PRECISION = 0.001
 
-from _std import StdLib, ScreenRenderer, Styles
+from _env import Env
+from _std import StdLib, ScreenRenderer, StylesHints
+from _desk import DeskLib
 
 from OCC.Core.gp import gp_Pnt, gp_Trsf, gp_Dir, gp_Vec, gp_Ax1, gp_Ax2, gp_GTrsf, gp_OZ
 from OCC.Core.Geom import Geom_TrimmedCurve
@@ -22,12 +23,25 @@ from OCC.Core.BRepAlgoAPI import BRepAlgoAPI_Common, BRepAlgoAPI_Cut
 
 from math import pi
 
+EQUAL_POINTS_PRECISION = 0.001
+
+DAO_BASE_RADIUS = 40
+DAO_OFFSET = 3
+DAO_SLICE_EXAMPLE_KOEF = 0.5
+DAO_SLICE_FACE_HEIGHT = 30
+DAO_SLICE_COUNT = 10
+DAO_SKINING_SLICES_KOEFS = [0.03, 0.09, 0.16, 0.24, 0.35, 0.50, 0.70, 0.85]
+DAO_CASE_HEIGHT = 30
+DAO_CASE_GAP = 1
+
+
 def makeCircleWire(thePoint1, thePoint2, thePoint3):
     theCircle = GC_MakeCircle(thePoint1, thePoint2, thePoint3).Value()
     theEdge = BRepBuilderAPI_MakeEdge(theCircle).Edge()
     theWire =  BRepBuilderAPI_MakeWire(theEdge).Wire()
     return theWire
 
+'''
 
 
 def getXYZ(gpPnt):
@@ -45,13 +59,13 @@ def getUniquePoints(thePoints) :
       if not isPointExistInPoints(thePoint, uniquePoints):
          uniquePoints += [thePoint]
     return uniquePoints
-
+'''
 def getPntRotate(pCenter,  p,  angle):
    ax = gp_Ax1(pCenter, gp_Dir(0,0,1))
    pnt = gp_Pnt(p.XYZ())
    pnt.Rotate(ax, angle)
    return pnt
-
+'''
 def getPntScale(pCenter,  p, scale):
    pnt = gp_Pnt(p.XYZ())
    pnt.Scale(pCenter, scale)
@@ -107,7 +121,6 @@ def getShapeTranslate(shape, x,y,z):
 # *******************************************************************************
 # *******************************************************************************
 # *******************************************************************************
-
 
 
 def makeEdgesFacesIntersectPoints(edgesShape, facesShape):
@@ -174,17 +187,22 @@ def slide_07_DaoWithCase (sc, r, offset, caseH, caseZMove,gap):
     case = getShapeTranslate(case, 0,0, caseZMove)
     sc.shape(case, 'StyleDaoCase')
 
-
+'''
 
 # *********************************************************************************
 # *********************************************************************************
 # *********************************************************************************
 
-def class DaoLib:
+class DaoLib:
+    def __init__(self):
+        super().__init__()
+        self.std = StdLib()
+        self.desk = DeskLib('A0 M5:1', 5/1)
+        self.stylesHints.add(desk.getStylesHints())
 
-    def getDaoBasePoints():
+    def getDaoBasePoints(self):
 
-        r = sc.getVal('DAO_BASE_RADIUS')
+        r = DAO_BASE_RADIUS
         r2 = r/2
 
         gpPntMinC = gp_Pnt(0,r2,0)
@@ -202,12 +220,12 @@ def class DaoLib:
         return p;
 
     def getDaoBoundCircleWire(offset):
-        r = sc.getVal('DAO_BASE_RADIUS') + offset
+        r = DAO_BASE_RADIUS + offset
         return makeCircleWire(gp_Pnt(r,0,0), gp_Pnt(0,r,0), gp_Pnt(-r,0,0))
 
-    def getDaoClassicWire():
+    def getDaoClassicWire(self):
 
-        p = sc.get('DaoBasePoints')
+        p = self.getCached('getDaoBasePoints')
 
         arc0 =  GC_MakeArcOfCircle(p[0],p[1],p[2]).Value()
         arc1 =  GC_MakeArcOfCircle(p[2],p[3],p[4]).Value()
@@ -223,6 +241,7 @@ def class DaoLib:
 
         return theWire
 
+    '''
     def getDaoOffsetWire(offset):
 
         classicWire = sc.get('DaoClassicWire')
@@ -369,18 +388,23 @@ def class DaoLib:
     # **********************************************************************************
     # **********************************************************************************
     # **********************************************************************************
+    '''
+    def getDaoClassicSlide(self):
 
-    def drawDaoClassicSlide(sc):
+        ret = self.std.getGroup()
 
-        sc.style('Main')
+        points = self.getCached('getDaoBasePoints', 'p')
+        points.setStyle('DeskMainPoint')
+        ret.add(points)
 
-        sc.label('p')
-        sc.draw('DaoBasePoints')
+        classic = self.getCached('DaoClassicWire')
+        classic.setStyle('DeskMainWire')
+        ret.add(classic)
 
-        sc.draw('DaoClassicWire')
-
-        sc.style('Info')
-        sc.getCashed('getDaoBoundCircleWire', 0)
+        circle = self.getCashed('getDaoBoundCircle', 0)
+        circle.style('DeskInfoWire')
+        ret.add(circle)
+        return ret
     '''
     def drawDaoOffsetSlide(sc):
     
@@ -527,20 +551,13 @@ def class DaoLib:
     
     def initDaoVals(sc):
     
-        sc.setVal('DAO_BASE_RADIUS', 40)
-        sc.setVal('DAO_OFFSET', 3)
-        sc.setVal('DAO_SLICE_EXAMPLE_KOEF', 0.5)
-        sc.setVal('DAO_SLICE_FACE_HEIGHT', 30)
-        sc.setVal('DAO_SLICE_COUNT', 10)
-        sc.setVal('DAO_SKINING_SLICES_KOEFS', [0.03, 0.09 , 0.16, 0.24, 0.35, 0.50, 0.70, 0.85])
-        sc.setVal('DAO_CASE_HEIGHT', 30)
-        sc.setVal('DAO_CASE_GAP', 1)
     '''
-    def getSlide(slideNum, infoLayer = false)
+    def getSlide(self, slideNum, isHelpers):
         if slideNum == 0:
             slide = lib.getDaoClassicSlide()
         elif slideNum == 1:
             slide = lib.getDaoOffsetSlide()
+        '''    
         elif slideNum == 2:
             slide = lib.drawDaoExampleSliceSlide()
         elif slideNum == 3:
@@ -551,9 +568,11 @@ def class DaoLib:
             slide = drawDaoIngYangSlide(sc)
         elif slideNum == 6:
             slide = drawDaoCaseSlide(sc)
-        if isInfoObjects:
+        if isHelpers:
             slide.add(self.desk.getDesk())
             slide.add(self.desk.getAxis())
+        '''
+
         return slide
 
 if __name__ == '__main__':
@@ -561,18 +580,20 @@ if __name__ == '__main__':
     env = Env()
     SLIDE_NUM = env.get('SLIDE_NUM', 2)
 
+    styleHints = styleHints()
+
     lib = DaoLib()
-    scene = lib.getSlide(SLIDE_NUM)
-    styleSet = lib.getStyleSet()
+    scene = lib.getSlide(SLIDE_NUM, True)
+    styleHints = lib.getStyleHints()
 
     screen = ScreenRenderer()
     screen.render(scene, styleSet)
 
 
-    sc.render()
+    '''   sc.render()
 
-self.getVal('SLIDE_NAME'), self.getVal('SLIDE_NUM')
-'''        self.setVal('RENDER_TARGET', 'screen')
+    self.getVal('SLIDE_NAME'), self.getVal('SLIDE_NUM')
+            self.setVal('RENDER_TARGET', 'screen')
     
     self.setVal('SCENE_SCALE', '1:1')
     self.setVal('SCENE_IS_DESK', True)
@@ -590,4 +611,4 @@ self.getVal('SLIDE_NAME'), self.getVal('SLIDE_NUM')
         self.putToRender( Desk(None, self.styler) )         
     if self.getVal('SCENE_IS_AXIS'):
         self.putToRender( Axis(None, self.styler) )         
-'''
+    '''

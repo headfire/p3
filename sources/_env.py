@@ -12,7 +12,7 @@ class Env:
                 except ValueError:
                     print('Non int param')
 
-    def env(self, paramName, defaultValue):
+    def get(self, paramName, defaultValue):
         if paramName in self.envParams:
             return self.envParams[paramName]
         else:
