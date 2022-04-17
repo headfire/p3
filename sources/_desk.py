@@ -1,4 +1,4 @@
-from _std import StdLib, ScreenRenderer
+from _std import DrawLib, StdLib, StylesHints, ScreenRenderer
 
 from OCC.Core.gp import gp_Pnt,  gp_Vec
 
@@ -7,24 +7,23 @@ BOARD_BORDER_SIZE, BOARD_SIZE_Z = 60, 20
 PIN_OFFSET, PIN_R, PIN_WIDTH = 30, 10, 2
 INFO_LINE_R = 3
 
-STYLES = {'BoardStyle': ((208, 117, 28), 0, 'PLASTIC'),
-          'PaperStyle': ((230, 230, 230), 0, 'PLASTIC'),
-          'InfoStyle': ((100, 100, 100), 50, 'PLASTIC'),
-          'ConeStyle': ((50, 200, 50), 0, 'CHROME'),
-          'PibStyle': ((100, 100, 100), 0, 'CHROME')
-          }
+DESK_STYLES = {'BoardStyle': ((208, 117, 28), 0, 'PLASTIC'),
+               'PaperStyle': ((230, 230, 230), 0, 'PLASTIC'),
+               'InfoStyle': ((100, 100, 100), 50, 'PLASTIC'),
+               'ConeStyle': ((50, 200, 50), 0, 'CHROME'),
+               'PinStyle': ((100, 100, 100), 0, 'CHROME')
+               }
 
 
-class DeskLib:
+class DeskLib(DrawLib):
  
     def __init__(self, deskLabelText='A0 M1:1', scaleK=1/1):
         self.std = StdLib()
         self.deskLabelText = deskLabelText
         self.scaleK = scaleK
-        self.styles = STYLES
-        
-    def getStyles(self): 
-        return self.styles
+
+    def addToStylesHints(self, varStylesHints):
+        varStylesHints.addHints(DESK_STYLES)
 
     # ***************************
 
@@ -194,8 +193,10 @@ if __name__ == '__main__':
 
     drawLib = DeskLib('A0 M5:1', 5/1)
     demo = drawLib.getDemo()
-    styles = drawLib.getStyles()
+    stylesHints = StylesHints()
+    drawLib.addToStylesHints(stylesHints)
     # demo.dump()
 
     rend = ScreenRenderer()
-    rend.render(demo, styles)
+    rend.setStyleSet(stylesHints)
+    rend.render(demo)

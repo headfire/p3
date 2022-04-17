@@ -45,6 +45,24 @@ MATERIAL_CONSTS = {
 }
 
 
+class StylesHints:
+    def __init__(self):
+        self.hints = {}
+
+    def hintStyleValues(self, styleName):
+        if self.hints is not None:
+            if styleName in self.hints:
+                return self.hints[styleName]
+        return DEFAULT_STYLE_VALUES
+
+    def addHint(self, styleName, styleValues):
+        self.hints[styleName] = styleValues
+
+    def addHints(self, hints):
+        for key in hints:
+            self.hints[key] = hints[key]
+
+
 def todoUse(varToUse):
     print('TODO use', varToUse)
 
@@ -69,20 +87,14 @@ def _getWireStartPointAndTangentDir(wire):
 class ScreenRenderer:
 
     def __init__(self):
-        self.styles = None
         self.display = None
+        self.styleSet = StylesHints()
         self.curStyleName = None
         self.curLayerName = None
         self.curTransObj = None
 
-    def _getStyleValues(self, styleName):
-        if self.styles is not None:
-            if styleName in self.styles:
-                return self.styles[styleName]
-        return DEFAULT_STYLE_VALUES
-
     def _renderText(self, pnt, text, size):
-        color, transparency, materialName = self._getStyleValues(self.curStyleName)
+        color, transparency, materialName = self.styleSet.hintStyleValues(self.curStyleName)
         r, g, b = color
         if self.curTransObj is not None:
             pnt = pnt.Transformed(self.curTransObj)
@@ -98,7 +110,7 @@ class ScreenRenderer:
         self.curTransObj = transObj
 
     def _renderShapeObj(self, shape):
-        color, transparency, materialName = self._getStyleValues(self.curStyleName)
+        color, transparency, materialName = self.styleSet.hintStyleValues(self.curStyleName)
         if self.curTransObj is not None:
             shape = BRepBuilderAPI_Transform(shape, self.curTransObj).Shape()
         ais = AIS_Shape(shape)
@@ -111,14 +123,15 @@ class ScreenRenderer:
         ais.SetMaterial(aspect)
         self.display.Context.Display(ais, False)
 
-    def render(self, drawable, styles):
+    def setStyleSet(self, styleSet):
+        self.styleSet = styleSet
+
+    def render(self, drawable):
         self.display, start_display, add_menu, add_function_to_menu = init_display(
             None, (700, 500), True, [128, 128, 128], [128, 128, 128]
         )
 
-        self.styles = styles
         drawable.render(self)
-        self.styles = None
 
         self.display.FitAll()
         start_display()
@@ -375,12 +388,16 @@ class Surface(Drawable):
 # ************************************************************
 
 
-class CachedLib:
+class DrawLib:
 
     def __init(self):
         self.cache = {}
 
-    def get(self, methodName, param1=None, param2=None):
+    @staticmethod
+    def addToStylesHints(stylesHintsToAdd):
+        pass
+
+    def getCached(self, methodName, param1=None, param2=None):
 
         params = ''
         if param1 is not None:
@@ -402,7 +419,7 @@ class CachedLib:
         method(param1, param2)
 
 
-class StdLib:
+class StdLib(DrawLib):
 
     @staticmethod
     def getGroup():

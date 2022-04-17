@@ -3,7 +3,7 @@
 
 EQUAL_POINTS_PRECISION = 0.001
 
-from _scene import Scene
+from _std import StdLib, ScreenRenderer, Styles
 
 from OCC.Core.gp import gp_Pnt, gp_Trsf, gp_Dir, gp_Vec, gp_Ax1, gp_Ax2, gp_GTrsf, gp_OZ
 from OCC.Core.Geom import Geom_TrimmedCurve
@@ -536,27 +536,38 @@ def class DaoLib:
         sc.setVal('DAO_CASE_HEIGHT', 30)
         sc.setVal('DAO_CASE_GAP', 1)
     '''
+    def getSlide(slideNum, infoLayer = false)
+        if slideNum == 0:
+            slide = lib.getDaoClassicSlide()
+        elif slideNum == 1:
+            slide = lib.getDaoOffsetSlide()
+        elif slideNum == 2:
+            slide = lib.drawDaoExampleSliceSlide()
+        elif slideNum == 3:
+            slide = drawManySliceSlide(sc)
+        elif slideNum == 4:
+            slide = drawDaoSkiningSlide(sc)
+        elif slideNum == 5:
+            slide = drawDaoIngYangSlide(sc)
+        elif slideNum == 6:
+            slide = drawDaoCaseSlide(sc)
+        if isInfoObjects:
+            slide.add(self.desk.getDesk())
+            slide.add(self.desk.getAxis())
+        return slide
 
 if __name__ == '__main__':
 
     env = Env()
     SLIDE_NUM = env.get('SLIDE_NUM', 2)
-    lib = DaoLib()
 
-    if SLIDE_NUM == 0:
-        scene = slideLib.getDaoClassicSlide()
-    elif SLIDE_NUM == 1:
-        scene = drawLib.getDaoOffsetSlide()
-    elif SLIDE_NUM == 2:
-        scene = drawDaoExampleSliceSlide()
-    elif SLIDE_NUM == 3:
-        drawManySliceSlide(sc)
-    elif SLIDE_NUM == 4:
-        drawDaoSkiningSlide(sc)
-    elif SLIDE_NUM == 5:
-        drawDaoIngYangSlide(sc)
-    elif SLIDE_NUM == 6:
-        drawDaoCaseSlide(sc)
+    lib = DaoLib()
+    scene = lib.getSlide(SLIDE_NUM)
+    styleSet = lib.getStyleSet()
+
+    screen = ScreenRenderer()
+    screen.render(scene, styleSet)
+
 
     sc.render()
 
