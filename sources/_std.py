@@ -73,7 +73,7 @@ class ScreenRenderer:
         self.display = None
         self.curStyleName = None
         self.curLayerName = None
-        self.curTransObj = gp_Trsf()
+        self.curTransObj = None
 
     def _getStyleValues(self, styleName):
         if self.styles is not None:
@@ -81,12 +81,26 @@ class ScreenRenderer:
                 return self.styles[styleName]
         return DEFAULT_STYLE_VALUES
 
-    def _renderShapeObj(self, shape, transforms):
+    def _renderText(self, pnt, text, size):
         color, transparency, materialName = self._getStyleValues(self.curStyleName)
-        t = gp_Trsf()
-        for tr in transforms:
-            t *= tr.getTransObj()
-        shape = BRepBuilderAPI_Transform(shape, t).Shape()
+        r, g, b = color
+        if self.curTransObj is not None:
+            pnt = pnt.Transformed(self.curTransObj)
+        self.display.DisplayMessage(pnt, text, size, (r / 256, g / 256, b / 256), False)
+
+    def setStyle(self, styleName):
+        self.curStyleName = styleName
+
+    def setLayer(self, layerName):
+        self.curLayerName = layerName
+
+    def setTransObj(self, transObj):
+        self.curTransObj = transObj
+
+    def _renderShapeObj(self, shape):
+        color, transparency, materialName = self._getStyleValues(self.curStyleName)
+        if self.curTransObj is not None:
+            shape = BRepBuilderAPI_Transform(shape, self.curTransObj).Shape()
         ais = AIS_Shape(shape)
         r, g, b = color
         aisColor = Quantity_Color(r / 256, g / 256, b / 256,
@@ -109,43 +123,31 @@ class ScreenRenderer:
         self.display.FitAll()
         start_display()
 
-    def setStyle(self, styleName):
-        self.curStyleName = styleName
-
-    def setLayer(self, layerName):
-        self.curLayerName = layerName
-
-    def setTransObj(self, transObj):
-        self.curTransObj = transObj
-
-    def renderLabel(self, geometry, transObj):
+    def renderLabel(self, geometry):
         pnt, text, size = geometry
-        color, transparency, materialName = self._getStyleValues(self.curStyleName)
-        r, g, b = color
-        pntTrans = pnt.Transformed(transObj)
-        self.display.DisplayMessage(pntTrans, text, size, (r / 256, g / 256, b / 256), False)
+        self._renderText(pnt, text, size)
 
-    def renderBox(self, geometry, transforms):
+    def renderBox(self, geometry):
         xSize, ySize, zSize = geometry
         shape = BRepPrimAPI_MakeBox(xSize, ySize, zSize).Shape()
-        self._renderShapeObj(shape, transforms)
+        self._renderShapeObj(shape)
 
-    def renderSphere(self, geometry, transforms):
+    def renderSphere(self, geometry):
         pnt, r = geometry
         shape = BRepPrimAPI_MakeSphere(pnt, r).Shape()
-        self._renderShapeObj(shape, transforms)
+        self._renderShapeObj(shape)
 
-    def renderCone(self, geometry, transforms):
+    def renderCone(self, geometry):
         r1, r2, h = geometry
         shape = BRepPrimAPI_MakeCone(r1, r2, h).Shape()
-        self._renderShapeObj(shape, transforms)
+        self._renderShapeObj(shape)
 
-    def renderCylinder(self, geometry, transforms):
+    def renderCylinder(self, geometry):
         r, h = geometry
         shape = BRepPrimAPI_MakeCylinder(r, h).Shape()
-        self._renderShapeObj(shape, transforms)
+        self._renderShapeObj(shape)
 
-    def renderTube(self, geometry, transforms):
+    def renderTube(self, geometry):
         wire, radius = geometry
         startPoint, tangentDir = _getWireStartPointAndTangentDir(wire)
         profileCircle = GC_MakeCircle(startPoint, tangentDir, radius).Value()
@@ -155,11 +157,11 @@ class ScreenRenderer:
         pipeShell = BRepOffsetAPI_MakePipe(wire, profileWire)
         pipeShape = pipeShell.Shape()
 
-        self._renderShapeObj(pipeShape, transforms)
+        self._renderShapeObj(pipeShape)
 
-    def renderSurface(self, geometry, transforms):
+    def renderSurface(self, geometry):
         surfaceShape = geometry
-        self._renderShapeObj(surfaceShape, transforms)
+        self._renderShapeObj(surfaceShape)
 
 
 # ************************************************************
@@ -229,12 +231,24 @@ class Drawable:
 
         self.parent = None
         self.geometry = geometry
-        self.transforms = []
         self.layerName = None
         self.styleName = None
         self.children = {}
         self.childrenCount = 0
-        self.transObj = gp_Trsf()
+        self.transObj = None
+
+    def setStyle(self, styleName):
+        self.styleName = styleName
+
+    def setLayer(self, layerName):
+        self.layerName = layerName
+
+    def addTransform(self, transform):
+        transObj = transform.getTransObj()
+        if self.transObj is None:
+            self.transObj = transObj
+        else:
+            self.transObj *= transObj
 
     def add(self, drawable, name=None):
         drawable.parent = self
@@ -243,39 +257,48 @@ class Drawable:
         self.children[name] = drawable
         self.childrenCount += 1
 
+    def getFinalTransObj(self):
+        if self.parent is not None:
+            parentTransObj = self.parent.getFinalTransObj()
+        else:
+            parentTransObj = None
+        if parentTransObj is not None:
+            if self.transObj is not None:
+                return self.transObj * parentTransObj
+            else:
+                return parentTransObj
+        else:
+            if self.transObj is not None:
+                return self.transObj
+            else:
+                return None
+
     def getFinalLayerName(self):
         if self.layerName is not None:
-            return layerName
-        if self.parent is nort None
-            return self.parent.getLayerName()
+            return self.layerName
+        if self.parent is not None:
+            return self.parent.getFinalLayerName()
         return None
 
     def getFinalStyleName(self):
-        if self.layerName is not None:
-            return layerName
-        if self.parent is nort None
-            return self.parent.getLayerName()
+        if self.styleName is not None:
+            return self.styleName
+        if self.parent is not None:
+            return self.parent.getFinalStyleName()
         return None
 
     def dump(self, prefix=''):
-        print(prefix + self.__class__.__name__)
+        print(prefix + self.__class__.__name__, self.styleName, self.getFinalStyleName())
         for key in self.children:
             self.children[key].dump(prefix + '[' + key + ']')
 
     def copy(self):
         copied = self.__class__(self.geometry)
-        copied.transforms = self.transforms.copy()
         copied.layerName = self.layerName
         copied.styleName = self.styleName
         for key in self.children:
             copied.children[key] = self.children[key].copy()
         return copied
-
-    def addTransform(self, transform):
-            self.transObj *= transform.getTransObj()
-
-    def getFinalTransObj(self):
-        return self.transObj * self.parent.getFinalTransObj()
 
     def translate(self, dx, dy, dz):
         self.addTransform(Translate((dx, dy, dz)))
@@ -289,20 +312,10 @@ class Drawable:
     def fromPointToPoint(self, pnt1, pnt2):
         self.addTransform(FromPointToPoint((pnt1, pnt2)))
 
-    def setStyle(self, styleName):
-        if self.styleName is None:
-            self.styleName = styleName
-        for key in self.children:
-            self.children[key].setStyle(styleName)
-
-    def setLayer(self, layerName):
-        if self.layerName is None:
-            self.layerName = layerName
-        self.layerName = layerName
-        for key in self.children:
-            self.children[key].setLayer(layerName)
-
     def render(self, lib):
+        lib.setStyle(self.getFinalStyleName())
+        lib.setLayer(self.getFinalLayerName())
+        lib.setTransObj(self.getFinalTransObj())
         self.renderSelf(lib)
         for key in self.children:
             self.children[key].render(lib)
@@ -318,32 +331,32 @@ class Hook(Drawable):
 
 class Label(Drawable):
     def renderSelf(self, lib):
-        lib.renderLabel(self.geometry, self.transforms, self.styleName, self.layerName)
+        lib.renderLabel(self.geometry)
 
 
 class Box(Drawable):
     def renderSelf(self, lib):
-        lib.renderBox(self.geometry, self.transforms, self.styleName, self.layerName)
+        lib.renderBox(self.geometry)
 
 
 class Sphere(Drawable):
     def renderSelf(self, lib):
-        lib.renderSphere(self.geometry, self.transforms, self.styleName, self.layerName)
+        lib.renderSphere(self.geometry)
 
 
 class Cone(Drawable):
     def renderSelf(self, lib):
-        lib.renderCone(self.geometry, self.transforms, self.styleName, self.layerName)
+        lib.renderCone(self.geometry)
 
 
 class Cylinder(Drawable):
     def renderSelf(self, lib):
-        lib.renderCylinder(self.geometry, self.transforms, self.styleName, self.layerName)
+        lib.renderCylinder(self.geometry)
 
 
 class Tube(Drawable):
     def renderSelf(self, lib):
-        lib.renderTube(self.geometry, self.transforms, self.styleName, self.layerName)
+        lib.renderTube(self.geometry)
 
 
 class Tor(Drawable):
@@ -351,13 +364,12 @@ class Tor(Drawable):
         pnt1, pnt2, pnt3, r = self.geometry
         geomCircle = GC_MakeCircle(pnt1, pnt2, pnt3).Value()
         wire = BRepBuilderAPI_MakeEdge(geomCircle).Edge()
-        lib.renderTube((wire, r), self.transforms, self.styleName, self.layerName)
+        lib.renderTube((wire, r))
 
 
 class Surface(Drawable):
     def renderSelf(self, lib):
-        lib.renderSurface(self.geometry, self.transforms, self.styleName, self.layerName)
-
+        lib.renderSurface(self.geometry)
 
 # ************************************************************
 

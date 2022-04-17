@@ -195,6 +195,7 @@ if __name__ == '__main__':
     drawLib = DeskLib('A0 M5:1', 5/1)
     demo = drawLib.getDemo()
     styles = drawLib.getStyles()
+    # demo.dump()
 
     rend = ScreenRenderer()
-    rend.render(demo, styles) 
+    rend.render(demo, styles)
