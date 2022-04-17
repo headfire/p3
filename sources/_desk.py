@@ -4,6 +4,7 @@ from OCC.Core.gp import gp_Pnt, gp_Vec
 
 
 DESK_INIT_HINTS = {
+
     'scale': 1 / 1,
     'scaleText': 'A0 M1:1',
 
@@ -12,7 +13,7 @@ DESK_INIT_HINTS = {
     'pinMaterial': ((100, 100, 100), 0, 'CHROME'),
     'infoMaterial': ((100, 100, 100), 50, 'PLASTIC'),
 
-    'paperSize': (1189, 841, 1),  # A0
+    'paperSizes': (1189, 841, 1),  # A0
 
     'boardH': 20,
     'boardBorderSize': 60,
@@ -26,47 +27,52 @@ DESK_INIT_HINTS = {
 
     'pointRFactor': 3,
     'arrowRFactor': 3,
-    'arrowHFactor': 15
+    'arrowHFactor': 15,
+
+    'infoLabelSizePx': 20,  # not scaled
+    'infoLabelDelta': 15
+
 }
 
-class DeskLib(DrawLib):
+
+class DeskDrawLib(DrawLib):
 
     def __init__(self):
+        super().__init__()
         self.std = StdDrawLib()
         self.initHints(DESK_INIT_HINTS)
 
     # ***************************
 
-    def getPoint(self, pnt, baseLineWidth):
+    def getPoint(self, pnt, baseLineR):
 
         scale = self.getHint('scale')
-        pointWidthFactor = self.getHint('pointWidthFactor')
+        pointWidthFactor = self.getHint('pointRFactor')
 
-        pointR = baseLineWidth * pointWidthFactor / 2
-        ret = self.std.getSphere(pnt, pointR / scale)
+        pointR = baseLineR * pointWidthFactor / scale
+        ret = self.std.getSphere(pnt, pointR)
 
         return ret
 
-    def getLine(self, pnt1, pnt2, baseLineWidth):
+    def getLine(self, pnt1, pnt2, baseLineR):
 
         scale = self.getHint('scale')
 
+        lineR = baseLineR / scale
         vec = gp_Vec(pnt1, pnt2)
-        lineR = baseLineWidth / 2
-        ret = self.std.getCylinder(lineR / scale, vec.Magnitude())
+        ret = self.std.getCylinder(lineR, vec.Magnitude())
         ret.fromPointToPoint(pnt1, pnt2)
 
         return ret
 
-    def getVector(self, pnt1, pnt2, baseLineWidth):
+    def getVector(self, pnt1, pnt2, baseLineR):
 
         scale = self.getHint('scale')
-        wArrowFactor = self.getHint('arrowWidthFactor')
-        arrowWFactor = self.getHint('arrowHeightFactor')
+        arrowRFactor = self.getHint('arrowRFactor')
+        arrowHFactor = self.getHint('arrowHFactor')
 
-        rArrow = rLine * 3 / scale
-        hArrow = rLine * 15 / scale
-
+        rArrow = baseLineR * arrowRFactor / scale
+        hArrow = baseLineR * arrowHFactor / scale
         v = gp_Vec(pnt1, pnt2)
         vLen = v.Magnitude()
         v *= (vLen - hArrow) / vLen
@@ -83,12 +89,18 @@ class DeskLib(DrawLib):
 
         return ret
 
-        # **************************************
+    # **************************************
 
     def getInfoLabel(self, pnt, text):
+
+        scale = self.getHint('scale')
         infoMaterial = self.getHint('infoMaterial')
-        ret = self.std.getLabel(pnt, text, 20)
-        ret.translate(5, 5, 5)
+        infoLabelDelta = self.getHint('infoLabelDelta')
+        infoLabelSizePx = self.getHint('infoLabelSizePx')  # not scaled
+
+        delta = infoLabelDelta / scale
+        ret = self.std.getLabel(pnt, text, infoLabelSizePx)
+        ret.translate(delta, delta, delta)
         ret.setMaterial(infoMaterial)
         return ret
 
@@ -240,9 +252,9 @@ class DeskLib(DrawLib):
 
 
 if __name__ == '__main__':
-    deskLib = DeskLib()
-    deskLib.setHint('DeskLabelText', 'A0 M5:1')
-    deskLib.setHint('DeskLabelText', 5 / 1)
+    deskLib = DeskDrawLib()
+    deskLib.setHint('scaleText', 'A0 M5:1')
+    deskLib.setHint('scale', 5 / 1)
     demo = deskLib.getDemo()
     # demo.dump()
 

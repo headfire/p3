@@ -329,7 +329,7 @@ class Drawable:
         self.addTransform(FromPointToPoint((pnt1, pnt2)))
 
     def render(self, renderer):
-        renderer.setStyle(self.getFinalMaterial())
+        renderer.setMaterial(self.getFinalMaterial())
         renderer.setLayer(self.getFinalLayer())
         renderer.setTransObj(self.getFinalTrans())
         self.renderSelf(renderer)
@@ -393,7 +393,7 @@ class Surface(Drawable):
 
 class DrawLib:
 
-    def __init(self):
+    def __init__(self):
         self.cache = {}
         self.hints = {}
 
@@ -402,10 +402,16 @@ class DrawLib:
             self.hints[key] = hints[key]
 
     def getHint(self, hintName):
-        return self.hints[hintName]
+        if hintName in self.hints:
+            return self.hints[hintName]
+        else:
+            raise Exception('Bad GET hint name: ' + self.__class__.__name__ + "['"+hintName + "']")
 
     def setHint(self, hintName, hintValue):
-        self.hints[hintName] = hintValue
+        if hintName in self.hints:
+            self.hints[hintName] = hintValue
+        else:
+            raise Exception('Bad SET hint name: ' + self.__class__.__name__ + "['" + hintName + "']")
 
     def getCached(self, methodName, param1=None, param2=None):
 

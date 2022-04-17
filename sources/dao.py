@@ -1,10 +1,8 @@
 # OpenCascade tutorial by headfire (headfire@yandex.ru)
 # point and line attributes
 
-
-from _env import Env
-from _std import StdLib, ScreenRenderer, StylesHints
-from _desk import DeskLib
+from _std import EnvParamLib, DrawLib, StdDrawLib, ScreenRenderLib
+from _desk import DeskDrawLib
 
 from OCC.Core.gp import gp_Pnt, gp_Trsf, gp_Dir, gp_Vec, gp_Ax1, gp_Ax2, gp_GTrsf, gp_OZ
 from OCC.Core.Geom import Geom_TrimmedCurve
@@ -193,12 +191,18 @@ def slide_07_DaoWithCase (sc, r, offset, caseH, caseZMove,gap):
 # *********************************************************************************
 # *********************************************************************************
 
-class DaoLib:
+class DaoDrawLib(DrawLib):
     def __init__(self):
+
         super().__init__()
-        self.std = StdLib()
-        self.desk = DeskLib('A0 M5:1', 5/1)
-        self.stylesHints.add(desk.getStylesHints())
+        self.initHints(DESK_INIT_HINTS)
+
+        self.std = StdDrawLib()
+
+        self.desk = DeskDrawLib('A0 M5:1', 5/1)
+        self.desk.setHint('scale', 5/1)
+        self.desk.setHint('scaleText', 'A0 M5:1')
+
 
     def getDaoBasePoints(self):
 
