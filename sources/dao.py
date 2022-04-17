@@ -391,7 +391,7 @@ class DaoLib:
     '''
     def getDaoClassicSlide(self):
 
-        ret = self.std.getGroup()
+        ret = self.std.setStyle()
 
         points = self.getCached('getDaoBasePoints', 'p')
         points.setStyle('DeskMainPoint')

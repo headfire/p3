@@ -429,7 +429,7 @@ class DrawLib:
         method(param1, param2)
 
 
-class StdLib(DrawLib):
+class StdDrawLib(DrawLib):
 
     @staticmethod
     def getGroup():

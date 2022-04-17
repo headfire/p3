@@ -470,7 +470,7 @@ class Surface(Drawable):
 
 class StandartLib:
 
-    def getGroup(self):
+    def setStyle(self):
         return Drawable(None)
 
     def getFoo(self):
