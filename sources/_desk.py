@@ -1,4 +1,4 @@
-from _standart_lib import StandartLib, ScreenRenderer
+from _standart import StandartLib, ScreenRenderer
 
 from OCC.Core.gp import gp_Pnt,  gp_Vec
 
