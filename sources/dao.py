@@ -195,6 +195,9 @@ class DaoDrawLib(DrawLib):
     def __init__(self):
         super().__init__()
 
+        self.theSlideNum
+        self.theIsDeskObjects
+
         self.theBaseRadius = 40
         self.theOffset = 3
         self.theSliceExampleK = 0.5
@@ -565,10 +568,13 @@ class DaoDrawLib(DrawLib):
     
     '''
 
-    def getSlide(self, slideNum, isHelpers):
-        # if slideNum == 0:
+    def getScene(self):
 
-        slide = self.getDaoClassicSlide()
+        if slideNum == 0:
+            slide = self.getDaoClassicSlide()
+        else
+            slide = self.getDaoClassicSlide()
+
 
         '''    
         elif slideNum == 1:
@@ -583,11 +589,11 @@ class DaoDrawLib(DrawLib):
             slide = drawDaoIngYangSlide(sc)
         elif slideNum == 6:
             slide = drawDaoCaseSlide(sc)
+
         if isHelpers:
             slide.add(self.desk.getDesk())
             slide.add(self.desk.getAxis())
-        '''
-
+    
         return slide
 
 
@@ -601,7 +607,8 @@ if __name__ == '__main__':
     screen = ScreenRenderLib()
     screen.render(slide)
 
-    '''   sc.render()
+    '''
+    sc.render()
 
     self.getVal('SLIDE_NAME'), self.getVal('SLIDE_NUM')
             self.setVal('RENDER_TARGET', 'screen')
