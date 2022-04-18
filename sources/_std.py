@@ -18,34 +18,6 @@ from OCC.Core.BRepTools import BRepTools_WireExplorer
 import sys
 
 
-def check(aObj, aClass):
-    if not isinstance(aObj, aClass):
-        raise Exception('EXPECTED ' + aClass.__name__ + '  - REAL ' + aObj.__class__.__name__)
-
-
-def checkGeom(aGeom):
-    if not isinstance(aGeom, dict):
-        raise Exception('geom MUST BE dict() - REAL ' + aGeom.__class__.__name__)
-    for key in aGeom:
-        if not isinstance(key, str):
-            raise Exception('geom KEY MUST BE str - REAL ' + key.__class__.__name__)
-        if not isinstance(aGeom[key], (int, float, str, gp_Pnt, TopoDS_Shape)):
-            raise Exception('geom[' + key + '] INCORRECT geom item type - REAL ' + aGeom.__class__.__name__)
-
-
-class EnvParamLib:
-
-    def __init__(self):
-        self.envParams = {}
-        for param in sys.argv:
-            key, sep, val = param.partition('=')
-            self.envParams[key] = val
-
-    def get(self, paramName, defaultValue):
-        if paramName in self.envParams:
-            return self.envParams[paramName]
-        else:
-            return defaultValue
 
 
 DEFAULT_MATERIAL = (50, 50, 50), 0, 'CHROME'
@@ -78,8 +50,22 @@ MATERIAL_CONSTS = {
     'DEFAULT': Graphic3d_NameOfMaterial.Graphic3d_NOM_DEFAULT
 }
 
+def check(aObj, aClass):
+    if not isinstance(aObj, aClass):
+        raise Exception('EXPECTED ' + aClass.__name__ + '  - REAL ' + aObj.__class__.__name__)
 
-def _getVectorTangentToCurveAtPoint(edge, uRatio):
+
+def checkGeom(aGeom):
+    if not isinstance(aGeom, dict):
+        raise Exception('geom MUST BE dict() - REAL ' + aGeom.__class__.__name__)
+    for key in aGeom:
+        if not isinstance(key, str):
+            raise Exception('geom KEY MUST BE str - REAL ' + key.__class__.__name__)
+        if not isinstance(aGeom[key], (int, float, str, gp_Pnt, TopoDS_Shape)):
+            raise Exception('geom[' + key + '] INCORRECT geom item type - REAL ' + aGeom.__class__.__name__)
+
+
+def getVectorTangentToCurveAtPoint(edge, uRatio):
     aCurve, aFP, aLP = BRep_Tool.Curve(edge)
     aP = aFP + (aLP - aFP) * uRatio
     v1 = gp_Vec()
@@ -88,12 +74,27 @@ def _getVectorTangentToCurveAtPoint(edge, uRatio):
     return v1
 
 
-def _getWireStartPointAndTangentDir(wire):
+def getWireStartPointAndTangentDir(wire):
     ex = BRepTools_WireExplorer(wire)
     edge = ex.Current()
     vertex = ex.CurrentVertex()
-    v = _getVectorTangentToCurveAtPoint(edge, 0)
+    v = getVectorTangentToCurveAtPoint(edge, 0)
     return BRep_Tool.Pnt(vertex), gp_Dir(v)
+
+
+class EnvParamLib:
+
+    def __init__(self):
+        self.envParams = {}
+        for param in sys.argv:
+            key, sep, val = param.partition('=')
+            self.envParams[key] = val
+
+    def get(self, paramName, defaultValue):
+        if paramName in self.envParams:
+            return self.envParams[paramName]
+        else:
+            return defaultValue
 
 
 class ScreenRenderLib:
@@ -102,28 +103,85 @@ class ScreenRenderLib:
 
         self.display = None
 
-        self.theTrans = None
-        self.theGeom = None
-        self.theMaterial = None
-        self.theLayer = None
+        self.curTrans = None
+        self.drawGeom = None
+        self.drawMaterial = None
+        self.drawLayer = None
 
-    def _renderText(self, aText, aFontHeightPx):
+    def renderTextObj(self, aText, aFoncurightPx):
         pnt = gp_Pnt(0,0,0)
-        if self.theTrans is not None:
-            pnt = gp_Pnt(0,0,0).Transformed(self.theTrans)
-        self.display.DisplayMessage(pnt, aText, aFontHeightPx, (self.theMaterial['r'] / 256, self.theMaterial['g'] / 256, self.theMaterial['b'] / 256), False)
+        if self.curTrans is not None:
+            pnt = gp_Pnt(0,0,0).Transformed(self.curTrans)
+        self.display.DisplayMessage(pnt, aText, aFoncurightPx, (self.curMaterial['r'] / 256, self.curMaterial['g'] / 256, self.curMaterial['b'] / 256), False)
 
-    def _renderShapeObj(self, shape):
-        if self.curTransObj is not None:
-            shape = BRepBuilderAPI_Transform(shape, self.theTrans).Shape()
+    def renderShapeObj(self, shape):
+        if self.curTrans is not None:
+            shape = BRepBuilderAPI_Transform(shape, self.curTrans).Shape()
         ais = AIS_Shape(shape)
-        aisColor = Quantity_Color(self.theMaterial['r'] / 256, self.theMaterial['g'] / 256, self.theMaterial['b'] / 256,
+        aisColor = Quantity_Color(self.curMaterial['r'] / 256, self.curMaterial['g'] / 256, self.curMaterial['b'] / 256,
                                   Quantity_TypeOfColor(Quantity_TypeOfColor.Quantity_TOC_RGB))
         ais.SetColor(aisColor)
-        ais.SetTransparency(1 - self.theMaterial['a'] / 256)
-        aspect = Graphic3d_MaterialAspect(MATERIAL_CONSTS[self.theMaterial['materialName']])
+        ais.SetTransparency(1 - self.curMaterial['a'] / 256)
+        aspect = Graphic3d_MaterialAspect(MATERIAL_CONSTS[self.curMaterial['materialName']])
         ais.SetMaterial(aspect)
         self.display.Context.Display(ais, False)
+
+    def renderWireObj(self, aWire, aWireRadius):
+
+        startPoint, tangentDir = getWireStartPointAndTangentDir(aWire)
+        profileCircle = GC_MakeCircle(startPoint, tangentDir, aWireRadius).Value()
+        profileEdge = BRepBuilderAPI_MakeEdge(profileCircle).Edge()
+        profileWire = BRepBuilderAPI_MakeWire(profileEdge).Wire()
+
+        shape = BRepOffsetAPI_MakePipe(aWire, profileWire).Shape
+
+        self.renderShapeObj(shape)
+
+    def renderNone(self):
+        pass
+
+    def renderLabel(self, geometry):
+        self.renderText(self.curGeom['aText'], self.curGeom['aFoncurightPx'])
+
+    def renderBox(self):
+        shape = BRepPrimAPI_MakeBox(self.curGeom['aSizeX'], self.curGeom['aSizeY'], self.curGeom['aSizeZ']).Shape()
+        self.renderShapeObj(shape)
+
+    def renderSphere(self):
+        shape = BRepPrimAPI_MakeSphere(self.curGeom['aRadius']).Shape()
+        self.renderShapeObj(shape)
+
+    def renderCone(self):
+        shape = BRepPrimAPI_MakeCone(self.curGeom['aRadius1'], self.curGeom['aRadius2'], self.curGeom['aHeight']).Shape()
+        self.renderShapeObj(shape)
+
+    def renderCylinder(self):
+        shape = BRepPrimAPI_MakeCylinder(self.curGeom['aRadius'], self.curGeom['aHeight']).Shape()
+        self.renderShapeObj(shape)
+
+    def renderTor(self):
+        geomCircle = GC_MakeCircle(self.curGeom['aPnt1'], self.curGeom['aPnt12'], self.curGeom['aPnt1']).Value()
+        wire = BRepBuilderAPI_MakeEdge(geomCircle).Edge()
+        self.renderWireObj(wire, self.curGeom['aTorRadius'])
+
+    def renderWire(self):
+        self.renderTubeObj(self.curGeom['aWire'], self.curGeom['aWireRadius'])
+
+    def renderSurface(self):
+        self.renderShapeObj(self.curGeom['aSurface'])
+
+    def renderDrawItem(self, aDrawItem):
+
+        self.curMaterial =  aDrawItem.getFinalMaterial()
+        self.curLayer = aDrawItem.getFinalLayer()
+        self.curTrans = aDrawItem.getFinalTrans()
+        self.curGeom = aDrawItem.getFinalTrans()
+
+        renderMethod = self.__getattribute__('render' + self.curGeom['renderAs'])
+        renderMethod()
+
+        for key in aDrawItem.children:
+            self.renderDrawItem(aDrawItem.children[key])
 
     def render(self, aDrawItem):
         self.display, start_display, add_menu, add_function_to_menu = init_display(
@@ -134,54 +192,6 @@ class ScreenRenderLib:
 
         self.display.FitAll()
         start_display()
-
-    def renderGeom(self, aGeom):
-        method = self.__getattribute__('render' + aGeom['renderAs'])
-        method()
-
-    def renderNone(self):
-
-    def renderLabel(self, geometry):
-        self._renderText(self.theGeom['aText'], self.theGeom['aFontHeightPx'])
-
-    def renderBox(self):
-        shape = BRepPrimAPI_MakeBox(self.theGeom['aSizeX'], self.theGeom['aSizeY'], self.theGeom['aSizeZ'])).Shape()
-        self._renderShapeObj(shape)
-
-    def renderSphere(self):
-        shape = BRepPrimAPI_MakeSphere(self.theGeom['aRadius']).Shape()
-        self._renderShapeObj(shape)
-
-    def renderCone(self, geometry):
-        shape = BRepPrimAPI_MakeCone(self.theGeom['aRadius1'], self.theGeom['aRadius2'], self.theGeom['aHeight']).Shape()
-        self._renderShapeObj(shape)
-
-    def renderCylinder(self):
-        shape = BRepPrimAPI_MakeCylinder(self.theGeom['aRadius'], self.theGeom['aHeight']).Shape()
-        self._renderShapeObj(shape)
-
-    def renderTube(self):
-
-        startPoint, tangentDir = _getWireStartPointAndTangentDir(wire)
-        profileCircle = GC_MakeCircle(startPoint, tangentDir, radius).Value()
-        profileEdge = BRepBuilderAPI_MakeEdge(profileCircle).Edge()
-        profileWire = BRepBuilderAPI_MakeWire(profileEdge).Wire()
-
-        pipeShell = BRepOffsetAPI_MakePipe(wire, profileWire)
-        pipeShape = pipeShell.Shape()
-
-        self._renderShapeObj(pipeShape)
-
-    def renderSurface(self, geometry):
-        surfaceShape = geometry
-        self._renderShapeObj(surfaceShape)
-
-    def renderTor(self, aGeometry):
-        pnt1, pnt2, pnt3, r = aGeometry
-        geomCircle = GC_MakeCircle(pnt1, pnt2, pnt3).Value()
-        wire = BRepBuilderAPI_MakeEdge(geomCircle).Edge()
-        self.renderTube((wire, r))
-
 
 # ************************************************************
 
@@ -302,19 +312,6 @@ class DrawItem:
         return None
 
 
-    def render(self, renderLib):
-        renderLib.setMaterial(self.getFinalMaterial())
-        renderLib.setLayer(self.getFinalLayer())
-        renderLib.setTransObj(self.getFinalTrans())
-        self.renderSelf(renderLib)
-        for key in self.children:
-            self.children[key].render(renderLib)
-
-    def renderSelf(self, renderer):
-        pass
-
-
-# ************************************************************
 
 class StdDrawLib:
 
@@ -370,12 +367,12 @@ class StdDrawLib:
     def drawCone(self, aRadius1, aRadius2, aHeight):
         return self.itemClass({'aRadius1': aRadius1, 'aRadius2': aRadius2, 'aHeight': aHeight, 'renderAs': 'Cone'})
 
-    def drawTor(self, aPnt1, aPnt2, aPnt3, aTubeRadius):
+    def drawTor(self, aPnt1, aPnt2, aPnt3, aTorRadius):
         return self.itemClass(
-            {'aPnt1': aPnt1, 'aPnt2': aPnt2, 'aPnt3': aPnt3, 'aTubeRadius': aTubeRadius, 'renderAs': 'Tor'})
+            {'aPnt1': aPnt1, 'aPnt2': aPnt2, 'aPnt3': aPnt3, 'aTorRadius': aTorRadius, 'renderAs': 'Tor'})
 
-    def drawTube(self, aWire, aTubeRadius):
-        return self.itemClass({'aWire': aWire, 'aTubeRadius': aTubeRadius, 'renderAs': 'Tube'})
+    def drawWire(self, aWire, aWireRadius):
+        return self.itemClass({'aWire': aWire, 'aWireRadius': aWireRadius, 'renderAs': 'Tube'})
 
     def drawSurface(self, aSurface):
         return self.itemClass({'aSurface': aSurface, 'renderAs': 'Surface'})
