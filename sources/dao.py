@@ -1,6 +1,3 @@
-# OpenCascade tutorial by headfire (headfire@yandex.ru)
-# point and line attributes
-
 from _std import EnvParamLib, DrawLib, StdDrawLib, ScreenRenderLib
 from _desk import DeskDrawLib
 
@@ -195,8 +192,8 @@ class DaoDrawLib(DrawLib):
     def __init__(self):
         super().__init__()
 
-        self.theSlideNum
-        self.theIsDeskObjects
+        self.theSlideNum = 0  # from 0 to 6
+        self.theIsDeskObjects = True
 
         self.theBaseRadius = 40
         self.theOffset = 3
@@ -213,7 +210,8 @@ class DaoDrawLib(DrawLib):
         self.desk.theScale = 5 / 1
         self.desk.theScaleText = 'A0 M5:1'
 
-    def getDaoBasePoints(self):
+    def geomBasePoints(self):
+
         r = self.theBaseRadius
         r2 = r / 2
 
@@ -221,18 +219,20 @@ class DaoDrawLib(DrawLib):
 
         origin = gp_Pnt(0, 0, 0)
 
-        p = {
-            0: origin,
-            1: getPntRotate(gpPntMinC, origin, -pi / 4),
-            2: gp_Pnt(-r2, r2, 0),
-            3: getPntRotate(gpPntMinC, origin, -pi / 4 * 3),
-            4: gp_Pnt(0, r, 0),
-            5: gp_Pnt(r, 0, 0),
-            6: gp_Pnt(0, -r, 0),
-            7: gp_Pnt(r2, -r2, 0)
-            }
+        geom = [
+            origin,
+            getPntRotate(gpPntMinC, origin, -pi / 4),
+            gp_Pnt(-r2, r2, 0),
+            getPntRotate(gpPntMinC, origin, -pi / 4 * 3),
+            gp_Pnt(0, r, 0),
+            gp_Pnt(r, 0, 0),
+            gp_Pnt(0, -r, 0),
+            gp_Pnt(r2, -r2, 0)
+            ]
 
-        return p
+        return geom
+
+
 
     def getDaoBoundCircleWire(self, aOffset):
         r = self.theBaseRadius + aOffset
@@ -404,21 +404,28 @@ class DaoDrawLib(DrawLib):
     # **********************************************************************************
     '''
 
-    def getDaoClassicSlide(self):
-        ret = self.std.getGroup()
+    def drawBasePoints(self, aPntArr):
 
-        points = self.getCached('getDaoBasePoints', 'p')
-        points.setStyle('DeskMainPoint')
-        ret.add(points)
+        draw = self.std.drawGroup()
 
-        classic = self.getCached('DaoClassicWire')
-        classic.setStyle('DeskMainWire')
-        ret.add(classic)
+        for key in aPntArr:
+            draw.add(self.desk.drawMainPoint(aPntArr))
+            draw.add(self.desk.drawInfoLabel(aPntArr, 'p' + str(key)))
 
-        circle = self.getCached('getDaoBoundCircle', 0)
-        circle.style('DeskInfoWire')
-        ret.add(circle)
-        return ret
+
+    def drawDaoClassicSlide(self):
+
+        draw = self.std.drawGroup()
+
+        basePntArr = self.getCached('geomBasePoints', 'p')
+        draw.add(self.drawPntArr(basePntArr, 'p'))
+
+        classicWire = self.getCached('geomClassicWire')
+        draw.add(self.desk.drawMainWire(classicWire))
+
+        draw.add(self.drawBoundCircle(self.theBaseRadius))
+
+        return draw
 
     '''
     def drawDaoOffsetSlide(sc):
@@ -568,13 +575,10 @@ class DaoDrawLib(DrawLib):
     
     '''
 
-    def getScene(self):
+    def drawScene(self):
 
-        if slideNum == 0:
-            slide = self.getDaoClassicSlide()
-        else
-            slide = self.getDaoClassicSlide()
-
+        # if self.theSlideNum == 0:
+        draw = self.drawDaoClassicSlide()
 
         '''    
         elif slideNum == 1:
@@ -593,19 +597,21 @@ class DaoDrawLib(DrawLib):
         if isHelpers:
             slide.add(self.desk.getDesk())
             slide.add(self.desk.getAxis())
-    
-        return slide
+        '''
+
+        return draw
 
 
 if __name__ == '__main__':
+
     env = EnvParamLib()
     slideNum = env.get('slideNum', 2)
 
     lib = DaoDrawLib()
-    slide = lib.getSlide(slideNum, True)
+    scene = lib.drawScene()
 
     screen = ScreenRenderLib()
-    screen.render(slide)
+    screen.render(scene)
 
     '''
     sc.render()

@@ -421,45 +421,45 @@ class DrawLib:
 class StdDrawLib(DrawLib):
 
     @staticmethod
-    def getGroup():
+    def drawGroup():
         return Drawable(None)
 
     @staticmethod
-    def getFoo():
+    def drawFoo():
         return Drawable(None)
 
     @staticmethod
-    def getContainer(customData):
+    def drawContainer(customData):
         return Drawable(customData)
 
     @staticmethod
-    def getHook(pnt):
+    def drawHook(pnt):
         return Drawable(pnt)
 
     @staticmethod
-    def getLabel(pnt, text, size):
+    def drawLabel(pnt, text, size):
         return Label((pnt, text, size))
 
     @staticmethod
-    def getBox(xSize, ySize, zSize):
+    def drawBox(xSize, ySize, zSize):
         return Box((xSize, ySize, zSize))
 
     @staticmethod
-    def getSphere(pnt, r):
+    def drawSphere(pnt, r):
         return Sphere((pnt, r))
 
     @staticmethod
-    def getCone(r1, r2, h):
+    def drawCone(r1, r2, h):
         return Cone((r1, r2, h))
 
     @staticmethod
-    def getCylinder(r, h):
+    def drawCylinder(r, h):
         return Cylinder((r, h))
 
     @staticmethod
-    def getTube(wire, radius):
+    def drawTube(wire, radius):
         return Tube((wire, radius))
 
     @staticmethod
-    def getSurface(surface):
+    def drawSurface(surface):
         return Surface(surface)
