@@ -20,8 +20,9 @@ class DeskDrawLib(DrawLib):
         self.thePaperMaterial = ((230, 230, 230), 0, 'PLASTIC')
         self.thePinMaterial = ((100, 100, 100), 0, 'CHROME')
 
-        self.theInfoMaterial = ((100, 100, 100), 50, 'PLASTIC')
-        self.theMainWireMaterial = ((50, 50, 250), 50, 'CHROME')
+        self.theInfoMaterial = ((100, 100, 100), 50, 'PLASTIC')     # gray
+        self.theMainWireMaterial = ((50, 50, 250), 50, 'CHROME')    # blue
+        self.theMainPointMaterial = ((250, 250, 50), 50, 'CHROME')  # yellow
 
         self.thePaperSizes = (1189, 841, 1)  # A0
 
@@ -56,6 +57,12 @@ class DeskDrawLib(DrawLib):
         ret.fromPointToPoint(pnt1, pnt2)
 
         return ret
+
+    def drawCircle(self, aPnt1, aPnt2, aPnt3, aBaseLineR):
+
+        draw = self.std.drawTor(aPnt1, aPnt2, aPnt3, aBaseLineR / self.theScale)
+
+        return draw
 
     def drawVector(self, aPnt1, aPnt2, aBaseLineR):
 
@@ -96,10 +103,16 @@ class DeskDrawLib(DrawLib):
 
         return ret
 
+    def drawInfoCircle(self, aPnt1, aPnt2, aPnt3):
+
+        draw = self.std.drawTor(aPnt1, aPnt2, aPnt3, self.theMainLineWidth)
+
+        return draw
+
     def drawMainPoint(self, aPnt):
 
         ret = self.drawPoint(aPnt, self.theMainLineWidth / 2)
-        ret.setMaterial(self.theMainMaterial)
+        ret.setMaterial(self.theMainPointMaterial)
 
         return ret
 

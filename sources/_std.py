@@ -7,6 +7,7 @@ from OCC.Core.Quantity import Quantity_Color, Quantity_TypeOfColor
 from OCC.Core.Graphic3d import Graphic3d_NameOfMaterial, Graphic3d_MaterialAspect
 from OCC.Core.BRepBuilderAPI import BRepBuilderAPI_MakeEdge, BRepBuilderAPI_MakeWire, BRepBuilderAPI_Transform
 from OCC.Core.BRepOffsetAPI import BRepOffsetAPI_MakePipe
+from OCC.Core.TopoDS import TopoDS_Shape
 
 from OCC.Core.BRepPrimAPI import BRepPrimAPI_MakeSphere, BRepPrimAPI_MakeBox, \
     BRepPrimAPI_MakeCylinder, BRepPrimAPI_MakeCone
@@ -17,17 +18,28 @@ from OCC.Core.BRepTools import BRepTools_WireExplorer
 import sys
 
 
+def check(aObj, aClass):
+    if not isinstance(aObj, aClass):
+        raise Exception('EXPECTED ' + aClass.__name__ + '  - REAL ' + aObj.__class__.__name__)
+
+
+def checkGeom(aGeom):
+    if not isinstance(aGeom, dict):
+        raise Exception('geom MUST BE dict() - REAL ' + aGeom.__class__.__name__)
+    for key in aGeom:
+        if not isinstance (key, str):
+            raise Exception('geom KEY MUST BE str - REAL ' + key.__class__.__name__)
+        if not isinstance (aGeom[key], (gp_Pnt, TopoDS_Shape)):
+            raise Exception('geom['+key+'] MUST BE gp_Pnt OR TopoDS_Shape - REAL ' + aGeom.__class__.__name__)
+
+
 class EnvParamLib:
 
     def __init__(self):
         self.envParams = {}
         for param in sys.argv:
             key, sep, val = param.partition('=')
-            if val != '':
-                try:
-                    self.envParams[key] = int(val)
-                except ValueError:
-                    print('Non int param')
+            self.envParams[key] = val
 
     def get(self, paramName, defaultValue):
         if paramName in self.envParams:
@@ -65,10 +77,6 @@ MATERIAL_CONSTS = {
     'TRANSPARENT': Graphic3d_NameOfMaterial.Graphic3d_NOM_TRANSPARENT,
     'DEFAULT': Graphic3d_NameOfMaterial.Graphic3d_NOM_DEFAULT
 }
-
-
-def todoUse(varToUse):
-    print('TODO use', varToUse)
 
 
 def _getVectorTangentToCurveAtPoint(edge, uRatio):
@@ -176,8 +184,14 @@ class ScreenRenderLib:
         surfaceShape = geometry
         self._renderShapeObj(surfaceShape)
 
+    def renderTor(self, aGeometry):
+        pnt1, pnt2, pnt3, r = aGeometry
+        geomCircle = GC_MakeCircle(pnt1, pnt2, pnt3).Value()
+        wire = BRepBuilderAPI_MakeEdge(geomCircle).Edge()
+        self.renderTube((wire, r))
 
 # ************************************************************
+
 
 class Transform:
     def __init__(self, geometry):
@@ -210,7 +224,9 @@ class Scale(Transform):
 
     def getTransObj(self):
         kx, ky, kz = self.geometry
-        todoUse((kx, ky, kz))
+        check(kx, int)
+        check(ky, int)
+        check(kz, int)
         tObj = gp_GTrsf()
         # todo SetAffinity tObj.SetScale(kx, ky, kz)
         return tObj
@@ -253,6 +269,19 @@ class Drawable:
         self.children = {}
         self.childrenCount = 0
 
+    def dump(self, prefix=''):
+        print(prefix + self.__class__.__name__, self.material, self.getFinalMaterial())
+        for key in self.children:
+            self.children[key].dump(prefix + '[' + key + ']')
+
+    def add(self, drawable, name=None):
+        check(drawable, Drawable)
+        drawable.parent = self
+        if name is None:
+            name = 'Child' + str(self.childrenCount)
+        self.children[name] = drawable
+        self.childrenCount += 1
+
     def setMaterial(self, material):
         self.material = material
 
@@ -265,13 +294,6 @@ class Drawable:
             self.trans = trans
         else:
             self.trans *= trans
-
-    def add(self, drawable, name=None):
-        drawable.parent = self
-        if name is None:
-            name = 'Child' + str(self.childrenCount)
-        self.children[name] = drawable
-        self.childrenCount += 1
 
     def getFinalTrans(self):
         if self.parent is not None:
@@ -303,19 +325,6 @@ class Drawable:
             return self.parent.getFinalMaterial()
         return None
 
-    def dump(self, prefix=''):
-        print(prefix + self.__class__.__name__, self.material, self.getFinalMaterial())
-        for key in self.children:
-            self.children[key].dump(prefix + '[' + key + ']')
-
-    def copy(self):
-        copied = self.__class__(self.geometry)
-        copied.layer = self.layer
-        copied.material = self.material
-        for key in self.children:
-            copied.children[key] = self.children[key].copy()
-        return copied
-
     def translate(self, dx, dy, dz):
         self.addTransform(Translate((dx, dy, dz)))
 
@@ -328,13 +337,13 @@ class Drawable:
     def fromPointToPoint(self, pnt1, pnt2):
         self.addTransform(FromPointToPoint((pnt1, pnt2)))
 
-    def render(self, renderer):
-        renderer.setMaterial(self.getFinalMaterial())
-        renderer.setLayer(self.getFinalLayer())
-        renderer.setTransObj(self.getFinalTrans())
-        self.renderSelf(renderer)
+    def render(self, renderLib):
+        renderLib.setMaterial(self.getFinalMaterial())
+        renderLib.setLayer(self.getFinalLayer())
+        renderLib.setTransObj(self.getFinalTrans())
+        self.renderSelf(renderLib)
         for key in self.children:
-            self.children[key].render(renderer)
+            self.children[key].render(renderLib)
 
     def renderSelf(self, renderer):
         pass
@@ -377,10 +386,7 @@ class Tube(Drawable):
 
 class Tor(Drawable):
     def renderSelf(self, renderer):
-        pnt1, pnt2, pnt3, r = self.geometry
-        geomCircle = GC_MakeCircle(pnt1, pnt2, pnt3).Value()
-        wire = BRepBuilderAPI_MakeEdge(geomCircle).Edge()
-        renderer.renderTube((wire, r))
+        renderer.renderTor(self.geometry)
 
 
 class Surface(Drawable):
@@ -396,7 +402,7 @@ class DrawLib:
     def __init__(self):
         self.cache = {}
 
-    def getCached(self, methodName, param1=None, param2=None):
+    def geom(self, methodName, param1=None, param2=None):
 
         params = ''
         if param1 is not None:
@@ -409,14 +415,19 @@ class DrawLib:
         method = self.__getattribute__(methodName)
         if cacheKey in self.cache:
             print('==> Get from cache', cacheKey)
-            return self.cache[cacheKey].copy()
-        print('==> Compute', cacheKey)
-        if param1 is None:
-            return method()
-        if param2 is None:
-            return method(param1)
-        method(param1, param2)
-
+            geom = self.cache[cacheKey]
+            return geom
+        else:
+            if param1 is None:
+                geom =  method()
+            elif param2 is None:
+                geom = method(param1)
+            else:
+                geom =  method(param1, param2)
+            checkGeom(geom)
+            print('==> Compute', cacheKey)
+            self.cache[cacheKey] = geom
+        return geom
 
 class StdDrawLib(DrawLib):
 
@@ -446,7 +457,12 @@ class StdDrawLib(DrawLib):
 
     @staticmethod
     def drawSphere(pnt, r):
+        check(pnt, gp_Pnt)
         return Sphere((pnt, r))
+
+    @staticmethod
+    def drawTor(aPnt1, aPnt2, aPnt3, aTubeRadius):
+        return Tor((aPnt1, aPnt2, aPnt3, aTubeRadius))
 
     @staticmethod
     def drawCone(r1, r2, h):

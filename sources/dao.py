@@ -182,10 +182,10 @@ def slide_07_DaoWithCase (sc, r, offset, caseH, caseZMove,gap):
 
 '''
 
+# *********************************************************************************
+# *********************************************************************************
+# *********************************************************************************
 
-# *********************************************************************************
-# *********************************************************************************
-# *********************************************************************************
 
 class DaoDrawLib(DrawLib):
 
@@ -211,7 +211,6 @@ class DaoDrawLib(DrawLib):
         self.desk.theScaleText = 'A0 M5:1'
 
     def geomBasePoints(self):
-
         r = self.theBaseRadius
         r2 = r / 2
 
@@ -219,27 +218,27 @@ class DaoDrawLib(DrawLib):
 
         origin = gp_Pnt(0, 0, 0)
 
-        geom = [
-            origin,
-            getPntRotate(gpPntMinC, origin, -pi / 4),
-            gp_Pnt(-r2, r2, 0),
-            getPntRotate(gpPntMinC, origin, -pi / 4 * 3),
-            gp_Pnt(0, r, 0),
-            gp_Pnt(r, 0, 0),
-            gp_Pnt(0, -r, 0),
-            gp_Pnt(r2, -r2, 0)
-            ]
+        geom = {
+            'p0': origin,
+            'p1': getPntRotate(gpPntMinC, origin, -pi / 4),
+            'p2': gp_Pnt(-r2, r2, 0),
+            'p3': getPntRotate(gpPntMinC, origin, -pi / 4 * 3),
+            'p4': gp_Pnt(0, r, 0),
+            'p5': gp_Pnt(r, 0, 0),
+            'p6': gp_Pnt(0, -r, 0),
+            'p7': gp_Pnt(r2, -r2, 0)
+        }
 
         return geom
 
-
-
-    def getDaoBoundCircleWire(self, aOffset):
+    def drawBoundCircle(self, aOffset):
         r = self.theBaseRadius + aOffset
-        return makeCircleWire(gp_Pnt(r, 0, 0), gp_Pnt(0, r, 0), gp_Pnt(-r, 0, 0))
+        draw = self.desk.drawInfoCircle(gp_Pnt(r, 0, 0), gp_Pnt(0, r, 0), gp_Pnt(-r, 0, 0))
+
+        return draw
 
     def getDaoClassicWire(self):
-        p = self.getCached('getDaoBasePoints')
+        p = self.geom('geomDaoBasePoints')
 
         arc0 = GC_MakeArcOfCircle(p[0], p[1], p[2]).Value()
         arc1 = GC_MakeArcOfCircle(p[2], p[3], p[4]).Value()
@@ -404,26 +403,25 @@ class DaoDrawLib(DrawLib):
     # **********************************************************************************
     '''
 
-    def drawBasePoints(self, aPntArr):
-
+    def drawPntArr(self, aPntArr):
         draw = self.std.drawGroup()
-
         for key in aPntArr:
-            draw.add(self.desk.drawMainPoint(aPntArr))
-            draw.add(self.desk.drawInfoLabel(aPntArr, 'p' + str(key)))
+            draw.add(self.desk.drawMainPoint(aPntArr[key]))
+            draw.add(self.desk.drawInfoLabel(aPntArr[key], key))
 
+        return draw
 
     def drawDaoClassicSlide(self):
 
         draw = self.std.drawGroup()
 
-        basePntArr = self.getCached('geomBasePoints', 'p')
-        draw.add(self.drawPntArr(basePntArr, 'p'))
+        basePointsGeom = self.geom('geomBasePoints')
+        draw.add(self.drawPntArr(basePointsGeom))
 
-        classicWire = self.getCached('geomClassicWire')
-        draw.add(self.desk.drawMainWire(classicWire))
+        # classicWire = self.getCached('geomClassicWire')
+        # draw.add(self.desk.drawMainWire(classicWire))
 
-        draw.add(self.drawBoundCircle(self.theBaseRadius))
+        # draw.add(self.drawBoundCircle(self.theBaseRadius))
 
         return draw
 
@@ -576,7 +574,6 @@ class DaoDrawLib(DrawLib):
     '''
 
     def drawScene(self):
-
         # if self.theSlideNum == 0:
         draw = self.drawDaoClassicSlide()
 
@@ -595,15 +592,16 @@ class DaoDrawLib(DrawLib):
             slide = drawDaoCaseSlide(sc)
 
         if isHelpers:
-            slide.add(self.desk.getDesk())
             slide.add(self.desk.getAxis())
         '''
+        paintDesk = self.desk.drawDesk()
+        paintDesk.translate(0, 0, -60)
+        draw.add(paintDesk)
 
         return draw
 
 
 if __name__ == '__main__':
-
     env = EnvParamLib()
     slideNum = env.get('slideNum', 2)
 
