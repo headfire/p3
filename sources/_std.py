@@ -17,9 +17,6 @@ from OCC.Core.BRepTools import BRepTools_WireExplorer
 
 import sys
 
-
-
-
 DEFAULT_MATERIAL = (50, 50, 50), 0, 'CHROME'
 
 MATERIAL_CONSTS = {
@@ -49,6 +46,7 @@ MATERIAL_CONSTS = {
     'TRANSPARENT': Graphic3d_NameOfMaterial.Graphic3d_NOM_TRANSPARENT,
     'DEFAULT': Graphic3d_NameOfMaterial.Graphic3d_NOM_DEFAULT
 }
+
 
 def check(aObj, aClass):
     if not isinstance(aObj, aClass):
@@ -103,16 +101,17 @@ class ScreenRenderLib:
 
         self.display = None
 
+        self.curGeom = None
         self.curTrans = None
-        self.drawGeom = None
-        self.drawMaterial = None
-        self.drawLayer = None
+        self.curMaterial = None
+        self.curLayer = None
 
-    def renderTextObj(self, aText, aFoncurightPx):
-        pnt = gp_Pnt(0,0,0)
+    def renderTextObj(self, aText, aHeightPx):
+        pnt = gp_Pnt(0, 0, 0)
         if self.curTrans is not None:
-            pnt = gp_Pnt(0,0,0).Transformed(self.curTrans)
-        self.display.DisplayMessage(pnt, aText, aFoncurightPx, (self.curMaterial['r'] / 256, self.curMaterial['g'] / 256, self.curMaterial['b'] / 256), False)
+            pnt = gp_Pnt(0, 0, 0).Transformed(self.curTrans)
+        rgb = (self.curMaterial['r'] / 256, self.curMaterial['g'] / 256, self.curMaterial['b'] / 256)
+        self.display.DisplayMessage(pnt, aText, aHeightPx, rgb, False)
 
     def renderShapeObj(self, shape):
         if self.curTrans is not None:
@@ -140,8 +139,8 @@ class ScreenRenderLib:
     def renderNone(self):
         pass
 
-    def renderLabel(self, geometry):
-        self.renderText(self.curGeom['aText'], self.curGeom['aFoncurightPx'])
+    def renderLabel(self):
+        self.renderTextObj(self.curGeom['aText'], self.curGeom['aHeightPx'])
 
     def renderBox(self):
         shape = BRepPrimAPI_MakeBox(self.curGeom['aSizeX'], self.curGeom['aSizeY'], self.curGeom['aSizeZ']).Shape()
@@ -152,7 +151,8 @@ class ScreenRenderLib:
         self.renderShapeObj(shape)
 
     def renderCone(self):
-        shape = BRepPrimAPI_MakeCone(self.curGeom['aRadius1'], self.curGeom['aRadius2'], self.curGeom['aHeight']).Shape()
+        shape = BRepPrimAPI_MakeCone(self.curGeom['aRadius1'], self.curGeom['aRadius2'],
+                                     self.curGeom['aHeight']).Shape()
         self.renderShapeObj(shape)
 
     def renderCylinder(self):
@@ -165,14 +165,14 @@ class ScreenRenderLib:
         self.renderWireObj(wire, self.curGeom['aTorRadius'])
 
     def renderWire(self):
-        self.renderTubeObj(self.curGeom['aWire'], self.curGeom['aWireRadius'])
+        self.renderWireObj(self.curGeom['aWire'], self.curGeom['aWireRadius'])
 
     def renderSurface(self):
         self.renderShapeObj(self.curGeom['aSurface'])
 
     def renderDrawItem(self, aDrawItem):
 
-        self.curMaterial =  aDrawItem.getFinalMaterial()
+        self.curMaterial = aDrawItem.getFinalMaterial()
         self.curLayer = aDrawItem.getFinalLayer()
         self.curTrans = aDrawItem.getFinalTrans()
         self.curGeom = aDrawItem.getFinalTrans()
@@ -183,20 +183,21 @@ class ScreenRenderLib:
         for key in aDrawItem.children:
             self.renderDrawItem(aDrawItem.children[key])
 
-    def render(self, aDrawItem):
+    def renderScene(self, aSceneDrawItem):
         self.display, start_display, add_menu, add_function_to_menu = init_display(
             None, (700, 500), True, [128, 128, 128], [128, 128, 128]
         )
 
-        aDrawItem.render(self)
+        self.renderDrawItem(aSceneDrawItem)
 
         self.display.FitAll()
         start_display()
 
+
 # ************************************************************
 
 
-class DrawItem:
+class StdDrawItem:
 
     def __init__(self, aGeom):
 
@@ -211,7 +212,7 @@ class DrawItem:
         self.children = {}
         self.childrenCount = 0
 
-    def _addTrans(self, aNewTrans):
+    def addTrans(self, aNewTrans):
         if self.trans is None:
             self.trans = aNewTrans
         else:
@@ -223,7 +224,7 @@ class DrawItem:
             self.children[key].dump(prefix + '[' + key + ']')
 
     def add(self, aDrawItem, aItemName=None):
-        check(aDrawItem, DrawItem)
+        check(aDrawItem, StdDrawItem)
         aDrawItem.parent = self
         if aItemName is None:
             aItemName = 'Child' + str(self.childrenCount)
@@ -233,17 +234,17 @@ class DrawItem:
 
     def setMaterial(self, material):
         self.material = material
-        return self;
+        return self
 
     def setLayer(self, layer):
         self.layer = layer
-        return self;
+        return self
 
     def translate(self, dx, dy, dz):
         tObj = gp_Trsf()
         tObj.SetTranslation(gp_Vec(dx, dy, dz))
         self.addTrans(tObj)
-        return self;
+        return self
 
     def scale(self, kx, ky, kz):
         check(kx, int)
@@ -252,7 +253,7 @@ class DrawItem:
         tObj = gp_GTrsf()
         # todo SetAffinity tObj.SetScale(kx, ky, kz)
         self.addTrans(tObj)
-        return self;
+        return self
 
     def rotate(self, pntAxFrom, pntAxTo, angle):
 
@@ -260,7 +261,7 @@ class DrawItem:
         ax1 = gp_Ax1(pntAxFrom, gp_Dir(gp_Vec(pntAxFrom, pntAxTo)))
         tObj.SetRotation(ax1, angle)
         self.addTrans(tObj)
-        return self;
+        return self
 
     def fromPointToPoint(self, pnt1, pnt2):
 
@@ -278,8 +279,7 @@ class DrawItem:
         tObj.SetRotation(gp_Ax1(gp_Pnt(0, 0, 0), rotateDir), rotateAngle)
         tObj.SetTranslationPart(gp_Vec(gp_Pnt(0, 0, 0), pnt1))
         self.addTrans(tObj)
-        return self;
-
+        return self
 
     def getFinalTrans(self):
         if self.parent is not None:
@@ -312,12 +312,18 @@ class DrawItem:
         return None
 
 
-
-class StdDrawLib:
+class DrawLib:
 
     def __init__(self):
+
         self.cache = {}
-        self.itemClass = DrawItem
+
+        self.theDebug = False
+
+    def createDrawItem(self, aGeom):
+        if self.theDebug:
+            print('Create Draw Item from', aGeom)
+        return StdDrawItem(aGeom)
 
     def geom(self, methodName, param1=None, param2=None):
 
@@ -346,33 +352,36 @@ class StdDrawLib:
             self.cache[cacheKey] = geom
         return geom
 
+
+class StdDrawLib(DrawLib):
+
     def drawGroup(self):
-        return self.itemClass({'renderAs': 'None'})
+        return self.createDrawItem({'renderAs': 'None'})
 
     def drawHook(self):
-        return self.itemClass({'renderAs': 'None'})
+        return self.createDrawItem({'renderAs': 'None'})
 
-    def drawLabel(self, aText, aFontHeightPx):
-        return self.itemClass({'aText': aText, 'aFontHeightPx': aFontHeightPx, 'renderAs': 'Label'})
+    def drawLabel(self, aText, aHeightPx):
+        return self.createDrawItem({'aText': aText, 'aHeightPx': aHeightPx, 'renderAs': 'Label'})
 
     def drawBox(self, aSizeX, aSizeY, aSizeZ):
-        return self.itemClass({'aSizeX': aSizeX, 'aSizeY': aSizeY, 'aSizeZ': aSizeZ, 'renderAs': 'Box'})
+        return self.createDrawItem({'aSizeX': aSizeX, 'aSizeY': aSizeY, 'aSizeZ': aSizeZ, 'renderAs': 'Box'})
 
     def drawSphere(self, r):
-        return self.itemClass({r})
+        return self.createDrawItem({r})
 
     def drawCylinder(self, aRadius, aHeight):
-        return self.itemClass({'aRadius': aRadius, 'aHeight': aHeight, 'renderAs': 'Cylinder'})
+        return self.createDrawItem({'aRadius': aRadius, 'aHeight': aHeight, 'renderAs': 'Cylinder'})
 
     def drawCone(self, aRadius1, aRadius2, aHeight):
-        return self.itemClass({'aRadius1': aRadius1, 'aRadius2': aRadius2, 'aHeight': aHeight, 'renderAs': 'Cone'})
+        return self.createDrawItem({'aRadius1': aRadius1, 'aRadius2': aRadius2, 'aHeight': aHeight, 'renderAs': 'Cone'})
 
     def drawTor(self, aPnt1, aPnt2, aPnt3, aTorRadius):
-        return self.itemClass(
-            {'aPnt1': aPnt1, 'aPnt2': aPnt2, 'aPnt3': aPnt3, 'aTorRadius': aTorRadius, 'renderAs': 'Tor'})
+        return self.createDrawItem({'aPnt1': aPnt1, 'aPnt2': aPnt2, 'aPnt3': aPnt3,
+                                    'aTorRadius': aTorRadius, 'renderAs': 'Tor'})
 
     def drawWire(self, aWire, aWireRadius):
-        return self.itemClass({'aWire': aWire, 'aWireRadius': aWireRadius, 'renderAs': 'Tube'})
+        return self.createDrawItem({'aWire': aWire, 'aWireRadius': aWireRadius, 'renderAs': 'Tube'})
 
     def drawSurface(self, aSurface):
-        return self.itemClass({'aSurface': aSurface, 'renderAs': 'Surface'})
+        return self.createDrawItem({'aSurface': aSurface, 'renderAs': 'Surface'})

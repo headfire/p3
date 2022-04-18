@@ -1,17 +1,14 @@
 from _std import DrawLib, StdDrawLib, ScreenRenderLib
-
 from OCC.Core.gp import gp_Pnt, gp_Vec
-
-DESK_INIT_HINTS = {
-
-}
 
 
 class DeskDrawLib(DrawLib):
 
     def __init__(self):
         super().__init__()
+
         self.std = StdDrawLib()
+        self.desk = DeskDrawLib()
 
         self.theScale = 1 / 1
         self.theScaleText = 'A0 M1:1'
