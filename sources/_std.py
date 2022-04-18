@@ -395,23 +395,6 @@ class DrawLib:
 
     def __init__(self):
         self.cache = {}
-        self.hints = {}
-
-    def initHints(self, hints):
-        for key in hints:
-            self.hints[key] = hints[key]
-
-    def getHint(self, hintName):
-        if hintName in self.hints:
-            return self.hints[hintName]
-        else:
-            raise Exception('Bad GET hint name: ' + self.__class__.__name__ + "['"+hintName + "']")
-
-    def setHint(self, hintName, hintValue):
-        if hintName in self.hints:
-            self.hints[hintName] = hintValue
-        else:
-            raise Exception('Bad SET hint name: ' + self.__class__.__name__ + "['" + hintName + "']")
 
     def getCached(self, methodName, param1=None, param2=None):
 
