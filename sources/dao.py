@@ -4,43 +4,37 @@
 from _std import EnvParamLib, DrawLib, StdDrawLib, ScreenRenderLib
 from _desk import DeskDrawLib
 
-from OCC.Core.gp import gp_Pnt, gp_Trsf, gp_Dir, gp_Vec, gp_Ax1, gp_Ax2, gp_GTrsf, gp_OZ
-from OCC.Core.Geom import Geom_TrimmedCurve
-from OCC.Core.GeomAPI import GeomAPI_IntCS
-from OCC.Core.TopExp import TopExp_Explorer
-from OCC.Core.TopAbs import  TopAbs_FACE, TopAbs_EDGE, TopAbs_VERTEX
+from OCC.Core.gp import gp_Pnt, gp_Dir, gp_Ax1
+# , gp_Vec, gp_Ax2, gp_GTrsf, gp_OZ, gp_Trsf
+
+# from OCC.Core.Geom import Geom_TrimmedCurve
+# from OCC.Core.GeomAPI import GeomAPI_IntCS
+# from OCC.Core.TopExp import TopExp_Explorer
+# from OCC.Core.TopAbs import  TopAbs_FACE, TopAbs_EDGE, TopAbs_VERTEX
 
 from OCC.Core.GC import GC_MakeArcOfCircle, GC_MakeCircle
 
-from OCC.Core.BRep import BRep_Tool
-from OCC.Core.BRepBuilderAPI import  (BRepBuilderAPI_MakeEdge, BRepBuilderAPI_MakeWire,
-             BRepBuilderAPI_Transform, BRepBuilderAPI_GTransform, BRepBuilderAPI_MakeFace,  BRepBuilderAPI_MakeVertex)
-from OCC.Core.BRepOffsetAPI import BRepOffsetAPI_MakeOffset, BRepOffsetAPI_ThruSections
-from OCC.Core.BRepPrimAPI import BRepPrimAPI_MakeSphere, BRepPrimAPI_MakeBox
-from OCC.Core.BRepAlgoAPI import BRepAlgoAPI_Common, BRepAlgoAPI_Cut
+# from OCC.Core.BRep import BRep_Tool
+from OCC.Core.BRepBuilderAPI import BRepBuilderAPI_MakeEdge, BRepBuilderAPI_MakeWire
+# , BRepBuilderAPI_Transform, BRepBuilderAPI_GTransform, BRepBuilderAPI_MakeFace,  BRepBuilderAPI_MakeVertex)
+
+# from OCC.Core.BRepOffsetAPI import BRepOffsetAPI_MakeOffset, BRepOffsetAPI_ThruSections
+# from OCC.Core.BRepPrimAPI import BRepPrimAPI_MakeSphere, BRepPrimAPI_MakeBox
+# from OCC.Core.BRepAlgoAPI import BRepAlgoAPI_Common, BRepAlgoAPI_Cut
 
 from math import pi
 
 EQUAL_POINTS_PRECISION = 0.001
 
-DAO_BASE_RADIUS = 40
-DAO_OFFSET = 3
-DAO_SLICE_EXAMPLE_KOEF = 0.5
-DAO_SLICE_FACE_HEIGHT = 30
-DAO_SLICE_COUNT = 10
-DAO_SKINING_SLICES_KOEFS = [0.03, 0.09, 0.16, 0.24, 0.35, 0.50, 0.70, 0.85]
-DAO_CASE_HEIGHT = 30
-DAO_CASE_GAP = 1
-
 
 def makeCircleWire(thePoint1, thePoint2, thePoint3):
     theCircle = GC_MakeCircle(thePoint1, thePoint2, thePoint3).Value()
     theEdge = BRepBuilderAPI_MakeEdge(theCircle).Edge()
-    theWire =  BRepBuilderAPI_MakeWire(theEdge).Wire()
+    theWire = BRepBuilderAPI_MakeWire(theEdge).Wire()
     return theWire
 
-'''
 
+'''
 
 def getXYZ(gpPnt):
     return (gpPnt.X(), gpPnt.Y(), gpPnt.Z())
@@ -58,11 +52,15 @@ def getUniquePoints(thePoints) :
          uniquePoints += [thePoint]
     return uniquePoints
 '''
-def getPntRotate(pCenter,  p,  angle):
-   ax = gp_Ax1(pCenter, gp_Dir(0,0,1))
-   pnt = gp_Pnt(p.XYZ())
-   pnt.Rotate(ax, angle)
-   return pnt
+
+
+def getPntRotate(pCenter, p, angle):
+    ax = gp_Ax1(pCenter, gp_Dir(0, 0, 1))
+    pnt = gp_Pnt(p.XYZ())
+    pnt.Rotate(ax, angle)
+    return pnt
+
+
 '''
 def getPntScale(pCenter,  p, scale):
    pnt = gp_Pnt(p.XYZ())
@@ -187,63 +185,72 @@ def slide_07_DaoWithCase (sc, r, offset, caseH, caseZMove,gap):
 
 '''
 
+
 # *********************************************************************************
 # *********************************************************************************
 # *********************************************************************************
 
 class DaoDrawLib(DrawLib):
-    def __init__(self):
 
+    def __init__(self):
         super().__init__()
-        self.initHints(DESK_INIT_HINTS)
+
+        self.theBaseRadius = 40
+        self.theOffset = 3
+        self.theSliceExampleK = 0.5
+        self.theSliceFaceH = 30
+        self.theSliceCount = 10
+        self.theSkinningKs = [0.03, 0.09, 0.16, 0.24, 0.35, 0.50, 0.70, 0.85]
+        self.theBasisH = 30
+        self.theBasisGap = 1
 
         self.std = StdDrawLib()
 
-        self.desk = DeskDrawLib('A0 M5:1', 5/1)
-        self.desk.setHint('scale', 5/1)
-        self.desk.setHint('scaleText', 'A0 M5:1')
-
+        self.desk = DeskDrawLib()
+        self.desk.theScale = 5 / 1
+        self.desk.theScaleText = 'A0 M5:1'
 
     def getDaoBasePoints(self):
+        r = self.theBaseRadius
+        r2 = r / 2
 
-        r = DAO_BASE_RADIUS
-        r2 = r/2
+        gpPntMinC = gp_Pnt(0, r2, 0)
 
-        gpPntMinC = gp_Pnt(0,r2,0)
+        origin = gp_Pnt(0, 0, 0)
 
-        p = {}
-        p[0] = gp_Pnt(0,0,0)
-        p[1] = getPntRotate(gpPntMinC , p[0], -pi/4)
-        p[2] = gp_Pnt(-r2,r2,0)
-        p[3] = getPntRotate(gpPntMinC , p[0], -pi/4*3)
-        p[4] = gp_Pnt(0,r,0)
-        p[5] = gp_Pnt(r,0,0)
-        p[6] = gp_Pnt(0,-r,0)
-        p[7] = gp_Pnt(r2,-r2,0)
+        p = {
+            0: origin,
+            1: getPntRotate(gpPntMinC, origin, -pi / 4),
+            2: gp_Pnt(-r2, r2, 0),
+            3: getPntRotate(gpPntMinC, origin, -pi / 4 * 3),
+            4: gp_Pnt(0, r, 0),
+            5: gp_Pnt(r, 0, 0),
+            6: gp_Pnt(0, -r, 0),
+            7: gp_Pnt(r2, -r2, 0)
+            }
 
-        return p;
+        return p
 
-    def getDaoBoundCircleWire(offset):
-        r = DAO_BASE_RADIUS + offset
-        return makeCircleWire(gp_Pnt(r,0,0), gp_Pnt(0,r,0), gp_Pnt(-r,0,0))
+    def getDaoBoundCircleWire(self, aOffset):
+        r = self.theBaseRadius + aOffset
+        return makeCircleWire(gp_Pnt(r, 0, 0), gp_Pnt(0, r, 0), gp_Pnt(-r, 0, 0))
 
     def getDaoClassicWire(self):
-
         p = self.getCached('getDaoBasePoints')
 
-        arc0 =  GC_MakeArcOfCircle(p[0],p[1],p[2]).Value()
-        arc1 =  GC_MakeArcOfCircle(p[2],p[3],p[4]).Value()
-        arc2 =  GC_MakeArcOfCircle(p[4],p[5],p[6]).Value()
-        arc3 =  GC_MakeArcOfCircle(p[6],p[7],p[0]).Value()
+        arc0 = GC_MakeArcOfCircle(p[0], p[1], p[2]).Value()
+        arc1 = GC_MakeArcOfCircle(p[2], p[3], p[4]).Value()
+        arc2 = GC_MakeArcOfCircle(p[4], p[5], p[6]).Value()
+        arc3 = GC_MakeArcOfCircle(p[6], p[7], p[0]).Value()
 
         edge0 = BRepBuilderAPI_MakeEdge(arc0).Edge()
         edge1 = BRepBuilderAPI_MakeEdge(arc1).Edge()
         edge2 = BRepBuilderAPI_MakeEdge(arc2).Edge()
         edge3 = BRepBuilderAPI_MakeEdge(arc3).Edge()
 
-        theWire =  BRepBuilderAPI_MakeWire(edge0, edge1, edge2, edge3).Wire()
+        ret = BRepBuilderAPI_MakeWire(edge0, edge1, edge2, edge3).Wire()
 
-        return theWire
+        return ret
 
     '''
     def getDaoOffsetWire(offset):
@@ -393,9 +400,9 @@ class DaoDrawLib(DrawLib):
     # **********************************************************************************
     # **********************************************************************************
     '''
-    def getDaoClassicSlide(self):
 
-        ret = self.std.setStyle()
+    def getDaoClassicSlide(self):
+        ret = self.std.getGroup()
 
         points = self.getCached('getDaoBasePoints', 'p')
         points.setStyle('DeskMainPoint')
@@ -405,10 +412,11 @@ class DaoDrawLib(DrawLib):
         classic.setStyle('DeskMainWire')
         ret.add(classic)
 
-        circle = self.getCashed('getDaoBoundCircle', 0)
+        circle = self.getCached('getDaoBoundCircle', 0)
         circle.style('DeskInfoWire')
         ret.add(circle)
         return ret
+
     '''
     def drawDaoOffsetSlide(sc):
     
@@ -556,12 +564,15 @@ class DaoDrawLib(DrawLib):
     def initDaoVals(sc):
     
     '''
+
     def getSlide(self, slideNum, isHelpers):
-        if slideNum == 0:
-            slide = lib.getDaoClassicSlide()
-        elif slideNum == 1:
-            slide = lib.getDaoOffsetSlide()
+        # if slideNum == 0:
+
+        slide = self.getDaoClassicSlide()
+
         '''    
+        elif slideNum == 1:
+            slide = self.getDaoOffsetSlide()
         elif slideNum == 2:
             slide = lib.drawDaoExampleSliceSlide()
         elif slideNum == 3:
@@ -579,20 +590,16 @@ class DaoDrawLib(DrawLib):
 
         return slide
 
+
 if __name__ == '__main__':
+    env = EnvParamLib()
+    slideNum = env.get('slideNum', 2)
 
-    env = Env()
-    SLIDE_NUM = env.get('SLIDE_NUM', 2)
+    lib = DaoDrawLib()
+    slide = lib.getSlide(slideNum, True)
 
-    styleHints = styleHints()
-
-    lib = DaoLib()
-    scene = lib.getSlide(SLIDE_NUM, True)
-    styleHints = lib.getStyleHints()
-
-    screen = ScreenRenderer()
-    screen.render(scene, styleSet)
-
+    screen = ScreenRenderLib()
+    screen.render(slide)
 
     '''   sc.render()
 
