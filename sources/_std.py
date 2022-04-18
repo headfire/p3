@@ -17,8 +17,6 @@ from OCC.Core.BRepTools import BRepTools_WireExplorer
 
 import sys
 
-DEFAULT_MATERIAL = (50, 50, 50), 0, 'CHROME'
-
 MATERIAL_CONSTS = {
     'BRASS': Graphic3d_NameOfMaterial.Graphic3d_NOM_BRASS,
     'BRONZE': Graphic3d_NameOfMaterial.Graphic3d_NOM_BRONZE,
@@ -48,41 +46,45 @@ MATERIAL_CONSTS = {
 }
 
 
-def check(aObj, aClass):
-    if not isinstance(aObj, aClass):
-        raise Exception('EXPECTED ' + aClass.__name__ + '  - REAL ' + aObj.__class__.__name__)
-
-
-def checkGeom(aGeom):
-    if not isinstance(aGeom, dict):
-        raise Exception('geom MUST BE dict() - REAL ' + aGeom.__class__.__name__)
-    for key in aGeom:
-        if not isinstance(key, str):
-            raise Exception('geom KEY MUST BE str - REAL ' + key.__class__.__name__)
-        if not isinstance(aGeom[key], (int, float, str, gp_Pnt, TopoDS_Shape)):
-            raise Exception('geom[' + key + '] INCORRECT geom item type - REAL ' + aGeom.__class__.__name__)
-
-
-def getVectorTangentToCurveAtPoint(edge, uRatio):
-    aCurve, aFP, aLP = BRep_Tool.Curve(edge)
-    aP = aFP + (aLP - aFP) * uRatio
-    v1 = gp_Vec()
-    p1 = gp_Pnt()
-    aCurve.D1(aP, p1, v1)
-    return v1
-
-
-def getWireStartPointAndTangentDir(wire):
-    ex = BRepTools_WireExplorer(wire)
-    edge = ex.Current()
-    vertex = ex.CurrentVertex()
-    v = getVectorTangentToCurveAtPoint(edge, 0)
-    return BRep_Tool.Pnt(vertex), gp_Dir(v)
-
-
-class EnvParamLib:
+class StdObject:
 
     def __init__(self):
+        self.theIsDebug = False
+
+    def debug(self, aVar):
+        if self.theIsDebug:
+            print('DEBUG:', aVar)
+
+    def makeMethodNonStatic(self):
+        self.debug('Make this method non static')
+
+    def mt(self, colorRGB256=(50, 50, 50), materialType='CHROME', alpha256=255):
+        self.makeMethodNonStatic()
+        r256, g256, b256 = colorRGB256
+        return {'rgb': (r256 / 255, g256 / 255, b256 / 255), 'materialType': materialType, 'alpha': alpha256 / 255}
+
+    def checkObj(self, aObj, aClass):
+        self.makeMethodNonStatic()
+        if not isinstance(aObj, aClass):
+            raise Exception('EXPECTED ' + aClass.__name__ + '  - REAL ' + aObj.__class__.__name__)
+
+    def checkGeom(self, aGeom):
+        self.makeMethodNonStatic()
+        if not isinstance(aGeom, dict):
+            raise Exception('geom MUST BE dict() - REAL ' + aGeom.__class__.__name__)
+        for key in aGeom:
+            if not isinstance(key, str):
+                raise Exception('geom KEY MUST BE str - REAL ' + key.__class__.__name__)
+            if not isinstance(aGeom[key], (int, float, str, gp_Pnt, TopoDS_Shape)):
+                raise Exception('geom[' + key + '] INCORRECT geom item type - REAL ' + aGeom.__class__.__name__)
+
+
+class EnvParamLib(StdObject):
+
+    def __init__(self):
+
+        super().__init__()
+
         self.envParams = {}
         for param in sys.argv:
             key, sep, val = param.partition('=')
@@ -95,9 +97,11 @@ class EnvParamLib:
             return defaultValue
 
 
-class ScreenRenderLib:
+class ScreenRenderLib(StdObject):
 
     def __init__(self):
+
+        super().__init__()
 
         self.display = None
 
@@ -106,28 +110,44 @@ class ScreenRenderLib:
         self.curMaterial = None
         self.curLayer = None
 
+    def getVectorTangentToCurveAtPoint(self, edge, uRatio):
+        self.makeMethodNonStatic()
+        aCurve, aFP, aLP = BRep_Tool.Curve(edge)
+        aP = aFP + (aLP - aFP) * uRatio
+        v1 = gp_Vec()
+        p1 = gp_Pnt()
+        aCurve.D1(aP, p1, v1)
+        return v1
+
+    def getWireStartPointAndTangentDir(self, wire):
+        ex = BRepTools_WireExplorer(wire)
+        edge = ex.Current()
+        vertex = ex.CurrentVertex()
+        v = self.getVectorTangentToCurveAtPoint(edge, 0)
+        return BRep_Tool.Pnt(vertex), gp_Dir(v)
+
     def renderTextObj(self, aText, aHeightPx):
         pnt = gp_Pnt(0, 0, 0)
         if self.curTrans is not None:
             pnt = gp_Pnt(0, 0, 0).Transformed(self.curTrans)
-        rgb = (self.curMaterial['r'] / 256, self.curMaterial['g'] / 256, self.curMaterial['b'] / 256)
-        self.display.DisplayMessage(pnt, aText, aHeightPx, rgb, False)
+        self.display.DisplayMessage(pnt, aText, aHeightPx, self.curMaterial['rgb'], False)
 
     def renderShapeObj(self, shape):
         if self.curTrans is not None:
             shape = BRepBuilderAPI_Transform(shape, self.curTrans).Shape()
         ais = AIS_Shape(shape)
-        aisColor = Quantity_Color(self.curMaterial['r'] / 256, self.curMaterial['g'] / 256, self.curMaterial['b'] / 256,
+        r, g, b = self.curMaterial['rgb']
+        aisColor = Quantity_Color(r, g, b,
                                   Quantity_TypeOfColor(Quantity_TypeOfColor.Quantity_TOC_RGB))
         ais.SetColor(aisColor)
-        ais.SetTransparency(1 - self.curMaterial['a'] / 256)
-        aspect = Graphic3d_MaterialAspect(MATERIAL_CONSTS[self.curMaterial['materialName']])
+        ais.SetTransparency(1 - self.curMaterial['alpha'])
+        aspect = Graphic3d_MaterialAspect(MATERIAL_CONSTS[self.curMaterial['materialType']])
         ais.SetMaterial(aspect)
         self.display.Context.Display(ais, False)
 
     def renderWireObj(self, aWire, aWireRadius):
 
-        startPoint, tangentDir = getWireStartPointAndTangentDir(aWire)
+        startPoint, tangentDir = self.getWireStartPointAndTangentDir(aWire)
         profileCircle = GC_MakeCircle(startPoint, tangentDir, aWireRadius).Value()
         profileEdge = BRepBuilderAPI_MakeEdge(profileCircle).Edge()
         profileWire = BRepBuilderAPI_MakeWire(profileEdge).Wire()
@@ -175,8 +195,9 @@ class ScreenRenderLib:
         self.curMaterial = aDrawItem.getFinalMaterial()
         self.curLayer = aDrawItem.getFinalLayer()
         self.curTrans = aDrawItem.getFinalTrans()
-        self.curGeom = aDrawItem.getFinalTrans()
+        self.curGeom = aDrawItem.getFinalGeom()
 
+        aDrawItem.dump()
         renderMethod = self.__getattribute__('render' + self.curGeom['renderAs'])
         renderMethod()
 
@@ -197,10 +218,11 @@ class ScreenRenderLib:
 # ************************************************************
 
 
-class StdDrawItem:
+class StdDrawItem(StdObject):
 
     def __init__(self, aGeom):
 
+        super().__init__()
         self.parent = None
 
         self.geom = aGeom
@@ -224,7 +246,7 @@ class StdDrawItem:
             self.children[key].dump(prefix + '[' + key + ']')
 
     def add(self, aDrawItem, aItemName=None):
-        check(aDrawItem, StdDrawItem)
+        self.checkObj(aDrawItem, StdDrawItem)
         aDrawItem.parent = self
         if aItemName is None:
             aItemName = 'Child' + str(self.childrenCount)
@@ -247,9 +269,9 @@ class StdDrawItem:
         return self
 
     def scale(self, kx, ky, kz):
-        check(kx, int)
-        check(ky, int)
-        check(kz, int)
+        self.checkObj(kx, int)
+        self.checkObj(ky, int)
+        self.checkObj(kz, int)
         tObj = gp_GTrsf()
         # todo SetAffinity tObj.SetScale(kx, ky, kz)
         self.addTrans(tObj)
@@ -309,20 +331,20 @@ class StdDrawItem:
             return self.material
         if self.parent is not None:
             return self.parent.getFinalMaterial()
-        return None
+        return self.mt()
+
+    def getFinalGeom(self):
+        return self.geom
 
 
-class DrawLib:
+class DrawLib(StdObject):
 
     def __init__(self):
-
+        super().__init__()
         self.cache = {}
 
-        self.theDebug = False
-
     def createDrawItem(self, aGeom):
-        if self.theDebug:
-            print('Create Draw Item from', aGeom)
+        self.makeMethodNonStatic()
         return StdDrawItem(aGeom)
 
     def geom(self, methodName, param1=None, param2=None):
@@ -347,7 +369,7 @@ class DrawLib:
                 geom = method(param1)
             else:
                 geom = method(param1, param2)
-            checkGeom(geom)
+            self.checkGeom(geom)
             print('==> Compute', cacheKey)
             self.cache[cacheKey] = geom
         return geom
@@ -367,8 +389,8 @@ class StdDrawLib(DrawLib):
     def drawBox(self, aSizeX, aSizeY, aSizeZ):
         return self.createDrawItem({'aSizeX': aSizeX, 'aSizeY': aSizeY, 'aSizeZ': aSizeZ, 'renderAs': 'Box'})
 
-    def drawSphere(self, r):
-        return self.createDrawItem({r})
+    def drawSphere(self, aRadius):
+        return self.createDrawItem({'aRadius': aRadius, 'renderAs': 'Sphere'})
 
     def drawCylinder(self, aRadius, aHeight):
         return self.createDrawItem({'aRadius': aRadius, 'aHeight': aHeight, 'renderAs': 'Cylinder'})

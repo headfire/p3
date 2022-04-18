@@ -609,7 +609,7 @@ if __name__ == '__main__':
     scene = lib.drawScene()
 
     screen = ScreenRenderLib()
-    screen.render(scene)
+    screen.renderScene(scene)
 
     '''
     sc.render()

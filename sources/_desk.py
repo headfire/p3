@@ -1,6 +1,19 @@
 from _std import DrawLib, StdDrawLib, ScreenRenderLib
 from OCC.Core.gp import gp_Pnt, gp_Vec
 
+WOOD_RGB256 = 208, 117, 28
+PAPER_RGB256 = 230, 230, 230
+STEEL_RGB256 = 100, 100, 100
+
+GRAY_RGB256 = 100, 100, 100
+
+HALF_TRANSPARENCY_ALPHA = 100
+
+BLUE_RGB256 = 100, 100, 255
+YELLOW_RGB256 = 255, 255, 100
+
+AO_SIZE_XYZ = 1189, 841, 1
+
 
 class DeskDrawLib(DrawLib):
 
@@ -8,20 +21,19 @@ class DeskDrawLib(DrawLib):
         super().__init__()
 
         self.std = StdDrawLib()
-        self.desk = DeskDrawLib()
 
         self.theScale = 1 / 1
         self.theScaleText = 'A0 M1:1'
 
-        self.theBoardMaterial = ((208, 117, 28), 0, 'PLASTIC')
-        self.thePaperMaterial = ((230, 230, 230), 0, 'PLASTIC')
-        self.thePinMaterial = ((100, 100, 100), 0, 'CHROME')
+        self.theBoardMaterial = self.mt(WOOD_RGB256, 'PLASTIC')
+        self.thePaperMaterial = self.mt(PAPER_RGB256, 'PLASTIC')
+        self.thePinMaterial = self.mt(STEEL_RGB256, 'CHROME')
+        self.theMainPointMaterial = self.mt(YELLOW_RGB256, 'CHROME')  # yellow
+        self.theMainWireMaterial = self.mt(BLUE_RGB256, 'CHROME')  # blue
 
-        self.theInfoMaterial = ((100, 100, 100), 50, 'PLASTIC')     # gray
-        self.theMainWireMaterial = ((50, 50, 250), 50, 'CHROME')    # blue
-        self.theMainPointMaterial = ((250, 250, 50), 50, 'CHROME')  # yellow
+        self.theInfoMaterial = self.mt(GRAY_RGB256, 'PLASTIC', HALF_TRANSPARENCY_ALPHA)
 
-        self.thePaperSizes = (1189, 841, 1)  # A0
+        self.thePaperSizes = AO_SIZE_XYZ
 
         self.theBoardH = 20
         self.theBoardBorderSize = 60
@@ -42,7 +54,8 @@ class DeskDrawLib(DrawLib):
 
     def drawPoint(self, aPnt, aBaseLineR):
         pointR = aBaseLineR * self.thePointRFactor / self.theScale
-        ret = self.std.drawSphere(aPnt, pointR)
+        ret = self.std.drawSphere(pointR)
+        ret.translate(aPnt.X(), aPnt.Y(), aPnt.Z())
         return ret
 
     def drawLine(self, pnt1, pnt2, baseLineR):
@@ -56,13 +69,11 @@ class DeskDrawLib(DrawLib):
         return ret
 
     def drawCircle(self, aPnt1, aPnt2, aPnt3, aBaseLineR):
-
         draw = self.std.drawTor(aPnt1, aPnt2, aPnt3, aBaseLineR / self.theScale)
 
         return draw
 
     def drawVector(self, aPnt1, aPnt2, aBaseLineR):
-
         rArrow = aBaseLineR * self.theArrowRFactor / self.theScale
         hArrow = aBaseLineR * self.theArrowHFactor / self.theScale
         v = gp_Vec(aPnt1, aPnt2)
@@ -84,58 +95,50 @@ class DeskDrawLib(DrawLib):
     # **************************************
 
     def drawInfoLabel(self, aPnt, aText):
-
         delta = self.theInfoLabelDelta / self.theScale
 
-        ret = self.std.drawLabel(aPnt, aText, self.theInfoLabelSizePx)
-        ret.translate(delta, delta, delta)
+        ret = self.std.drawLabel(aText, self.theInfoLabelSizePx)
+        ret.translate(aPnt.X() + delta, aPnt.Y() + delta, aPnt.Z() + delta)
         ret.setMaterial(self.theInfoMaterial)
 
         return ret
 
     def drawInfoPoint(self, aPnt):
-
         ret = self.drawPoint(aPnt, self.theInfoLineWidth / 2)
         ret.setMaterial(self.theInfoMaterial)
 
         return ret
 
     def drawInfoCircle(self, aPnt1, aPnt2, aPnt3):
-
         draw = self.std.drawTor(aPnt1, aPnt2, aPnt3, self.theMainLineWidth)
 
         return draw
 
     def drawMainPoint(self, aPnt):
-
         ret = self.drawPoint(aPnt, self.theMainLineWidth / 2)
         ret.setMaterial(self.theMainPointMaterial)
 
         return ret
 
     def drawInfoLine(self, aPnt1, aPnt2):
-
         ret = self.drawLine(aPnt1, aPnt2, self.theInfoLineWidth / 2)
         ret.setMaterial(self.theInfoMaterial)
 
         return ret
 
     def drawMainWire(self, aWire):
-
-        draw = self.std.drawTube(aWire, self.theMainLineWidth / 2)
+        draw = self.std.drawWire(aWire, self.theMainLineWidth / 2)
         draw.setMaterial(self.theMainWireMaterial)
 
         return draw
 
     def drawInfoWire(self, aWire):
-
-        draw = self.std.drawTube(aWire, self.theInfoLineWidth / 2)
+        draw = self.std.drawWire(aWire, self.theInfoLineWidth / 2)
         draw.setMaterial(self.theInfoMaterial)
 
         return draw
 
     def drawInfoVector(self, aPnt1, aPnt2):
-
         ret = self.drawVector(aPnt1, aPnt2, self.theInfoLineWidth / 2)
         ret.setMaterial(self.theInfoMaterial)
 
@@ -144,7 +147,6 @@ class DeskDrawLib(DrawLib):
         # **************************************
 
     def drawPin(self, x, y):
-
         pin = self.std.drawCylinder(self.thePinR / self.theScale, self.thePinH / self.theScale)
         pin.translate(x, y, 0)
         pin.setMaterial(self.thePinMaterial)
@@ -152,7 +154,6 @@ class DeskDrawLib(DrawLib):
         return pin
 
     def drawDesk(self):
-
         ret = self.std.drawGroup()
 
         paperSizeX, paperSizeY, paperSizeZ = self.thePaperSizes
@@ -182,7 +183,6 @@ class DeskDrawLib(DrawLib):
         return ret
 
     def drawBounds(self, pnt1, pnt2):
-
         x1, y1, z1 = pnt1.X(), pnt1.Y(), pnt1.Z()
         x2, y2, z2 = pnt2.X(), pnt2.Y(), pnt2.Z()
 
@@ -206,7 +206,6 @@ class DeskDrawLib(DrawLib):
         return ret
 
     def drawAxis(self, size, step):
-
         ret = self.std.drawGroup()
 
         ret.add(self.drawInfoVector(gp_Pnt(0, 0, 0), gp_Pnt(size, 0, 0)))
@@ -228,8 +227,7 @@ class DeskDrawLib(DrawLib):
 
     # **************************************
 
-    def drawDemo(self):
-
+    def drawDemoScene(self):
         ret = self.std.drawGroup()
 
         desk = self.drawDesk()
@@ -244,19 +242,18 @@ class DeskDrawLib(DrawLib):
 
         cone = self.std.drawCone(30, 0, 100)
         cone.translate(0, 0, -50)
-        cone.setMaterial(((50, 200, 50), 0, 'CHROME'))
+        cone.setMaterial(self.mt((50, 200, 50), 'CHROME'))
         ret.add(cone)
 
         return ret
 
 
 if __name__ == '__main__':
-
     deskLib = DeskDrawLib()
     deskLib.theScaleText = 'A0 M5:1'
     deskLib.theScale = 5 / 1
-    demo = deskLib.drawDemo()
-    # demo.dump()
+    demoScene = deskLib.drawDemoScene()
+    demoScene.dump()
 
     screen = ScreenRenderLib()
-    screen.render(demo)
+    screen.renderScene(demoScene)
