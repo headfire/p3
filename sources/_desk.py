@@ -253,7 +253,7 @@ if __name__ == '__main__':
     deskLib.theScaleText = 'A0 M5:1'
     deskLib.theScale = 5 / 1
     demoScene = deskLib.drawDemoScene()
-    demoScene.dump()
+    #demoScene.dump()
 
     screen = ScreenRenderLib()
     screen.renderScene(demoScene)

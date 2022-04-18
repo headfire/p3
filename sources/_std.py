@@ -197,7 +197,6 @@ class ScreenRenderLib(StdObject):
         self.curTrans = aDrawItem.getFinalTrans()
         self.curGeom = aDrawItem.getFinalGeom()
 
-        aDrawItem.dump()
         renderMethod = self.__getattribute__('render' + self.curGeom['renderAs'])
         renderMethod()
 
