@@ -44,9 +44,14 @@ MATERIAL_CONSTS = {
     'DEFAULT': Graphic3d_NameOfMaterial.Graphic3d_NOM_DEFAULT
 }
 
-DEFAULT_COLOR = (100, 100, 100)
+DEFAULT_COLOR = 100, 100, 100
+DEFAULT_MATERIAL = 'CHROME'
 DEFAULT_TRANSPARENCY = 0.0
-DEFAULT_MATERIAL = 'PLASTIC'
+DEFAULT_LAYER = 'DefaultLayer'
+
+
+def getTransparency(self):
+    return self.getHierarchyAttr('aTransparency', DEFAULT_TRANSPARENCY)
 
 
 class SmartObject:
@@ -65,6 +70,14 @@ class SmartObject:
         self.makeMethodNonStatic()
         if not isinstance(aObj, aClass):
             raise Exception('EXPECTED ' + aClass.__name__ + '  - REAL ' + aObj.__class__.__name__)
+
+    def dumpTransform(self, transform):
+        self.makeMethodNonStatic()
+        for iRow in range(1, 4):
+            prn = ''
+            for iCol in range(1, 5):
+                prn += '  ' + str(transform.Value(iRow, iCol))
+            print(prn)
 
 
 class EnvParamLib(SmartObject):
@@ -88,7 +101,6 @@ class EnvParamLib(SmartObject):
 class ScreenRenderLib(SmartObject):
 
     def __init__(self):
-
         super().__init__()
 
         self.display = None
@@ -118,13 +130,13 @@ class ScreenRenderLib(SmartObject):
     def _renderTextObj(self, aText, aHeightPx):
         pnt = gp_Pnt(0, 0, 0).Transformed(self.aTransform)
         r, g, b = self.aColor
-        self.display.DisplayMessage(pnt, aText, aHeightPx, (r/255, g/255, b/255), False)
+        self.display.DisplayMessage(pnt, aText, aHeightPx, (r / 255, g / 255, b / 255), False)
 
     def _renderShapeObj(self, shape):
         shape = BRepBuilderAPI_Transform(shape, self.aTransform).Shape()
         ais = AIS_Shape(shape)
         r, g, b = self.aColor
-        aisColor = Quantity_Color(r/255, g/255, b/255,
+        aisColor = Quantity_Color(r / 255, g / 255, b / 255,
                                   Quantity_TypeOfColor(Quantity_TypeOfColor.Quantity_TOC_RGB))
         ais.SetColor(aisColor)
         ais.SetTransparency(self.aTransparency)
@@ -133,7 +145,6 @@ class ScreenRenderLib(SmartObject):
         self.display.Context.Display(ais, False)
 
     def _renderWireObj(self, aWire, aWireRadius):
-
         startPoint, tangentDir = self._getWireStartPointAndTangentDir(aWire)
         profileCircle = GC_MakeCircle(startPoint, tangentDir, aWireRadius).Value()
         profileEdge = BRepBuilderAPI_MakeEdge(profileCircle).Edge()
@@ -187,7 +198,6 @@ class ScreenRenderLib(SmartObject):
         self._renderShapeObj(aSurface)
 
     def _renderDrawItem(self, aDrawItem):
-
         self.aGeom = aDrawItem.getGeomImmutable()
         self.aMaterial = aDrawItem.getMaterial()
         self.aColor = aDrawItem.getColor()
@@ -247,10 +257,11 @@ class DrawItem(SmartObject):
 
     def getHierarchyAttr(self, aAttrName, aDefaultValue):
         value = self.__getattribute__(aAttrName)
+        #print('Hello hierarhy',aAttrName ,value)
         if value is not None:
             return value
         if self.parent is not None:
-            return self.parent.getHierarchyAttr(self, aAttrName, aDefaultValue)
+            return self.parent.getHierarchyAttr(aAttrName, aDefaultValue)
         return aDefaultValue
 
     def _dump(self, prefix=''):
@@ -259,7 +270,6 @@ class DrawItem(SmartObject):
             self.children[key].dump(prefix + '[' + key + ']')
 
     def _applyGeomTransform(self, aAppliedTransform):
-        print('Hello _applyGeomTransform')
         self.aGeomTransform *= aAppliedTransform
 
     def add(self, aDrawItem, aItemName=None):
@@ -384,31 +394,20 @@ class DrawItem(SmartObject):
     def getTransform(self):
         if self.parent is not None:
             ret = gp_Trsf()
+            ret *= self.aGeomTransform
             ret *= self.parent.getTransform()
             return ret
         else:
             return self.aGeomTransform
 
     def getLayer(self):
-        if self.aLayer is not None:
-            return self.aLayer
-        if self.parent is not None:
-            return self.parent.getLayer()
-        return None
+        return self.getHierarchyAttr('aLayer', DEFAULT_LAYER)
 
     def getColor(self):
-        if self.aColor is not None:
-            return self.aColor
-        if self.parent is not None:
-            return self.parent.getColor()
-        return DEFAULT_COLOR
+        return self.getHierarchyAttr('aColor', DEFAULT_COLOR)
 
     def getTransparency(self):
-        if self.aTransparency is not None:
-            return self.aTransparency
-        if self.parent is not None:
-            return self.parent.getTransparency()
-        return DEFAULT_TRANSPARENCY
+        return self.getHierarchyAttr('aTransparency', DEFAULT_TRANSPARENCY)
 
     def getMaterial(self):
         if self.aMaterial is not None:

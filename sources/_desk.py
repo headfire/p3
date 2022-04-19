@@ -78,15 +78,15 @@ class DeskDrawLib(DrawLib):
     def getLabelDelta(self, aLibStyleName):
         return self.theStyleSizeValues[aLibStyleName][2] / self.theScale
 
-    def applyStyle(self, draw, aStyle):
+    def applyStyle(self, aDraw, aStyle):
         self.makeMethodNonStatic()
-        draw.setColor(aStyle[0])
-        draw.setMaterial(aStyle[1])
-        draw.setTransparency(aStyle[2])
+        aDraw.setColor(aStyle[0])
+        aDraw.setMaterial(aStyle[1])
+        aDraw.setTransparency(aStyle[2])
 
-    def applyLibStyle(self, draw, aLibStyleName, aGeomType):
+    def applyLibStyle(self, aDraw, aLibStyleName, aGeomType):
         libStyle = self.theStyleValues[aLibStyleName + aGeomType]
-        self.applyStyle(draw, libStyle)
+        self.applyStyle(aDraw, libStyle)
 
     def drawPoint(self, aPnt, aLibStyleName):
         draw = self.drawPrimitive()
@@ -178,7 +178,7 @@ class DeskDrawLib(DrawLib):
         bsz = self.theBoardH / self.theScale
         board.setAsBox(bsx, bsy, bsz)
         board.setTranslate(-bsx / 2, -bsy / 2, -psz - bsz)
-        self.applyStyle(paper, self.thePaperStyle)
+        self.applyStyle(board, self.theBoardStyle)
         draw.add(board)
 
         draw.add(self.drawLabel(gp_Pnt(-bsx / 2, -bsy / 2, -psz), self.theScaleText, 'InfoStyle'))
