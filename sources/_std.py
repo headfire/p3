@@ -46,7 +46,7 @@ MATERIAL_CONSTS = {
 
 DEFAULT_COLOR = (100, 100, 100)
 DEFAULT_TRANSPARENCY = 0.0
-DEFAULT_MATERIAL = 'CHROME'
+DEFAULT_MATERIAL = 'PLASTIC'
 
 
 class SmartObject:
@@ -170,12 +170,13 @@ class ScreenRenderLib(SmartObject):
         shape = BRepPrimAPI_MakeCylinder(aRadius, aHeight).Shape()
         self._renderShapeObj(shape)
 
-    def _renderAsTorus(self):
-        # todo change geom on r1, r2 and transform
-        aPnt1, aPnt2, aPnt3, aRadius2 = self.aGeom
+    # todo _renderAsTorus
+
+    def _renderAsCircle(self):
+        aPnt1, aPnt2, aPnt3, aLineWidth = self.aGeom
         geomCircle = GC_MakeCircle(aPnt1, aPnt2, aPnt3).Value()
         wire = BRepBuilderAPI_MakeEdge(geomCircle).Edge()
-        self._renderWireObj(wire, aRadius2)
+        self._renderWireObj(wire, aLineWidth)
 
     def _renderAsWire(self):
         aWire, aWireRadius = self.aGeom
@@ -199,12 +200,12 @@ class ScreenRenderLib(SmartObject):
         for key in aDrawItem.children:
             self._renderDrawItem(aDrawItem.children[key])
 
-    def renderScene(self, aSceneDrawItem):
+    def render(self, aDrawItem):
         self.display, start_display, add_menu, add_function_to_menu = init_display(
             None, (700, 500), True, [128, 128, 128], [128, 128, 128]
         )
 
-        self._renderDrawItem(aSceneDrawItem)
+        self._renderDrawItem(aDrawItem)
 
         self.display.FitAll()
         start_display()
@@ -300,9 +301,10 @@ class DrawItem(SmartObject):
         return self
 
     # todo def setAsTorus(self, aRadius1, aRadius2):
-    def setAsTorus(self, aPnt1, aPnt2, aPnt3, aWidth):
-        self.aGeomType = 'Torus'
-        self.aGeomImmutable = aPnt1, aPnt2, aPnt3, aWidth
+
+    def setAsCircle(self, aPnt1, aPnt2, aPnt3, aLineWidth):
+        self.aGeomType = 'Circle'
+        self.aGeomImmutable = aPnt1, aPnt2, aPnt3, aLineWidth
         return self
 
     def setAsWire(self, aWire, aLineRadius):
@@ -413,19 +415,25 @@ class DrawItem(SmartObject):
             return self.parent.getMaterial()
         return DEFAULT_MATERIAL
 
+    def getChild(self, fullName):
+        names = fullName.split('.')
+        ret = self
+        for childName in names:
+            ret = ret.children[childName]
+        return ret
+
+    def getPosition(self):
+        return gp_Pnt(0, 0, 0).Transformed(self.getTransform())
+
 
 class DrawLib(SmartObject):
 
     def __init__(self):
         super().__init__()
-        self.cache = {}
+        self.drawCache = {}
         self.aDrawItemClass = DrawItem
 
-    def getDrawItem(self):
-        return self.aDrawItemClass()
-
-    def getCached(self, methodName, param1=None, param2=None):
-
+    def drawCached(self, methodName, param1=None, param2=None):
         params = ''
         if param1 is not None:
             params += str(param1)
@@ -435,17 +443,23 @@ class DrawLib(SmartObject):
         cacheKey = methodName + '(' + params + ')'
 
         method = self.__getattribute__(methodName)
-        if cacheKey in self.cache:
+        if cacheKey in self.drawCache:
             print('==> Get from cache', cacheKey)
-            retObj = self.cache[cacheKey]
-            return retObj.copy()
+            draw = self.drawCache[cacheKey].copy()
         else:
-            if param1 is None:
-                retObj = method()
-            elif param2 is None:
-                retObj = method(param1)
-            else:
-                retObj = method(param1, param2)
             print('==> Compute', cacheKey)
-            self.cache[cacheKey] = retObj
-            return retObj
+            if param1 is None:
+                draw = method()
+            elif param2 is None:
+                draw = method(param1)
+            else:
+                draw = method(param1, param2)
+            self.drawCache[cacheKey] = draw
+            self.checkObj(draw, DrawItem)
+        return draw
+
+    def drawGroup(self):
+        return self.aDrawItemClass()
+
+    def drawPrimitive(self):
+        return self.aDrawItemClass()

@@ -1,37 +1,61 @@
-from _std import DrawLib, StdDrawLib, ScreenRenderLib
+from _std import DrawLib, ScreenRenderLib
 from OCC.Core.gp import gp_Pnt, gp_Vec
 
-WOOD_RGB256 = 208, 117, 28
-PAPER_RGB256 = 230, 230, 230
-STEEL_RGB256 = 100, 100, 100
+WOOD_COLOR = 208, 117, 28
+PAPER_COLOR = 230, 230, 230
+STEEL_COLOR = 100, 100, 100
 
-GRAY_RGB256 = 100, 100, 100
 
-HALF_TRANSPARENCY_ALPHA = 100
-
-BLUE_RGB256 = 100, 100, 255
-YELLOW_RGB256 = 255, 255, 100
+NICE_WHITE_COLOR = 240, 240, 240
+NICE_GRAY_COLOR = 100, 100, 100
+NICE_RED_COLOR = 200, 30, 30
+NICE_BLUE_COLOR = 100, 100, 255
+NICE_YELLOW_COLOR = 255, 255, 100
+NICE_ORIGINAL_COLOR = 241,79,160
 
 AO_SIZE_XYZ = 1189, 841, 1
 
+MATE = 'PLASTIC'
+CHROME = 'CHROME'
 
 class DeskDrawLib(DrawLib):
 
     def __init__(self):
         super().__init__()
 
-        self.std = StdDrawLib()
-
         self.theScale = 1 / 1
         self.theScaleText = 'A0 M1:1'
 
-        self.theBoardMaterial = self.mt(WOOD_RGB256, 'PLASTIC')
-        self.thePaperMaterial = self.mt(PAPER_RGB256, 'PLASTIC')
-        self.thePinMaterial = self.mt(STEEL_RGB256, 'CHROME')
-        self.theMainPointMaterial = self.mt(YELLOW_RGB256, 'CHROME')  # yellow
-        self.theMainWireMaterial = self.mt(BLUE_RGB256, 'CHROME')  # blue
+        self.theStyleSizeValues = {
+            # [BaseLineR, TextHeightPx, TextDelta]
 
-        self.theInfoMaterial = self.mt(GRAY_RGB256, 'PLASTIC', HALF_TRANSPARENCY_ALPHA)
+            'MainStyle': [5, 20, 5],
+            'InfoStyle': [3, 20, 5],
+            'FocusStyle': [3, 20, 5]
+        }
+
+        self.theStyleValues = {
+            # [color, material, transparency]
+
+            'MainStylePointGeom': [NICE_YELLOW_COLOR, CHROME, 0.0],
+            'MainStyleLineGeom': [NICE_BLUE_COLOR, CHROME, 0.0],
+            'MainStyleFaceGeom': [NICE_ORIGINAL_COLOR, CHROME, 0.0],
+            'MainStyleLabelGeom': [NICE_WHITE_COLOR, MATE, 0.0],
+
+            'InfoStylePointGeom': [NICE_GRAY_COLOR, MATE, 0.5],
+            'InfoStyleLineGeom': [NICE_GRAY_COLOR, MATE,  0.5],
+            'InfoStyleFaceGeom': [NICE_GRAY_COLOR, MATE,  0.5],
+            'InfoStyleLabelGeom': [NICE_GRAY_COLOR, MATE, 0.0],
+
+            'FocusStylePointGeom': [NICE_RED_COLOR, MATE, 0],
+            'FocusStyleLineGeom': [NICE_RED_COLOR, MATE, 0],
+            'FocusStyleFaceGeom': [NICE_RED_COLOR, MATE, 0.5],
+            'FocusStyleLabelGeom': [NICE_RED_COLOR, MATE, 0.0],
+        }
+
+        self.theBoardColor = WOOD_COLOR
+        self.thePaperColor = PAPER_COLOR,
+        self.thePinColor = STEEL_COLOR
 
         self.thePaperSizes = AO_SIZE_XYZ
 
@@ -42,186 +66,200 @@ class DeskDrawLib(DrawLib):
         self.thePinR = 10
         self.thePinH = 2
 
-        self.theInfoLineWidth = 6
-        self.theMainLineWidth = 8
-
         self.thePointRFactor = 3
         self.theArrowRFactor = 3
         self.theArrowHFactor = 15
 
-        self.theInfoLabelSizePx = 20  # not scaled
-        self.theInfoLabelDelta = 15
+    def getStyleBaseRadius(self, aStyle):
+        return self.theStyleSizeValues[aStyle][0]
 
-    def drawPoint(self, aPnt, aBaseLineR):
-        pointR = aBaseLineR * self.thePointRFactor / self.theScale
-        ret = self.std.drawSphere(pointR)
-        ret.translate(aPnt.X(), aPnt.Y(), aPnt.Z())
-        return ret
+    def getStyleTextHeightPx(self, aStyle):
+        return self.theStyleSizeValues[aStyle][1]
 
-    def drawLine(self, pnt1, pnt2, baseLineR):
-        scale = self.theScale
+    def getStyleTextDelta(self, aStyle):
+        return self.theStyleSizeValues[aStyle][2]
 
-        lineR = baseLineR / scale
-        vec = gp_Vec(pnt1, pnt2)
-        ret = self.std.drawCylinder(lineR, vec.Magnitude())
-        ret.fromPointToPoint(pnt1, pnt2)
+    def getStyleColor(self,  aStyle, aDrawType):
+        return self.theStyleValues[aStyle+aDrawType][0]
 
-        return ret
+    def getStyleMaterial(self, aStyle, aDrawType):
+        return self.theStyleValues[aStyle + aDrawType][1]
 
-    def drawCircle(self, aPnt1, aPnt2, aPnt3, aBaseLineR):
-        draw = self.std.drawTor(aPnt1, aPnt2, aPnt3, aBaseLineR / self.theScale)
+    def getStyleTransparency(self, aStyle,  aDrawType):
+        return self.theStyleValues[aStyle+aDrawType][2]
+
+    def doStyle(self, draw, aStyle, aGeomType):
+        draw.setColor(self.getStyleColor(aStyle, aGeomType))
+        draw.setMaterial(self.getStyleMaterial(aStyle, aGeomType))
+        draw.setTransparency(self.getStyleTransparency(aStyle, aGeomType))
+
+    def drawPoint(self, aPnt, style):
+
+        draw = self.drawPrimitive()
+
+        pointR = self.getStyleBaseRadius(style) * self.thePointRFactor / self.theScale
+        draw.setAsSphere(pointR)
+        draw.translate(aPnt.X(), aPnt.Y(), aPnt.Z())
+
+        self.doStyle(draw, style, 'PointScale')
 
         return draw
 
-    def drawVector(self, aPnt1, aPnt2, aBaseLineR):
-        rArrow = aBaseLineR * self.theArrowRFactor / self.theScale
-        hArrow = aBaseLineR * self.theArrowHFactor / self.theScale
+    def drawLine(self, pnt1, pnt2, style):
+
+        draw = self.drawPrimitive()
+
+        scale = self.theScale
+        lineR = self.getStyleBaseRadius(style) / scale
+        vec = gp_Vec(pnt1, pnt2)
+        draw.setAsCylinder(lineR, vec.Magnitude())
+        draw.setDirection(pnt1, pnt2)
+
+        self.doStyle(draw, style, 'LineGeom')
+        return draw
+
+
+    def drawCircle(self, aPnt1, aPnt2, aPnt3, aStyle):
+
+        draw = self.drawPrimitive()
+
+        draw.setAsCircle(aPnt1, aPnt2, aPnt3, self.getStyleBaseRadius(aStyle) / self.theScale)
+
+        self.doLineStyle(draw, aStyle, 'LineGeom')
+        return draw
+
+    def drawVector(self, aPnt1, aPnt2, style):
+
+        draw = self.drawGroup()
+
+        rArrow = self.getStyleBaseRadius(style) * self.theArrowRFactor
+        hArrow = self.getStyleBaseRadius(style) * self.theArrowHFactor
         v = gp_Vec(aPnt1, aPnt2)
         vLen = v.Magnitude()
         v *= (vLen - hArrow) / vLen
         pntM = aPnt1.Translated(v)
 
-        ret = self.std.drawGroup()
+        line = self.drawLine(aPnt1, pntM, style)
+        draw.add(line)
 
-        line = self.drawInfoLine(aPnt1, pntM)
-        ret.add(line)
+        arrow = self.drawPrimitive()
+        arrow.setAsCone(rArrow, 0, hArrow)
+        arrow.setDirection(pntM, aPnt2)
+        self.doStyle(arrow, style, 'LineGeom')
+        draw.add(arrow)
 
-        arrow = self.std.drawCone(rArrow, 0, hArrow)
-        arrow.fromPointToPoint(pntM, aPnt2)
-        ret.add(arrow)
-
-        return ret
+        return draw
 
     # **************************************
 
-    def drawInfoLabel(self, aPnt, aText):
-        delta = self.theInfoLabelDelta / self.theScale
+    def drawLabel(self, aPnt, aText, style):
 
-        ret = self.std.drawLabel(aText, self.theInfoLabelSizePx)
-        ret.translate(aPnt.X() + delta, aPnt.Y() + delta, aPnt.Z() + delta)
-        ret.setMaterial(self.theInfoMaterial)
+        draw = self.drawPrimitive()
 
-        return ret
+        delta = self.getStyleTextDelta()
 
-    def drawInfoPoint(self, aPnt):
-        ret = self.drawPoint(aPnt, self.theInfoLineWidth / 2)
-        ret.setMaterial(self.theInfoMaterial)
+        draw.setAsLabel(aText, self.getStyleTextHeightPx[style])
+        draw.setTranslate(aPnt.X() + delta, aPnt.Y() + delta, aPnt.Z() + delta)
 
-        return ret
-
-    def drawInfoCircle(self, aPnt1, aPnt2, aPnt3):
-        draw = self.std.drawTor(aPnt1, aPnt2, aPnt3, self.theMainLineWidth)
-
+        self.doStyle(draw, 'TextGeom')
         return draw
 
-    def drawMainPoint(self, aPnt):
-        ret = self.drawPoint(aPnt, self.theMainLineWidth / 2)
-        ret.setMaterial(self.theMainPointMaterial)
 
-        return ret
+    def drawWire(self, aWire, style):
 
-    def drawInfoLine(self, aPnt1, aPnt2):
-        ret = self.drawLine(aPnt1, aPnt2, self.theInfoLineWidth / 2)
-        ret.setMaterial(self.theInfoMaterial)
-
-        return ret
-
-    def drawMainWire(self, aWire):
-        draw = self.std.drawWire(aWire, self.theMainLineWidth / 2)
-        draw.setMaterial(self.theMainWireMaterial)
+        draw = self.drawPrimitive()
+        draw.setAsWire(aWire, self.getStyleBaseRadius())
+        self.doStyle(draw, style)
 
         return draw
-
-    def drawInfoWire(self, aWire):
-        draw = self.std.drawWire(aWire, self.theInfoLineWidth / 2)
-        draw.setMaterial(self.theInfoMaterial)
-
-        return draw
-
-    def drawInfoVector(self, aPnt1, aPnt2):
-        ret = self.drawVector(aPnt1, aPnt2, self.theInfoLineWidth / 2)
-        ret.setMaterial(self.theInfoMaterial)
-
-        return ret
 
         # **************************************
 
     def drawPin(self, x, y):
-        pin = self.std.drawCylinder(self.thePinR / self.theScale, self.thePinH / self.theScale)
-        pin.translate(x, y, 0)
-        pin.setMaterial(self.thePinMaterial)
 
-        return pin
+        draw = self.drawPrimitive()
+        draw.setAsCylinder(self.thePinR / self.theScale, self.thePinH / self.theScale)
+        draw.setTranslate(x, y, 0)
+
+        draw.setColor(self.thePinColor)
+        draw.setMaterial(CHROME)
+
+        return draw
 
     def drawDesk(self):
-        ret = self.std.drawGroup()
 
+        draw = self.std.drawGroup()
+
+        paper = self.drawPrimitive()
         paperSizeX, paperSizeY, paperSizeZ = self.thePaperSizes
         psx, psy, psz = paperSizeX / self.theScale, paperSizeY / self.theScale, paperSizeZ / self.theScale
-        paper = self.std.drawBox(psx, psy, psz)
+        paper.setAsBox(psx, psy, psz)
         paper.translate(-psx / 2, -psy / 2, -psz)
-        paper.setMaterial(self.thePaperMaterial)
-        ret.add(paper)
+        paper.setMaterial(self.theMate)
+        paper.setColor(self.thePaperColor)
+        draw.add(paper)
 
+        board = self.drawPrimitive()
         bsx = (paperSizeX + self.theBoardBorderSize * 2) / self.theScale
         bsy = (paperSizeY + self.theBoardBorderSize * 2) / self.theScale
         bsz = self.theBoardH / self.theScale
-        board = self.std.drawBox(bsx, bsy, bsz)
+        board.setAsBox(bsx, bsy, bsz)
         board.translate(-bsx / 2, -bsy / 2, -psz - bsz)
-        board.setMaterial(self.theBoardMaterial)
-        ret.add(board)
+        board.setMaterial(self.theMate)
+        draw.add(board)
 
-        ret.add(self.drawInfoLabel(gp_Pnt(-bsx / 2, -bsy / 2, -psz), self.theScaleText))
+        draw.add(self.drawLabel(gp_Pnt(-bsx / 2, -bsy / 2, -psz), self.theScaleText, 'InfoStyle'))
 
         dx = (paperSizeX / 2 - self.thePinOffset) / self.theScale
         dy = (paperSizeY / 2 - self.thePinOffset) / self.theScale
-        ret.add(self.drawPin(-dx, -dy))
-        ret.add(self.drawPin(dx, -dy))
-        ret.add(self.drawPin(dx, dy))
-        ret.add(self.drawPin(-dx, dy))
+        draw.add(self.drawPin(-dx, -dy))
+        draw.add(self.drawPin(dx, -dy))
+        draw.add(self.drawPin(dx, dy))
+        draw.add(self.drawPin(-dx, dy))
 
-        return ret
+        return draw
 
     def drawBounds(self, pnt1, pnt2):
+
+        draw = self.drawGroup()
+
         x1, y1, z1 = pnt1.X(), pnt1.Y(), pnt1.Z()
         x2, y2, z2 = pnt2.X(), pnt2.Y(), pnt2.Z()
 
-        ret = self.std.drawGroup()
+        draw.add(self.drawLine(gp_Pnt(x1, y1, z1), gp_Pnt(x1, y2, z1), 'InfoStyle'))
+        draw.add(self.drawLine(gp_Pnt(x1, y2, z1), gp_Pnt(x2, y2, z1), 'InfoStyle'))
+        draw.add(self.drawLine(gp_Pnt(x2, y2, z1), gp_Pnt(x2, y1, z1), 'InfoStyle'))
+        draw.add(self.drawLine(gp_Pnt(x2, y1, z1), gp_Pnt(x1, y1, z1), 'InfoStyle'))
 
-        ret.add(self.drawInfoLine(gp_Pnt(x1, y1, z1), gp_Pnt(x1, y2, z1)))
-        ret.add(self.drawInfoLine(gp_Pnt(x1, y2, z1), gp_Pnt(x2, y2, z1)))
-        ret.add(self.drawInfoLine(gp_Pnt(x2, y2, z1), gp_Pnt(x2, y1, z1)))
-        ret.add(self.drawInfoLine(gp_Pnt(x2, y1, z1), gp_Pnt(x1, y1, z1)))
+        draw.add(self.drawLine(gp_Pnt(x1, y1, z1), gp_Pnt(x1, y1, z2), 'InfoStyle'))
+        draw.add(self.drawLine(gp_Pnt(x1, y2, z1), gp_Pnt(x1, y2, z2), 'InfoStyle'))
+        draw.add(self.drawLine(gp_Pnt(x2, y1, z1), gp_Pnt(x2, y1, z2), 'InfoStyle'))
+        draw.add(self.drawLine(gp_Pnt(x2, y2, z1), gp_Pnt(x2, y2, z2), 'InfoStyle'))
 
-        ret.add(self.drawInfoLine(gp_Pnt(x1, y1, z1), gp_Pnt(x1, y1, z2)))
-        ret.add(self.drawInfoLine(gp_Pnt(x1, y2, z1), gp_Pnt(x1, y2, z2)))
-        ret.add(self.drawInfoLine(gp_Pnt(x2, y1, z1), gp_Pnt(x2, y1, z2)))
-        ret.add(self.drawInfoLine(gp_Pnt(x2, y2, z1), gp_Pnt(x2, y2, z2)))
+        draw.add(self.drawLine(gp_Pnt(x1, y1, z2), gp_Pnt(x1, y2, z2), 'InfoStyle'))
+        draw.add(self.drawLine(gp_Pnt(x1, y2, z2), gp_Pnt(x2, y2, z2), 'InfoStyle'))
+        draw.add(self.drawLine(gp_Pnt(x2, y2, z2), gp_Pnt(x2, y1, z2), 'InfoStyle'))
+        draw.add(self.drawLine(gp_Pnt(x2, y1, z2), gp_Pnt(x1, y1, z2), 'InfoStyle'))
 
-        ret.add(self.drawInfoLine(gp_Pnt(x1, y1, z2), gp_Pnt(x1, y2, z2)))
-        ret.add(self.drawInfoLine(gp_Pnt(x1, y2, z2), gp_Pnt(x2, y2, z2)))
-        ret.add(self.drawInfoLine(gp_Pnt(x2, y2, z2), gp_Pnt(x2, y1, z2)))
-        ret.add(self.drawInfoLine(gp_Pnt(x2, y1, z2), gp_Pnt(x1, y1, z2)))
-
-        return ret
+        return draw
 
     def drawAxis(self, size, step):
         ret = self.std.drawGroup()
 
-        ret.add(self.drawInfoVector(gp_Pnt(0, 0, 0), gp_Pnt(size, 0, 0)))
-        ret.add(self.drawInfoVector(gp_Pnt(0, 0, 0), gp_Pnt(0, size, 0)))
-        ret.add(self.drawInfoVector(gp_Pnt(0, 0, 0), gp_Pnt(0, 0, size)))
-        ret.add(self.drawInfoLabel(gp_Pnt(size, 0, 0), 'X'))
-        ret.add(self.drawInfoLabel(gp_Pnt(0, size, 0), 'Y'))
-        ret.add(self.drawInfoLabel(gp_Pnt(0, 0, size), 'Z'))
+        ret.add(self.drawVector(gp_Pnt(0, 0, 0), gp_Pnt(size, 0, 0), 'InfoStyle'))
+        ret.add(self.drawVector(gp_Pnt(0, 0, 0), gp_Pnt(0, size, 0), 'InfoStyle'))
+        ret.add(self.drawVector(gp_Pnt(0, 0, 0), gp_Pnt(0, 0, size), 'InfoStyle'))
+        ret.add(self.drawLabel(gp_Pnt(size, 0, 0), 'X', 'InfoStyle'))
+        ret.add(self.drawLabel(gp_Pnt(0, size, 0), 'Y', 'InfoStyle'))
+        ret.add(self.drawLabel(gp_Pnt(0, 0, size), 'Z', 'InfoStyle'))
 
-        ret.add(self.drawInfoPoint(gp_Pnt(0, 0, 0)))
+        ret.add(self.drawPoint(gp_Pnt(0, 0, 0)), 'InfoStyle')
         cnt = size // step
         for i in range(1, cnt - 1):
             d = i * step
-            ret.add(self.drawInfoPoint(gp_Pnt(d, 0, 0)))
-            ret.add(self.drawInfoPoint(gp_Pnt(0, d, 0)))
-            ret.add(self.drawInfoPoint(gp_Pnt(0, 0, d)))
+            ret.add(self.drawInfoPoint(gp_Pnt(d, 0, 0)),'InfoStyle')
+            ret.add(self.drawInfoPoint(gp_Pnt(0, d, 0)),'InfoStyle')
+            ret.add(self.drawInfoPoint(gp_Pnt(0, 0, d)),'InfoStyle')
 
         return ret
 
