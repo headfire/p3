@@ -93,9 +93,9 @@ class DeskDrawLib(DrawLib):
 
         pointR = self.getBaseRadius(aLibStyleName) * self.thePointRFactor
         draw.setAsSphere(pointR)
-        draw.translate(aPnt.X(), aPnt.Y(), aPnt.Z())
+        draw.setTranslate(aPnt.X(), aPnt.Y(), aPnt.Z())
 
-        self.applyLibStyle(draw, aLibStyleName, 'PointScale')
+        self.applyLibStyle(draw, aLibStyleName, 'PointGeom')
 
         return draw
 
@@ -143,7 +143,7 @@ class DeskDrawLib(DrawLib):
         delta = self.getLabelDelta(aLibStyleName)
         draw.setAsLabel(aText, self.getLabelHeightPx(aLibStyleName))
         draw.setTranslate(aPnt.X() + delta, aPnt.Y() + delta, aPnt.Z() + delta)
-        self.applyLibStyle(draw, aLibStyleName, 'TextGeom')
+        self.applyLibStyle(draw, aLibStyleName, 'LabelGeom')
         return draw
 
     def drawWire(self, aWire, aLibStyleName):
@@ -241,7 +241,7 @@ class DeskDrawLib(DrawLib):
         draw = self.drawGroup()
 
         desk = self.drawDesk()
-        desk.translate(0, 0, -60)
+        desk.setTranslate(0, 0, -60)
         draw.add(desk)
 
         bounds = self.drawBounds(gp_Pnt(-50, -50, -50), gp_Pnt(50, 50, 20))

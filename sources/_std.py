@@ -188,14 +188,14 @@ class ScreenRenderLib(SmartObject):
 
     def _renderDrawItem(self, aDrawItem):
 
-        renderMethod = self.__getattribute__('_renderAs' + aDrawItem.getGeomType())
-        renderMethod(aDrawItem)
-
         self.aGeom = aDrawItem.getGeomImmutable()
         self.aMaterial = aDrawItem.getMaterial()
         self.aColor = aDrawItem.getColor()
         self.aTransparency = aDrawItem.getTransparency()
         self.aTransform = aDrawItem.getTransform()
+
+        renderMethod = self.__getattribute__('_renderAs' + aDrawItem.getGeomType())
+        renderMethod()
 
         for key in aDrawItem.children:
             self._renderDrawItem(aDrawItem.children[key])
@@ -259,6 +259,7 @@ class DrawItem(SmartObject):
             self.children[key].dump(prefix + '[' + key + ']')
 
     def _applyGeomTransform(self, aAppliedTransform):
+        print('Hello _applyGeomTransform')
         self.aGeomTransform *= aAppliedTransform
 
     def add(self, aDrawItem, aItemName=None):
@@ -406,7 +407,7 @@ class DrawItem(SmartObject):
         if self.aTransparency is not None:
             return self.aTransparency
         if self.parent is not None:
-            return self.parent.getTransparentcy()
+            return self.parent.getTransparency()
         return DEFAULT_TRANSPARENCY
 
     def getMaterial(self):
