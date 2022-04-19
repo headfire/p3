@@ -71,13 +71,14 @@ class DeskDrawLib(DrawLib):
         self.theArrowHFactor = 15
 
     def getStyleBaseRadius(self, aStyle):
-        return self.theStyleSizeValues[aStyle][0]
+        return self.theStyleSizeValues[aStyle][0] /  self.theScale
+
 
     def getStyleTextHeightPx(self, aStyle):
-        return self.theStyleSizeValues[aStyle][1]
+        return self.theStyleSizeValues[aStyle][1]  # not scaled
 
     def getStyleTextDelta(self, aStyle):
-        return self.theStyleSizeValues[aStyle][2]
+        return self.theStyleSizeValues[aStyle][2] /  self.theScale
 
     def getStyleColor(self,  aStyle, aDrawType):
         return self.theStyleValues[aStyle+aDrawType][0]
@@ -123,9 +124,9 @@ class DeskDrawLib(DrawLib):
 
         draw = self.drawPrimitive()
 
-        draw.setAsCircle(aPnt1, aPnt2, aPnt3, self.getStyleBaseRadius(aStyle) / self.theScale)
+        draw.setAsCircle(aPnt1, aPnt2, aPnt3, self.getStyleBaseRadius(aStyle)
 
-        self.doLineStyle(draw, aStyle, 'LineGeom')
+        self.doStyle(draw, aStyle, 'LineGeom')
         return draw
 
     def drawVector(self, aPnt1, aPnt2, style):
