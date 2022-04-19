@@ -1,4 +1,4 @@
-from _std import EnvParamLib, DrawLib, StdDrawLib, ScreenRenderLib
+from _std import EnvParamLib, DrawLib, ScreenRenderLib
 from _desk import DeskDrawLib
 
 from OCC.Core.gp import gp_Pnt, gp_Dir, gp_Ax1
@@ -182,6 +182,7 @@ def slide_07_DaoWithCase (sc, r, offset, caseH, caseZMove,gap):
 
 '''
 
+
 # *********************************************************************************
 # *********************************************************************************
 # *********************************************************************************
@@ -204,55 +205,20 @@ class DaoDrawLib(DrawLib):
         self.theBasisH = 30
         self.theBasisGap = 1
 
-        self.std = StdDrawLib()
-
         self.desk = DeskDrawLib()
         self.desk.theScale = 5 / 1
         self.desk.theScaleText = 'A0 M5:1'
 
-    def geomBasePoints(self):
-        r = self.theBaseRadius
-        r2 = r / 2
-
-        gpPntMinC = gp_Pnt(0, r2, 0)
-
-        origin = gp_Pnt(0, 0, 0)
-
-        geom = {
-            'p0': origin,
-            'p1': getPntRotate(gpPntMinC, origin, -pi / 4),
-            'p2': gp_Pnt(-r2, r2, 0),
-            'p3': getPntRotate(gpPntMinC, origin, -pi / 4 * 3),
-            'p4': gp_Pnt(0, r, 0),
-            'p5': gp_Pnt(r, 0, 0),
-            'p6': gp_Pnt(0, -r, 0),
-            'p7': gp_Pnt(r2, -r2, 0)
-        }
-
-        return geom
+    def addPoint(self, aGroup, aName, aPnt):
+        aGroup.add(self.desk.drawPoint(aPnt, 'MainStyle'), aName)
+        aGroup.add(self.desk.drawLabel(aPnt, aName, 'MainStyle'), aName + 'Label')
 
     def drawBoundCircle(self, aOffset):
         r = self.theBaseRadius + aOffset
-        draw = self.desk.drawInfoCircle(gp_Pnt(r, 0, 0), gp_Pnt(0, r, 0), gp_Pnt(-r, 0, 0))
+        draw = self.desk.drawCircle(gp_Pnt(r, 0, 0), gp_Pnt(0, r, 0), gp_Pnt(-r, 0, 0), 'InfoStyle')
 
         return draw
 
-    def getDaoClassicWire(self):
-        p = self.geom('geomDaoBasePoints')
-
-        arc0 = GC_MakeArcOfCircle(p[0], p[1], p[2]).Value()
-        arc1 = GC_MakeArcOfCircle(p[2], p[3], p[4]).Value()
-        arc2 = GC_MakeArcOfCircle(p[4], p[5], p[6]).Value()
-        arc3 = GC_MakeArcOfCircle(p[6], p[7], p[0]).Value()
-
-        edge0 = BRepBuilderAPI_MakeEdge(arc0).Edge()
-        edge1 = BRepBuilderAPI_MakeEdge(arc1).Edge()
-        edge2 = BRepBuilderAPI_MakeEdge(arc2).Edge()
-        edge3 = BRepBuilderAPI_MakeEdge(arc3).Edge()
-
-        ret = BRepBuilderAPI_MakeWire(edge0, edge1, edge2, edge3).Wire()
-
-        return ret
 
     '''
     def getDaoOffsetWire(offset):
@@ -402,21 +368,58 @@ class DaoDrawLib(DrawLib):
     # **********************************************************************************
     # **********************************************************************************
     '''
+    def drawClassicWire(self):
 
-    def drawPntArr(self, aPntArr):
-        draw = self.std.drawGroup()
-        for key in aPntArr:
-            draw.add(self.desk.drawMainPoint(aPntArr[key]))
-            draw.add(self.desk.drawInfoLabel(aPntArr[key], key))
+        base = self.drawBasePoints()
+        p = {}
+        for i in range(8):
+            geom = base.getChild('p'+str(i)).getGeomImmutable()
+            pnt, radius = geom
+            p[i] = pnt
+
+        #p = self.drawCached('drawDaoBasePoints')
+
+        arc0 = GC_MakeArcOfCircle(p[0], p[1], p[2]).Value()
+        arc1 = GC_MakeArcOfCircle(p[2], p[3], p[4]).Value()
+        arc2 = GC_MakeArcOfCircle(p[4], p[5], p[6]).Value()
+        arc3 = GC_MakeArcOfCircle(p[6], p[7], p[0]).Value()
+
+        edge0 = BRepBuilderAPI_MakeEdge(arc0).Edge()
+        edge1 = BRepBuilderAPI_MakeEdge(arc1).Edge()
+        edge2 = BRepBuilderAPI_MakeEdge(arc2).Edge()
+        edge3 = BRepBuilderAPI_MakeEdge(arc3).Edge()
+
+        wire  = BRepBuilderAPI_MakeWire(edge0, edge1, edge2, edge3).Wire()
+
+        return self.desk.drawWire(wire,'MainStyle')
+
+
+    def drawBasePoints(self):
+        r = self.theBaseRadius
+        r2 = r / 2
+        origin = gp_Pnt(0, 0, 0)
+        gpPntMinC = gp_Pnt(0, r2, 0)
+
+        draw = self.drawGroup()
+
+        self.addPoint(draw, 'p0', origin)
+        self.addPoint(draw, 'p1', getPntRotate(gpPntMinC, origin, -pi / 4))
+        self.addPoint(draw, 'p2', gp_Pnt(-r2, r2, 0))
+        self.addPoint(draw, 'p3', getPntRotate(gpPntMinC, origin, -pi / 4 * 3))
+        self.addPoint(draw, 'p4', gp_Pnt(0, r, 0))
+        self.addPoint(draw, 'p5', gp_Pnt(r, 0, 0))
+        self.addPoint(draw, 'p6', gp_Pnt(0, -r, 0))
+        self.addPoint(draw, 'p7', gp_Pnt(r2, -r2, 0))
 
         return draw
 
     def drawDaoClassicSlide(self):
+        draw = self.drawGroup()
 
-        draw = self.std.drawGroup()
+        # basePointsGeom = self.geom('geomBasePoints')
 
-        basePointsGeom = self.geom('geomBasePoints')
-        draw.add(self.drawPntArr(basePointsGeom))
+        draw.add(self.drawBasePoints())
+        draw.add(self.drawClassicWire())
 
         # classicWire = self.getCached('geomClassicWire')
         # draw.add(self.desk.drawMainWire(classicWire))
@@ -595,7 +598,7 @@ class DaoDrawLib(DrawLib):
             slide.add(self.desk.getAxis())
         '''
         paintDesk = self.desk.drawDesk()
-        paintDesk.translate(0, 0, -60)
+        paintDesk.setTranslate(0, 0, -60)
         draw.add(paintDesk)
 
         return draw
@@ -609,7 +612,7 @@ if __name__ == '__main__':
     scene = lib.drawScene()
 
     screen = ScreenRenderLib()
-    screen.renderScene(scene)
+    screen.render(scene)
 
     '''
     sc.render()
