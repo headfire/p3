@@ -1,7 +1,7 @@
 from OCC.Display.SimpleGui import init_display
 
 from OCC.Core.GC import GC_MakeCircle
-from OCC.Core.gp import gp_XYZ, gp_Pnt, gp_Dir, gp_Vec, gp_Ax1, gp_Trsf, gp_GTrsf
+from OCC.Core.gp import gp_Pnt, gp_Dir, gp_Vec, gp_Ax1, gp_Trsf
 from OCC.Core.AIS import AIS_Shape
 from OCC.Core.Quantity import Quantity_Color, Quantity_TypeOfColor
 from OCC.Core.Graphic3d import Graphic3d_NameOfMaterial, Graphic3d_MaterialAspect
@@ -240,7 +240,8 @@ class DrawItem(SmartObject):
         ret.aLayer = self.aLayer
         ret.aGeomType = self.aGeomType
         ret.aGeomImmutable = self.aGeomImmutable
-        ret.aGeomTransform = gp_GTrsf(ret.aGeomTransform)
+        ret.aGeomTransform = gp_Trsf()
+        ret.aGeomTransform *= ret.aGeomTransform
         for key in self.children:
             ret.children[key] = self.children[key].copy()
 
@@ -332,19 +333,19 @@ class DrawItem(SmartObject):
         return self
 
     def setTranslate(self, dx, dy, dz):
-        tObj = gp_GTrsf()
-        tObj.SetTranslationPart(gp_XYZ(dx, dy, dz))
+        tObj = gp_Trsf()
+        tObj.SetTranslation(gp_Vec(dx, dy, dz))
         self._applyGeomTransform(tObj)
         return self
 
-    def setScale(self, kx, ky, kz):
-        self.checkObj(kx, int)
-        self.checkObj(ky, int)
-        self.checkObj(kz, int)
-        tObj = gp_GTrsf()
+        # def setScale(self, kx, ky, kz):
+        # self.checkObj(kx, int)
+        # self.checkObj(ky, int)
+        # self.checkObj(kz, int)
+        # tObj = gp_Trsf()
         # todo SetAffinity tObj.SetScale(kx, ky, kz)
-        self._applyGeomTransform(tObj)
-        return self
+        # self._applyGeomTransform(tObj)
+        # return self
 
     def setRotate(self, pntAxFrom, pntAxTo, angle):
 
