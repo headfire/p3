@@ -1,13 +1,12 @@
 from OCC.Display.SimpleGui import init_display
 
 from OCC.Core.GC import GC_MakeCircle
-from OCC.Core.gp import gp_Pnt, gp_Dir, gp_Vec, gp_Ax1, gp_Trsf, gp_GTrsf
+from OCC.Core.gp import gp_XYZ, gp_Pnt, gp_Dir, gp_Vec, gp_Ax1, gp_Trsf, gp_GTrsf
 from OCC.Core.AIS import AIS_Shape
 from OCC.Core.Quantity import Quantity_Color, Quantity_TypeOfColor
 from OCC.Core.Graphic3d import Graphic3d_NameOfMaterial, Graphic3d_MaterialAspect
 from OCC.Core.BRepBuilderAPI import BRepBuilderAPI_MakeEdge, BRepBuilderAPI_MakeWire, BRepBuilderAPI_Transform
 from OCC.Core.BRepOffsetAPI import BRepOffsetAPI_MakePipe
-from OCC.Core.TopoDS import TopoDS_Shape
 
 from OCC.Core.BRepPrimAPI import BRepPrimAPI_MakeSphere, BRepPrimAPI_MakeBox, \
     BRepPrimAPI_MakeCylinder, BRepPrimAPI_MakeCone
@@ -45,8 +44,12 @@ MATERIAL_CONSTS = {
     'DEFAULT': Graphic3d_NameOfMaterial.Graphic3d_NOM_DEFAULT
 }
 
+DEFAULT_COLOR = (100, 100, 100)
+DEFAULT_TRANSPARENCY = 0.0
+DEFAULT_MATERIAL = 'CHROME'
 
-class StdObject:
+
+class SmartObject:
 
     def __init__(self):
         self.theIsDebug = False
@@ -58,28 +61,13 @@ class StdObject:
     def makeMethodNonStatic(self):
         self.debug('Make this method non static')
 
-    def mt(self, colorRGB256=(50, 50, 50), materialType='CHROME', alpha256=255):
-        self.makeMethodNonStatic()
-        r256, g256, b256 = colorRGB256
-        return {'rgb': (r256 / 255, g256 / 255, b256 / 255), 'materialType': materialType, 'alpha': alpha256 / 255}
-
     def checkObj(self, aObj, aClass):
         self.makeMethodNonStatic()
         if not isinstance(aObj, aClass):
             raise Exception('EXPECTED ' + aClass.__name__ + '  - REAL ' + aObj.__class__.__name__)
 
-    def checkGeom(self, aGeom):
-        self.makeMethodNonStatic()
-        if not isinstance(aGeom, dict):
-            raise Exception('geom MUST BE dict() - REAL ' + aGeom.__class__.__name__)
-        for key in aGeom:
-            if not isinstance(key, str):
-                raise Exception('geom KEY MUST BE str - REAL ' + key.__class__.__name__)
-            if not isinstance(aGeom[key], (int, float, str, gp_Pnt, TopoDS_Shape)):
-                raise Exception('geom[' + key + '] INCORRECT geom item type - REAL ' + aGeom.__class__.__name__)
 
-
-class EnvParamLib(StdObject):
+class EnvParamLib(SmartObject):
 
     def __init__(self):
 
@@ -97,7 +85,7 @@ class EnvParamLib(StdObject):
             return defaultValue
 
 
-class ScreenRenderLib(StdObject):
+class ScreenRenderLib(SmartObject):
 
     def __init__(self):
 
@@ -105,12 +93,13 @@ class ScreenRenderLib(StdObject):
 
         self.display = None
 
-        self.curGeom = None
-        self.curTrans = None
-        self.curMaterial = None
-        self.curLayer = None
+        self.aGeom = None
+        self.aMaterial = None
+        self.aColor = None
+        self.aTransparency = None
+        self.aTransform = None
 
-    def getVectorTangentToCurveAtPoint(self, edge, uRatio):
+    def _getVectorTangentToCurveAtPoint(self, edge, uRatio):
         self.makeMethodNonStatic()
         aCurve, aFP, aLP = BRep_Tool.Curve(edge)
         aP = aFP + (aLP - aFP) * uRatio
@@ -119,96 +108,103 @@ class ScreenRenderLib(StdObject):
         aCurve.D1(aP, p1, v1)
         return v1
 
-    def getWireStartPointAndTangentDir(self, wire):
+    def _getWireStartPointAndTangentDir(self, wire):
         ex = BRepTools_WireExplorer(wire)
         edge = ex.Current()
         vertex = ex.CurrentVertex()
-        v = self.getVectorTangentToCurveAtPoint(edge, 0)
+        v = self._getVectorTangentToCurveAtPoint(edge, 0)
         return BRep_Tool.Pnt(vertex), gp_Dir(v)
 
-    def renderTextObj(self, aText, aHeightPx):
-        pnt = gp_Pnt(0, 0, 0)
-        if self.curTrans is not None:
-            pnt = gp_Pnt(0, 0, 0).Transformed(self.curTrans)
-        self.display.DisplayMessage(pnt, aText, aHeightPx, self.curMaterial['rgb'], False)
+    def _renderTextObj(self, aText, aHeightPx):
+        pnt = gp_Pnt(0, 0, 0).Transformed(self.aTransform)
+        r, g, b = self.aColor
+        self.display.DisplayMessage(pnt, aText, aHeightPx, (r/255, g/255, b/255), False)
 
-    def renderShapeObj(self, shape):
-        if self.curTrans is not None:
-            shape = BRepBuilderAPI_Transform(shape, self.curTrans).Shape()
+    def _renderShapeObj(self, shape):
+        shape = BRepBuilderAPI_Transform(shape, self.aTransform).Shape()
         ais = AIS_Shape(shape)
-        r, g, b = self.curMaterial['rgb']
-        aisColor = Quantity_Color(r, g, b,
+        r, g, b = self.aColor
+        aisColor = Quantity_Color(r/255, g/255, b/255,
                                   Quantity_TypeOfColor(Quantity_TypeOfColor.Quantity_TOC_RGB))
         ais.SetColor(aisColor)
-        ais.SetTransparency(1 - self.curMaterial['alpha'])
-        aspect = Graphic3d_MaterialAspect(MATERIAL_CONSTS[self.curMaterial['materialType']])
+        ais.SetTransparency(self.aTransparency)
+        aspect = Graphic3d_MaterialAspect(MATERIAL_CONSTS[self.aMaterial])
         ais.SetMaterial(aspect)
         self.display.Context.Display(ais, False)
 
-    def renderWireObj(self, aWire, aWireRadius):
+    def _renderWireObj(self, aWire, aWireRadius):
 
-        startPoint, tangentDir = self.getWireStartPointAndTangentDir(aWire)
+        startPoint, tangentDir = self._getWireStartPointAndTangentDir(aWire)
         profileCircle = GC_MakeCircle(startPoint, tangentDir, aWireRadius).Value()
         profileEdge = BRepBuilderAPI_MakeEdge(profileCircle).Edge()
         profileWire = BRepBuilderAPI_MakeWire(profileEdge).Wire()
 
         shape = BRepOffsetAPI_MakePipe(aWire, profileWire).Shape
 
-        self.renderShapeObj(shape)
+        self._renderShapeObj(shape)
 
-    def renderNone(self):
+    def _renderAsEmpty(self):
         pass
 
-    def renderLabel(self):
-        self.renderTextObj(self.curGeom['aText'], self.curGeom['aHeightPx'])
+    def _renderAsLabel(self):
+        aText, aHeightPx = self.aGeom
+        self._renderTextObj(aText, aHeightPx)
 
-    def renderBox(self):
-        shape = BRepPrimAPI_MakeBox(self.curGeom['aSizeX'], self.curGeom['aSizeY'], self.curGeom['aSizeZ']).Shape()
-        self.renderShapeObj(shape)
+    def _renderAsBox(self):
+        aSizeX, aSizeY, aSizeZ = self.aGeom
+        shape = BRepPrimAPI_MakeBox(aSizeX, aSizeY, aSizeZ).Shape()
+        self._renderShapeObj(shape)
 
-    def renderSphere(self):
-        shape = BRepPrimAPI_MakeSphere(self.curGeom['aRadius']).Shape()
-        self.renderShapeObj(shape)
+    def _renderAsSphere(self):
+        aRadius = self.aGeom
+        shape = BRepPrimAPI_MakeSphere(aRadius).Shape()
+        self._renderShapeObj(shape)
 
-    def renderCone(self):
-        shape = BRepPrimAPI_MakeCone(self.curGeom['aRadius1'], self.curGeom['aRadius2'],
-                                     self.curGeom['aHeight']).Shape()
-        self.renderShapeObj(shape)
+    def _renderAsCone(self):
+        aRadius1, aRadius2, aHeight = self.aGeom
+        shape = BRepPrimAPI_MakeCone(aRadius1, aRadius2, aHeight).Shape()
+        self._renderShapeObj(shape)
 
-    def renderCylinder(self):
-        shape = BRepPrimAPI_MakeCylinder(self.curGeom['aRadius'], self.curGeom['aHeight']).Shape()
-        self.renderShapeObj(shape)
+    def _renderAsCylinder(self):
+        aRadius, aHeight = self.aGeom
+        shape = BRepPrimAPI_MakeCylinder(aRadius, aHeight).Shape()
+        self._renderShapeObj(shape)
 
-    def renderTor(self):
-        geomCircle = GC_MakeCircle(self.curGeom['aPnt1'], self.curGeom['aPnt12'], self.curGeom['aPnt1']).Value()
+    def _renderAsTorus(self):
+        # todo change geom on r1, r2 and transform
+        aPnt1, aPnt2, aPnt3, aRadius2 = self.aGeom
+        geomCircle = GC_MakeCircle(aPnt1, aPnt2, aPnt3).Value()
         wire = BRepBuilderAPI_MakeEdge(geomCircle).Edge()
-        self.renderWireObj(wire, self.curGeom['aTorRadius'])
+        self._renderWireObj(wire, aRadius2)
 
-    def renderWire(self):
-        self.renderWireObj(self.curGeom['aWire'], self.curGeom['aWireRadius'])
+    def _renderAsWire(self):
+        aWire, aWireRadius = self.aGeom
+        self._renderWireObj(aWire, aWireRadius)
 
-    def renderSurface(self):
-        self.renderShapeObj(self.curGeom['aSurface'])
+    def _renderAsSurface(self):
+        aSurface = self.aGeom
+        self._renderShapeObj(aSurface)
 
-    def renderDrawItem(self, aDrawItem):
+    def _renderDrawItem(self, aDrawItem):
 
-        self.curMaterial = aDrawItem.getFinalMaterial()
-        self.curLayer = aDrawItem.getFinalLayer()
-        self.curTrans = aDrawItem.getFinalTrans()
-        self.curGeom = aDrawItem.getFinalGeom()
+        renderMethod = self.__getattribute__('_renderAs' + aDrawItem.getGeomType())
+        renderMethod(aDrawItem)
 
-        renderMethod = self.__getattribute__('render' + self.curGeom['renderAs'])
-        renderMethod()
+        self.aGeom = aDrawItem.getGeomImmutable()
+        self.aMaterial = aDrawItem.getMaterial()
+        self.aColor = aDrawItem.getColor()
+        self.aTransparency = aDrawItem.getTransparency()
+        self.aTransform = aDrawItem.getTransform()
 
         for key in aDrawItem.children:
-            self.renderDrawItem(aDrawItem.children[key])
+            self._renderDrawItem(aDrawItem.children[key])
 
     def renderScene(self, aSceneDrawItem):
         self.display, start_display, add_menu, add_function_to_menu = init_display(
             None, (700, 500), True, [128, 128, 128], [128, 128, 128]
         )
 
-        self.renderDrawItem(aSceneDrawItem)
+        self._renderDrawItem(aSceneDrawItem)
 
         self.display.FitAll()
         start_display()
@@ -216,36 +212,55 @@ class ScreenRenderLib(StdObject):
 
 # ************************************************************
 
+class DrawItem(SmartObject):
 
-class StdDrawItem(StdObject):
-
-    def __init__(self, aGeom):
+    def __init__(self):
 
         super().__init__()
+
         self.parent = None
-
-        self.geom = aGeom
-
-        self.layer = None
-        self.material = None
-        self.trans = None
-
         self.children = {}
         self.childrenCount = 0
 
-    def addTrans(self, aNewTrans):
-        if self.trans is None:
-            self.trans = aNewTrans
-        else:
-            self.trans *= aNewTrans
+        self.aGeomType = 'Empty'
+        self.aGeomImmutable = None
+        self.aGeomTransform = gp_Trsf()
 
-    def dump(self, prefix=''):
-        print(prefix + self.__class__.__name__, self.material, self.getFinalMaterial())
+        self.aMaterial = None
+        self.aTransparency = None
+        self.aColor = None
+        self.aLayer = None
+
+    def copy(self):
+        ret = DrawItem()
+        ret.aColor = self.aColor
+        ret.aMaterial = self.aMaterial
+        ret.aTransparency = self.aTransparency
+        ret.aLayer = self.aLayer
+        ret.aGeomType = self.aGeomType
+        ret.aGeomImmutable = self.aGeomImmutable
+        ret.aGeomTransform = gp_GTrsf(ret.aGeomTransform)
+        for key in self.children:
+            ret.children[key] = self.children[key].copy()
+
+    def getHierarchyAttr(self, aAttrName, aDefaultValue):
+        value = self.__getattribute__(aAttrName)
+        if value is not None:
+            return value
+        if self.parent is not None:
+            return self.parent.getHierarchyAttr(self, aAttrName, aDefaultValue)
+        return aDefaultValue
+
+    def _dump(self, prefix=''):
+        print(prefix + self.__class__.__name__, self.aGeomType)
         for key in self.children:
             self.children[key].dump(prefix + '[' + key + ']')
 
+    def _applyGeomTransform(self, aAppliedTransform):
+        self.aGeomTransform *= aAppliedTransform
+
     def add(self, aDrawItem, aItemName=None):
-        self.checkObj(aDrawItem, StdDrawItem)
+        self.checkObj(aDrawItem, DrawItem)
         aDrawItem.parent = self
         if aItemName is None:
             aItemName = 'Child' + str(self.childrenCount)
@@ -253,38 +268,91 @@ class StdDrawItem(StdObject):
         self.childrenCount += 1
         return aDrawItem
 
-    def setMaterial(self, material):
-        self.material = material
+    def setAsEmpty(self):
+        self.aGeomType = 'Empty'
+        self.aGeomImmutable = None
         return self
 
-    def setLayer(self, layer):
-        self.layer = layer
+    def setAsLabel(self, aText, aHeightPx):
+        self.aGeomType = 'Label'
+        self.aGeomImmutable = aText, aHeightPx
         return self
 
-    def translate(self, dx, dy, dz):
-        tObj = gp_Trsf()
-        tObj.SetTranslation(gp_Vec(dx, dy, dz))
-        self.addTrans(tObj)
+    def setAsBox(self, aSizeX, aSizeY, aSizeZ):
+        self.aGeomType = 'Box'
+        self.aGeomImmutable = aSizeX, aSizeY, aSizeZ
+
         return self
 
-    def scale(self, kx, ky, kz):
+    def setAsSphere(self, aRadius):
+        self.aGeomType = 'Sphere'
+        self.aGeomImmutable = aRadius
+        return self
+
+    def setAsCylinder(self, aRadius, aHeight):
+        self.aGeomType = 'Cylinder'
+        self.aGeomImmutable = aRadius, aHeight
+        return self
+
+    def setAsCone(self, aRadius1, aRadius2, aHeight):
+        self.aGeomType = 'Cone'
+        self.aGeomImmutable = aRadius1, aRadius2, aHeight
+        return self
+
+    # todo def setAsTorus(self, aRadius1, aRadius2):
+    def setAsTorus(self, aPnt1, aPnt2, aPnt3, aWidth):
+        self.aGeomType = 'Torus'
+        self.aGeomImmutable = aPnt1, aPnt2, aPnt3, aWidth
+        return self
+
+    def setAsWire(self, aWire, aLineRadius):
+        self.aGeomType = 'Wire'
+        self.aGeomImmutable = aWire, aLineRadius
+        return self
+
+    def setAsSurface(self, aSurface):
+        self.aGeomType = 'Surface'
+        self.aGeomImmutable = aSurface
+        return self
+
+    def setColor(self, aColor_RGB_256):
+        self.aColor = aColor_RGB_256
+
+    def setTransparency(self, aFloat_0_1):
+        self.aTransparency = aFloat_0_1
+
+    def setMaterial(self, aMaterialName):
+        self.aMaterial = aMaterialName
+        return self
+
+    def setLayer(self, aLayerName):
+        self.aLayer = aLayerName
+        return self
+
+    def setTranslate(self, dx, dy, dz):
+        tObj = gp_GTrsf()
+        tObj.SetTranslationPart(gp_XYZ(dx, dy, dz))
+        self._applyGeomTransform(tObj)
+        return self
+
+    def setScale(self, kx, ky, kz):
         self.checkObj(kx, int)
         self.checkObj(ky, int)
         self.checkObj(kz, int)
         tObj = gp_GTrsf()
         # todo SetAffinity tObj.SetScale(kx, ky, kz)
-        self.addTrans(tObj)
+        self._applyGeomTransform(tObj)
         return self
 
-    def rotate(self, pntAxFrom, pntAxTo, angle):
+    def setRotate(self, pntAxFrom, pntAxTo, angle):
 
         tObj = gp_Trsf()
         ax1 = gp_Ax1(pntAxFrom, gp_Dir(gp_Vec(pntAxFrom, pntAxTo)))
         tObj.SetRotation(ax1, angle)
-        self.addTrans(tObj)
+        self._applyGeomTransform(tObj)
         return self
 
-    def fromPointToPoint(self, pnt1, pnt2):
+    def setDirection(self, pnt1, pnt2):
 
         dirVec = gp_Vec(pnt1, pnt2)
         targetDir = gp_Dir(dirVec)
@@ -299,54 +367,64 @@ class StdDrawItem(StdObject):
         tObj = gp_Trsf()
         tObj.SetRotation(gp_Ax1(gp_Pnt(0, 0, 0), rotateDir), rotateAngle)
         tObj.SetTranslationPart(gp_Vec(gp_Pnt(0, 0, 0), pnt1))
-        self.addTrans(tObj)
+        self._applyGeomTransform(tObj)
+
         return self
 
-    def getFinalTrans(self):
-        if self.parent is not None:
-            parentTrans = self.parent.getFinalTrans()
-        else:
-            parentTrans = None
-        if parentTrans is not None:
-            if self.trans is not None:
-                return self.trans * parentTrans
-            else:
-                return parentTrans
-        else:
-            if self.trans is not None:
-                return self.trans
-            else:
-                return None
+    def getGeomType(self):
+        return self.aGeomType
 
-    def getFinalLayer(self):
-        if self.layer is not None:
-            return self.layer
+    def getGeomImmutable(self):
+        return self.aGeomImmutable
+
+    def getTransform(self):
         if self.parent is not None:
-            return self.parent.getFinalLayer()
+            ret = gp_Trsf()
+            ret *= self.parent.getTransform()
+            return ret
+        else:
+            return self.aGeomTransform
+
+    def getLayer(self):
+        if self.aLayer is not None:
+            return self.aLayer
+        if self.parent is not None:
+            return self.parent.getLayer()
         return None
 
-    def getFinalMaterial(self):
-        if self.material is not None:
-            return self.material
+    def getColor(self):
+        if self.aColor is not None:
+            return self.aColor
         if self.parent is not None:
-            return self.parent.getFinalMaterial()
-        return self.mt()
+            return self.parent.getColor()
+        return DEFAULT_COLOR
 
-    def getFinalGeom(self):
-        return self.geom
+    def getTransparency(self):
+        if self.aTransparency is not None:
+            return self.aTransparency
+        if self.parent is not None:
+            return self.parent.getTransparentcy()
+        return DEFAULT_TRANSPARENCY
+
+    def getMaterial(self):
+        if self.aMaterial is not None:
+            return self.aMaterial
+        if self.parent is not None:
+            return self.parent.getMaterial()
+        return DEFAULT_MATERIAL
 
 
-class DrawLib(StdObject):
+class DrawLib(SmartObject):
 
     def __init__(self):
         super().__init__()
         self.cache = {}
+        self.aDrawItemClass = DrawItem
 
-    def createDrawItem(self, aGeom):
-        self.makeMethodNonStatic()
-        return StdDrawItem(aGeom)
+    def getDrawItem(self):
+        return self.aDrawItemClass()
 
-    def geom(self, methodName, param1=None, param2=None):
+    def getCached(self, methodName, param1=None, param2=None):
 
         params = ''
         if param1 is not None:
@@ -359,50 +437,15 @@ class DrawLib(StdObject):
         method = self.__getattribute__(methodName)
         if cacheKey in self.cache:
             print('==> Get from cache', cacheKey)
-            geom = self.cache[cacheKey]
-            return geom
+            retObj = self.cache[cacheKey]
+            return retObj.copy()
         else:
             if param1 is None:
-                geom = method()
+                retObj = method()
             elif param2 is None:
-                geom = method(param1)
+                retObj = method(param1)
             else:
-                geom = method(param1, param2)
-            self.checkGeom(geom)
+                retObj = method(param1, param2)
             print('==> Compute', cacheKey)
-            self.cache[cacheKey] = geom
-        return geom
-
-
-class StdDrawLib(DrawLib):
-
-    def drawGroup(self):
-        return self.createDrawItem({'renderAs': 'None'})
-
-    def drawHook(self):
-        return self.createDrawItem({'renderAs': 'None'})
-
-    def drawLabel(self, aText, aHeightPx):
-        return self.createDrawItem({'aText': aText, 'aHeightPx': aHeightPx, 'renderAs': 'Label'})
-
-    def drawBox(self, aSizeX, aSizeY, aSizeZ):
-        return self.createDrawItem({'aSizeX': aSizeX, 'aSizeY': aSizeY, 'aSizeZ': aSizeZ, 'renderAs': 'Box'})
-
-    def drawSphere(self, aRadius):
-        return self.createDrawItem({'aRadius': aRadius, 'renderAs': 'Sphere'})
-
-    def drawCylinder(self, aRadius, aHeight):
-        return self.createDrawItem({'aRadius': aRadius, 'aHeight': aHeight, 'renderAs': 'Cylinder'})
-
-    def drawCone(self, aRadius1, aRadius2, aHeight):
-        return self.createDrawItem({'aRadius1': aRadius1, 'aRadius2': aRadius2, 'aHeight': aHeight, 'renderAs': 'Cone'})
-
-    def drawTor(self, aPnt1, aPnt2, aPnt3, aTorRadius):
-        return self.createDrawItem({'aPnt1': aPnt1, 'aPnt2': aPnt2, 'aPnt3': aPnt3,
-                                    'aTorRadius': aTorRadius, 'renderAs': 'Tor'})
-
-    def drawWire(self, aWire, aWireRadius):
-        return self.createDrawItem({'aWire': aWire, 'aWireRadius': aWireRadius, 'renderAs': 'Tube'})
-
-    def drawSurface(self, aSurface):
-        return self.createDrawItem({'aSurface': aSurface, 'renderAs': 'Surface'})
+            self.cache[cacheKey] = retObj
+            return retObj
