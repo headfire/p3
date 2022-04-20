@@ -58,7 +58,7 @@ class DeskDrawLib(DrawLib):
 
         self.theBoardH = 20
         self.theBoardBorderSize = 60
-        self.theBoardStyle = self.getStdStyle(WOOD_COLOR, MATE, 0)
+        self.theBoardWoodStyle = self.getStdStyle(WOOD_COLOR, MATE, 0)
 
         self.thePaperSizes = AO_SIZE_XYZ
         self.thePaperStyle = self.getStdStyle(PAPER_COLOR, MATE, 0)
@@ -67,6 +67,10 @@ class DeskDrawLib(DrawLib):
         self.thePinR = 10
         self.thePinH = 2
         self.thePinStyle = self.getStdStyle(STEEL_COLOR, CHROME, 0)
+
+    def setScale(self, scaleK, scaleText):
+        self.theScale = scaleK
+        self.theScaleText = scaleText
 
     def getBaseRadius(self, aDeskStyleName):
         return self.theStyleSizeValues[aDeskStyleName][0] / self.theScale
@@ -87,7 +91,7 @@ class DeskDrawLib(DrawLib):
 
         group = self.getStdGroup()
 
-        group.itemName('labelText')
+        group.nameHint('labelText')
         item = self.getStdLabel(aText, self.getLabelHeightPx(aDeskStyleName))
         move = self.getStdMove()
         move.setTranslate(aPnt.X() + delta, aPnt.Y() + delta, aPnt.Z() + delta)
@@ -105,7 +109,7 @@ class DeskDrawLib(DrawLib):
         move = self.getStdMove()
         move.setTranslate(aPnt.X(), aPnt.Y(), aPnt.Z())
         style = self.getDeskStyle(aDeskStyleName, 'PointGeom')
-        group.itemName('pointSphere')
+        group.nameHint('pointSphere')
         group.addItem(item, move, style)
 
         return group
@@ -117,11 +121,11 @@ class DeskDrawLib(DrawLib):
         lineR = self.getBaseRadius(aDeskStyleName)
         vec = gp_Vec(pnt1, pnt2)
 
+        group.nameHint('lineCylinder')
         item = self.getStdCylinder(lineR, vec.Magnitude())
         move = self.getStdMove()
         move.setDirection(pnt1, pnt2)
         style = self.getDeskStyle(aDeskStyleName, 'LineGeom')
-        group.itemName('lineCylinder')
         group.addItem(item, move, style)
 
         return group
@@ -130,7 +134,7 @@ class DeskDrawLib(DrawLib):
 
         group = self.getStdGroup()
 
-        group.itemName('circleObj')
+        group.nameHint('circleObj')
         item = self.getStdCircle(aPnt1, aPnt2, aPnt3, self.getBaseRadius(aDeskStyleName))
         move = self.getStdMove()
         style = self.getDeskStyle(aDeskStyleName, 'LineGeom')
@@ -138,7 +142,7 @@ class DeskDrawLib(DrawLib):
 
         return group
 
-    def drawVector(self, aPnt1, aPnt2, aDeskStyleName):
+    def getDeskVector(self, aPnt1, aPnt2, aDeskStyleName):
 
         rArrow = self.getBaseRadius(aDeskStyleName) * self.theArrowRFactor
         hArrow = self.getBaseRadius(aDeskStyleName) * self.theArrowHFactor
@@ -149,11 +153,11 @@ class DeskDrawLib(DrawLib):
 
         group = self.getStdGroup()
 
-        group.itemName('vectorLine')
+        group.nameHint('vectorLine')
         item = self.getDeskLine(aPnt1, pntM, aDeskStyleName)
         group.addItem(item)
 
-        group.itemName('vectorArrow')
+        group.nameHint('vectorArrow')
         item = self.getStdCone(rArrow, 0, hArrow)
         move = self.getStdMove()
         move.setDirection(pntM, aPnt2)
@@ -162,138 +166,153 @@ class DeskDrawLib(DrawLib):
 
         return group
 
-    # **************************************
-
     def getDeskWire(self, aWire, aDeskStyleName):
 
         group = self.getStdGroup()
 
-        group.itemName('vectorLine')
-        item = self.getStdWire(aWire, self.getBaseRadius(aLibStyleName))
+        group.nameHint('aWire')
+        item = self.getStdWire(aWire, self.getBaseRadius(aDeskStyleName))
         style = self.getDeskStyle(aDeskStyleName, 'LineGeom')
         group.addItem(item, None, style)
 
         return group
 
+    # **************************************
 
-        draw = self.drawPrimitive()
-        draw.setAsWire()
-        self.applyLibStyle(draw, aDeskStyleName, 'LineGeom')
-        return draw
+    def getDeskPin(self, x, y):
 
-        # **************************************
+        group = self.getStdGroup()
 
-    def drawPin(self, x, y):
-        draw = self.drawPrimitive()
-        draw.setAsCylinder(self.thePinR / self.theScale, self.thePinH / self.theScale)
-        draw.setTranslate(x, y, 0)
-        self.applyStyle(draw, self.thePinStyle)
-        return draw
+        group.nameHint('pinCylinder')
+        item = self.getStdCylinder(self.thePinR / self.theScale, self.thePinH / self.theScale)
+        move = self.getStdMove()
+        move.setTranslate(x, y, 0)
+        group.addItem(item, move, self.thePinStyle)
 
-    def drawDesk(self):
-        draw = self.drawGroup()
+        return group
 
-        paper = self.drawPrimitive()
+    def getDeskDrawBoard(self):
+
+        group = self.getStdGroup()
+
         paperSizeX, paperSizeY, paperSizeZ = self.thePaperSizes
         psx, psy, psz = paperSizeX / self.theScale, paperSizeY / self.theScale, paperSizeZ / self.theScale
-        paper.setAsBox(psx, psy, psz)
-        paper.setTranslate(-psx / 2, -psy / 2, -psz)
-        self.applyStyle(paper, self.thePaperStyle)
-        draw.add(paper)
 
-        board = self.drawPrimitive()
+        group.nameHint('boardPaper')
+        item = self.getStdBox(psx, psy, psz)
+        move = self.getStdMove()
+        move.setTranslate(-psx / 2, -psy / 2, -psz)
+        group.addItem(item, move, self.thePaperStyle)
+
         bsx = (paperSizeX + self.theBoardBorderSize * 2) / self.theScale
         bsy = (paperSizeY + self.theBoardBorderSize * 2) / self.theScale
         bsz = self.theBoardH / self.theScale
-        board.setAsBox(bsx, bsy, bsz)
-        board.setTranslate(-bsx / 2, -bsy / 2, -psz - bsz)
-        self.applyStyle(board, self.theBoardStyle)
-        draw.add(board)
 
-        draw.add(self.drawLabel(gp_Pnt(-bsx / 2, -bsy / 2, -psz), self.theScaleText, 'InfoStyle'))
+        group.nameHint('boardWood')
+        item = self.getStdBox(bsx, bsy, bsz)
+        move = self.getStdMove()
+        move.setTranslate(-bsx / 2, -bsy / 2, -psz - bsz)
+        group.addItem(item, move, self.theBoardWoodStyle)
+
+        group.nameHint('scaleLabel')
+        item = self.getDeskLabel(gp_Pnt(-bsx / 2, -bsy / 2, -psz), self.theScaleText, 'InfoStyle')
+        group.addItem(item)
 
         dx = (paperSizeX / 2 - self.thePinOffset) / self.theScale
         dy = (paperSizeY / 2 - self.thePinOffset) / self.theScale
-        draw.add(self.drawPin(-dx, -dy))
-        draw.add(self.drawPin(dx, -dy))
-        draw.add(self.drawPin(dx, dy))
-        draw.add(self.drawPin(-dx, dy))
 
-        return draw
+        group.nameHint('pinN')
+        group.addItem(self.getDeskPin(-dx, -dy))
+        group.addItem(self.getDeskPin(dx, -dy))
+        group.addItem(self.getDeskPin(dx, dy))
+        group.addItem(self.getDeskPin(-dx, dy))
 
-    def drawBounds(self, pnt1, pnt2):
-        draw = self.drawGroup()
+        return group
+
+    def getDeskBounds(self, pnt1, pnt2):
+
+        group = self.getStdGroup()
 
         x1, y1, z1 = pnt1.X(), pnt1.Y(), pnt1.Z()
         x2, y2, z2 = pnt2.X(), pnt2.Y(), pnt2.Z()
 
-        draw.add(self.drawLine(gp_Pnt(x1, y1, z1), gp_Pnt(x1, y2, z1), 'InfoStyle'))
-        draw.add(self.drawLine(gp_Pnt(x1, y2, z1), gp_Pnt(x2, y2, z1), 'InfoStyle'))
-        draw.add(self.drawLine(gp_Pnt(x2, y2, z1), gp_Pnt(x2, y1, z1), 'InfoStyle'))
-        draw.add(self.drawLine(gp_Pnt(x2, y1, z1), gp_Pnt(x1, y1, z1), 'InfoStyle'))
+        group.nameHint('boundsLineN')
 
-        draw.add(self.drawLine(gp_Pnt(x1, y1, z1), gp_Pnt(x1, y1, z2), 'InfoStyle'))
-        draw.add(self.drawLine(gp_Pnt(x1, y2, z1), gp_Pnt(x1, y2, z2), 'InfoStyle'))
-        draw.add(self.drawLine(gp_Pnt(x2, y1, z1), gp_Pnt(x2, y1, z2), 'InfoStyle'))
-        draw.add(self.drawLine(gp_Pnt(x2, y2, z1), gp_Pnt(x2, y2, z2), 'InfoStyle'))
+        group.addItem(self.getDeskLine(gp_Pnt(x1, y1, z1), gp_Pnt(x1, y2, z1), 'InfoStyle'))
+        group.addItem(self.getDeskLine(gp_Pnt(x1, y2, z1), gp_Pnt(x2, y2, z1), 'InfoStyle'))
+        group.addItem(self.getDeskLine(gp_Pnt(x2, y2, z1), gp_Pnt(x2, y1, z1), 'InfoStyle'))
+        group.addItem(self.getDeskLine(gp_Pnt(x2, y1, z1), gp_Pnt(x1, y1, z1), 'InfoStyle'))
 
-        draw.add(self.drawLine(gp_Pnt(x1, y1, z2), gp_Pnt(x1, y2, z2), 'InfoStyle'))
-        draw.add(self.drawLine(gp_Pnt(x1, y2, z2), gp_Pnt(x2, y2, z2), 'InfoStyle'))
-        draw.add(self.drawLine(gp_Pnt(x2, y2, z2), gp_Pnt(x2, y1, z2), 'InfoStyle'))
-        draw.add(self.drawLine(gp_Pnt(x2, y1, z2), gp_Pnt(x1, y1, z2), 'InfoStyle'))
+        group.addItem(self.getDeskLine(gp_Pnt(x1, y1, z1), gp_Pnt(x1, y1, z2), 'InfoStyle'))
+        group.addItem(self.getDeskLine(gp_Pnt(x1, y2, z1), gp_Pnt(x1, y2, z2), 'InfoStyle'))
+        group.addItem(self.getDeskLine(gp_Pnt(x2, y1, z1), gp_Pnt(x2, y1, z2), 'InfoStyle'))
+        group.addItem(self.getDeskLine(gp_Pnt(x2, y2, z1), gp_Pnt(x2, y2, z2), 'InfoStyle'))
 
-        return draw
+        group.addItem(self.getDeskLine(gp_Pnt(x1, y1, z2), gp_Pnt(x1, y2, z2), 'InfoStyle'))
+        group.addItem(self.getDeskLine(gp_Pnt(x1, y2, z2), gp_Pnt(x2, y2, z2), 'InfoStyle'))
+        group.addItem(self.getDeskLine(gp_Pnt(x2, y2, z2), gp_Pnt(x2, y1, z2), 'InfoStyle'))
+        group.addItem(self.getDeskLine(gp_Pnt(x2, y1, z2), gp_Pnt(x1, y1, z2), 'InfoStyle'))
+
+        return group
 
     def drawAxis(self, size, step):
-        draw = self.drawGroup()
 
-        draw.add(self.drawVector(gp_Pnt(0, 0, 0), gp_Pnt(size, 0, 0), 'InfoStyle'))
-        draw.add(self.drawVector(gp_Pnt(0, 0, 0), gp_Pnt(0, size, 0), 'InfoStyle'))
-        draw.add(self.drawVector(gp_Pnt(0, 0, 0), gp_Pnt(0, 0, size), 'InfoStyle'))
-        draw.add(self.drawLabel(gp_Pnt(size, 0, 0), 'X', 'InfoStyle'))
-        draw.add(self.drawLabel(gp_Pnt(0, size, 0), 'Y', 'InfoStyle'))
-        draw.add(self.drawLabel(gp_Pnt(0, 0, size), 'Z', 'InfoStyle'))
+        group = self.getStdGroup()
 
-        draw.add(self.drawPoint(gp_Pnt(0, 0, 0), 'InfoStyle'))
+        group.nameHint('axisVectorN')
+        group.addItem(self.getDeskVector(gp_Pnt(0, 0, 0), gp_Pnt(size, 0, 0), 'InfoStyle'))
+        group.addItem(self.getDeskVector(gp_Pnt(0, 0, 0), gp_Pnt(0, size, 0), 'InfoStyle'))
+        group.addItem(self.getDeskVector(gp_Pnt(0, 0, 0), gp_Pnt(0, 0, size), 'InfoStyle'))
+
+        group.nameHint('axisLabelN')
+        group.addItem(self.getDeskLabel(gp_Pnt(size, 0, 0), 'X', 'InfoStyle'))
+        group.addItem(self.getDeskLabel(gp_Pnt(0, size, 0), 'Y', 'InfoStyle'))
+        group.addItem(self.getDeskLabel(gp_Pnt(0, 0, size), 'Z', 'InfoStyle'))
+
+        group.nameHint('axisPointN')
+        group.addItem(self.getDeskPoint(gp_Pnt(0, 0, 0), 'InfoStyle'))
         cnt = size // step
         for i in range(1, cnt - 1):
             d = i * step
-            draw.add(self.drawPoint(gp_Pnt(d, 0, 0), 'InfoStyle'))
-            draw.add(self.drawPoint(gp_Pnt(0, d, 0), 'InfoStyle'))
-            draw.add(self.drawPoint(gp_Pnt(0, 0, d), 'InfoStyle'))
+            group.addItem(self.getDeskPoint(gp_Pnt(d, 0, 0), 'InfoStyle'))
+            group.addItem(self.getDeskPoint(gp_Pnt(0, d, 0), 'InfoStyle'))
+            group.addItem(self.getDeskPoint(gp_Pnt(0, 0, d), 'InfoStyle'))
 
-        return draw
+        return group
 
     # **************************************
 
-    def drawDemoScene(self):
-        draw = self.drawGroup()
+    def getDeskDemo(self):
 
-        desk = self.drawDesk()
-        desk.setTranslate(0, 0, -60)
-        draw.add(desk)
+        group = self.getStdGroup()
 
-        bounds = self.drawBounds(gp_Pnt(-50, -50, -50), gp_Pnt(50, 50, 20))
-        draw.add(bounds)
+        group.nameHint('desk')
+        move = self.getStdMove()
+        move.setTranslate(0, 0, -60)
+        group.addItem(self.getDeskDrawBoard(), move)
 
+        group.nameHint('bounds')
+        group.addItem(self.getDeskBounds(gp_Pnt(-50, -50, -50), gp_Pnt(50, 50, 20)))
+
+        group.nameHint('axis')
         axis = self.drawAxis(50, 10)
-        draw.add(axis)
+        group.addItem(axis)
 
-        cone = self.drawPrimitive()
-        cone.setAsCone(30, 0, 100)
-        cone.setTranslate(0, 0, -50)
-        self.applyStyle(cone, [(50, 200, 50), 'CHROME', 0.7])
-        draw.add(cone)
+        group.nameHint('demoThree')
+        item = self.getStdCone(30, 0, 100)
+        move = self.getStdMove()
+        move.setTranslate(0, 0, -50)
+        style = self.getStdStyle((50, 200, 50), 'CHROME', 0.7)
+        group.addItem(item, move, style)
 
-        return draw
+        return group
 
 
 if __name__ == '__main__':
     deskLib = DeskDrawLib()
-    deskLib.theScaleText = 'A0 M5:1'
-    deskLib.theScale = 5 / 1
-    demoScene = deskLib.drawDemoScene()
-    # demoScene.dump()
+    deskLib.setScale(5 / 1, 'A0 M5:1')
+    deskDemo = deskLib.getDeskDemo()
+    # deskDemo.dump()
 
     screen = ScreenRenderLib()
-    screen.render(demoScene)
+    screen.render(deskDemo)

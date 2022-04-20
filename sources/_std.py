@@ -135,7 +135,7 @@ class DrawMove:
                 prn += '  ' + str(trsf.Value(iRow, iCol))
             print(prn)
 
-    def setTranslate(self, dx, dy, dz):
+    def setMove(self, dx, dy, dz):
         trsf = gp_Trsf()
         trsf.SetTranslation(gp_Vec(dx, dy, dz))
         self.aTrsf *= trsf
@@ -150,7 +150,7 @@ class DrawMove:
         self.aTrsf *= trsf
         return self
 
-    def setDirection(self, pnt1, pnt2):
+    def setDirect(self, pnt1, pnt2):
 
         dirVec = gp_Vec(pnt1, pnt2)
         targetDir = gp_Dir(dirVec)
@@ -249,7 +249,7 @@ class RenderLib:
         self.libShow()
 
 
-class ScreenRenderLib:
+class ScreenRenderLib(RenderLib):
 
     def __init__(self):
         super().__init__()
@@ -367,7 +367,7 @@ class GroupDrawItem(DrawItem):
 
         return ret
 
-    def nextName(self, aNextItemName):
+    def nameItem(self, aNextItemName):
         self.aNextItemName = aNextItemName
 
     def addItem(self, aItem, aMove=DrawMove(), aStyle=DrawStyle()):
@@ -526,12 +526,12 @@ class DrawLib:
         return DrawMove()
 
     @staticmethod
-    def getStdGroup():
-        return GroupDrawItem()
-
-    @staticmethod
     def getStdEmpty():
         return DrawItem()
+
+    @staticmethod
+    def getStdGroup():
+        return GroupDrawItem()
 
     @staticmethod
     def getStdCargo(aCargo):
