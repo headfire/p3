@@ -80,6 +80,22 @@ class DeskDrawLib(DrawLib):
     def getDeskStyle(self, aDeskStyleName, aDeskGeomType):
         return self.theStyleValues[aDeskStyleName + aDeskGeomType]
 
+    # ***********************************************************************
+
+    def getDeskLabel(self, aPnt, aText, aDeskStyleName):
+        delta = self.getLabelDelta(aDeskStyleName)
+
+        group = self.getStdGroup()
+
+        group.itemName('labelText')
+        item = self.getStdLabel(aText, self.getLabelHeightPx(aDeskStyleName))
+        move = self.getStdMove()
+        move.setTranslate(aPnt.X() + delta, aPnt.Y() + delta, aPnt.Z() + delta)
+        style = self.getDeskStyle(aDeskStyleName, 'LabelGeom')
+        group.addItem(item, move, style)
+
+        return group
+
     def getDeskPoint(self, aPnt, aDeskStyleName):
 
         group = self.getStdGroup()
@@ -89,7 +105,8 @@ class DeskDrawLib(DrawLib):
         move = self.getStdMove()
         move.setTranslate(aPnt.X(), aPnt.Y(), aPnt.Z())
         style = self.getDeskStyle(aDeskStyleName, 'PointGeom')
-        group.addItem(item, move, style, 'pointSphere')
+        group.itemName('pointSphere')
+        group.addItem(item, move, style)
 
         return group
 
@@ -97,14 +114,15 @@ class DeskDrawLib(DrawLib):
 
         group = self.getStdGroup()
 
-        lineR = self.getBaseRadius(aLibStyleName)
+        lineR = self.getBaseRadius(aDeskStyleName)
         vec = gp_Vec(pnt1, pnt2)
 
         item = self.getStdCylinder(lineR, vec.Magnitude())
         move = self.getStdMove()
         move.setDirection(pnt1, pnt2)
         style = self.getDeskStyle(aDeskStyleName, 'LineGeom')
-        group.addItem(item, move, style,'lineCylinder')
+        group.itemName('lineCylinder')
+        group.addItem(item, move, style)
 
         return group
 
@@ -112,17 +130,18 @@ class DeskDrawLib(DrawLib):
 
         group = self.getStdGroup()
 
+        group.itemName('circleObj')
         item = self.getStdCircle(aPnt1, aPnt2, aPnt3, self.getBaseRadius(aDeskStyleName))
         move = self.getStdMove()
         style = self.getDeskStyle(aDeskStyleName, 'LineGeom')
-        group.addItem(item, move, style, 'lineCylinder')
+        group.addItem(item, move, style)
 
         return group
 
-    def drawVector(self, aPnt1, aPnt2, aLibStyleName):
+    def drawVector(self, aPnt1, aPnt2, aDeskStyleName):
 
-        rArrow = self.getBaseRadius(aLibStyleName) * self.theArrowRFactor
-        hArrow = self.getBaseRadius(aLibStyleName) * self.theArrowHFactor
+        rArrow = self.getBaseRadius(aDeskStyleName) * self.theArrowRFactor
+        hArrow = self.getBaseRadius(aDeskStyleName) * self.theArrowHFactor
         v = gp_Vec(aPnt1, aPnt2)
         vLen = v.Magnitude()
         v *= (vLen - hArrow) / vLen
@@ -130,9 +149,11 @@ class DeskDrawLib(DrawLib):
 
         group = self.getStdGroup()
 
-        item = self.drawLine(aPnt1, pntM, aLibStyleName)
+        group.itemName('vectorLine')
+        item = self.getDeskLine(aPnt1, pntM, aDeskStyleName)
         group.addItem(item)
 
+        group.itemName('vectorArrow')
         item = self.getStdCone(rArrow, 0, hArrow)
         move = self.getStdMove()
         move.setDirection(pntM, aPnt2)
@@ -141,28 +162,23 @@ class DeskDrawLib(DrawLib):
 
         return group
 
-
-        arrow.setAsCone(rArrow, 0, hArrow)
-        arrow.setDirection(pntM, aPnt2)
-        self.applyLibStyle(arrow, aLibStyleName, 'LineGeom')
-        draw.add(arrow)
-
-        return draw
-
     # **************************************
 
-    def drawLabel(self, aPnt, aText, aLibStyleName):
-        draw = self.drawPrimitive()
-        delta = self.getLabelDelta(aLibStyleName)
-        draw.setAsLabel(aText, self.getLabelHeightPx(aLibStyleName))
-        draw.setTranslate(aPnt.X() + delta, aPnt.Y() + delta, aPnt.Z() + delta)
-        self.applyLibStyle(draw, aLibStyleName, 'LabelGeom')
-        return draw
+    def getDeskWire(self, aWire, aDeskStyleName):
 
-    def drawWire(self, aWire, aLibStyleName):
+        group = self.getStdGroup()
+
+        group.itemName('vectorLine')
+        item = self.getStdWire(aWire, self.getBaseRadius(aLibStyleName))
+        style = self.getDeskStyle(aDeskStyleName, 'LineGeom')
+        group.addItem(item, None, style)
+
+        return group
+
+
         draw = self.drawPrimitive()
-        draw.setAsWire(aWire, self.getBaseRadius(aLibStyleName))
-        self.applyLibStyle(draw, aLibStyleName, 'LineGeom')
+        draw.setAsWire()
+        self.applyLibStyle(draw, aDeskStyleName, 'LineGeom')
         return draw
 
         # **************************************
