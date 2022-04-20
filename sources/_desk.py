@@ -40,34 +40,33 @@ class DeskDrawLib(DrawLib):
 
         self.theStyleValues = {
             # [color, material, transparency]
+            'MainStylePointGeom': self.getStdStyle(NICE_YELLOW_COLOR, CHROME, 0.0),
+            'MainStyleLineGeom': self.getStdStyle(NICE_BLUE_COLOR, CHROME, 0.0),
+            'MainStyleFaceGeom': self.getStdStyle(NICE_ORIGINAL_COLOR, CHROME, 0.0),
+            'MainStyleLabelGeom': self.getStdStyle(NICE_WHITE_COLOR, MATE, 0.0),
 
-            'MainStylePointGeom': [NICE_YELLOW_COLOR, CHROME, 0.0],
-            'MainStyleLineGeom': [NICE_BLUE_COLOR, CHROME, 0.0],
-            'MainStyleFaceGeom': [NICE_ORIGINAL_COLOR, CHROME, 0.0],
-            'MainStyleLabelGeom': [NICE_WHITE_COLOR, MATE, 0.0],
+            'InfoStylePointGeom': self.getStdStyle(NICE_GRAY_COLOR, MATE, 0.5),
+            'InfoStyleLineGeom': self.getStdStyle(NICE_GRAY_COLOR, MATE, 0.5),
+            'InfoStyleFaceGeom': self.getStdStyle(NICE_GRAY_COLOR, MATE, 0.5),
+            'InfoStyleLabelGeom': self.getStdStyle(NICE_GRAY_COLOR, MATE, 0.0),
 
-            'InfoStylePointGeom': [NICE_GRAY_COLOR, MATE, 0.5],
-            'InfoStyleLineGeom': [NICE_GRAY_COLOR, MATE, 0.5],
-            'InfoStyleFaceGeom': [NICE_GRAY_COLOR, MATE, 0.5],
-            'InfoStyleLabelGeom': [NICE_GRAY_COLOR, MATE, 0.0],
-
-            'FocusStylePointGeom': [NICE_RED_COLOR, MATE, 0],
-            'FocusStyleLineGeom': [NICE_RED_COLOR, MATE, 0],
-            'FocusStyleFaceGeom': [NICE_RED_COLOR, MATE, 0.5],
-            'FocusStyleLabelGeom': [NICE_RED_COLOR, MATE, 0.0],
+            'FocusStylePointGeom': self.getStdStyle(NICE_RED_COLOR, MATE, 0.0),
+            'FocusStyleLineGeom': self.getStdStyle(NICE_RED_COLOR, MATE, 0.0),
+            'FocusStyleFaceGeom': self.getStdStyle(NICE_RED_COLOR, MATE, 0.5),
+            'FocusStyleLabelGeom': self.getStdStyle(NICE_RED_COLOR, MATE, 0.0),
         }
 
         self.theBoardH = 20
         self.theBoardBorderSize = 60
-        self.theBoardStyle = [WOOD_COLOR, MATE, 0]
+        self.theBoardStyle = self.getStdStyle(WOOD_COLOR, MATE, 0)
 
         self.thePaperSizes = AO_SIZE_XYZ
-        self.thePaperStyle = [PAPER_COLOR, MATE, 0]
+        self.thePaperStyle = self.getStdStyle(PAPER_COLOR, MATE, 0)
 
         self.thePinOffset = 30
         self.thePinR = 10
         self.thePinH = 2
-        self.thePinStyle = [STEEL_COLOR, CHROME, 0]
+        self.thePinStyle = self.getStdStyle(STEEL_COLOR, CHROME, 0)
 
     def getBaseRadius(self, aLibStyleName):
         return self.theStyleSizeValues[aLibStyleName][0] / self.theScale
@@ -79,22 +78,28 @@ class DeskDrawLib(DrawLib):
         return self.theStyleSizeValues[aLibStyleName][2] / self.theScale
 
     def applyStyle(self, aDraw, aStyle):
-        self.makeMethodNonStatic()
         aDraw.setColor(aStyle[0])
         aDraw.setMaterial(aStyle[1])
         aDraw.setTransparency(aStyle[2])
 
-    def applyLibStyle(self, aDraw, aLibStyleName, aGeomType):
-        libStyle = self.theStyleValues[aLibStyleName + aGeomType]
+    def getDeskSt(self, aDeskStyleName, aGeomType):
+        val = self.theStyleValues[aLibStyleName + aGeomType]
+        deskStyle = self.getStdStyle()
+        deskStyle.setColor()
+
         self.applyStyle(aDraw, libStyle)
 
-    def drawPoint(self, aPnt, aLibStyleName):
-        draw = self.drawPrimitive()
+    def getDeskPoint(self, aPnt, aLibStyleName):
+
+        draw = self.getStdGroup()
 
         pointR = self.getBaseRadius(aLibStyleName) * self.thePointRFactor
-        draw.setAsSphere(pointR)
-        draw.setTranslate(aPnt.X(), aPnt.Y(), aPnt.Z())
+        point = self.getStdSphere(pointR)
+        pointSt = self.getDeskSt(pointR)
+        pointTr = self.getStdTr().setTranslate(aPnt.X(), aPnt.Y(), aPnt.Z())
+        draw.add(point, pointSt, pointSt)
 
+        draw.last.
         self.applyLibStyle(draw, aLibStyleName, 'PointGeom')
 
         return draw

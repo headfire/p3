@@ -44,40 +44,41 @@ MATERIAL_CONSTS = {
     'DEFAULT': Graphic3d_NameOfMaterial.Graphic3d_NOM_DEFAULT
 }
 
-DEFAULT_COLOR = 0.5, 0.5, 0.5
+DEFAULT_NORMED_COLOR = 0.5, 0.5, 0.5
 DEFAULT_MATERIAL = 'CHROME'
-DEFAULT_TRANSPARENCY = 0.0
-DEFAULT_LAYER = 'DefaultLayer'
+DEFAULT_NORMED_TRANSPARENCY = 0.0
+DEFAULT_LAYER_NAME = 'DefaultLayer'
 
-def _checkObj(self, aObj, aClass):
-    self.makeMethodNonStatic()
+
+def _checkObj(aObj, aClass):
     if not isinstance(aObj, aClass):
         raise Exception('EXPECTED ' + aClass.__name__ + '  - REAL ' + aObj.__class__.__name__)
 
 
-def _mergeValues(aDominantValue, aRecessiveValue):
-    if aDominantValue is not None:
-        return aDominantValue
-    return aRecessiveValue
+def _getValue(aValue, aDefaultValue):
+    if aValue is not None:
+        return aValue
+    return aDefaultValue
 
 
-def _mergeDrawingSettings(aParent, aChild):
-
-    ret = DrawSettings()
-
-    ret.aColor = _mergeValues(aChild.aColor, aParent.aColor)
-    ret.aMaterial = _mergeValues(aChild.aMaterial, aParent.aMaterial)
-    ret.aTransparency = _mergeValues(aChild.aTransparency, aParent.aTransparency)
-    ret.aLayer = _mergeValues(aChild.aLayer, aParent.aLayer)
+def _mergeMove(aItemMove, aSuperMove):
+    ret = DrawMove()
     ret.aTrsf = gp_Trsf()
-    ret.aTrsf *= aChild.aTrsf()
-    ret.aTrsf *= aParent.aTrsf()
+    ret.aTrsf *= aItemMove.aTrsf
+    ret.aTrsf *= aSuperMove.aTrsf
+    ret.aLayer = _getValue(aItemMove.aLayer, aSuperMove.aLayer)
+    return ret
 
+
+def _mergeStyle(aItemStyle, aSuperStyle):
+    ret = DrawStyle()
+    ret.aNormedColor = _getValue(aItemStyle.aNormedColor, aSuperStyle.aNormedColor)
+    ret.aNormedTransparency = _getValue(aItemStyle.aNormedTransparency, aSuperStyle.aNormedTransparency)
+    ret.aMaterial = _getValue(aItemStyle.aMaterial, aSuperStyle.aMaterial)
     return ret
 
 
 def _getVectorTangentToCurveAtPoint(edge, uRatio):
-
     aCurve, aFP, aLP = BRep_Tool.Curve(edge)
     aP = aFP + (aLP - aFP) * uRatio
     v1 = gp_Vec()
@@ -87,7 +88,6 @@ def _getVectorTangentToCurveAtPoint(edge, uRatio):
 
 
 def _getWireStartPointAndTangentDir(wire):
-
     ex = BRepTools_WireExplorer(wire)
     edge = ex.Current()
     vertex = ex.CurrentVertex()
@@ -95,13 +95,36 @@ def _getWireStartPointAndTangentDir(wire):
     return BRep_Tool.Pnt(vertex), gp_Dir(v)
 
 
-class DrawSettings:
+class DrawStyle:
+    def __init__(self):
+        self.aColor = None
+        self.aMaterial = None
+        self.aTransparency = None
+
+    def setColor(self, aColor_RGB_256):
+        r256, g256, b256 = aColor_RGB_256
+        self.aColor = (r256 / 255, g256 / 255, b256 / 255)
+
+    def setTransparency(self, aFloat_0_1):
+        self.aTransparency = aFloat_0_1
+
+    def setMaterial(self, aMaterialName):
+        self.aMaterial = aMaterialName
+
+    def getNormedColor(self):
+        return self.aColor
+
+    def getNormedTransparency(self):
+        return self.aTransparency
+
+    def getMaterial(self):
+        return self.aMaterial
+
+
+class DrawMove:
 
     def __init__(self):
         self.aTrsf = gp_Trsf()
-        self.aMaterial = DEFAULT_MATERIAL
-        self.aTransparency = DEFAULT_TRANSPARENCY
-        self.aColor = DEFAULT_COLOR
         self.aLayer = None
 
     def _dumpTrsf(self):
@@ -111,19 +134,6 @@ class DrawSettings:
             for iCol in range(1, 5):
                 prn += '  ' + str(trsf.Value(iRow, iCol))
             print(prn)
-
-    def setColor(self, aColor_RGB_256):
-        r256, g256, b256 = aColor_RGB_256
-        self.aColor = (r256/255, g256/255, b256/255)
-
-    def setTransparency(self, aFloat_0_1):
-        self.aTransparency = aFloat_0_1
-
-    def setMaterial(self, aMaterialName):
-        self.aMaterial = aMaterialName
-
-    def setLayer(self, aLayerName):
-        self.aLayer = aLayerName
 
     def setTranslate(self, dx, dy, dz):
         trsf = gp_Trsf()
@@ -162,31 +172,17 @@ class DrawSettings:
     def getTrsf(self):
         return self.aTrsf
 
-    def getLayer(self):
-        return self.aLayer
 
-    def getNormedColor(self):
-        return self.aColor
+class DrawSettings:
+    def __init__(self):
+        self.aStyle = DrawStyle()
+        self.aMove = DrawMove()
+        self.aLayer = 'DefaultLayer'
 
-    def getNormedTransparency(self):
-        return self.aTransparency
 
-    def getMaterial(self):
-        return self.aMaterial
-
-class SmartObject:
+class EnvParamLib:
 
     def __init__(self):
-        self.theIsDebug = False
-
-
-
-class EnvParamLib(SmartObject):
-
-    def __init__(self):
-
-        super().__init__()
-
         self.envParams = {}
         for param in sys.argv:
             key, sep, val = param.partition('=')
@@ -199,26 +195,81 @@ class EnvParamLib(SmartObject):
             return defaultValue
 
 
-class ScreenRenderLib(SmartObject):
+class RenderLib:
+
+    def __init__(self):
+        self.aNormedColor = None
+        self.aMaterial = None
+        self.aNormedTransparency = None
+        self.aTrsf = None
+        self.aLayer = None
+        pass
+
+    def setNormedColor(self, aNormedColor):
+        self.aNormedColor = aNormedColor
+
+    def setMaterial(self, aMaterial):
+        self.aMaterial = aMaterial
+
+    def setNormedTransparency(self, aNormedTransparency):
+        self.aNormedTransparency = aNormedTransparency
+
+    def setTrsf(self, aTrsf):
+        self.aTrsf = aTrsf
+
+    def setLayer(self, aLayer):
+        self.aLayer = aLayer
+
+    def getNormedColor(self):
+        return _getValue(self.aNormedColor, DEFAULT_NORMED_COLOR)
+
+    def getMaterial(self):
+        return _getValue(self.aMaterial, DEFAULT_MATERIAL)
+
+    def getNormedTransparency(self):
+        return _getValue(self.aNormedTransparency, DEFAULT_NORMED_TRANSPARENCY)
+
+    def getTrsf(self):
+        return _getValue(self.aTrsf, gp_Trsf())
+
+    def getLayer(self):
+        return _getValue(self.aLayer, DEFAULT_LAYER_NAME)
+
+    def libInit(self):
+        pass
+
+    def libShow(self):
+        pass
+
+    def render(self, aDrawItem, aDrawSettings=None):
+        self.libInit()
+        if aDrawSettings is not None:
+            aDrawSettings = DrawSettings()
+        aDrawItem.render(self, aDrawSettings)
+        self.libShow()
+
+
+class ScreenRenderLib:
 
     def __init__(self):
         super().__init__()
-
         self.display = None
+        self.start_display = None
 
-        self.aGeom = None
-        self.aMaterial = None
-        self.aColor = None
-        self.aTransparency = None
-        self.aTransform = None
+    def libInit(self):
+        self.display, self.start_display, add_menu, add_function_to_menu = init_display(
+            None, (700, 500), True, [128, 128, 128], [128, 128, 128]
+        )
+
+    def libShow(self):
+        self.display.FitAll()
+        self.start_display()
 
     def _renderTextObj(self, aText, aHeightPx, aDrawSettings):
-
-        pnt = gp_Pnt(0, 0, 0).Transformed(self.aTransform)
+        pnt = gp_Pnt(0, 0, 0).Transformed(aDrawSettings.getTrsf())
         self.display.DisplayMessage(pnt, aText, aHeightPx, aDrawSettings.getNormedColor(), False)
 
     def _renderShapeObj(self, aShape, aDrawSettings):
-
         shapeTr = BRepBuilderAPI_Transform(aShape, aDrawSettings.getTransform()).Shape()
         ais = AIS_Shape(shapeTr)
         r, g, b = aDrawSettings.getNormedColor()
@@ -226,12 +277,11 @@ class ScreenRenderLib(SmartObject):
                                   Quantity_TypeOfColor(Quantity_TypeOfColor.Quantity_TOC_RGB))
         ais.SetColor(aisColor)
         ais.SetTransparency(aDrawSettings.getNormedTransparency())
-        aspect = Graphic3d_MaterialAspect(MATERIAL_CONSTS[self.aMaterial])
+        aspect = Graphic3d_MaterialAspect(MATERIAL_CONSTS[aDrawSettings.getMaterial()])
         ais.SetMaterial(aspect)
         self.display.Context.Display(ais, False)
 
     def _renderWireObj(self, aWire, aWireRadius, aDrawSettings):
-
         startPoint, tangentDir = _getWireStartPointAndTangentDir(aWire)
         profileCircle = GC_MakeCircle(startPoint, tangentDir, aWireRadius).Value()
         profileEdge = BRepBuilderAPI_MakeEdge(profileCircle).Edge()
@@ -241,8 +291,7 @@ class ScreenRenderLib(SmartObject):
 
         self._renderShapeObj(shape, aDrawSettings)
 
-    def renderLabel(self, aDrawSettings):
-        aText, aHeightPx = self.aGeom
+    def renderLabel(self, aText, aHeightPx, aDrawSettings):
         self._renderTextObj(aText, aHeightPx, aDrawSettings)
 
     def renderBox(self, aSizeX, aSizeY, aSizeZ, aDrawSettings):
@@ -261,71 +310,54 @@ class ScreenRenderLib(SmartObject):
         shape = BRepPrimAPI_MakeCylinder(aRadius, aHeight).Shape()
         self._renderShapeObj(shape, aDrawSettings)
 
-    def renderTorus(self, aRadius1, aRadius2,  aDrawSettings):
+    def renderTorus(self, aRadius1, aRadius2, aDrawSettings):
         shape = BRepPrimAPI_MakeTorus(aRadius1, aRadius2).Shape()
         self._renderShapeObj(shape, aDrawSettings)
 
-    def renderCircle(self, aDrawSettings):
-        aPnt1, aPnt2, aPnt3, aLineWidth = self.aGeom
+    def renderCircle(self, aPnt1, aPnt2, aPnt3, aLineWidth, aDrawSettings):
         geomCircle = GC_MakeCircle(aPnt1, aPnt2, aPnt3).Value()
         wire = BRepBuilderAPI_MakeEdge(geomCircle).Edge()
         self._renderWireObj(wire, aLineWidth, aDrawSettings)
 
-    def renderWire(self, aDrawSettings):
-        aWire, aWireRadius = self.aGeom
+    def renderWire(self, aWire, aWireRadius, aDrawSettings):
         self._renderWireObj(aWire, aWireRadius, aDrawSettings)
 
-    def renderSurface(self, aDrawSettings):
-        aSurface = self.aGeom
+    def renderSurface(self, aSurface, aDrawSettings):
         self._renderShapeObj(aSurface, aDrawSettings)
-
-    def render(self, aDrawItem, aDrawSettings = None):
-        self.display, start_display, add_menu, add_function_to_menu = init_display(
-            None, (700, 500), True, [128, 128, 128], [128, 128, 128]
-        )
-
-        if aDrawSettings == None:
-            aDrawSettings = DrawSettings()
-
-        aDrawItem.render(self, aDrawSettings)
-
-        self.display.FitAll()
-        start_display()
 
 
 # ************************************************************
 
-
-class DrawItem(SmartObject):
-
-    def __init__(self):
-        super().__init__()
+class DrawItem:
 
     def _dump(self, prefix=''):
         print(prefix + self.__class__.__name__)
 
-    def getItemFromPath(self, pathName):
-        _checkObj(pathName, str)
-        return self
+    @staticmethod
+    def renderLibPrepare(renderLib, aMove, aStyle):
+        renderLib.setTrsf(aMove.getTrsf())
+        renderLib.setLayer(aMove.getLayer())
+        renderLib.setNormedColor(aStyle.getNormedColor())
+        renderLib.setMaterial(aStyle.getMaterial())
+        renderLib.setNormedTransparency(aStyle.getNormedTransparency())
 
-    def getPosition(self):
-        return gp_Pnt(0, 0, 0)
+    def render(self, renderLib, aMove, aStyle):
+        self.renderLibPrepare(renderLib, aMove, aStyle)
 
 
 class GroupDrawItem(DrawItem):
 
     def __init__(self):
-        super()
         self.children = {}
-        self.last = None #  last asset for draw item setting
+        self.last = None  # last asset for draw item setting
 
-    def dump(self, prefix=''):
-        super().dump()
+    def _dump(self, prefix=''):
+        super()._dump()
         for key in self.children:
             self.children[key].dump(prefix + '[' + key + ']')
 
-    def add(self, aDrawItem, aItemName=None):
-        self.checkObj(aDrawItem, DrawItem)
+    def addItem(self, aDrawItem, aItemName=None):
+        _checkObj(aDrawItem, DrawItem)
         if aItemName is None:
             aItemName = 'Child' + str(len(self.children))
         self.last = DrawSettings()
@@ -338,93 +370,114 @@ class GroupDrawItem(DrawItem):
             ret = ret.children[token]
         return ret
 
+    def render(self, renderLib, aSuperMove, aSuperStyle):
+        for key in self.children:
+            drawItem, aItemMove, aItemStyle = self.children[key]
+            mergedMove = _mergeMove(aItemStyle, aSuperStyle)
+            mergedStyle = _mergeStyle(aItemStyle, aSuperStyle)
+            drawItem.render(renderLib, mergedMove, mergedStyle)
 
-class EmptyDrawItem(DrawItem):
-    def __init__(self):
-        super().__init__()
 
 class CargoDrawItem(DrawItem):
     def __init__(self, aCargo):
         self.aCargo = aCargo
         super().__init__()
 
+
 class HookDrawItem(DrawItem):
     def __init__(self, aHookPnt):
         self.aHookPnt = aHookPnt
         super().__init__()
 
+
 class LabelDrawItem(DrawItem):
     def __init__(self, aText, aHeightPx):
-        super().__init__()
         self.aText, self.aHeightPx = aText, aHeightPx
-    def render(self, renderLib, aDrawSettings):
-        renderLib.renderLabel(self.aText, self.aHeightPx, aDrawSettings)
+
+    def render(self, renderLib, aMove, aStyle):
+        self.renderLibPrepare(renderLib, aMove, aStyle)
+        renderLib.renderLabel(self.aText, self.aHeightPx)
+
 
 class BoxDrawItem(DrawItem):
     def __init__(self, aSizeX, aSizeY, aSizeZ):
-        super().__init__()
         self.aSizeX, self.aSizeY, self.aSizeZ = aSizeX, aSizeY, aSizeZ
-    def render(self, renderLib, aDrawSettings):
-        renderLib.renderCone(self.aSizeX, self.aSizeY, self.aSizeZ, aDrawSettings)
+
+    def render(self, renderLib, aMove, aStyle):
+        self.renderLibPrepare(renderLib, aMove, aStyle)
+        renderLib.renderCone(self.aSizeX, self.aSizeY, self.aSizeZ)
+
 
 class SphereDrawItem(DrawItem):
     def __init__(self, aRadius):
-        super().__init__()
         self.aRadius = aRadius
-    def render(self, renderLib, aDrawSettings):
-        renderLib.renderCone(self.aRadius, aDrawSettings)
+
+    def render(self, renderLib, aMove, aStyle):
+        self.renderLibPrepare(renderLib, aMove, aStyle)
+        renderLib.renderCone(self.aRadius)
+
 
 class CylinderDrawItem(DrawItem):
     def __init__(self, aRadius, aHeight):
-        super().__init__()
-        self.aRadius, self.aHeight =  aRadius, aHeight
-    def render(self, renderLib, aDrawSettings):
-        renderLib.renderCone(self.aRadius, self.aHeight, aDrawSettings)
+        self.aRadius, self.aHeight = aRadius, aHeight
+
+    def render(self, renderLib, aMove, aStyle):
+        self.renderLibPrepare(renderLib, aMove, aStyle)
+        renderLib.renderCone(self.aRadius, self.aHeight)
+
 
 class ConeDrawItem(DrawItem):
     def __init__(self, aRadius1, aRadius2, aHeight):
-        super().__init__()
         self.aRadius1, self.aRadius2, self.aHeight = aRadius1, aRadius2, aHeight
-    def render(self, renderLib, aDrawSettings):
-        renderLib.renderCone(self.aRadius1, self.aRadius2, self.aHeight, aDrawSettings)
+
+    def render(self, renderLib, aMove, aStyle):
+        self.renderLibPrepare(renderLib, aMove, aStyle)
+        renderLib.renderCone(self.aRadius1, self.aRadius2, self.aHeight)
+
 
 class TorusDrawItem(DrawItem):
     def __init__(self, aRadius1, aRadius2):
-        super().__init__()
         self.aRadius1, self.aRadius2 = aRadius1, aRadius2
-    def render(self, renderLib, aDrawSettings):
-        renderLib.renderTorus(self.aRadius1, self.aRadius2, aDrawSettings)
+
+    def render(self, renderLib, aMove, aStyle):
+        self.renderLibPrepare(renderLib, aMove, aStyle)
+        renderLib.renderTorus(self.aRadius1, self.aRadius2)
+
 
 class CircleDrawItem(DrawItem):
     def __init__(self, aPnt1, aPnt2, aPnt3, aLineWidth):
-        super().__init__()
         self.aPnt1, self.aPnt2, self.aPnt3, self.aLineWidth = aPnt1, aPnt2, aPnt3, aLineWidth
-    def render(self, renderLib, aDrawSettings):
-        renderLib.renderCircle(self.aPnt1, self.aPnt2, self.aPnt3, self.aLineWidth, aDrawSettings)
+
+    def render(self, renderLib, aMove, aStyle):
+        self.renderLibPrepare(renderLib, aMove, aStyle)
+        renderLib.renderCircle(self.aPnt1, self.aPnt2, self.aPnt3, self.aLineWidth)
+
 
 class WireDrawItem(DrawItem):
     def __init__(self, aWire, aLineRadius):
-        super().__init__()
         self.aWire, self.aLineRadius = aWire, aLineRadius
-    def render(self, renderLib, aDrawSettings):
-        renderLib.renderWire(self.aWire, self.aLineRadius, aDrawSettings)
+
+    def render(self, renderLib, aMove, aStyle):
+        self.renderLibPrepare(renderLib, aMove, aStyle)
+        renderLib.renderWire(self.aWire, self.aLineRadius)
+
 
 class SurfaceDrawItem(DrawItem):
     def __init__(self, aSurface):
-        super().__init__()
         self.aSurface = aSurface
-    def render(self, renderLib, aDrawSettings):
-        renderLib.renderSurface(self.aSurface, aDrawSettings)
+
+    def render(self, renderLib, aMove, aStyle):
+        self.renderLibPrepare(renderLib, aMove, aStyle)
+        renderLib.renderSurface(self.aSurface)
 
 
-
-class DrawLib(SmartObject):
+class DrawLib:
 
     def __init__(self):
-        super().__init__()
-        self.drawCache = {}
+        self.cache = {}
 
     def getCached(self, methodName, param1=None, param2=None):
+
         params = ''
         if param1 is not None:
             params += str(param1)
@@ -434,9 +487,9 @@ class DrawLib(SmartObject):
         cacheKey = methodName + '(' + params + ')'
 
         method = self.__getattribute__(methodName)
-        if cacheKey in self.drawCache:
+        if cacheKey in self.cache:
             print('==> Get from cache', cacheKey)
-            draw = self.drawCache[cacheKey].copy()
+            draw = self.cache[cacheKey]
         else:
             print('==> Compute', cacheKey)
             if param1 is None:
@@ -445,9 +498,20 @@ class DrawLib(SmartObject):
                 draw = method(param1)
             else:
                 draw = method(param1, param2)
-            self.drawCache[cacheKey] = draw
-            self.checkObj(draw, DrawItem)
+            self.cache[cacheKey] = draw
         return draw
+
+    @staticmethod
+    def getStdStyle(aColor256=None, aMaterialName=None, aNormedTransparency=None):
+        ret = DrawStyle()
+        ret.setColor(aColor256)
+        ret.setMaterial(aMaterialName)
+        ret.setTransparency(aNormedTransparency)
+        return ret
+
+    @staticmethod
+    def getStdMove():
+        return DrawMove()
 
     @staticmethod
     def getStdGroup():
@@ -455,7 +519,7 @@ class DrawLib(SmartObject):
 
     @staticmethod
     def getStdEmpty():
-        return EmptyDrawItem()
+        return DrawItem()
 
     @staticmethod
     def getStdCargo(aCargo):
@@ -499,4 +563,4 @@ class DrawLib(SmartObject):
 
     @staticmethod
     def getStdSurface(aSurface):
-        return SurfaceDrawItem()
+        return SurfaceDrawItem(aSurface)
