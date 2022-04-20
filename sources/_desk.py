@@ -68,61 +68,58 @@ class DeskDrawLib(DrawLib):
         self.thePinH = 2
         self.thePinStyle = self.getStdStyle(STEEL_COLOR, CHROME, 0)
 
-    def getBaseRadius(self, aLibStyleName):
-        return self.theStyleSizeValues[aLibStyleName][0] / self.theScale
+    def getBaseRadius(self, aDeskStyleName):
+        return self.theStyleSizeValues[aDeskStyleName][0] / self.theScale
 
-    def getLabelHeightPx(self, aLibStyleName):
-        return self.theStyleSizeValues[aLibStyleName][1]  # not scaled
+    def getLabelHeightPx(self, aDeskStyleName):
+        return self.theStyleSizeValues[aDeskStyleName][1]  # not scaled
 
-    def getLabelDelta(self, aLibStyleName):
-        return self.theStyleSizeValues[aLibStyleName][2] / self.theScale
+    def getLabelDelta(self, aDeskStyleName):
+        return self.theStyleSizeValues[aDeskStyleName][2] / self.theScale
 
-    def applyStyle(self, aDraw, aStyle):
-        aDraw.setColor(aStyle[0])
-        aDraw.setMaterial(aStyle[1])
-        aDraw.setTransparency(aStyle[2])
+    def getDeskStyle(self, aDeskStyleName, aDeskGeomType):
+        return self.theStyleValues[aDeskStyleName + aDeskGeomType]
 
-    def getDeskSt(self, aDeskStyleName, aGeomType):
-        val = self.theStyleValues[aLibStyleName + aGeomType]
-        deskStyle = self.getStdStyle()
-        deskStyle.setColor()
+    def getDeskPoint(self, aPnt, aDeskStyleName):
 
-        self.applyStyle(aDraw, libStyle)
+        group = self.getStdGroup()
 
-    def getDeskPoint(self, aPnt, aLibStyleName):
+        pointR = self.getBaseRadius(aDeskStyleName) * self.thePointRFactor
+        item = self.getStdSphere(pointR)
+        move = self.getStdMove()
+        move.setTranslate(aPnt.X(), aPnt.Y(), aPnt.Z())
+        style = self.getDeskStyle(aDeskStyleName, 'PointGeom')
+        group.addItem(item, move, style, 'pointSphere')
 
-        draw = self.getStdGroup()
+        return group
 
-        pointR = self.getBaseRadius(aLibStyleName) * self.thePointRFactor
-        point = self.getStdSphere(pointR)
-        pointSt = self.getDeskSt(pointR)
-        pointTr = self.getStdTr().setTranslate(aPnt.X(), aPnt.Y(), aPnt.Z())
-        draw.add(point, pointSt, pointSt)
+    def getDeskLine(self, pnt1, pnt2, aDeskStyleName):
 
-        draw.last.
-        self.applyLibStyle(draw, aLibStyleName, 'PointGeom')
-
-        return draw
-
-    def drawLine(self, pnt1, pnt2, aLibStyleName):
-        draw = self.drawPrimitive()
+        group = self.getStdGroup()
 
         lineR = self.getBaseRadius(aLibStyleName)
         vec = gp_Vec(pnt1, pnt2)
-        draw.setAsCylinder(lineR, vec.Magnitude())
-        draw.setDirection(pnt1, pnt2)
 
-        self.applyLibStyle(draw, aLibStyleName, 'LineGeom')
-        return draw
+        item = self.getStdCylinder(lineR, vec.Magnitude())
+        move = self.getStdMove()
+        move.setDirection(pnt1, pnt2)
+        style = self.getDeskStyle(aDeskStyleName, 'LineGeom')
+        group.addItem(item, move, style,'lineCylinder')
 
-    def drawCircle(self, aPnt1, aPnt2, aPnt3, aLibStyleName):
-        draw = self.drawPrimitive()
-        draw.setAsCircle(aPnt1, aPnt2, aPnt3, self.getBaseRadius(aLibStyleName))
-        self.applyLibStyle(draw, aLibStyleName, 'LineGeom')
-        return draw
+        return group
+
+    def getDeskCircle(self, aPnt1, aPnt2, aPnt3, aDeskStyleName):
+
+        group = self.getStdGroup()
+
+        item = self.getStdCircle(aPnt1, aPnt2, aPnt3, self.getBaseRadius(aDeskStyleName))
+        move = self.getStdMove()
+        style = self.getDeskStyle(aDeskStyleName, 'LineGeom')
+        group.addItem(item, move, style, 'lineCylinder')
+
+        return group
 
     def drawVector(self, aPnt1, aPnt2, aLibStyleName):
-        draw = self.drawGroup()
 
         rArrow = self.getBaseRadius(aLibStyleName) * self.theArrowRFactor
         hArrow = self.getBaseRadius(aLibStyleName) * self.theArrowHFactor
@@ -130,10 +127,21 @@ class DeskDrawLib(DrawLib):
         vLen = v.Magnitude()
         v *= (vLen - hArrow) / vLen
         pntM = aPnt1.Translated(v)
-        line = self.drawLine(aPnt1, pntM, aLibStyleName)
-        draw.add(line)
 
-        arrow = self.drawPrimitive()
+        group = self.getStdGroup()
+
+        item = self.drawLine(aPnt1, pntM, aLibStyleName)
+        group.addItem(item)
+
+        item = self.getStdCone(rArrow, 0, hArrow)
+        move = self.getStdMove()
+        move.setDirection(pntM, aPnt2)
+        style = self.getDeskStyle(aDeskStyleName, 'LineGeom')
+        group.addItem(item, move, style)
+
+        return group
+
+
         arrow.setAsCone(rArrow, 0, hArrow)
         arrow.setDirection(pntM, aPnt2)
         self.applyLibStyle(arrow, aLibStyleName, 'LineGeom')

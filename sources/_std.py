@@ -349,19 +349,31 @@ class GroupDrawItem(DrawItem):
 
     def __init__(self):
         self.children = {}
-        self.last = None  # last asset for draw item setting
+        self.aNextItemName = None
 
     def _dump(self, prefix=''):
         super()._dump()
         for key in self.children:
             self.children[key].dump(prefix + '[' + key + ']')
 
-    def addItem(self, aDrawItem, aItemName=None):
-        _checkObj(aDrawItem, DrawItem)
-        if aItemName is None:
-            aItemName = 'Child' + str(len(self.children))
-        self.last = DrawSettings()
-        self.children[aItemName] = (aDrawItem, self.last)
+    def _makeNextItemName(self):
+
+        if self.aNextItemName is None:
+            ret = 'Child' + str(len(self.children))
+        else:
+            ret = self.aNextItemName
+
+        self.aNextItemName = None
+
+        return ret
+
+    def nextName(self, aNextItemName):
+        self.aNextItemName = aNextItemName
+
+    def addItem(self, aItem, aMove=DrawMove(), aStyle=DrawStyle()):
+        _checkObj(aItem, DrawItem)
+        itemName = self._makeNextItemName()
+        self.children[itemName] = (aItem, aMove, aStyle)
 
     def getItem(self, aPath):
         tokens = aPath.split('.')
@@ -372,10 +384,10 @@ class GroupDrawItem(DrawItem):
 
     def render(self, renderLib, aSuperMove, aSuperStyle):
         for key in self.children:
-            drawItem, aItemMove, aItemStyle = self.children[key]
-            mergedMove = _mergeMove(aItemStyle, aSuperStyle)
-            mergedStyle = _mergeStyle(aItemStyle, aSuperStyle)
-            drawItem.render(renderLib, mergedMove, mergedStyle)
+            item, itemMove, itemStyle = self.children[key]
+            mergedMove = _mergeMove(itemStyle, aSuperStyle)
+            mergedStyle = _mergeStyle(itemStyle, aSuperStyle)
+            item.render(renderLib, mergedMove, mergedStyle)
 
 
 class CargoDrawItem(DrawItem):
