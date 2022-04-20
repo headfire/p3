@@ -357,7 +357,7 @@ class GroupDrawItem(DrawItem):
             self.children[key].dump(prefix + '[' + key + ']')
 
     def _makeNextItemName(self):
-
+        # todo N in end of hint processing
         if self.aNextItemName is None:
             ret = 'Child' + str(len(self.children))
         else:
@@ -367,7 +367,7 @@ class GroupDrawItem(DrawItem):
 
         return ret
 
-    def nameItem(self, aNextItemName):
+    def nameHint(self, aNextItemName):
         self.aNextItemName = aNextItemName
 
     def addItem(self, aItem, aMove=DrawMove(), aStyle=DrawStyle()):
