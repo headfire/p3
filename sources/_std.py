@@ -222,21 +222,9 @@ class ScreenRenderLib(SmartObject):
 
 
 # ************************************************************
-
-class DrawItem(SmartObject):
-
+class Asset:
     def __init__(self):
-
-        super().__init__()
-
-        self.parent = None
-        self.children = {}
-        self.childrenCount = 0
-
-        self.aGeomType = 'Empty'
-        self.aGeomImmutable = None
-        self.aGeomTransform = gp_Trsf()
-
+        self.aTransform = gp_Trsf()
         self.aMaterial = None
         self.aTransparency = None
         self.aColor = None
@@ -255,79 +243,8 @@ class DrawItem(SmartObject):
         for key in self.children:
             ret.children[key] = self.children[key].copy()
 
-    def getHierarchyAttr(self, aAttrName, aDefaultValue):
-        value = self.__getattribute__(aAttrName)
-        #print('Hello hierarhy',aAttrName ,value)
-        if value is not None:
-            return value
-        if self.parent is not None:
-            return self.parent.getHierarchyAttr(aAttrName, aDefaultValue)
-        return aDefaultValue
-
-    def _dump(self, prefix=''):
-        print(prefix + self.__class__.__name__, self.aGeomType)
-        for key in self.children:
-            self.children[key].dump(prefix + '[' + key + ']')
-
     def _applyGeomTransform(self, aAppliedTransform):
         self.aGeomTransform *= aAppliedTransform
-
-    def add(self, aDrawItem, aItemName=None):
-        self.checkObj(aDrawItem, DrawItem)
-        aDrawItem.parent = self
-        if aItemName is None:
-            aItemName = 'Child' + str(self.childrenCount)
-        self.children[aItemName] = aDrawItem
-        self.childrenCount += 1
-        return aDrawItem
-
-    def setAsEmpty(self):
-        self.aGeomType = 'Empty'
-        self.aGeomImmutable = None
-        return self
-
-    def setAsLabel(self, aText, aHeightPx):
-        self.aGeomType = 'Label'
-        self.aGeomImmutable = aText, aHeightPx
-        return self
-
-    def setAsBox(self, aSizeX, aSizeY, aSizeZ):
-        self.aGeomType = 'Box'
-        self.aGeomImmutable = aSizeX, aSizeY, aSizeZ
-
-        return self
-
-    def setAsSphere(self, aRadius):
-        self.aGeomType = 'Sphere'
-        self.aGeomImmutable = aRadius
-        return self
-
-    def setAsCylinder(self, aRadius, aHeight):
-        self.aGeomType = 'Cylinder'
-        self.aGeomImmutable = aRadius, aHeight
-        return self
-
-    def setAsCone(self, aRadius1, aRadius2, aHeight):
-        self.aGeomType = 'Cone'
-        self.aGeomImmutable = aRadius1, aRadius2, aHeight
-        return self
-
-    # todo def setAsTorus(self, aRadius1, aRadius2):
-
-    def setAsCircle(self, aPnt1, aPnt2, aPnt3, aLineWidth):
-        self.aGeomType = 'Circle'
-        self.aGeomImmutable = aPnt1, aPnt2, aPnt3, aLineWidth
-        return self
-
-    def setAsWire(self, aWire, aLineRadius):
-        self.aGeomType = 'Wire'
-        self.aGeomImmutable = aWire, aLineRadius
-        return self
-
-    def setAsSurface(self, aSurface):
-        self.aGeomType = 'Surface'
-        self.aGeomImmutable = aSurface
-        return self
 
     def setColor(self, aColor_RGB_256):
         self.aColor = aColor_RGB_256
@@ -384,13 +301,6 @@ class DrawItem(SmartObject):
         self._applyGeomTransform(tObj)
 
         return self
-
-    def getGeomType(self):
-        return self.aGeomType
-
-    def getGeomImmutable(self):
-        return self.aGeomImmutable
-
     def getTransform(self):
         if self.parent is not None:
             ret = gp_Trsf()
@@ -416,6 +326,21 @@ class DrawItem(SmartObject):
             return self.parent.getMaterial()
         return DEFAULT_MATERIAL
 
+
+class DrawItem(SmartObject):
+
+    def __init__(self):
+
+        super().__init__()
+
+        self.aGeomType = 'Empty'
+        self.aGeomImmutable = None
+
+    def _dump(self, prefix=''):
+        print(prefix + self.__class__.__name__, self.aGeomType)
+        for key in self.children:
+            self.children[key].dump(prefix + '[' + key + ']')
+
     def getChild(self, fullName):
         names = fullName.split('.')
         ret = self
@@ -425,6 +350,94 @@ class DrawItem(SmartObject):
 
     def getPosition(self):
         return gp_Pnt(0, 0, 0).Transformed(self.getTransform())
+
+
+class GroupItem:
+
+    self.parent = None
+    self.children = {}
+    self.childrenCount = 0
+    self.last = None
+
+    def add(self, aDrawItem, aItemName=None):
+        self.checkObj(aDrawItem, DrawItem)
+        aDrawItem.parent = self
+        if aItemName is None:
+            aItemName = 'Child' + str(self.childrenCount)
+        self.last = Asset()
+        self.children[aItemName] = (aDrawItem, self.last)
+        self.childrenCount += 1
+        return aDrawItem
+
+class EmptyDrawItem(DrawItem):
+    def __init__(self):
+        super().__init__()
+
+class HookDrawItem(DrawItem):
+    def __init__(self, aHookPnt):
+        aHookPnt
+        super().__init__()
+
+class GeomDrawItem(DrawItem):
+    def __init__(self, aPnt):
+        super().__init__()
+
+class LabelDrawItem(DrawItem):
+    def __init__(self, aText, aHeightPx):
+        super().__init__()
+        self.aText, self.aHeightPx = aText, aHeightPx
+
+class BoxDrawItem(DrawItem):
+    def __init__(self, aSizeX, aSizeY, aSizeZ):
+        super().__init__()
+        self.aSizeX, self.aSizeY, self.aSizeZ = aSizeX, aSizeY, aSizeZ
+    def render(self, renderLib, drawAsset)
+        renderLib.renderCone(self.aSizeX, self.aSizeY, self.aSizeZ, drawAsset)
+
+class SphereDrawItem(DrawItem):
+    def __init__(self, aRadius):
+        super().__init__()
+        self.aRadius = aRadius
+    def render(self, renderLib, drawAsset)
+        renderLib.renderCone(self.aRadius, drawAsset)
+
+class CylinderDrawItem(DrawItem):
+    def __init__(self, aRadius, aHeight):
+        super().__init__()
+        self.aRadius, self.aHeight =  aRadius, aHeight
+    def render(self, renderLib, drawAsset)
+        renderLib.renderCone(self.aRadius, self.aHeight, drawAsset)
+
+class ConeDrawItem(DrawItem):
+    def __init__(self, aRadius1, aRadius2, aHeight):
+        super().__init__()
+        self.aRadius1, self.aRadius2, self.aHeight = aRadius1, aRadius2, aHeight
+    def render(self, renderLib, drawAsset)
+        renderLib.renderCone(self.aRadius1, self.aRadius2, self.aHeight, drawAsset)
+
+# todo class Torus(self, aRadius1, aRadius2):
+
+class CircleDrawItem(DrawItem):
+    def __init__(self, aPnt1, aPnt2, aPnt3, aLineWidth):
+        super().__init__()
+        self.aPnt1, self.aPnt2, self.aPnt3, self.aLineWidth = Pnt1, aPnt2, aPnt3, aLineWidth
+    def render(self, renderLib, drawAsset)
+        renderLib.renderCircle(self.aPnt1, self.aPnt2, self.aPnt3, self.aLineWidth, drawAsset)
+
+class WireDrawItem(DrawItem):
+    def __init__(self, aWire, aLineRadius):
+        super().__init__()
+        self.aWire, self.aLineRadius = aWire, aLineRadius
+    def render(self, renderLib, drawAsset)
+        renderLib.renderWire(self.aWire, self.aLineRadius, drawAsset)
+
+class SurfaceDrawItem(DrawItem):
+    def __init__(self, aSurface):
+        super().__init__()
+        self.aSurface = aSurface
+    def render(self, renderLib, drawAsset)
+        renderLib.renderSurface(self.aSurface, drawAsset)
+
 
 
 class DrawLib(SmartObject):
