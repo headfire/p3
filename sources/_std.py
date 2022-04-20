@@ -9,7 +9,7 @@ from OCC.Core.BRepBuilderAPI import BRepBuilderAPI_MakeEdge, BRepBuilderAPI_Make
 from OCC.Core.BRepOffsetAPI import BRepOffsetAPI_MakePipe
 
 from OCC.Core.BRepPrimAPI import BRepPrimAPI_MakeSphere, BRepPrimAPI_MakeBox, \
-    BRepPrimAPI_MakeCylinder, BRepPrimAPI_MakeCone
+    BRepPrimAPI_MakeCylinder, BRepPrimAPI_MakeCone, BRepPrimAPI_MakeTorus
 
 from OCC.Core.BRep import BRep_Tool
 from OCC.Core.BRepTools import BRepTools_WireExplorer
@@ -44,40 +44,141 @@ MATERIAL_CONSTS = {
     'DEFAULT': Graphic3d_NameOfMaterial.Graphic3d_NOM_DEFAULT
 }
 
-DEFAULT_COLOR = 100, 100, 100
+DEFAULT_COLOR = 0.5, 0.5, 0.5
 DEFAULT_MATERIAL = 'CHROME'
 DEFAULT_TRANSPARENCY = 0.0
 DEFAULT_LAYER = 'DefaultLayer'
 
+def _checkObj(self, aObj, aClass):
+    self.makeMethodNonStatic()
+    if not isinstance(aObj, aClass):
+        raise Exception('EXPECTED ' + aClass.__name__ + '  - REAL ' + aObj.__class__.__name__)
 
-def getTransparency(self):
-    return self.getHierarchyAttr('aTransparency', DEFAULT_TRANSPARENCY)
 
+def _mergeValues(aDominantValue, aRecessiveValue):
+    if aDominantValue is not None:
+        return aDominantValue
+    return aRecessiveValue
+
+
+def _mergeDrawingSettings(aParent, aChild):
+
+    ret = DrawSettings()
+
+    ret.aColor = _mergeValues(aChild.aColor, aParent.aColor)
+    ret.aMaterial = _mergeValues(aChild.aMaterial, aParent.aMaterial)
+    ret.aTransparency = _mergeValues(aChild.aTransparency, aParent.aTransparency)
+    ret.aLayer = _mergeValues(aChild.aLayer, aParent.aLayer)
+    ret.aTrsf = gp_Trsf()
+    ret.aTrsf *= aChild.aTrsf()
+    ret.aTrsf *= aParent.aTrsf()
+
+    return ret
+
+
+def _getVectorTangentToCurveAtPoint(edge, uRatio):
+
+    aCurve, aFP, aLP = BRep_Tool.Curve(edge)
+    aP = aFP + (aLP - aFP) * uRatio
+    v1 = gp_Vec()
+    p1 = gp_Pnt()
+    aCurve.D1(aP, p1, v1)
+    return v1
+
+
+def _getWireStartPointAndTangentDir(wire):
+
+    ex = BRepTools_WireExplorer(wire)
+    edge = ex.Current()
+    vertex = ex.CurrentVertex()
+    v = _getVectorTangentToCurveAtPoint(edge, 0)
+    return BRep_Tool.Pnt(vertex), gp_Dir(v)
+
+
+class DrawSettings:
+
+    def __init__(self):
+        self.aTrsf = gp_Trsf()
+        self.aMaterial = DEFAULT_MATERIAL
+        self.aTransparency = DEFAULT_TRANSPARENCY
+        self.aColor = DEFAULT_COLOR
+        self.aLayer = None
+
+    def _dumpTrsf(self):
+        trsf = self.aTrsf
+        for iRow in range(1, 4):
+            prn = ''
+            for iCol in range(1, 5):
+                prn += '  ' + str(trsf.Value(iRow, iCol))
+            print(prn)
+
+    def setColor(self, aColor_RGB_256):
+        r256, g256, b256 = aColor_RGB_256
+        self.aColor = (r256/255, g256/255, b256/255)
+
+    def setTransparency(self, aFloat_0_1):
+        self.aTransparency = aFloat_0_1
+
+    def setMaterial(self, aMaterialName):
+        self.aMaterial = aMaterialName
+
+    def setLayer(self, aLayerName):
+        self.aLayer = aLayerName
+
+    def setTranslate(self, dx, dy, dz):
+        trsf = gp_Trsf()
+        trsf.SetTranslation(gp_Vec(dx, dy, dz))
+        self.aTrsf *= trsf
+
+    # todo setScale K and XYZ
+
+    def setRotate(self, pntAxFrom, pntAxTo, angle):
+
+        trsf = gp_Trsf()
+        ax1 = gp_Ax1(pntAxFrom, gp_Dir(gp_Vec(pntAxFrom, pntAxTo)))
+        trsf.SetRotation(ax1, angle)
+        self.aTrsf *= trsf
+        return self
+
+    def setDirection(self, pnt1, pnt2):
+
+        dirVec = gp_Vec(pnt1, pnt2)
+        targetDir = gp_Dir(dirVec)
+
+        rotateAngle = gp_Dir(0, 0, 1).Angle(targetDir)
+        if not gp_Dir(0, 0, 1).IsParallel(targetDir, 0.001):
+            rotateDir = gp_Dir(0, 0, 1)
+            rotateDir.Cross(targetDir)
+        else:
+            rotateDir = gp_Dir(0, 1, 0)
+
+        trsf = gp_Trsf()
+        trsf.SetRotation(gp_Ax1(gp_Pnt(0, 0, 0), rotateDir), rotateAngle)
+        trsf.SetTranslationPart(gp_Vec(gp_Pnt(0, 0, 0), pnt1))
+        self.aTrsf *= trsf
+
+        return self
+
+    def getTrsf(self):
+        return self.aTrsf
+
+    def getLayer(self):
+        return self.aLayer
+
+    def getNormedColor(self):
+        return self.aColor
+
+    def getNormedTransparency(self):
+        return self.aTransparency
+
+    def getMaterial(self):
+        return self.aMaterial
 
 class SmartObject:
 
     def __init__(self):
         self.theIsDebug = False
 
-    def debug(self, aVar):
-        if self.theIsDebug:
-            print('DEBUG:', aVar)
-
-    def makeMethodNonStatic(self):
-        self.debug('Make this method non static')
-
-    def checkObj(self, aObj, aClass):
-        self.makeMethodNonStatic()
-        if not isinstance(aObj, aClass):
-            raise Exception('EXPECTED ' + aClass.__name__ + '  - REAL ' + aObj.__class__.__name__)
-
-    def dumpTransform(self, transform):
-        self.makeMethodNonStatic()
-        for iRow in range(1, 4):
-            prn = ''
-            for iCol in range(1, 5):
-                prn += '  ' + str(transform.Value(iRow, iCol))
-            print(prn)
 
 
 class EnvParamLib(SmartObject):
@@ -111,332 +212,209 @@ class ScreenRenderLib(SmartObject):
         self.aTransparency = None
         self.aTransform = None
 
-    def _getVectorTangentToCurveAtPoint(self, edge, uRatio):
-        self.makeMethodNonStatic()
-        aCurve, aFP, aLP = BRep_Tool.Curve(edge)
-        aP = aFP + (aLP - aFP) * uRatio
-        v1 = gp_Vec()
-        p1 = gp_Pnt()
-        aCurve.D1(aP, p1, v1)
-        return v1
+    def _renderTextObj(self, aText, aHeightPx, aDrawSettings):
 
-    def _getWireStartPointAndTangentDir(self, wire):
-        ex = BRepTools_WireExplorer(wire)
-        edge = ex.Current()
-        vertex = ex.CurrentVertex()
-        v = self._getVectorTangentToCurveAtPoint(edge, 0)
-        return BRep_Tool.Pnt(vertex), gp_Dir(v)
-
-    def _renderTextObj(self, aText, aHeightPx):
         pnt = gp_Pnt(0, 0, 0).Transformed(self.aTransform)
-        r, g, b = self.aColor
-        self.display.DisplayMessage(pnt, aText, aHeightPx, (r / 255, g / 255, b / 255), False)
+        self.display.DisplayMessage(pnt, aText, aHeightPx, aDrawSettings.getNormedColor(), False)
 
-    def _renderShapeObj(self, shape):
-        shape = BRepBuilderAPI_Transform(shape, self.aTransform).Shape()
-        ais = AIS_Shape(shape)
-        r, g, b = self.aColor
-        aisColor = Quantity_Color(r / 255, g / 255, b / 255,
+    def _renderShapeObj(self, aShape, aDrawSettings):
+
+        shapeTr = BRepBuilderAPI_Transform(aShape, aDrawSettings.getTransform()).Shape()
+        ais = AIS_Shape(shapeTr)
+        r, g, b = aDrawSettings.getNormedColor()
+        aisColor = Quantity_Color(r, g, b,
                                   Quantity_TypeOfColor(Quantity_TypeOfColor.Quantity_TOC_RGB))
         ais.SetColor(aisColor)
-        ais.SetTransparency(self.aTransparency)
+        ais.SetTransparency(aDrawSettings.getNormedTransparency())
         aspect = Graphic3d_MaterialAspect(MATERIAL_CONSTS[self.aMaterial])
         ais.SetMaterial(aspect)
         self.display.Context.Display(ais, False)
 
-    def _renderWireObj(self, aWire, aWireRadius):
-        startPoint, tangentDir = self._getWireStartPointAndTangentDir(aWire)
+    def _renderWireObj(self, aWire, aWireRadius, aDrawSettings):
+
+        startPoint, tangentDir = _getWireStartPointAndTangentDir(aWire)
         profileCircle = GC_MakeCircle(startPoint, tangentDir, aWireRadius).Value()
         profileEdge = BRepBuilderAPI_MakeEdge(profileCircle).Edge()
         profileWire = BRepBuilderAPI_MakeWire(profileEdge).Wire()
 
         shape = BRepOffsetAPI_MakePipe(aWire, profileWire).Shape
 
-        self._renderShapeObj(shape)
+        self._renderShapeObj(shape, aDrawSettings)
 
-    def _renderAsEmpty(self):
-        pass
-
-    def _renderAsLabel(self):
+    def renderLabel(self, aDrawSettings):
         aText, aHeightPx = self.aGeom
-        self._renderTextObj(aText, aHeightPx)
+        self._renderTextObj(aText, aHeightPx, aDrawSettings)
 
-    def _renderAsBox(self):
-        aSizeX, aSizeY, aSizeZ = self.aGeom
+    def renderBox(self, aSizeX, aSizeY, aSizeZ, aDrawSettings):
         shape = BRepPrimAPI_MakeBox(aSizeX, aSizeY, aSizeZ).Shape()
-        self._renderShapeObj(shape)
+        self._renderShapeObj(shape, aDrawSettings)
 
-    def _renderAsSphere(self):
-        aRadius = self.aGeom
+    def renderSphere(self, aRadius, aDrawSettings):
         shape = BRepPrimAPI_MakeSphere(aRadius).Shape()
-        self._renderShapeObj(shape)
+        self._renderShapeObj(shape, aDrawSettings)
 
-    def _renderAsCone(self):
-        aRadius1, aRadius2, aHeight = self.aGeom
+    def renderCone(self, aRadius1, aRadius2, aHeight, aDrawSettings):
         shape = BRepPrimAPI_MakeCone(aRadius1, aRadius2, aHeight).Shape()
-        self._renderShapeObj(shape)
+        self._renderShapeObj(shape, aDrawSettings)
 
-    def _renderAsCylinder(self):
-        aRadius, aHeight = self.aGeom
+    def renderCylinder(self, aRadius, aHeight, aDrawSettings):
         shape = BRepPrimAPI_MakeCylinder(aRadius, aHeight).Shape()
-        self._renderShapeObj(shape)
+        self._renderShapeObj(shape, aDrawSettings)
 
-    # todo _renderAsTorus
+    def renderTorus(self, aRadius1, aRadius2,  aDrawSettings):
+        shape = BRepPrimAPI_MakeTorus(aRadius1, aRadius2).Shape()
+        self._renderShapeObj(shape, aDrawSettings)
 
-    def _renderAsCircle(self):
+    def renderCircle(self, aDrawSettings):
         aPnt1, aPnt2, aPnt3, aLineWidth = self.aGeom
         geomCircle = GC_MakeCircle(aPnt1, aPnt2, aPnt3).Value()
         wire = BRepBuilderAPI_MakeEdge(geomCircle).Edge()
-        self._renderWireObj(wire, aLineWidth)
+        self._renderWireObj(wire, aLineWidth, aDrawSettings)
 
-    def _renderAsWire(self):
+    def renderWire(self, aDrawSettings):
         aWire, aWireRadius = self.aGeom
-        self._renderWireObj(aWire, aWireRadius)
+        self._renderWireObj(aWire, aWireRadius, aDrawSettings)
 
-    def _renderAsSurface(self):
+    def renderSurface(self, aDrawSettings):
         aSurface = self.aGeom
-        self._renderShapeObj(aSurface)
+        self._renderShapeObj(aSurface, aDrawSettings)
 
-    def _renderDrawItem(self, aDrawItem):
-        self.aGeom = aDrawItem.getGeomImmutable()
-        self.aMaterial = aDrawItem.getMaterial()
-        self.aColor = aDrawItem.getColor()
-        self.aTransparency = aDrawItem.getTransparency()
-        self.aTransform = aDrawItem.getTransform()
-
-        renderMethod = self.__getattribute__('_renderAs' + aDrawItem.getGeomType())
-        renderMethod()
-
-        for key in aDrawItem.children:
-            self._renderDrawItem(aDrawItem.children[key])
-
-    def render(self, aDrawItem):
+    def render(self, aDrawItem, aDrawSettings = None):
         self.display, start_display, add_menu, add_function_to_menu = init_display(
             None, (700, 500), True, [128, 128, 128], [128, 128, 128]
         )
 
-        self._renderDrawItem(aDrawItem)
+        if aDrawSettings == None:
+            aDrawSettings = DrawSettings()
+
+        aDrawItem.render(self, aDrawSettings)
 
         self.display.FitAll()
         start_display()
 
 
 # ************************************************************
-class Asset:
-    def __init__(self):
-        self.aTransform = gp_Trsf()
-        self.aMaterial = None
-        self.aTransparency = None
-        self.aColor = None
-        self.aLayer = None
-
-    def copy(self):
-        ret = DrawItem()
-        ret.aColor = self.aColor
-        ret.aMaterial = self.aMaterial
-        ret.aTransparency = self.aTransparency
-        ret.aLayer = self.aLayer
-        ret.aGeomType = self.aGeomType
-        ret.aGeomImmutable = self.aGeomImmutable
-        ret.aGeomTransform = gp_Trsf()
-        ret.aGeomTransform *= ret.aGeomTransform
-        for key in self.children:
-            ret.children[key] = self.children[key].copy()
-
-    def _applyGeomTransform(self, aAppliedTransform):
-        self.aGeomTransform *= aAppliedTransform
-
-    def setColor(self, aColor_RGB_256):
-        self.aColor = aColor_RGB_256
-
-    def setTransparency(self, aFloat_0_1):
-        self.aTransparency = aFloat_0_1
-
-    def setMaterial(self, aMaterialName):
-        self.aMaterial = aMaterialName
-        return self
-
-    def setLayer(self, aLayerName):
-        self.aLayer = aLayerName
-        return self
-
-    def setTranslate(self, dx, dy, dz):
-        tObj = gp_Trsf()
-        tObj.SetTranslation(gp_Vec(dx, dy, dz))
-        self._applyGeomTransform(tObj)
-        return self
-
-        # def setScale(self, kx, ky, kz):
-        # self.checkObj(kx, int)
-        # self.checkObj(ky, int)
-        # self.checkObj(kz, int)
-        # tObj = gp_Trsf()
-        # todo SetAffinity tObj.SetScale(kx, ky, kz)
-        # self._applyGeomTransform(tObj)
-        # return self
-
-    def setRotate(self, pntAxFrom, pntAxTo, angle):
-
-        tObj = gp_Trsf()
-        ax1 = gp_Ax1(pntAxFrom, gp_Dir(gp_Vec(pntAxFrom, pntAxTo)))
-        tObj.SetRotation(ax1, angle)
-        self._applyGeomTransform(tObj)
-        return self
-
-    def setDirection(self, pnt1, pnt2):
-
-        dirVec = gp_Vec(pnt1, pnt2)
-        targetDir = gp_Dir(dirVec)
-
-        rotateAngle = gp_Dir(0, 0, 1).Angle(targetDir)
-        if not gp_Dir(0, 0, 1).IsParallel(targetDir, 0.001):
-            rotateDir = gp_Dir(0, 0, 1)
-            rotateDir.Cross(targetDir)
-        else:
-            rotateDir = gp_Dir(0, 1, 0)
-
-        tObj = gp_Trsf()
-        tObj.SetRotation(gp_Ax1(gp_Pnt(0, 0, 0), rotateDir), rotateAngle)
-        tObj.SetTranslationPart(gp_Vec(gp_Pnt(0, 0, 0), pnt1))
-        self._applyGeomTransform(tObj)
-
-        return self
-    def getTransform(self):
-        if self.parent is not None:
-            ret = gp_Trsf()
-            ret *= self.aGeomTransform
-            ret *= self.parent.getTransform()
-            return ret
-        else:
-            return self.aGeomTransform
-
-    def getLayer(self):
-        return self.getHierarchyAttr('aLayer', DEFAULT_LAYER)
-
-    def getColor(self):
-        return self.getHierarchyAttr('aColor', DEFAULT_COLOR)
-
-    def getTransparency(self):
-        return self.getHierarchyAttr('aTransparency', DEFAULT_TRANSPARENCY)
-
-    def getMaterial(self):
-        if self.aMaterial is not None:
-            return self.aMaterial
-        if self.parent is not None:
-            return self.parent.getMaterial()
-        return DEFAULT_MATERIAL
 
 
 class DrawItem(SmartObject):
 
     def __init__(self):
-
         super().__init__()
 
-        self.aGeomType = 'Empty'
-        self.aGeomImmutable = None
-
     def _dump(self, prefix=''):
-        print(prefix + self.__class__.__name__, self.aGeomType)
+        print(prefix + self.__class__.__name__)
+
+    def getItemFromPath(self, pathName):
+        _checkObj(pathName, str)
+        return self
+
+    def getPosition(self):
+        return gp_Pnt(0, 0, 0)
+
+
+class GroupDrawItem(DrawItem):
+
+    def __init__(self):
+        super()
+        self.children = {}
+        self.last = None #  last asset for draw item setting
+
+    def dump(self, prefix=''):
+        super().dump()
         for key in self.children:
             self.children[key].dump(prefix + '[' + key + ']')
 
-    def getChild(self, fullName):
-        names = fullName.split('.')
-        ret = self
-        for childName in names:
-            ret = ret.children[childName]
-        return ret
-
-    def getPosition(self):
-        return gp_Pnt(0, 0, 0).Transformed(self.getTransform())
-
-
-class GroupItem:
-
-    self.parent = None
-    self.children = {}
-    self.childrenCount = 0
-    self.last = None
-
     def add(self, aDrawItem, aItemName=None):
         self.checkObj(aDrawItem, DrawItem)
-        aDrawItem.parent = self
         if aItemName is None:
-            aItemName = 'Child' + str(self.childrenCount)
-        self.last = Asset()
+            aItemName = 'Child' + str(len(self.children))
+        self.last = DrawSettings()
         self.children[aItemName] = (aDrawItem, self.last)
-        self.childrenCount += 1
-        return aDrawItem
+
+    def getItem(self, aPath):
+        tokens = aPath.split('.')
+        ret = self
+        for token in tokens:
+            ret = ret.children[token]
+        return ret
+
 
 class EmptyDrawItem(DrawItem):
     def __init__(self):
         super().__init__()
 
-class HookDrawItem(DrawItem):
-    def __init__(self, aHookPnt):
-        aHookPnt
+class CargoDrawItem(DrawItem):
+    def __init__(self, aCargo):
+        self.aCargo = aCargo
         super().__init__()
 
-class GeomDrawItem(DrawItem):
-    def __init__(self, aPnt):
+class HookDrawItem(DrawItem):
+    def __init__(self, aHookPnt):
+        self.aHookPnt = aHookPnt
         super().__init__()
 
 class LabelDrawItem(DrawItem):
     def __init__(self, aText, aHeightPx):
         super().__init__()
         self.aText, self.aHeightPx = aText, aHeightPx
+    def render(self, renderLib, aDrawSettings):
+        renderLib.renderLabel(self.aText, self.aHeightPx, aDrawSettings)
 
 class BoxDrawItem(DrawItem):
     def __init__(self, aSizeX, aSizeY, aSizeZ):
         super().__init__()
         self.aSizeX, self.aSizeY, self.aSizeZ = aSizeX, aSizeY, aSizeZ
-    def render(self, renderLib, drawAsset)
-        renderLib.renderCone(self.aSizeX, self.aSizeY, self.aSizeZ, drawAsset)
+    def render(self, renderLib, aDrawSettings):
+        renderLib.renderCone(self.aSizeX, self.aSizeY, self.aSizeZ, aDrawSettings)
 
 class SphereDrawItem(DrawItem):
     def __init__(self, aRadius):
         super().__init__()
         self.aRadius = aRadius
-    def render(self, renderLib, drawAsset)
-        renderLib.renderCone(self.aRadius, drawAsset)
+    def render(self, renderLib, aDrawSettings):
+        renderLib.renderCone(self.aRadius, aDrawSettings)
 
 class CylinderDrawItem(DrawItem):
     def __init__(self, aRadius, aHeight):
         super().__init__()
         self.aRadius, self.aHeight =  aRadius, aHeight
-    def render(self, renderLib, drawAsset)
-        renderLib.renderCone(self.aRadius, self.aHeight, drawAsset)
+    def render(self, renderLib, aDrawSettings):
+        renderLib.renderCone(self.aRadius, self.aHeight, aDrawSettings)
 
 class ConeDrawItem(DrawItem):
     def __init__(self, aRadius1, aRadius2, aHeight):
         super().__init__()
         self.aRadius1, self.aRadius2, self.aHeight = aRadius1, aRadius2, aHeight
-    def render(self, renderLib, drawAsset)
-        renderLib.renderCone(self.aRadius1, self.aRadius2, self.aHeight, drawAsset)
+    def render(self, renderLib, aDrawSettings):
+        renderLib.renderCone(self.aRadius1, self.aRadius2, self.aHeight, aDrawSettings)
 
-# todo class Torus(self, aRadius1, aRadius2):
+class TorusDrawItem(DrawItem):
+    def __init__(self, aRadius1, aRadius2):
+        super().__init__()
+        self.aRadius1, self.aRadius2 = aRadius1, aRadius2
+    def render(self, renderLib, aDrawSettings):
+        renderLib.renderTorus(self.aRadius1, self.aRadius2, aDrawSettings)
 
 class CircleDrawItem(DrawItem):
     def __init__(self, aPnt1, aPnt2, aPnt3, aLineWidth):
         super().__init__()
-        self.aPnt1, self.aPnt2, self.aPnt3, self.aLineWidth = Pnt1, aPnt2, aPnt3, aLineWidth
-    def render(self, renderLib, drawAsset)
-        renderLib.renderCircle(self.aPnt1, self.aPnt2, self.aPnt3, self.aLineWidth, drawAsset)
+        self.aPnt1, self.aPnt2, self.aPnt3, self.aLineWidth = aPnt1, aPnt2, aPnt3, aLineWidth
+    def render(self, renderLib, aDrawSettings):
+        renderLib.renderCircle(self.aPnt1, self.aPnt2, self.aPnt3, self.aLineWidth, aDrawSettings)
 
 class WireDrawItem(DrawItem):
     def __init__(self, aWire, aLineRadius):
         super().__init__()
         self.aWire, self.aLineRadius = aWire, aLineRadius
-    def render(self, renderLib, drawAsset)
-        renderLib.renderWire(self.aWire, self.aLineRadius, drawAsset)
+    def render(self, renderLib, aDrawSettings):
+        renderLib.renderWire(self.aWire, self.aLineRadius, aDrawSettings)
 
 class SurfaceDrawItem(DrawItem):
     def __init__(self, aSurface):
         super().__init__()
         self.aSurface = aSurface
-    def render(self, renderLib, drawAsset)
-        renderLib.renderSurface(self.aSurface, drawAsset)
+    def render(self, renderLib, aDrawSettings):
+        renderLib.renderSurface(self.aSurface, aDrawSettings)
 
 
 
@@ -445,9 +423,8 @@ class DrawLib(SmartObject):
     def __init__(self):
         super().__init__()
         self.drawCache = {}
-        self.aDrawItemClass = DrawItem
 
-    def drawCached(self, methodName, param1=None, param2=None):
+    def getCached(self, methodName, param1=None, param2=None):
         params = ''
         if param1 is not None:
             params += str(param1)
@@ -472,8 +449,54 @@ class DrawLib(SmartObject):
             self.checkObj(draw, DrawItem)
         return draw
 
-    def drawGroup(self):
-        return self.aDrawItemClass()
+    @staticmethod
+    def getStdGroup():
+        return GroupDrawItem()
 
-    def drawPrimitive(self):
-        return self.aDrawItemClass()
+    @staticmethod
+    def getStdEmpty():
+        return EmptyDrawItem()
+
+    @staticmethod
+    def getStdCargo(aCargo):
+        return CargoDrawItem(aCargo)
+
+    @staticmethod
+    def getStdHook(aHookPnt):
+        return HookDrawItem(aHookPnt)
+
+    @staticmethod
+    def getStdLabel(aText, aHeightPx):
+        return LabelDrawItem(aText, aHeightPx)
+
+    @staticmethod
+    def getStdBox(aSizeX, aSizeY, aSizeZ):
+        return BoxDrawItem(aSizeX, aSizeY, aSizeZ)
+
+    @staticmethod
+    def getStdSphere(aRadius):
+        return SphereDrawItem(aRadius)
+
+    @staticmethod
+    def getStdCylinder(aRadius, aHeight):
+        return CylinderDrawItem(aRadius, aHeight)
+
+    @staticmethod
+    def getStdCone(aRadius1, aRadius2, aHeight):
+        return ConeDrawItem(aRadius1, aRadius2, aHeight)
+
+    @staticmethod
+    def getStdTorus(aRadius1, aRadius2):
+        return TorusDrawItem(aRadius1, aRadius2)
+
+    @staticmethod
+    def getStdCircle(aPnt1, aPnt2, aPnt3, aLineWidth):
+        return CircleDrawItem(aPnt1, aPnt2, aPnt3, aLineWidth)
+
+    @staticmethod
+    def getStdWire(aWire, aLineRadius):
+        return WireDrawItem(aWire, aLineRadius)
+
+    @staticmethod
+    def getStdSurface(aSurface):
+        return SurfaceDrawItem()
