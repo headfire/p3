@@ -187,6 +187,7 @@ def slide_07_DaoWithCase(sc, r, offset, caseH, caseZMove, gap):
 
 Todo = None
 DAO_BASE_RADIUS = 40
+DAO_OFFSET = 3
 DAO_SLICE_FACE_HEIGHT = 30
 DAO_SKINNING_SLICES_KS = [0.03, 0.09, 0.16, 0.24, 0.35, 0.50, 0.70, 0.85]
 
@@ -208,6 +209,7 @@ class DaoDraw(DeskDraw):
     def __init__(self):
         super().__init__(5 / 1, 'A0 M5:1')
         self.aBaseRadius = DAO_BASE_RADIUS
+        self.aOffset = DAO_OFFSET
         self.aSliceFaceHeight = DAO_SLICE_FACE_HEIGHT
         self.aSkinningSlicesKs = DAO_SKINNING_SLICES_KS
 
@@ -429,7 +431,7 @@ class DaoDraw(DeskDraw):
         dr = self.makeDraw()
 
         dr.nm('BasePoints')
-        dr.add(self.getPointsDraw(basePoints, 'p', 'MainStyle'))
+        dr.add(self.getDaoPointsDraw(basePoints, 'p', 'MainStyle'))
 
         dr.nm('ClassicWire')
         dr.add(self.getDeskWire(classicWire, 'MainStyle'))
@@ -439,9 +441,8 @@ class DaoDraw(DeskDraw):
 
         return dr
 
-    '''
     def getDaoOffsetSlide(sc):
-        offset = sc.getVal('DAO_OFFSET')
+        offset = self.aOffset
 
         sc.style('Main')
         sc.draw('DaoOffsetWire', offset)
