@@ -87,8 +87,8 @@ class Style:
     @staticmethod
     def mergeStyle(aItemStyle, aSuperStyle):
         ret = Style()
-        ret.aNormedColor = _getValue(aItemStyle.aNormedColor, aSuperStyle.aNormedColor)
-        ret.aNormedTransparency = _getValue(aItemStyle.aNormedTransparency, aSuperStyle.aNormedTransparency)
+        ret.aColor = _getValue(aItemStyle.aColor, aSuperStyle.aColor)
+        ret.aTransparency = _getValue(aItemStyle.aTransparency, aSuperStyle.aTransparency)
         ret.aMaterial = _getValue(aItemStyle.aMaterial, aSuperStyle.aMaterial)
         return ret
 
@@ -100,8 +100,8 @@ class Style:
             self.aColor = (r256 / 255, g256 / 255, b256 / 255)
         return self
 
-    def setTransparency(self, aFloat_0_1):
-        self.aTransparency = aFloat_0_1
+    def setTransparency(self, aNormedTransparency):
+        self.aTransparency = aNormedTransparency
         return self
 
     def setMaterial(self, aMaterialName):
@@ -199,53 +199,12 @@ class EnvParamLib:
 class RenderLib:
 
     def __init__(self):
-        self.aNormedColor = None
-        self.aMaterial = None
-        self.aNormedTransparency = None
-        self.aTrsf = None
-        self.aLayer = None
-        pass
+        self.aStyle = Style()
+        self.aMove = Move()
 
-    def setNormedColor(self, aNormedColor):
-        self.aNormedColor = aNormedColor
-
-    def setMaterial(self, aMaterial):
-        self.aMaterial = aMaterial
-
-    def setNormedTransparency(self, aNormedTransparency):
-        self.aNormedTransparency = aNormedTransparency
-
-    def setTrsf(self, aTrsf):
-        self.aTrsf = aTrsf
-
-    def setLayer(self, aLayer):
-        self.aLayer = aLayer
-
-    def getNormedColor(self):
-        return _getValue(self.aNormedColor, DEFAULT_NORMED_COLOR)
-
-    def getMaterial(self):
-        return _getValue(self.aMaterial, DEFAULT_MATERIAL)
-
-    def getNormedTransparency(self):
-        return _getValue(self.aNormedTransparency, DEFAULT_NORMED_TRANSPARENCY)
-
-    def getTrsf(self):
-        return _getValue(self.aTrsf, gp_Trsf())
-
-    def getLayer(self):
-        return _getValue(self.aLayer, DEFAULT_LAYER_NAME)
-
-    def libInit(self):
-        pass
-
-    def libShow(self):
-        pass
-
-    def render(self, aDrawItem, aMove = Move(), aStyle = Style()):
-        self.libInit()
-        aDrawItem.render(self, aMove, aStyle)
-        self.libShow()
+    def prepare(self, aMove, aStyle):
+        self.aStyle = aStyle
+        self.aMove = aMove
 
 
 class ScreenRenderLib(RenderLib):
@@ -255,32 +214,32 @@ class ScreenRenderLib(RenderLib):
         self.display = None
         self.start_display = None
 
-    def libInit(self):
+    def init(self):
         self.display, self.start_display, add_menu, add_function_to_menu = init_display(
             None, (700, 500), True, [128, 128, 128], [128, 128, 128]
         )
 
-    def libShow(self):
+    def show(self):
         self.display.FitAll()
         self.start_display()
 
-    def _renderTextObj(self, aText, aHeightPx, aDrawSettings):
-        pnt = gp_Pnt(0, 0, 0).Transformed(aDrawSettings.getTrsf())
-        self.display.DisplayMessage(pnt, aText, aHeightPx, aDrawSettings.getNormedColor(), False)
+    def _renderTextObj(self, aText, aHeightPx):
+        pnt = gp_Pnt(0, 0, 0).Transformed(self.aMove.getTrsf())
+        self.display.DisplayMessage(pnt, aText, aHeightPx, self.aStyle.getNormedColor(), False)
 
-    def _renderShapeObj(self, aShape, aDrawSettings):
-        shapeTr = BRepBuilderAPI_Transform(aShape, aDrawSettings.getTransform()).Shape()
+    def _renderShapeObj(self, aShape):
+        shapeTr = BRepBuilderAPI_Transform(aShape, self.aMove.getTrsf()).Shape()
         ais = AIS_Shape(shapeTr)
-        r, g, b = aDrawSettings.getNormedColor()
+        r, g, b = self.aStyle.getNormedColor()
         aisColor = Quantity_Color(r, g, b,
                                   Quantity_TypeOfColor(Quantity_TypeOfColor.Quantity_TOC_RGB))
         ais.SetColor(aisColor)
-        ais.SetTransparency(aDrawSettings.getNormedTransparency())
-        aspect = Graphic3d_MaterialAspect(MATERIAL_CONSTS[aDrawSettings.getMaterial()])
+        ais.SetTransparency(self.aStyle.getNormedTransparency())
+        aspect = Graphic3d_MaterialAspect(MATERIAL_CONSTS[self.aStyle.getMaterial()])
         ais.SetMaterial(aspect)
         self.display.Context.Display(ais, False)
 
-    def _renderWireObj(self, aWire, aWireRadius, aDrawSettings):
+    def _renderWireObj(self, aWire, aWireRadius):
         startPoint, tangentDir = _getWireStartPointAndTangentDir(aWire)
         profileCircle = GC_MakeCircle(startPoint, tangentDir, aWireRadius).Value()
         profileEdge = BRepBuilderAPI_MakeEdge(profileCircle).Edge()
@@ -288,41 +247,46 @@ class ScreenRenderLib(RenderLib):
 
         shape = BRepOffsetAPI_MakePipe(aWire, profileWire).Shape
 
-        self._renderShapeObj(shape, aDrawSettings)
+        self._renderShapeObj(shape)
 
-    def renderLabel(self, aText, aHeightPx, aDrawSettings):
-        self._renderTextObj(aText, aHeightPx, aDrawSettings)
+    def renderLabel(self, aText, aHeightPx):
+        self._renderTextObj(aText, aHeightPx)
 
-    def renderBox(self, aSizeX, aSizeY, aSizeZ, aDrawSettings):
+    def renderBox(self, aSizeX, aSizeY, aSizeZ):
         shape = BRepPrimAPI_MakeBox(aSizeX, aSizeY, aSizeZ).Shape()
-        self._renderShapeObj(shape, aDrawSettings)
+        self._renderShapeObj(shape)
 
-    def renderSphere(self, aRadius, aDrawSettings):
+    def renderSphere(self, aRadius):
         shape = BRepPrimAPI_MakeSphere(aRadius).Shape()
-        self._renderShapeObj(shape, aDrawSettings)
+        self._renderShapeObj(shape)
 
-    def renderCone(self, aRadius1, aRadius2, aHeight, aDrawSettings):
+    def renderCone(self, aRadius1, aRadius2, aHeight):
         shape = BRepPrimAPI_MakeCone(aRadius1, aRadius2, aHeight).Shape()
-        self._renderShapeObj(shape, aDrawSettings)
+        self._renderShapeObj(shape)
 
-    def renderCylinder(self, aRadius, aHeight, aDrawSettings):
+    def renderCylinder(self, aRadius, aHeight):
         shape = BRepPrimAPI_MakeCylinder(aRadius, aHeight).Shape()
-        self._renderShapeObj(shape, aDrawSettings)
+        self._renderShapeObj(shape)
 
-    def renderTorus(self, aRadius1, aRadius2, aDrawSettings):
+    def renderTorus(self, aRadius1, aRadius2):
         shape = BRepPrimAPI_MakeTorus(aRadius1, aRadius2).Shape()
-        self._renderShapeObj(shape, aDrawSettings)
+        self._renderShapeObj(shape)
 
-    def renderCircle(self, aPnt1, aPnt2, aPnt3, aLineWidth, aDrawSettings):
+    def renderCircle(self, aPnt1, aPnt2, aPnt3, aLineWidth):
         geomCircle = GC_MakeCircle(aPnt1, aPnt2, aPnt3).Value()
         wire = BRepBuilderAPI_MakeEdge(geomCircle).Edge()
-        self._renderWireObj(wire, aLineWidth, aDrawSettings)
+        self._renderWireObj(wire, aLineWidth)
 
-    def renderWire(self, aWire, aWireRadius, aDrawSettings):
-        self._renderWireObj(aWire, aWireRadius, aDrawSettings)
+    def renderWire(self, aWire, aWireRadius):
+        self._renderWireObj(aWire, aWireRadius)
 
-    def renderSurface(self, aSurface, aDrawSettings):
-        self._renderShapeObj(aSurface, aDrawSettings)
+    def renderSurface(self, aSurface):
+        self._renderShapeObj(aSurface)
+
+    def run(self, aDrawItem, aMove=Move(), aStyle=Style()):
+        self.init()
+        aDrawItem.render(self, aMove, aStyle)
+        self.show()
 
 
 # ************************************************************
@@ -343,19 +307,8 @@ class DrawObj:
 
 class DrawItem(DrawObj):
 
-    def _dump(self, prefix=''):
-        print(prefix + self.__class__.__name__)
-
-    @staticmethod
-    def renderLibPrepare(renderLib, aMove, aStyle):
-        renderLib.setTrsf(aMove.getTrsf())
-        renderLib.setLayer(aMove.getLayer())
-        renderLib.setNormedColor(aStyle.getNormedColor())
-        renderLib.setMaterial(aStyle.getMaterial())
-        renderLib.setNormedTransparency(aStyle.getNormedTransparency())
-
     def render(self, renderLib, aMove, aStyle):
-        self.renderLibPrepare(renderLib, aMove, aStyle)
+        pass
 
 
 class GroupDrawItem(DrawItem):
@@ -368,7 +321,7 @@ class GroupDrawItem(DrawItem):
         self.aNextItemStyle = Style()
 
     def _dump(self, prefix=''):
-        super()._dump()
+        print(prefix + self.__class__.__name__)
         for key in self.items:
             self.items[key].dump(prefix + '[' + key + ']')
 
@@ -396,7 +349,7 @@ class GroupDrawItem(DrawItem):
 
     def add(self, aItem):
         _checkObj(aItem, DrawItem)
-        self.items[self.makeItemName()] = (aItem, self.mv, self.st)
+        self.items[self.makeItemName()] = (aItem, self.aNextItemMove, self.aNextItemStyle)
         self.aNextItemMove = self.makeMove()
         self.aNextItemStyle = self.makeStyle()
 
@@ -410,7 +363,7 @@ class GroupDrawItem(DrawItem):
     def render(self, renderLib, aSuperMove, aSuperStyle):
         for key in self.items:
             item, itemMove, itemStyle = self.items[key]
-            mergedMove = Move.mergeMove(itemStyle, aSuperStyle)
+            mergedMove = Move.mergeMove(itemMove, aSuperMove)
             mergedStyle = Style.mergeStyle(itemStyle, aSuperStyle)
             item.render(renderLib, mergedMove, mergedStyle)
 
@@ -418,13 +371,11 @@ class GroupDrawItem(DrawItem):
 class CargoDrawItem(DrawItem):
     def __init__(self, aCargo):
         self.aCargo = aCargo
-        super().__init__()
 
 
 class HookDrawItem(DrawItem):
     def __init__(self, aHookPnt):
         self.aHookPnt = aHookPnt
-        super().__init__()
 
 
 class LabelDrawItem(DrawItem):
@@ -432,7 +383,7 @@ class LabelDrawItem(DrawItem):
         self.aText, self.aHeightPx = aText, aHeightPx
 
     def render(self, renderLib, aMove, aStyle):
-        self.renderLibPrepare(renderLib, aMove, aStyle)
+        renderLib.prepare(aMove, aStyle)
         renderLib.renderLabel(self.aText, self.aHeightPx)
 
 
@@ -441,7 +392,7 @@ class BoxDrawItem(DrawItem):
         self.aSizeX, self.aSizeY, self.aSizeZ = aSizeX, aSizeY, aSizeZ
 
     def render(self, renderLib, aMove, aStyle):
-        self.renderLibPrepare(renderLib, aMove, aStyle)
+        renderLib.prepare(aMove, aStyle)
         renderLib.renderCone(self.aSizeX, self.aSizeY, self.aSizeZ)
 
 
@@ -450,8 +401,8 @@ class SphereDrawItem(DrawItem):
         self.aRadius = aRadius
 
     def render(self, renderLib, aMove, aStyle):
-        self.renderLibPrepare(renderLib, aMove, aStyle)
-        renderLib.renderCone(self.aRadius)
+        renderLib.prepare(aMove, aStyle)
+        renderLib.renderSphere(self.aRadius)
 
 
 class CylinderDrawItem(DrawItem):
@@ -459,8 +410,8 @@ class CylinderDrawItem(DrawItem):
         self.aRadius, self.aHeight = aRadius, aHeight
 
     def render(self, renderLib, aMove, aStyle):
-        self.renderLibPrepare(renderLib, aMove, aStyle)
-        renderLib.renderCone(self.aRadius, self.aHeight)
+        renderLib.prepare(aMove, aStyle)
+        renderLib.renderCylinder(self.aRadius, self.aHeight)
 
 
 class ConeDrawItem(DrawItem):
@@ -468,7 +419,7 @@ class ConeDrawItem(DrawItem):
         self.aRadius1, self.aRadius2, self.aHeight = aRadius1, aRadius2, aHeight
 
     def render(self, renderLib, aMove, aStyle):
-        self.renderLibPrepare(renderLib, aMove, aStyle)
+        renderLib.prepare(aMove, aStyle)
         renderLib.renderCone(self.aRadius1, self.aRadius2, self.aHeight)
 
 
@@ -477,7 +428,7 @@ class TorusDrawItem(DrawItem):
         self.aRadius1, self.aRadius2 = aRadius1, aRadius2
 
     def render(self, renderLib, aMove, aStyle):
-        self.renderLibPrepare(renderLib, aMove, aStyle)
+        renderLib.prepare(aMove, aStyle)
         renderLib.renderTorus(self.aRadius1, self.aRadius2)
 
 
@@ -486,7 +437,7 @@ class CircleDrawItem(DrawItem):
         self.aPnt1, self.aPnt2, self.aPnt3, self.aLineWidth = aPnt1, aPnt2, aPnt3, aLineWidth
 
     def render(self, renderLib, aMove, aStyle):
-        self.renderLibPrepare(renderLib, aMove, aStyle)
+        renderLib.prepare(aMove, aStyle)
         renderLib.renderCircle(self.aPnt1, self.aPnt2, self.aPnt3, self.aLineWidth)
 
 
@@ -495,7 +446,7 @@ class WireDrawItem(DrawItem):
         self.aWire, self.aLineRadius = aWire, aLineRadius
 
     def render(self, renderLib, aMove, aStyle):
-        self.renderLibPrepare(renderLib, aMove, aStyle)
+        renderLib.prepare(aMove, aStyle)
         renderLib.renderWire(self.aWire, self.aLineRadius)
 
 
@@ -504,7 +455,7 @@ class SurfaceDrawItem(DrawItem):
         self.aSurface = aSurface
 
     def render(self, renderLib, aMove, aStyle):
-        self.renderLibPrepare(renderLib, aMove, aStyle)
+        renderLib.prepare(aMove, aStyle)
         renderLib.renderSurface(self.aSurface)
 
 

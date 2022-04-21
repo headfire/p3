@@ -294,4 +294,4 @@ class DeskDrawLib(DrawLib):
 if __name__ == '__main__':
     deskLib = DeskDrawLib()
     deskLib.setScale(5 / 1, 'A0 M5:1')
-    ScreenRenderLib().render(deskLib.getDeskDemo())
+    ScreenRenderLib().run(deskLib.getDeskDemo())
