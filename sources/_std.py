@@ -207,14 +207,10 @@ class RenderLib:
         self.aMove = aMove
 
 
-class ScreenRenderLib(RenderLib):
+class Screen(RenderLib):
 
     def __init__(self):
         super().__init__()
-        self.display = None
-        self.start_display = None
-
-    def init(self):
         self.display, self.start_display, add_menu, add_function_to_menu = init_display(
             None, (700, 500), True, [128, 128, 128], [128, 128, 128]
         )
@@ -245,7 +241,7 @@ class ScreenRenderLib(RenderLib):
         profileEdge = BRepBuilderAPI_MakeEdge(profileCircle).Edge()
         profileWire = BRepBuilderAPI_MakeWire(profileEdge).Wire()
 
-        shape = BRepOffsetAPI_MakePipe(aWire, profileWire).Shape
+        shape = BRepOffsetAPI_MakePipe(aWire, profileWire).Shape()
 
         self._renderShapeObj(shape)
 
@@ -283,14 +279,37 @@ class ScreenRenderLib(RenderLib):
     def renderSurface(self, aSurface):
         self._renderShapeObj(aSurface)
 
-    def run(self, aDrawItem, aMove=Move(), aStyle=Style()):
-        self.init()
-        aDrawItem.render(self, aMove, aStyle)
-        self.show()
-
 
 # ************************************************************
-class DrawObj:
+class Draw:
+
+    def __init__(self):
+        self.cache = {}
+
+    def getCached(self, methodName, param1=None, param2=None):
+
+        params = ''
+        if param1 is not None:
+            params += str(param1)
+        if param2 is not None:
+            params += ',' + str(param2)
+
+        cacheKey = methodName + '(' + params + ')'
+
+        method = self.__getattribute__(methodName)
+        if cacheKey in self.cache:
+            print('==> Get from cache', cacheKey)
+            obj = self.cache[cacheKey]
+        else:
+            print('==> Compute', cacheKey)
+            if param1 is None:
+                obj = method()
+            elif param2 is None:
+                obj = method(param1)
+            else:
+                obj = method(param1, param2)
+            self.cache[cacheKey] = obj
+        return obj
 
     @staticmethod
     def makeStyle(aColor256=None, aMaterialName=None, aNormedTransparency=None):
@@ -304,16 +323,55 @@ class DrawObj:
     def makeMove():
         return Move()
 
+    @staticmethod
+    def makeDraw():
+        return GroupDraw()
 
-class DrawItem(DrawObj):
+    @staticmethod
+    def getHook(aHookPnt, aHookObj=None):
+        return HookDraw(aHookPnt, aHookObj)
 
-    def render(self, renderLib, aMove, aStyle):
-        pass
+    @staticmethod
+    def getLabel(aText, aHeightPx):
+        return LabelDraw(aText, aHeightPx)
+
+    @staticmethod
+    def getBox(aSizeX, aSizeY, aSizeZ):
+        return BoxDraw(aSizeX, aSizeY, aSizeZ)
+
+    @staticmethod
+    def getSphere(aRadius):
+        return SphereDraw(aRadius)
+
+    @staticmethod
+    def getCylinder(aRadius, aHeight):
+        return CylinderDraw(aRadius, aHeight)
+
+    @staticmethod
+    def getCone(aRadius1, aRadius2, aHeight):
+        return ConeDraw(aRadius1, aRadius2, aHeight)
+
+    @staticmethod
+    def getTorus(aRadius1, aRadius2):
+        return TorusDraw(aRadius1, aRadius2)
+
+    @staticmethod
+    def getCircle(aPnt1, aPnt2, aPnt3, aLineWidth):
+        return CircleDraw(aPnt1, aPnt2, aPnt3, aLineWidth)
+
+    @staticmethod
+    def getWire(aWire, aLineRadius):
+        return WireDraw(aWire, aLineRadius)
+
+    @staticmethod
+    def getSurface(aSurface):
+        return SurfaceDraw(aSurface)
 
 
-class GroupDrawItem(DrawItem):
+class GroupDraw(Draw):
 
     def __init__(self):
+        super().__init__()
         self.items = {}
         self.aNextItemName = 'Obj'
         self.aNextItemNum = 0
@@ -328,6 +386,7 @@ class GroupDrawItem(DrawItem):
     def makeItemName(self):
         if self.aNextItemNum is None:
             itemName = self.aNextItemName
+            self.aNextItemNum = 1
         else:
             itemName = self.aNextItemName + '{0:3}'.format(self.aNextItemNum)
             self.aNextItemNum += 1
@@ -348,7 +407,7 @@ class GroupDrawItem(DrawItem):
         return self.aNextItemStyle
 
     def add(self, aItem):
-        _checkObj(aItem, DrawItem)
+        _checkObj(aItem, Draw)
         self.items[self.makeItemName()] = (aItem, self.aNextItemMove, self.aNextItemStyle)
         self.aNextItemMove = self.makeMove()
         self.aNextItemStyle = self.makeStyle()
@@ -360,183 +419,111 @@ class GroupDrawItem(DrawItem):
             ret = ret.children[token]
         return ret
 
-    def render(self, renderLib, aSuperMove, aSuperStyle):
+    def drawTo(self, renderLib, aMove=Move(), aStyle=Style()):
         for key in self.items:
             item, itemMove, itemStyle = self.items[key]
-            mergedMove = Move.mergeMove(itemMove, aSuperMove)
-            mergedStyle = Style.mergeStyle(itemStyle, aSuperStyle)
-            item.render(renderLib, mergedMove, mergedStyle)
+            mergedMove = Move.mergeMove(itemMove, aMove)
+            mergedStyle = Style.mergeStyle(itemStyle, aStyle)
+            item.drawTo(renderLib, mergedMove, mergedStyle)
 
 
-class CargoDrawItem(DrawItem):
-    def __init__(self, aCargo):
-        self.aCargo = aCargo
-
-
-class HookDrawItem(DrawItem):
-    def __init__(self, aHookPnt):
+class HookDraw(Draw):
+    def __init__(self, aHookPnt, aHookObj):
+        super().__init__()
         self.aHookPnt = aHookPnt
+        self.aHookObj = aHookObj
+
+    def drawTo(self, renderLib, aMove=Move(), aStyle=Style()):
+        pass
 
 
-class LabelDrawItem(DrawItem):
+class LabelDraw(Draw):
     def __init__(self, aText, aHeightPx):
+        super().__init__()
         self.aText, self.aHeightPx = aText, aHeightPx
 
-    def render(self, renderLib, aMove, aStyle):
+    def drawTo(self, renderLib, aMove=Move(), aStyle=Style()):
         renderLib.prepare(aMove, aStyle)
         renderLib.renderLabel(self.aText, self.aHeightPx)
 
 
-class BoxDrawItem(DrawItem):
+class BoxDraw(Draw):
     def __init__(self, aSizeX, aSizeY, aSizeZ):
+        super().__init__()
         self.aSizeX, self.aSizeY, self.aSizeZ = aSizeX, aSizeY, aSizeZ
 
-    def render(self, renderLib, aMove, aStyle):
+    def drawTo(self, renderLib, aMove=Move(), aStyle=Style()):
         renderLib.prepare(aMove, aStyle)
         renderLib.renderBox(self.aSizeX, self.aSizeY, self.aSizeZ)
 
 
-class SphereDrawItem(DrawItem):
+class SphereDraw(Draw):
     def __init__(self, aRadius):
+        super().__init__()
         self.aRadius = aRadius
 
-    def render(self, renderLib, aMove, aStyle):
+    def drawTo(self, renderLib, aMove=Move(), aStyle=Style()):
         renderLib.prepare(aMove, aStyle)
         renderLib.renderSphere(self.aRadius)
 
 
-class CylinderDrawItem(DrawItem):
+class CylinderDraw(Draw):
     def __init__(self, aRadius, aHeight):
+        super().__init__()
         self.aRadius, self.aHeight = aRadius, aHeight
 
-    def render(self, renderLib, aMove, aStyle):
+    def drawTo(self, renderLib, aMove=Move(), aStyle=Style()):
         renderLib.prepare(aMove, aStyle)
         renderLib.renderCylinder(self.aRadius, self.aHeight)
 
 
-class ConeDrawItem(DrawItem):
+class ConeDraw(Draw):
     def __init__(self, aRadius1, aRadius2, aHeight):
+        super().__init__()
         self.aRadius1, self.aRadius2, self.aHeight = aRadius1, aRadius2, aHeight
 
-    def render(self, renderLib, aMove, aStyle):
+    def drawTo(self, renderLib, aMove=Move(), aStyle=Style()):
         renderLib.prepare(aMove, aStyle)
         renderLib.renderCone(self.aRadius1, self.aRadius2, self.aHeight)
 
 
-class TorusDrawItem(DrawItem):
+class TorusDraw(Draw):
     def __init__(self, aRadius1, aRadius2):
+        super().__init__()
         self.aRadius1, self.aRadius2 = aRadius1, aRadius2
 
-    def render(self, renderLib, aMove, aStyle):
+    def drawTo(self, renderLib, aMove=Move(), aStyle=Style()):
+        super().__init__()
         renderLib.prepare(aMove, aStyle)
         renderLib.renderTorus(self.aRadius1, self.aRadius2)
 
 
-class CircleDrawItem(DrawItem):
+class CircleDraw(Draw):
     def __init__(self, aPnt1, aPnt2, aPnt3, aLineWidth):
+        super().__init__()
         self.aPnt1, self.aPnt2, self.aPnt3, self.aLineWidth = aPnt1, aPnt2, aPnt3, aLineWidth
 
-    def render(self, renderLib, aMove, aStyle):
+    def drawTo(self, renderLib, aMove=Move(), aStyle=Style()):
+        super().__init__()
         renderLib.prepare(aMove, aStyle)
         renderLib.renderCircle(self.aPnt1, self.aPnt2, self.aPnt3, self.aLineWidth)
 
 
-class WireDrawItem(DrawItem):
+class WireDraw(Draw):
     def __init__(self, aWire, aLineRadius):
+        super().__init__()
         self.aWire, self.aLineRadius = aWire, aLineRadius
 
-    def render(self, renderLib, aMove, aStyle):
+    def drawTo(self, renderLib, aMove=Move(), aStyle=Style()):
         renderLib.prepare(aMove, aStyle)
         renderLib.renderWire(self.aWire, self.aLineRadius)
 
 
-class SurfaceDrawItem(DrawItem):
+class SurfaceDraw(Draw):
     def __init__(self, aSurface):
+        super().__init__()
         self.aSurface = aSurface
 
-    def render(self, renderLib, aMove, aStyle):
+    def drawTo(self, renderLib, aMove=Move(), aStyle=Style()):
         renderLib.prepare(aMove, aStyle)
         renderLib.renderSurface(self.aSurface)
-
-
-class DrawLib(DrawObj):
-
-    def __init__(self):
-        self.cache = {}
-
-    def getCached(self, methodName, param1=None, param2=None):
-
-        params = ''
-        if param1 is not None:
-            params += str(param1)
-        if param2 is not None:
-            params += ',' + str(param2)
-
-        cacheKey = methodName + '(' + params + ')'
-
-        method = self.__getattribute__(methodName)
-        if cacheKey in self.cache:
-            print('==> Get from cache', cacheKey)
-            draw = self.cache[cacheKey]
-        else:
-            print('==> Compute', cacheKey)
-            if param1 is None:
-                draw = method()
-            elif param2 is None:
-                draw = method(param1)
-            else:
-                draw = method(param1, param2)
-            self.cache[cacheKey] = draw
-        return draw
-
-    @staticmethod
-    def getStdEmpty():
-        return DrawItem()
-
-    @staticmethod
-    def getStdGroup():
-        return GroupDrawItem()
-
-    @staticmethod
-    def getStdCargo(aCargo):
-        return CargoDrawItem(aCargo)
-
-    @staticmethod
-    def getStdHook(aHookPnt):
-        return HookDrawItem(aHookPnt)
-
-    @staticmethod
-    def getStdLabel(aText, aHeightPx):
-        return LabelDrawItem(aText, aHeightPx)
-
-    @staticmethod
-    def getStdBox(aSizeX, aSizeY, aSizeZ):
-        return BoxDrawItem(aSizeX, aSizeY, aSizeZ)
-
-    @staticmethod
-    def getStdSphere(aRadius):
-        return SphereDrawItem(aRadius)
-
-    @staticmethod
-    def getStdCylinder(aRadius, aHeight):
-        return CylinderDrawItem(aRadius, aHeight)
-
-    @staticmethod
-    def getStdCone(aRadius1, aRadius2, aHeight):
-        return ConeDrawItem(aRadius1, aRadius2, aHeight)
-
-    @staticmethod
-    def getStdTorus(aRadius1, aRadius2):
-        return TorusDrawItem(aRadius1, aRadius2)
-
-    @staticmethod
-    def getStdCircle(aPnt1, aPnt2, aPnt3, aLineWidth):
-        return CircleDrawItem(aPnt1, aPnt2, aPnt3, aLineWidth)
-
-    @staticmethod
-    def getStdWire(aWire, aLineRadius):
-        return WireDrawItem(aWire, aLineRadius)
-
-    @staticmethod
-    def getStdSurface(aSurface):
-        return SurfaceDrawItem(aSurface)

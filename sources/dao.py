@@ -1,27 +1,25 @@
-# OpenCascade tutorial by headfire (headfire@yandex.ru)
-# point and line attributes
+from _desk import DeskDraw
+from _std import Screen
 
-EQUAL_POINTS_PRECISION = 0.001
-
-from _scene import Scene
-
-from OCC.Core.gp import gp_Pnt, gp_Trsf, gp_Dir, gp_Vec, gp_Ax1, gp_Ax2, gp_GTrsf, gp_OZ
-from OCC.Core.Geom import Geom_TrimmedCurve
-from OCC.Core.GeomAPI import GeomAPI_IntCS
+from OCC.Core.gp import gp_Pnt, gp_Trsf, gp_Dir, gp_Vec, gp_Ax1, gp_OZ  # gp_Ax2, gp_GTrsf
+# from OCC.Core.Geom import Geom_TrimmedCurve
+# from OCC.Core.GeomAPI import GeomAPI_IntCS
 from OCC.Core.TopExp import TopExp_Explorer
-from OCC.Core.TopAbs import TopAbs_FACE, TopAbs_EDGE, TopAbs_VERTEX
+from OCC.Core.TopAbs import TopAbs_VERTEX  # TopAbs_FACE, TopAbs_EDGE,
 
 from OCC.Core.GC import GC_MakeArcOfCircle, GC_MakeCircle
 
 from OCC.Core.BRep import BRep_Tool
 from OCC.Core.BRepBuilderAPI import (BRepBuilderAPI_MakeEdge, BRepBuilderAPI_MakeWire,
-                                     BRepBuilderAPI_Transform, BRepBuilderAPI_GTransform, BRepBuilderAPI_MakeFace,
-                                     BRepBuilderAPI_MakeVertex)
-from OCC.Core.BRepOffsetAPI import BRepOffsetAPI_MakeOffset, BRepOffsetAPI_ThruSections
-from OCC.Core.BRepPrimAPI import BRepPrimAPI_MakeSphere, BRepPrimAPI_MakeBox
-from OCC.Core.BRepAlgoAPI import BRepAlgoAPI_Common, BRepAlgoAPI_Cut
+                                     BRepBuilderAPI_Transform, BRepBuilderAPI_MakeFace
+                                     )  # BRepBuilderAPI_GTransform, BRepBuilderAPI_MakeVertex
+from OCC.Core.BRepOffsetAPI import BRepOffsetAPI_MakeOffset  # BRepOffsetAPI_ThruSections
+# from OCC.Core.BRepPrimAPI import BRepPrimAPI_MakeSphere, BRepPrimAPI_MakeBox
+# from OCC.Core.BRepAlgoAPI import BRepAlgoAPI_Common, BRepAlgoAPI_Cut
 
 from math import pi
+
+EQUAL_POINTS_PRECISION = 0.001
 
 
 def makeCircleWire(thePoint1, thePoint2, thePoint3):
@@ -32,7 +30,7 @@ def makeCircleWire(thePoint1, thePoint2, thePoint3):
 
 
 def getXYZ(gpPnt):
-    return (gpPnt.X(), gpPnt.Y(), gpPnt.Z())
+    return gpPnt.X(), gpPnt.Y(), gpPnt.Z()
 
 
 def isPointExistInPoints(findingPoint, thePoints):
@@ -85,10 +83,10 @@ def getShapeItems(shape, topoType):
 
 
 def getPointsFromVertexes(vertexes):
-    pnts = []
+    ps = []
     for v in vertexes:
-        pnts += [BRep_Tool.Pnt(v)]
-    return pnts
+        ps += [BRep_Tool.Pnt(v)]
+    return ps
 
 
 # ********************************************************
@@ -97,7 +95,7 @@ def getPointsFromVertexes(vertexes):
 # ********************************************************
 
 
-def getShapeMirror(shape, p0):
+def getShapeMirror(shape):
     transform = gp_Trsf()
     transform.SetMirror(gp_Pnt(0, 0, 0))
     shape = BRepBuilderAPI_Transform(shape, transform).Shape()
@@ -116,12 +114,12 @@ def getShapeTranslate(shape, x, y, z):
 # *******************************************************************************
 # *******************************************************************************
 
-
+'''
 def makeEdgesFacesIntersectPoints(edgesShape, facesShape):
     def findIntersectPoints(curve, surface):
         pnts = []
         tool = GeomAPI_IntCS(curve, surface)
-        pCount = tool.NbPoints();
+        pCount = tool.NbPoints()
         for i in range(1, pCount + 1):
             pnts += [tool.Point(i)]
         return pnts
@@ -137,6 +135,7 @@ def makeEdgesFacesIntersectPoints(edgesShape, facesShape):
             findedIntersectPoints = findIntersectPoints(edgeTrimmedCurve, faceSurface)
             intersectPoints += findedIntersectPoints
     return intersectPoints
+'''
 
 
 def utilGetShapePoints(shape):
@@ -162,6 +161,7 @@ def utilGetZRotatedShape(theShape, angle):
     return rotatedShape
 
 
+'''
 def slide_06_DaoComplete(sc, r, offset):
     solidDao0 = getSolidDao(r, offset)
     sc.shape(solidDao0, stDao0)
@@ -180,19 +180,36 @@ def slide_07_DaoWithCase(sc, r, offset, caseH, caseZMove, gap):
     case = getShapeTranslate(case, 0, 0, caseZMove)
     sc.shape(case, 'StyleDaoCase')
 
-
+'''
 # *********************************************************************************
 # *********************************************************************************
 # *********************************************************************************
 
-BASE_RADIUS =
+Todo = None
+DAO_BASE_RADIUS = 40
+DAO_SLICE_FACE_HEIGHT = 30
+DAO_SKINNING_SLICES_KS = [0.03, 0.09, 0.16, 0.24, 0.35, 0.50, 0.70, 0.85]
 
-class DaoDrawLib(DrawLib)
+'''
+def initDaoVals(sc):
+    sc.setVal('DAO_BASE_RADIUS', 40)
+    sc.setVal('DAO_OFFSET', 3)
+    sc.setVal('DAO_SLICE_EXAMPLE_K', 0.5)
+    sc.setVal('DAO_SLICE_FACE_HEIGHT', 30)
+    sc.setVal('DAO_SLICE_COUNT', 10)
+    sc.setVal('DAO_SKINING_SLICES_KS', )
+    sc.setVal('DAO_CASE_HEIGHT', 30)
+    sc.setVal('DAO_CASE_GAP', 1)
+'''
+
+
+class DaoDraw(DeskDraw):
+
     def __init__(self):
-        self.desk = DeskDrawLib()
-        self.desk.setScale(5 / 1, 'A0 M5:1')
-
-        self.theBaseRadius
+        super().__init__(5 / 1, 'A0 M5:1')
+        self.theBaseRadius = DAO_BASE_RADIUS
+        self.theSliceFaceHeight = DAO_SLICE_FACE_HEIGHT
+        self.theSkinningSlicesKs = DAO_SKINNING_SLICES_KS
 
     def getDaoBasePoints(self):
 
@@ -204,19 +221,20 @@ class DaoDrawLib(DrawLib)
 
         origin = gp_Pnt(0, 0, 0)
 
-        p = [
-            origin
-            getPntRotate(gpPntMinC, origin, -pi / 4)
-            gp_Pnt(-r2, r2, 0)
-            getPntRotate(gpPntMinC, origin, -pi / 4 * 3)
-            gp_Pnt(0, r, 0)
-            gp_Pnt(r, 0, 0)
-            gp_Pnt(0, -r, 0)
-            gp_Pnt(r2, -r2, 0)
-        ]
-        return p
+        ps = {
+            0: origin,
+            1: getPntRotate(gpPntMinC, origin, -pi / 4),
+            2: gp_Pnt(-r2, r2, 0),
+            3: getPntRotate(gpPntMinC, origin, -pi / 4 * 3),
+            4: gp_Pnt(0, r, 0),
+            5: gp_Pnt(r, 0, 0),
+            6: gp_Pnt(0, -r, 0),
+            7: gp_Pnt(r2, -r2, 0)
+        }
+        return ps
 
     def getDaoBoundCircleWire(self, offset):
+
         r = self.theBaseRadius + offset
         return makeCircleWire(gp_Pnt(r, 0, 0), gp_Pnt(0, r, 0), gp_Pnt(-r, 0, 0))
 
@@ -251,19 +269,18 @@ class DaoDrawLib(DrawLib)
 
     def getDaoOffsetPoints(self, offset):
 
-        theWire = sc.getCached('getDaoOffsetWire', offset)
+        theWire = self.getCached('getDaoOffsetWire', offset)
 
         p = utilGetShapePoints(theWire)
 
         namedPoints = {
-            'Left':  p[0],
+            'Left': p[0],
             'Begin': p[1],
             'Right': p[2],
-            'End':   p[3]
+            'End': p[3]
         }
 
         return namedPoints
-
 
     def getDaoSecondOffsetWire(self, offset):
 
@@ -280,42 +297,40 @@ class DaoDrawLib(DrawLib)
 
         return focusPoint
 
-
     def getDaoSliceLine(self, offset, sliceK):
 
         limitPoints = self.getCached('getDaoOffsetPoints', offset)
 
-        leftPoint = limitPoints['Left']
         beginPoint = limitPoints['Begin']
         rightPoint = limitPoints['Right']
         endPoint = limitPoints['End']
 
-        focusPoint = sc.get('DaoFocusPoint')
+        focusPoint = self.getCached('getDaoFocusPoint')
 
         limitAngle = 0
         limitPoint = getPntScale(focusPoint, rightPoint, 1.2)
         BeginAngle = getAngle(focusPoint, limitPoint, beginPoint)
         endAngle = getAngle(focusPoint, limitPoint, endPoint)
-        limitKoef = (limitAngle - BeginAngle) / (endAngle - BeginAngle)
-        if sliceK < limitKoef:  # head
-            headKoef = (sliceK - 0) / (limitKoef - 0)
+        limitK = (limitAngle - BeginAngle) / (endAngle - BeginAngle)
+        if sliceK < limitK:  # head
+            headK = (sliceK - 0) / (limitK - 0)
             BeginX = rightPoint.X()
             endX = beginPoint.X()
-            deltaX = (endX - BeginX) * (1 - headKoef)
+            deltaX = (endX - BeginX) * (1 - headK)
             lineBeginPoint = getTranslatedPoint(focusPoint, deltaX, 0, 0)
             lineEndPoint = getTranslatedPoint(limitPoint, deltaX, 0, 0)
         else:  # tail
-            tailKoef = (sliceK - limitKoef) / (1 - limitKoef)
-            tailAngle = -(endAngle * tailKoef)
+            tailK = (sliceK - limitK) / (1 - limitK)
+            tailAngle = -(endAngle * tailK)
             lineBeginPoint = focusPoint
             lineEndPoint = getPntRotate(focusPoint, limitPoint, tailAngle)
 
         return lineBeginPoint, lineEndPoint
 
+    def getDaoSliceSurface(self, offset, sliceK):
 
-    def getDaoSliceSurface(offset, sliceKoef):
-        h = sc.getVal('DAO_SLICE_FACE_HEIGHT')
-        beginPoint, endPoint = sc.get('DaoSliceLine', offset, sliceKoef)
+        h = self.theSliceFaceHeight
+        beginPoint, endPoint = self.getCached('getDaoSliceLine', offset, sliceK)
 
         x1, y1, z1 = getXYZ(beginPoint)
         x2, y2, z2 = getXYZ(endPoint)
@@ -334,18 +349,20 @@ class DaoDrawLib(DrawLib)
 
         return face
 
+    '''
+    def getDaoSlicePoints(self, offset, sliceK):
 
-    def getDaoSlicePoints(offset, sliceKoef):
-        theWire = sc.get('DaoOffsetWire', offset)
-        theFace = sc.get('DaoSliceSurface', offset, sliceKoef)
+        theWire = self.getCached('getDaoOffsetWire', offset)
+        theFace = self.getCached('getDaoSliceSurface', offset, sliceK)
 
         farPoint, nearPoint = makeEdgesFacesIntersectPoints(theWire, theFace)
 
         return {'Near': nearPoint, 'Far': farPoint}
+    '''
 
+    def getDaoSliceWire(self, offset, sliceK):
 
-    def getDaoSliceWire(offset, sliceKoef):
-        slicePoints = sc.get('DaoSlicePoints', offset, sliceKoef)
+        slicePoints = self.getCached('getDaoSlicePoints', offset, sliceK)
         nearPoint = slicePoints['Near']
         farPoint = slicePoints['Far']
 
@@ -358,50 +375,72 @@ class DaoDrawLib(DrawLib)
 
         return makeCircleWire(nearPoint, upPoint, farPoint)
 
+    '''
+    def getDaoSkinningSurface(self, offset):
 
-    def getDaoSkiningSurface(offset):
-        # todo DaoOffsetPointes to LimitPoints
-        limitPoints = sc.get('DaoOffsetPoints', offset)
+        limitPoints = self.getCached('getDaoOffsetPoints', offset)
         beginPoint = limitPoints['Begin']
         endPoint = limitPoints['End']
 
-        skiner = BRepOffsetAPI_ThruSections(True)
-        skiner.SetSmoothing(True);
+        skinner = BRepOffsetAPI_ThruSections(True)
+        skinner.SetSmoothing(True);
 
         beginVertex = BRepBuilderAPI_MakeVertex(beginPoint).Vertex()
-        skiner.AddVertex(beginVertex)
+        skinner.AddVertex(beginVertex)
 
-        ks = sc.getVal('DAO_SKINING_SLICES_KOEFS')
+        ks = sc.getVal('')
         for i in range(len(ks)):
-            sliceWire = sc.get('DaoSliceWire', offset, ks[i])
-            skiner.AddWire(sliceWire)
+            sliceWire = self.getCached('getDaoSliceWire', offset, ks[i])
+            skinner.AddWire(sliceWire)
 
         endVertex = BRepBuilderAPI_MakeVertex(endPoint).Vertex()
-        skiner.AddVertex(endVertex)
+        skinner.AddVertex(endVertex)
 
         skiner.Build()
         surface = skiner.Shape()
 
         return surface
 
+    '''
 
     # **********************************************************************************
     # **********************************************************************************
     # **********************************************************************************
 
-    def drawDaoClassicSlide(sc):
-        sc.style('Main')
+    def getPointsDraw(self, pointsDict, prefix, styleName):
 
-        sc.label('p')
-        sc.draw('DaoBasePoints')
+        dr = self.makeDraw()
+        dr.nm('Point')
+        for key in pointsDict:
+            dr.add(self.getDeskPoint(pointsDict[key], styleName))
 
-        sc.draw('DaoClassicWire')
+        dr.nm('Label')
+        for key in pointsDict:
+            dr.add(self.getDeskLabel(pointsDict[key], prefix + str(key), 'InfoStyle'))
 
-        sc.style('Info')
-        sc.draw('DaoBoundCircleWire', 0)
+        return dr
 
+    def getDaoClassicSlide(self):
 
-    def drawDaoOffsetSlide(sc):
+        basePoints = self.getCached('getDaoBasePoints')
+        classicWire = self.getCached('getDaoClassicWire')
+        boundCircleWire = self.getCached('getDaoBoundCircleWire', 0)
+
+        dr = self.makeDraw()
+
+        dr.nm('BasePoints')
+        dr.add(self.getPointsDraw(basePoints, 'p', 'MainStyle'))
+
+        dr.nm('ClassicWire')
+        dr.add(self.getDeskWire(classicWire, 'MainStyle'))
+
+        dr.nm('BoundCircleWire')
+        dr.add(self.getDeskWire(boundCircleWire, 'InfoStyle'))
+
+        return dr
+
+    '''
+    def getDaoOffsetSlide(sc):
         offset = sc.getVal('DAO_OFFSET')
 
         sc.style('Main')
@@ -425,7 +464,7 @@ class DaoDrawLib(DrawLib)
         sc.draw('DaoFocusPoint')
 
         sc.style('Focus')
-        k = sc.getVal('DAO_SLICE_EXAMPLE_KOEF')
+        k = sc.getVal('DAO_SLICE_EXAMPLE_K')
         sc.draw('DaoSliceLine', offset, k)
         sc.draw('DaoSliceSurface', offset, k)
         sc.label('x')
@@ -463,7 +502,7 @@ class DaoDrawLib(DrawLib)
         sc.label('F')
         sc.draw('DaoFocusPoint')
 
-        ks = sc.getVal('DAO_SKINING_SLICES_KOEFS')
+        ks = sc.getVal('DAO_SKINING_SLICES_KS')
         for i in range(len(ks)):
             sc.style('Focus')
             sc.draw('DaoSliceLine', offset, ks[i])
@@ -539,23 +578,33 @@ class DaoDrawLib(DrawLib)
         return step05Surface
 
 
-    # **********************************************************************************
-    # **********************************************************************************
-    # **********************************************************************************
+        # **********************************************************************************
+        # **********************************************************************************
+        # **********************************************************************************
+    
+        def initDaoVals(sc):
+            sc.setVal('DAO_BASE_RADIUS', 40)
+            sc.setVal('DAO_OFFSET', 3)
+            sc.setVal('DAO_SLICE_EXAMPLE_K', 0.5)
+            sc.setVal('DAO_SLICE_FACE_HEIGHT', 30)
+            sc.setVal('DAO_SLICE_COUNT', 10)
+            sc.setVal('DAO_SKINING_SLICES_KS', [0.03, 0.09, 0.16, 0.24, 0.35, 0.50, 0.70, 0.85])
+            sc.setVal('DAO_CASE_HEIGHT', 30)
+            sc.setVal('DAO_CASE_GAP', 1)
+    
+        '''
 
-    def initDaoVals(sc):
-        sc.setVal('DAO_BASE_RADIUS', 40)
-        sc.setVal('DAO_OFFSET', 3)
-        sc.setVal('DAO_SLICE_EXAMPLE_KOEF', 0.5)
-        sc.setVal('DAO_SLICE_FACE_HEIGHT', 30)
-        sc.setVal('DAO_SLICE_COUNT', 10)
-        sc.setVal('DAO_SKINING_SLICES_KOEFS', [0.03, 0.09, 0.16, 0.24, 0.35, 0.50, 0.70, 0.85])
-        sc.setVal('DAO_CASE_HEIGHT', 30)
-        sc.setVal('DAO_CASE_GAP', 1)
 
+if __name__ == '__main__':
+    dao = DaoDraw()
+    slide = dao.getDaoClassicSlide()
+    desk = dao.getDeskDrawBoard()
+    screen = Screen()
+    slide.drawTo(screen)
+    desk.drawTo(screen, slide.makeMove().setMove(0,0,-60))
+    screen.show()
 
-    if __name__ == '__main__':
-
+    ''' 
         sc = Scene(globals())
 
         sc.setVal('SLIDE_NUM', 2)
@@ -585,7 +634,7 @@ class DaoDrawLib(DrawLib)
         sc.render()
 
         self.getVal('SLIDE_NAME'), self.getVal('SLIDE_NUM')
-    '''        self.setVal('RENDER_TARGET', 'screen')
+            self.setVal('RENDER_TARGET', 'screen')
     
             self.setVal('SCENE_SCALE', '1:1')
             self.setVal('SCENE_IS_DESK', True)
@@ -602,5 +651,5 @@ class DaoDrawLib(DrawLib)
             if self.getVal('SCENE_IS_DESK'):
                 self.putToRender( Desk(None, self.styler) )         
             if self.getVal('SCENE_IS_AXIS'):
-                self.putToRender( Axis(None, self.styler) )         
-    '''
+                self.putToRender( Axis(None, self.styler) )
+        '''
