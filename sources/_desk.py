@@ -20,13 +20,13 @@ CHROME = 'CHROME'
 
 class DeskDraw(Draw):
 
-    def __init__(self, theScaleK=1 / 1, theScaleText='A0 M1:1'):
+    def __init__(self, aScaleK=1 / 1, aScaleText='A0 M1:1'):
         super().__init__()
 
-        self.theScale = theScaleK
-        self.theScaleText = theScaleText
+        self.aScale = aScaleK
+        self.aScaleText = aScaleText
 
-        self.theStyleSizeValues = {
+        self.aStyleSizeValues = {
             # [BaseLineR, TextHeightPx, TextDelta]
 
             'MainStyle': [5, 20, 5],
@@ -34,11 +34,11 @@ class DeskDraw(Draw):
             'FocusStyle': [3, 20, 5]
         }
 
-        self.thePointRFactor = 3
-        self.theArrowRFactor = 3
-        self.theArrowHFactor = 15
+        self.aPointRFactor = 3
+        self.aArrowRFactor = 3
+        self.aArrowHFactor = 15
 
-        self.theStyleValues = {
+        self.aStyleValues = {
             # [color, material, transparency]
             'MainStylePointGeom': self.makeStyle(NICE_YELLOW_COLOR, CHROME, 0.0),
             'MainStyleLineGeom': self.makeStyle(NICE_BLUE_COLOR, CHROME, 0.0),
@@ -56,29 +56,29 @@ class DeskDraw(Draw):
             'FocusStyleLabelGeom': self.makeStyle(NICE_RED_COLOR, MATE, 0.0),
         }
 
-        self.theBoardH = 20
-        self.theBoardBorderSize = 60
-        self.theBoardWoodStyle = self.makeStyle(WOOD_COLOR, MATE, 0)
+        self.aBoardH = 20
+        self.aBoardBorderSize = 60
+        self.aBoardWoodStyle = self.makeStyle(WOOD_COLOR, MATE, 0)
 
-        self.thePaperSizes = AO_SIZE_XYZ
-        self.thePaperStyle = self.makeStyle(PAPER_COLOR, MATE, 0)
+        self.aPaperSizes = AO_SIZE_XYZ
+        self.aPaperStyle = self.makeStyle(PAPER_COLOR, MATE, 0)
 
-        self.thePinOffset = 30
-        self.thePinR = 10
-        self.thePinH = 2
-        self.thePinStyle = self.makeStyle(STEEL_COLOR, CHROME, 0)
+        self.aPinOffset = 30
+        self.aPinR = 10
+        self.aPinH = 2
+        self.aPinStyle = self.makeStyle(STEEL_COLOR, CHROME, 0)
 
     def getBaseRadius(self, aDeskStyleName):
-        return self.theStyleSizeValues[aDeskStyleName][0] / self.theScale
+        return self.aStyleSizeValues[aDeskStyleName][0] / self.aScale
 
     def getLabelHeightPx(self, aDeskStyleName):
-        return self.theStyleSizeValues[aDeskStyleName][1]  # not scaled
+        return self.aStyleSizeValues[aDeskStyleName][1]  # not scaled
 
     def getLabelDelta(self, aDeskStyleName):
-        return self.theStyleSizeValues[aDeskStyleName][2] / self.theScale
+        return self.aStyleSizeValues[aDeskStyleName][2] / self.aScale
 
     def getDeskStyle(self, aDeskStyleName, aDeskGeomType):
-        return self.theStyleValues[aDeskStyleName + aDeskGeomType]
+        return self.aStyleValues[aDeskStyleName + aDeskGeomType]
 
     # ***********************************************************************
 
@@ -97,7 +97,7 @@ class DeskDraw(Draw):
     def getDeskPoint(self, aPnt, aDeskStyleName):
         dr = self.makeDraw()
 
-        pointR = self.getBaseRadius(aDeskStyleName) * self.thePointRFactor
+        pointR = self.getBaseRadius(aDeskStyleName) * self.aPointRFactor
 
         dr.nm('pointSphere')
         dr.mv().setMove(aPnt.X(), aPnt.Y(), aPnt.Z())
@@ -131,8 +131,8 @@ class DeskDraw(Draw):
         return dr
 
     def getDeskVector(self, aPnt1, aPnt2, aDeskStyleName):
-        rArrow = self.getBaseRadius(aDeskStyleName) * self.theArrowRFactor
-        hArrow = self.getBaseRadius(aDeskStyleName) * self.theArrowHFactor
+        rArrow = self.getBaseRadius(aDeskStyleName) * self.aArrowRFactor
+        hArrow = self.getBaseRadius(aDeskStyleName) * self.aArrowHFactor
         v = gp_Vec(aPnt1, aPnt2)
         vLen = v.Magnitude()
         v *= (vLen - hArrow) / vLen
@@ -165,37 +165,37 @@ class DeskDraw(Draw):
         dr = self.makeDraw()
 
         dr.nm('pinCylinder')
-        dr.st(self.thePinStyle)
+        dr.st(self.aPinStyle)
         dr.mv().setMove(x, y, 0)
-        dr.add(self.getCylinder(self.thePinR / self.theScale, self.thePinH / self.theScale))
+        dr.add(self.getCylinder(self.aPinR / self.aScale, self.aPinH / self.aScale))
 
         return dr
 
     def getDeskDrawBoard(self):
         dr = self.makeDraw()
 
-        paperSizeX, paperSizeY, paperSizeZ = self.thePaperSizes
-        psx, psy, psz = paperSizeX / self.theScale, paperSizeY / self.theScale, paperSizeZ / self.theScale
+        paperSizeX, paperSizeY, paperSizeZ = self.aPaperSizes
+        psx, psy, psz = paperSizeX / self.aScale, paperSizeY / self.aScale, paperSizeZ / self.aScale
 
         dr.nm('boardPaper')
         dr.mv().setMove(-psx / 2, -psy / 2, -psz)
-        dr.st(self.thePaperStyle)
+        dr.st(self.aPaperStyle)
         dr.add(self.getBox(psx, psy, psz))
 
-        bsx = (paperSizeX + self.theBoardBorderSize * 2) / self.theScale
-        bsy = (paperSizeY + self.theBoardBorderSize * 2) / self.theScale
-        bsz = self.theBoardH / self.theScale
+        bsx = (paperSizeX + self.aBoardBorderSize * 2) / self.aScale
+        bsy = (paperSizeY + self.aBoardBorderSize * 2) / self.aScale
+        bsz = self.aBoardH / self.aScale
 
         dr.nm('boardWood')
         dr.mv().setMove(-bsx / 2, -bsy / 2, -psz - bsz)
-        dr.st(self.theBoardWoodStyle)
+        dr.st(self.aBoardWoodStyle)
         dr.add(self.getBox(bsx, bsy, bsz))
 
         dr.nm('scaleLabel')
-        dr.add(self.getDeskLabel(gp_Pnt(-bsx / 2, -bsy / 2, -psz), self.theScaleText, 'InfoStyle'))
+        dr.add(self.getDeskLabel(gp_Pnt(-bsx / 2, -bsy / 2, -psz), self.aScaleText, 'InfoStyle'))
 
-        dx = (paperSizeX / 2 - self.thePinOffset) / self.theScale
-        dy = (paperSizeY / 2 - self.thePinOffset) / self.theScale
+        dx = (paperSizeX / 2 - self.aPinOffset) / self.aScale
+        dy = (paperSizeY / 2 - self.aPinOffset) / self.aScale
 
         dr.nm('pin', 1)
         dr.add(self.getDeskPin(-dx, -dy))

@@ -22,29 +22,29 @@ from math import pi
 EQUAL_POINTS_PRECISION = 0.001
 
 
-def makeCircleWire(thePoint1, thePoint2, thePoint3):
-    theCircle = GC_MakeCircle(thePoint1, thePoint2, thePoint3).Value()
-    theEdge = BRepBuilderAPI_MakeEdge(theCircle).Edge()
-    theWire = BRepBuilderAPI_MakeWire(theEdge).Wire()
-    return theWire
+def makeCircleWire(aPoint1, aPoint2, aPoint3):
+    aCircle = GC_MakeCircle(aPoint1, aPoint2, aPoint3).Value()
+    aEdge = BRepBuilderAPI_MakeEdge(aCircle).Edge()
+    aWire = BRepBuilderAPI_MakeWire(aEdge).Wire()
+    return aWire
 
 
 def getXYZ(gpPnt):
     return gpPnt.X(), gpPnt.Y(), gpPnt.Z()
 
 
-def isPointExistInPoints(findingPoint, thePoints):
-    for thePoint in thePoints:
-        if thePoint.IsEqual(findingPoint, EQUAL_POINTS_PRECISION):
+def isPointExistInPoints(findingPoint, aPoints):
+    for aPoint in aPoints:
+        if aPoint.IsEqual(findingPoint, EQUAL_POINTS_PRECISION):
             return True
     return False
 
 
-def getUniquePoints(thePoints):
+def getUniquePoints(aPoints):
     uniquePoints = []
-    for thePoint in thePoints:
-        if not isPointExistInPoints(thePoint, uniquePoints):
-            uniquePoints += [thePoint]
+    for aPoint in aPoints:
+        if not isPointExistInPoints(aPoint, uniquePoints):
+            uniquePoints += [aPoint]
     return uniquePoints
 
 
@@ -61,8 +61,8 @@ def getPntScale(pCenter, p, scale):
     return pnt
 
 
-def getTranslatedPoint(thePoint, deltaX, deltaY, deltaZ):
-    translatedPoint = gp_Pnt(thePoint.XYZ())
+def getTranslatedPoint(aPoint, deltaX, deltaY, deltaZ):
+    translatedPoint = gp_Pnt(aPoint.XYZ())
     translatedPoint.Translate(gp_Vec(deltaX, deltaY, deltaZ))
     return translatedPoint
 
@@ -125,13 +125,13 @@ def makeEdgesFacesIntersectPoints(edgesShape, facesShape):
         return pnts
 
     intersectPoints = []
-    theEdges = getShapeItems(edgesShape, TopAbs_EDGE)
-    theFaces = getShapeItems(facesShape, TopAbs_FACE)
-    for theEdge in theEdges:
-        for theFace in theFaces:
-            edgeCurves = BRep_Tool.Curve(theEdge)
+    aEdges = getShapeItems(edgesShape, TopAbs_EDGE)
+    aFaces = getShapeItems(facesShape, TopAbs_FACE)
+    for aEdge in aEdges:
+        for aFace in aFaces:
+            edgeCurves = BRep_Tool.Curve(aEdge)
             edgeTrimmedCurve = Geom_TrimmedCurve(edgeCurves[0], edgeCurves[1], edgeCurves[2])
-            faceSurface = BRep_Tool.Surface(theFace)
+            faceSurface = BRep_Tool.Surface(aFace)
             findedIntersectPoints = findIntersectPoints(edgeTrimmedCurve, faceSurface)
             intersectPoints += findedIntersectPoints
     return intersectPoints
@@ -144,19 +144,19 @@ def utilGetShapePoints(shape):
     return getUniquePoints(shapePoints)
 
 
-def makeOffsetWire(theWire, offset):
+def makeOffsetWire(aWire, offset):
     tool = BRepOffsetAPI_MakeOffset()
-    tool.AddWire(theWire)
+    tool.AddWire(aWire)
     tool.Perform(offset)
-    theOffsetWire = tool.Shape()
-    return theOffsetWire
+    aOffsetWire = tool.Shape()
+    return aOffsetWire
 
 
-def utilGetZRotatedShape(theShape, angle):
-    theTransform = gp_Trsf()
+def utilGetZRotatedShape(aShape, angle):
+    aTransform = gp_Trsf()
     rotationAxis = gp_OZ()
-    theTransform.SetRotation(rotationAxis, angle)
-    rotatedShape = BRepBuilderAPI_Transform(theShape, theTransform).Shape()
+    aTransform.SetRotation(rotationAxis, angle)
+    rotatedShape = BRepBuilderAPI_Transform(aShape, aTransform).Shape()
 
     return rotatedShape
 
@@ -207,13 +207,13 @@ class DaoDraw(DeskDraw):
 
     def __init__(self):
         super().__init__(5 / 1, 'A0 M5:1')
-        self.theBaseRadius = DAO_BASE_RADIUS
-        self.theSliceFaceHeight = DAO_SLICE_FACE_HEIGHT
-        self.theSkinningSlicesKs = DAO_SKINNING_SLICES_KS
+        self.aBaseRadius = DAO_BASE_RADIUS
+        self.aSliceFaceHeight = DAO_SLICE_FACE_HEIGHT
+        self.aSkinningSlicesKs = DAO_SKINNING_SLICES_KS
 
     def getDaoBasePoints(self):
 
-        r = self.theBaseRadius
+        r = self.aBaseRadius
 
         r2 = r / 2
 
@@ -235,7 +235,7 @@ class DaoDraw(DeskDraw):
 
     def getDaoBoundCircleWire(self, offset):
 
-        r = self.theBaseRadius + offset
+        r = self.aBaseRadius + offset
         return makeCircleWire(gp_Pnt(r, 0, 0), gp_Pnt(0, r, 0), gp_Pnt(-r, 0, 0))
 
     def getDaoClassicWire(self):
@@ -252,9 +252,9 @@ class DaoDraw(DeskDraw):
         edge2 = BRepBuilderAPI_MakeEdge(arc2).Edge()
         edge3 = BRepBuilderAPI_MakeEdge(arc3).Edge()
 
-        theWire = BRepBuilderAPI_MakeWire(edge0, edge1, edge2, edge3).Wire()
+        aWire = BRepBuilderAPI_MakeWire(edge0, edge1, edge2, edge3).Wire()
 
-        return theWire
+        return aWire
 
     def getDaoOffsetWire(self, offset):
 
@@ -269,9 +269,9 @@ class DaoDraw(DeskDraw):
 
     def getDaoOffsetPoints(self, offset):
 
-        theWire = self.getCached('getDaoOffsetWire', offset)
+        aWire = self.getCached('getDaoOffsetWire', offset)
 
-        p = utilGetShapePoints(theWire)
+        p = utilGetShapePoints(aWire)
 
         namedPoints = {
             'Left': p[0],
@@ -291,7 +291,7 @@ class DaoDraw(DeskDraw):
 
     def getDaoFocusPoint(self):
 
-        r = self.theBaseRadius
+        r = self.aBaseRadius
 
         focusPoint = gp_Pnt(0, -r / 4, 0)
 
@@ -329,7 +329,7 @@ class DaoDraw(DeskDraw):
 
     def getDaoSliceSurface(self, offset, sliceK):
 
-        h = self.theSliceFaceHeight
+        h = self.aSliceFaceHeight
         beginPoint, endPoint = self.getCached('getDaoSliceLine', offset, sliceK)
 
         x1, y1, z1 = getXYZ(beginPoint)
@@ -352,10 +352,10 @@ class DaoDraw(DeskDraw):
     '''
     def getDaoSlicePoints(self, offset, sliceK):
 
-        theWire = self.getCached('getDaoOffsetWire', offset)
-        theFace = self.getCached('getDaoSliceSurface', offset, sliceK)
+        aWire = self.getCached('getDaoOffsetWire', offset)
+        aFace = self.getCached('getDaoSliceSurface', offset, sliceK)
 
-        farPoint, nearPoint = makeEdgesFacesIntersectPoints(theWire, theFace)
+        farPoint, nearPoint = makeEdgesFacesIntersectPoints(aWire, aFace)
 
         return {'Near': nearPoint, 'Far': farPoint}
     '''
