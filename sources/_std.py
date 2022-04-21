@@ -379,14 +379,14 @@ class GroupDrawItem(DrawItem):
             self.items[key].dump(prefix + '[' + key + ']')
 
     def makeItemName(self):
-        if self.aNextItemNum == 0:
+        if self.aNextItemNum is None:
             itemName = self.aNextItemName
         else:
             itemName = self.aNextItemName + '{0:3}'.format(self.aNextItemNum)
             self.aNextItemNum += 1
         return itemName
 
-    def nm(self, aNextItemName, aNextItemNum=0):
+    def nm(self, aNextItemName, aNextItemNum=None):
         self.aNextItemName = aNextItemName
         self.aNextItemNum = aNextItemNum
 

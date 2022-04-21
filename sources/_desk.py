@@ -191,22 +191,18 @@ class DeskDrawLib(DrawLib):
         psx, psy, psz = paperSizeX / self.theScale, paperSizeY / self.theScale, paperSizeZ / self.theScale
 
         gr.nm('boardPaper')
-        item = self.getStdBox(psx, psy, psz)
-        move = self.makeMove()
-        move.setTranslate(-psx / 2, -psy / 2, -psz)
+        gr.mv().setTranslate(-psx / 2, -psy / 2, -psz)
         gr.st(self.thePaperStyle)
-        gr.add(item, move, self.thePaperStyle)
+        gr.add(self.getStdBox(psx, psy, psz))
 
         bsx = (paperSizeX + self.theBoardBorderSize * 2) / self.theScale
         bsy = (paperSizeY + self.theBoardBorderSize * 2) / self.theScale
         bsz = self.theBoardH / self.theScale
 
         gr.nm('boardWood')
-        item = self.getStdBox(bsx, bsy, bsz)
-        move = self.makeMove()
-        move.setTranslate(-bsx / 2, -bsy / 2, -psz - bsz)
+        gr.mv().setTranslate(-bsx / 2, -bsy / 2, -psz - bsz)
         gr.st(self.theBoardWoodStyle)
-        gr.add(item, move, )
+        gr.add(self.getStdBox(bsx, bsy, bsz))
 
         gr.nm('scaleLabel')
         gr.add(self.getDeskLabel(gp_Pnt(-bsx / 2, -bsy / 2, -psz), self.theScaleText, 'InfoStyle'))
@@ -214,7 +210,7 @@ class DeskDrawLib(DrawLib):
         dx = (paperSizeX / 2 - self.thePinOffset) / self.theScale
         dy = (paperSizeY / 2 - self.thePinOffset) / self.theScale
 
-        gr.nm('pinN')
+        gr.nm('pin', 1)
         gr.add(self.getDeskPin(-dx, -dy))
         gr.add(self.getDeskPin(dx, -dy))
         gr.add(self.getDeskPin(dx, dy))
@@ -229,7 +225,7 @@ class DeskDrawLib(DrawLib):
         x1, y1, z1 = pnt1.X(), pnt1.Y(), pnt1.Z()
         x2, y2, z2 = pnt2.X(), pnt2.Y(), pnt2.Z()
 
-        gr.nm('boundsLineN')
+        gr.nm('boundsLine', 1)
 
         gr.add(self.getDeskLine(gp_Pnt(x1, y1, z1), gp_Pnt(x1, y2, z1), 'InfoStyle'))
         gr.add(self.getDeskLine(gp_Pnt(x1, y2, z1), gp_Pnt(x2, y2, z1), 'InfoStyle'))
@@ -252,17 +248,17 @@ class DeskDrawLib(DrawLib):
 
         gr = self.getStdGroup()
 
-        gr.nm('axisVectorN')
+        gr.nm('axisVector', 1)
         gr.add(self.getDeskVector(gp_Pnt(0, 0, 0), gp_Pnt(size, 0, 0), 'InfoStyle'))
         gr.add(self.getDeskVector(gp_Pnt(0, 0, 0), gp_Pnt(0, size, 0), 'InfoStyle'))
         gr.add(self.getDeskVector(gp_Pnt(0, 0, 0), gp_Pnt(0, 0, size), 'InfoStyle'))
 
-        gr.nm('axisLabelN')
+        gr.nm('axisLabel', 1)
         gr.add(self.getDeskLabel(gp_Pnt(size, 0, 0), 'X', 'InfoStyle'))
         gr.add(self.getDeskLabel(gp_Pnt(0, size, 0), 'Y', 'InfoStyle'))
         gr.add(self.getDeskLabel(gp_Pnt(0, 0, size), 'Z', 'InfoStyle'))
 
-        gr.nm('axisPointN')
+        gr.nm('axisPoint', 1)
         gr.add(self.getDeskPoint(gp_Pnt(0, 0, 0), 'InfoStyle'))
         cnt = size // step
         for i in range(1, cnt - 1):
@@ -280,23 +276,19 @@ class DeskDrawLib(DrawLib):
         gr = self.getStdGroup()
 
         gr.nm('desk')
-        move = self.makeMove()
-        move.setTranslate(0, 0, -60)
-        gr.add(self.getDeskDrawBoard(), move)
+        gr.mv().setTranslate(0, 0, -60)
+        gr.add(self.getDeskDrawBoard())
 
         gr.nm('bounds')
         gr.add(self.getDeskBounds(gp_Pnt(-50, -50, -50), gp_Pnt(50, 50, 20)))
 
         gr.nm('axis')
-        axis = self.drawAxis(50, 10)
-        gr.add(axis)
+        gr.add(self.drawAxis(50, 10))
 
         gr.nm('demoThree')
-        item = self.getStdCone(30, 0, 100)
-        move = self.makeMove()
-        move.setTranslate(0, 0, -50)
-        style = self.makeStyle((50, 200, 50), 'CHROME', 0.7)
-        gr.add(item, move, style)
+        gr.mv().setTranslate(0, 0, -50)
+        gr.st(self.makeStyle((50, 200, 50), 'CHROME', 0.7))
+        gr.add(self.getStdCone(30, 0, 100))
 
         return gr
 
@@ -304,8 +296,4 @@ class DeskDrawLib(DrawLib):
 if __name__ == '__main__':
     deskLib = DeskDrawLib()
     deskLib.setScale(5 / 1, 'A0 M5:1')
-    deskDemo = deskLib.getDeskDemo()
-    # deskDemo.dump()
-
-    screen = ScreenRenderLib()
-    screen.render(deskDemo)
+    ScreenRenderLib().render(deskLib.getDeskDemo())
