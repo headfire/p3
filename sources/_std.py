@@ -327,8 +327,22 @@ class ScreenRenderLib(RenderLib):
 
 
 # ************************************************************
+class DrawObj:
 
-class DrawItem:
+    @staticmethod
+    def makeStyle(aColor256=None, aMaterialName=None, aNormedTransparency=None):
+        ret = DrawStyle()
+        ret.setColor(aColor256)
+        ret.setMaterial(aMaterialName)
+        ret.setTransparency(aNormedTransparency)
+        return ret
+
+    @staticmethod
+    def makeMove():
+        return DrawMove()
+
+
+class DrawItem(DrawObj):
 
     def _dump(self, prefix=''):
         print(prefix + self.__class__.__name__)
@@ -348,32 +362,34 @@ class DrawItem:
 class GroupDrawItem(DrawItem):
 
     def __init__(self):
-        self.children = {}
-        self.aNextItemName = None
+        self.items = {}
+        self.aItemNameTemplate = 'Obj'
+        self.aItemNameNum = 0
+        self.st = DrawStyle()
+        self.mv = DrawMove()
 
     def _dump(self, prefix=''):
         super()._dump()
-        for key in self.children:
-            self.children[key].dump(prefix + '[' + key + ']')
+        for key in self.items:
+            self.items[key].dump(prefix + '[' + key + ']')
 
-    def _makeNextItemName(self):
-        # todo N in end of hint processing
-        if self.aNextItemName is None:
-            ret = 'Child' + str(len(self.children))
+    def makeItemName(self):
+        if self.aItemNameNum == 0:
+            itemName = self.aItemNameTemplate
         else:
-            ret = self.aNextItemName
+            itemName = self.aItemNameTemplate + '{0:3}'.format(self.aItemNameNum)
+            self.aItemNameNum += 1
+        return itemName
 
-        self.aNextItemName = None
+    def nm(self, aItemNameTemplate, aItemNameNum=0):
+        self.aItemNameTemplate = aItemNameTemplate
+        self.aItemNameNum = aItemNameNum
 
-        return ret
-
-    def nameHint(self, aNextItemName):
-        self.aNextItemName = aNextItemName
-
-    def addItem(self, aItem, aMove=DrawMove(), aStyle=DrawStyle()):
+    def add(self, aItem):
         _checkObj(aItem, DrawItem)
-        itemName = self._makeNextItemName()
-        self.children[itemName] = (aItem, aMove, aStyle)
+        self.items[self.makeItemName()] = (aItem, self.mv, self.st)
+        self.st = self.makeStyle()
+        self.mv = self.makeMove()
 
     def getItem(self, aPath):
         tokens = aPath.split('.')
@@ -383,8 +399,8 @@ class GroupDrawItem(DrawItem):
         return ret
 
     def render(self, renderLib, aSuperMove, aSuperStyle):
-        for key in self.children:
-            item, itemMove, itemStyle = self.children[key]
+        for key in self.items:
+            item, itemMove, itemStyle = self.items[key]
             mergedMove = _mergeMove(itemStyle, aSuperStyle)
             mergedStyle = _mergeStyle(itemStyle, aSuperStyle)
             item.render(renderLib, mergedMove, mergedStyle)
@@ -512,18 +528,6 @@ class DrawLib:
                 draw = method(param1, param2)
             self.cache[cacheKey] = draw
         return draw
-
-    @staticmethod
-    def getStdStyle(aColor256=None, aMaterialName=None, aNormedTransparency=None):
-        ret = DrawStyle()
-        ret.setColor(aColor256)
-        ret.setMaterial(aMaterialName)
-        ret.setTransparency(aNormedTransparency)
-        return ret
-
-    @staticmethod
-    def getStdMove():
-        return DrawMove()
 
     @staticmethod
     def getStdEmpty():
