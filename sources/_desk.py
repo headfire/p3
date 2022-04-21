@@ -92,11 +92,9 @@ class DeskDrawLib(DrawLib):
         gr = self.getStdGroup()
 
         gr.nm('labelText')
-        item = self.getStdLabel(aText, self.getLabelHeightPx(aDeskStyleName))
-        move = self.makeMove()
-        move.setTranslate(aPnt.X() + delta, aPnt.Y() + delta, aPnt.Z() + delta)
-        style = self.getDeskStyle(aDeskStyleName, 'LabelGeom')
-        gr.add(item, move, style)
+        gr.mv().setMove(aPnt.X() + delta, aPnt.Y() + delta, aPnt.Z() + delta)
+        gr.st(self.getDeskStyle(aDeskStyleName, 'LabelGeom'))
+        gr.add(self.getStdLabel(aText, self.getLabelHeightPx(aDeskStyleName)))
 
         return gr
 
@@ -107,7 +105,7 @@ class DeskDrawLib(DrawLib):
         pointR = self.getBaseRadius(aDeskStyleName) * self.thePointRFactor
 
         gr.nm('pointSphere')
-        gr.mv().setTranslate(aPnt.X(), aPnt.Y(), aPnt.Z())
+        gr.mv().setMove(aPnt.X(), aPnt.Y(), aPnt.Z())
         gr.st(self.getDeskStyle(aDeskStyleName, 'PointGeom'))
         gr.add(self.getStdSphere(pointR))
 
@@ -121,7 +119,7 @@ class DeskDrawLib(DrawLib):
         vec = gp_Vec(pnt1, pnt2)
 
         gr.nm('lineCylinder')
-        gr.mv().setDirection(pnt1, pnt2)
+        gr.mv().setDirect(pnt1, pnt2)
         gr.st(self.getDeskStyle(aDeskStyleName, 'LineGeom'))
         gr.add(self.getStdCylinder(lineR, vec.Magnitude()))
 
@@ -154,7 +152,7 @@ class DeskDrawLib(DrawLib):
         gr.add(self.getDeskLine(aPnt1, pntM, aDeskStyleName))
 
         gr.nm('vectorArrow')
-        gr.mv().setDirection(pntM, aPnt2)
+        gr.mv().setDirect(pntM, aPnt2)
         gr.st(self.getDeskStyle(aDeskStyleName, 'LineGeom'))
         gr.add(self.getStdCone(rArrow, 0, hArrow))
 
@@ -178,7 +176,7 @@ class DeskDrawLib(DrawLib):
 
         gr.nm('pinCylinder')
         gr.st(self.thePinStyle)
-        gr.mv().setTranslate(x, y, 0)
+        gr.mv().setMove(x, y, 0)
         gr.add(self.getStdCylinder(self.thePinR / self.theScale, self.thePinH / self.theScale))
 
         return gr
@@ -191,7 +189,7 @@ class DeskDrawLib(DrawLib):
         psx, psy, psz = paperSizeX / self.theScale, paperSizeY / self.theScale, paperSizeZ / self.theScale
 
         gr.nm('boardPaper')
-        gr.mv().setTranslate(-psx / 2, -psy / 2, -psz)
+        gr.mv().setMove(-psx / 2, -psy / 2, -psz)
         gr.st(self.thePaperStyle)
         gr.add(self.getStdBox(psx, psy, psz))
 
@@ -200,7 +198,7 @@ class DeskDrawLib(DrawLib):
         bsz = self.theBoardH / self.theScale
 
         gr.nm('boardWood')
-        gr.mv().setTranslate(-bsx / 2, -bsy / 2, -psz - bsz)
+        gr.mv().setMove(-bsx / 2, -bsy / 2, -psz - bsz)
         gr.st(self.theBoardWoodStyle)
         gr.add(self.getStdBox(bsx, bsy, bsz))
 
@@ -276,7 +274,7 @@ class DeskDrawLib(DrawLib):
         gr = self.getStdGroup()
 
         gr.nm('desk')
-        gr.mv().setTranslate(0, 0, -60)
+        gr.mv().setMove(0, 0, -60)
         gr.add(self.getDeskDrawBoard())
 
         gr.nm('bounds')
@@ -286,7 +284,7 @@ class DeskDrawLib(DrawLib):
         gr.add(self.drawAxis(50, 10))
 
         gr.nm('demoThree')
-        gr.mv().setTranslate(0, 0, -50)
+        gr.mv().setMove(0, 0, -50)
         gr.st(self.makeStyle((50, 200, 50), 'CHROME', 0.7))
         gr.add(self.getStdCone(30, 0, 100))
 

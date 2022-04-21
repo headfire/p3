@@ -93,8 +93,11 @@ class Style:
         return ret
 
     def setColor(self, aColor_RGB_256):
-        r256, g256, b256 = aColor_RGB_256
-        self.aColor = (r256 / 255, g256 / 255, b256 / 255)
+        if aColor_RGB_256 is None:
+            self.aColor = None
+        else:
+            r256, g256, b256 = aColor_RGB_256
+            self.aColor = (r256 / 255, g256 / 255, b256 / 255)
         return self
 
     def setTransparency(self, aFloat_0_1):
@@ -178,13 +181,6 @@ class Move:
         return self.aTrsf
 
 
-class DrawSettings:
-    def __init__(self):
-        self.aStyle = Style()
-        self.aMove = Move()
-        self.aLayer = 'DefaultLayer'
-
-
 class EnvParamLib:
 
     def __init__(self):
@@ -246,11 +242,9 @@ class RenderLib:
     def libShow(self):
         pass
 
-    def render(self, aDrawItem, aDrawSettings=None):
+    def render(self, aDrawItem, aMove = Move(), aStyle = Style()):
         self.libInit()
-        if aDrawSettings is not None:
-            aDrawSettings = DrawSettings()
-        aDrawItem.render(self, aDrawSettings)
+        aDrawItem.render(self, aMove, aStyle)
         self.libShow()
 
 
