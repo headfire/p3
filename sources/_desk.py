@@ -151,15 +151,12 @@ class DeskDrawLib(DrawLib):
         gr = self.getStdGroup()
 
         gr.nm('vectorLine')
-        item = self.getDeskLine(aPnt1, pntM, aDeskStyleName)
-        gr.add(item)
+        gr.add(self.getDeskLine(aPnt1, pntM, aDeskStyleName))
 
         gr.nm('vectorArrow')
-        item = self.getStdCone(rArrow, 0, hArrow)
-        move = self.makeMove()
-        move.setDirection(pntM, aPnt2)
-        style = self.getDeskStyle(aDeskStyleName, 'LineGeom')
-        gr.add(item, move, style)
+        gr.mv().setDirection(pntM, aPnt2)
+        gr.st(self.getDeskStyle(aDeskStyleName, 'LineGeom'))
+        gr.add(self.getStdCone(rArrow, 0, hArrow))
 
         return gr
 
@@ -168,9 +165,8 @@ class DeskDrawLib(DrawLib):
         gr = self.getStdGroup()
 
         gr.nm('aWire')
-        item = self.getStdWire(aWire, self.getBaseRadius(aDeskStyleName))
-        style = self.getDeskStyle(aDeskStyleName, 'LineGeom')
-        gr.add(item, None, style)
+        gr.st(self.getDeskStyle(aDeskStyleName, 'LineGeom'))
+        gr.add(self.getStdWire(aWire, self.getBaseRadius(aDeskStyleName)))
 
         return gr
 
@@ -181,10 +177,9 @@ class DeskDrawLib(DrawLib):
         gr = self.getStdGroup()
 
         gr.nm('pinCylinder')
-        item = self.getStdCylinder(self.thePinR / self.theScale, self.thePinH / self.theScale)
-        move = self.makeMove()
-        move.setTranslate(x, y, 0)
-        gr.add(item, move, self.thePinStyle)
+        gr.st(self.thePinStyle)
+        gr.mv().setTranslate(x, y, 0)
+        gr.add(self.getStdCylinder(self.thePinR / self.theScale, self.thePinH / self.theScale))
 
         return gr
 
@@ -199,6 +194,7 @@ class DeskDrawLib(DrawLib):
         item = self.getStdBox(psx, psy, psz)
         move = self.makeMove()
         move.setTranslate(-psx / 2, -psy / 2, -psz)
+        gr.st(self.thePaperStyle)
         gr.add(item, move, self.thePaperStyle)
 
         bsx = (paperSizeX + self.theBoardBorderSize * 2) / self.theScale
@@ -209,11 +205,11 @@ class DeskDrawLib(DrawLib):
         item = self.getStdBox(bsx, bsy, bsz)
         move = self.makeMove()
         move.setTranslate(-bsx / 2, -bsy / 2, -psz - bsz)
-        gr.add(item, move, self.theBoardWoodStyle)
+        gr.st(self.theBoardWoodStyle)
+        gr.add(item, move, )
 
         gr.nm('scaleLabel')
-        item = self.getDeskLabel(gp_Pnt(-bsx / 2, -bsy / 2, -psz), self.theScaleText, 'InfoStyle')
-        gr.add(item)
+        gr.add(self.getDeskLabel(gp_Pnt(-bsx / 2, -bsy / 2, -psz), self.theScaleText, 'InfoStyle'))
 
         dx = (paperSizeX / 2 - self.thePinOffset) / self.theScale
         dy = (paperSizeY / 2 - self.thePinOffset) / self.theScale
