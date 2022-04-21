@@ -61,23 +61,6 @@ def _getValue(aValue, aDefaultValue):
     return aDefaultValue
 
 
-def _mergeMove(aItemMove, aSuperMove):
-    ret = DrawMove()
-    ret.aTrsf = gp_Trsf()
-    ret.aTrsf *= aItemMove.aTrsf
-    ret.aTrsf *= aSuperMove.aTrsf
-    ret.aLayer = _getValue(aItemMove.aLayer, aSuperMove.aLayer)
-    return ret
-
-
-def _mergeStyle(aItemStyle, aSuperStyle):
-    ret = DrawStyle()
-    ret.aNormedColor = _getValue(aItemStyle.aNormedColor, aSuperStyle.aNormedColor)
-    ret.aNormedTransparency = _getValue(aItemStyle.aNormedTransparency, aSuperStyle.aNormedTransparency)
-    ret.aMaterial = _getValue(aItemStyle.aMaterial, aSuperStyle.aMaterial)
-    return ret
-
-
 def _getVectorTangentToCurveAtPoint(edge, uRatio):
     aCurve, aFP, aLP = BRep_Tool.Curve(edge)
     aP = aFP + (aLP - aFP) * uRatio
@@ -95,21 +78,32 @@ def _getWireStartPointAndTangentDir(wire):
     return BRep_Tool.Pnt(vertex), gp_Dir(v)
 
 
-class DrawStyle:
+class Style:
     def __init__(self):
         self.aColor = None
         self.aMaterial = None
         self.aTransparency = None
 
+    @staticmethod
+    def mergeStyle(aItemStyle, aSuperStyle):
+        ret = Style()
+        ret.aNormedColor = _getValue(aItemStyle.aNormedColor, aSuperStyle.aNormedColor)
+        ret.aNormedTransparency = _getValue(aItemStyle.aNormedTransparency, aSuperStyle.aNormedTransparency)
+        ret.aMaterial = _getValue(aItemStyle.aMaterial, aSuperStyle.aMaterial)
+        return ret
+
     def setColor(self, aColor_RGB_256):
         r256, g256, b256 = aColor_RGB_256
         self.aColor = (r256 / 255, g256 / 255, b256 / 255)
+        return self
 
     def setTransparency(self, aFloat_0_1):
         self.aTransparency = aFloat_0_1
+        return self
 
     def setMaterial(self, aMaterialName):
         self.aMaterial = aMaterialName
+        return self
 
     def getNormedColor(self):
         return self.aColor
@@ -121,11 +115,20 @@ class DrawStyle:
         return self.aMaterial
 
 
-class DrawMove:
+class Move:
 
     def __init__(self):
         self.aTrsf = gp_Trsf()
         self.aLayer = None
+
+    @staticmethod
+    def mergeMove(aItemMove, aSuperMove):
+        ret = Move()
+        ret.aTrsf = gp_Trsf()
+        ret.aTrsf *= aItemMove.aTrsf
+        ret.aTrsf *= aSuperMove.aTrsf
+        ret.aLayer = _getValue(aItemMove.aLayer, aSuperMove.aLayer)
+        return ret
 
     def _dumpTrsf(self):
         trsf = self.aTrsf
@@ -139,6 +142,7 @@ class DrawMove:
         trsf = gp_Trsf()
         trsf.SetTranslation(gp_Vec(dx, dy, dz))
         self.aTrsf *= trsf
+        return self
 
     # todo setScale K and XYZ
 
@@ -148,6 +152,7 @@ class DrawMove:
         ax1 = gp_Ax1(pntAxFrom, gp_Dir(gp_Vec(pntAxFrom, pntAxTo)))
         trsf.SetRotation(ax1, angle)
         self.aTrsf *= trsf
+
         return self
 
     def setDirect(self, pnt1, pnt2):
@@ -175,8 +180,8 @@ class DrawMove:
 
 class DrawSettings:
     def __init__(self):
-        self.aStyle = DrawStyle()
-        self.aMove = DrawMove()
+        self.aStyle = Style()
+        self.aMove = Move()
         self.aLayer = 'DefaultLayer'
 
 
@@ -331,7 +336,7 @@ class DrawObj:
 
     @staticmethod
     def makeStyle(aColor256=None, aMaterialName=None, aNormedTransparency=None):
-        ret = DrawStyle()
+        ret = Style()
         ret.setColor(aColor256)
         ret.setMaterial(aMaterialName)
         ret.setTransparency(aNormedTransparency)
@@ -339,7 +344,7 @@ class DrawObj:
 
     @staticmethod
     def makeMove():
-        return DrawMove()
+        return Move()
 
 
 class DrawItem(DrawObj):
@@ -363,10 +368,10 @@ class GroupDrawItem(DrawItem):
 
     def __init__(self):
         self.items = {}
-        self.aItemNameTemplate = 'Obj'
-        self.aItemNameNum = 0
-        self.st = DrawStyle()
-        self.mv = DrawMove()
+        self.aNextItemName = 'Obj'
+        self.aNextItemNum = 0
+        self.aNextItemMove = Move()
+        self.aNextItemStyle = Style()
 
     def _dump(self, prefix=''):
         super()._dump()
@@ -374,22 +379,32 @@ class GroupDrawItem(DrawItem):
             self.items[key].dump(prefix + '[' + key + ']')
 
     def makeItemName(self):
-        if self.aItemNameNum == 0:
-            itemName = self.aItemNameTemplate
+        if self.aNextItemNum == 0:
+            itemName = self.aNextItemName
         else:
-            itemName = self.aItemNameTemplate + '{0:3}'.format(self.aItemNameNum)
-            self.aItemNameNum += 1
+            itemName = self.aNextItemName + '{0:3}'.format(self.aNextItemNum)
+            self.aNextItemNum += 1
         return itemName
 
-    def nm(self, aItemNameTemplate, aItemNameNum=0):
-        self.aItemNameTemplate = aItemNameTemplate
-        self.aItemNameNum = aItemNameNum
+    def nm(self, aNextItemName, aNextItemNum=0):
+        self.aNextItemName = aNextItemName
+        self.aNextItemNum = aNextItemNum
+
+    def mv(self, aMove=None):
+        if aMove is not None:
+            self.aNextItemMove = aMove
+        return self.aNextItemMove
+
+    def st(self, aStyle=None):
+        if aStyle is not None:
+            self.aNextItemStyle = aStyle
+        return self.aNextItemStyle
 
     def add(self, aItem):
         _checkObj(aItem, DrawItem)
         self.items[self.makeItemName()] = (aItem, self.mv, self.st)
-        self.st = self.makeStyle()
-        self.mv = self.makeMove()
+        self.aNextItemMove = self.makeMove()
+        self.aNextItemStyle = self.makeStyle()
 
     def getItem(self, aPath):
         tokens = aPath.split('.')
@@ -401,8 +416,8 @@ class GroupDrawItem(DrawItem):
     def render(self, renderLib, aSuperMove, aSuperStyle):
         for key in self.items:
             item, itemMove, itemStyle = self.items[key]
-            mergedMove = _mergeMove(itemStyle, aSuperStyle)
-            mergedStyle = _mergeStyle(itemStyle, aSuperStyle)
+            mergedMove = Move.mergeMove(itemStyle, aSuperStyle)
+            mergedStyle = Style.mergeStyle(itemStyle, aSuperStyle)
             item.render(renderLib, mergedMove, mergedStyle)
 
 
