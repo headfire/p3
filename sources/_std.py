@@ -393,7 +393,7 @@ class BoxDrawItem(DrawItem):
 
     def render(self, renderLib, aMove, aStyle):
         renderLib.prepare(aMove, aStyle)
-        renderLib.renderCone(self.aSizeX, self.aSizeY, self.aSizeZ)
+        renderLib.renderBox(self.aSizeX, self.aSizeY, self.aSizeZ)
 
 
 class SphereDrawItem(DrawItem):
