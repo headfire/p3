@@ -514,7 +514,7 @@ class SurfaceDrawItem(DrawItem):
         renderLib.renderSurface(self.aSurface)
 
 
-class DrawLib:
+class DrawLib(DrawObj):
 
     def __init__(self):
         self.cache = {}
