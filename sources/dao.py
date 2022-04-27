@@ -441,20 +441,31 @@ class DaoDrawLib(DeskDrawLib):
 
         return dr
 
-    ''' 
-    def getDaoOffsetSlide(sc):
+    def getDaoOffsetSlide(self):
+
         offset = self.aOffset
+        boundCircleWire = self.getCached('getDaoBoundCircleWire', offset)
+        firstWire = self.getCached('getDaoOffsetWire', offset)
+        firstWirePoints = self.getCached('getDaoOffsetPoints', offset)
+        secondWire = self.getCached('getDaoSecondOffsetWire', offset)
 
-        sc.style('Main')
-        sc.draw('DaoOffsetWire', offset)
+        dr = self.makeDraw()
 
-        sc.label('p')
-        sc.draw('DaoOffsetPoints', offset)
+        dr.nm('firstWire')
+        dr.add(self.getDeskWire(firstWire, 'MainStyle'))
 
-        sc.style('Info')
-        sc.draw('DaoSecondOffsetWire', offset)
-        sc.draw('DaoBoundCircleWire', offset)
+        dr.nm('BasePoints')
+        dr.add(self.getDaoPointsDraw(firstWirePoints, 'p', 'MainStyle'))
 
+        dr.nm('SecondWire')
+        dr.add(self.getDeskWire(secondWire, 'InfoStyle'))
+
+        dr.nm('BoundCircleWire')
+        dr.add(self.getDeskWire(boundCircleWire, 'InfoStyle'))
+
+        return dr
+
+    ''' 
 
     def drawDaoExampleSliceSlide(sc):
         offset = sc.getVal('DAO_OFFSET')
@@ -599,7 +610,8 @@ class DaoDrawLib(DeskDrawLib):
 
 if __name__ == '__main__':
     daoLib = DaoDrawLib()
-    slide = daoLib.getDaoClassicSlide()
+    #slide = daoLib.getDaoClassicSlide()
+    slide = daoLib.getDaoOffsetSlide()
     desk = daoLib.getDeskDrawBoard()
     screen = Screen()
     slide.drawTo(screen)
