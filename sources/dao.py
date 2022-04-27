@@ -128,8 +128,10 @@ def makeEdgesFacesIntersectPoints(edgesShape, facesShape):
     aFaces = getShapeItems(facesShape, TopAbs_FACE)
     for aEdge in aEdges:
         for aFace in aFaces:
+            # noinspection PyTypeChecker
             edgeCurves = BRep_Tool.Curve(aEdge)
             edgeTrimmedCurve = Geom_TrimmedCurve(edgeCurves[0], edgeCurves[1], edgeCurves[2])
+            # noinspection PyTypeChecker
             faceSurface = BRep_Tool.Surface(aFace)
             findedIntersectPoints = findIntersectPoints(edgeTrimmedCurve, faceSurface)
             intersectPoints += findedIntersectPoints
@@ -351,7 +353,6 @@ class DaoDrawLib(DeskDrawLib):
 
         return face
 
-
     def getDaoSlicePoints(self, offset, sliceK):
 
         aWire = self.getCached('getDaoOffsetWire', offset)
@@ -464,7 +465,6 @@ class DaoDrawLib(DeskDrawLib):
 
         return dr
 
-
     def getDaoExampleSliceSlide(self):
 
         offset = self.aOffset
@@ -481,7 +481,7 @@ class DaoDrawLib(DeskDrawLib):
         dr.add(self.getDeskPoint(focus, 'MainStyle'))
 
         dr.nm('focusLabel')
-        dr.add(self.getDeskLabel(focus,'F' ,'MainStyle'))
+        dr.add(self.getDeskLabel(focus, 'F', 'MainStyle'))
 
         k = self.aSliceExampleK
         sliceLineP1, sliceLineP2 = self.getCached('getDaoSliceLine', offset, k)
@@ -628,10 +628,9 @@ class DaoDrawLib(DeskDrawLib):
 
 if __name__ == '__main__':
     daoLib = DaoDrawLib()
-    #slide = daoLib.getDaoClassicSlide()
-    #slide = daoLib.getDaoOffsetSlide()
+    # slide = daoLib.getDaoClassicSlide()
+    # slide = daoLib.getDaoOffsetSlide()
     slide = daoLib.getDaoExampleSliceSlide()
-
 
     desk = daoLib.getDeskDrawBoard()
     screen = Screen()
