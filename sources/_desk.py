@@ -18,7 +18,7 @@ MATE = 'PLASTIC'
 CHROME = 'CHROME'
 
 
-class DeskDraw(DrawLib):
+class DeskDrawLib(DrawLib):
 
     def __init__(self, aScaleK=1 / 1, aScaleText='A0 M1:1'):
         super().__init__()

@@ -1,4 +1,4 @@
-from _desk import DeskDraw
+from _desk import DeskDrawLib
 from _std import Screen
 
 from OCC.Core.gp import gp_Pnt, gp_Trsf, gp_Dir, gp_Vec, gp_Ax1, gp_OZ  # gp_Ax2, gp_GTrsf
@@ -204,7 +204,7 @@ def initDaoVals(sc):
 '''
 
 
-class DaoDraw(DeskDraw):
+class DaoDrawLib(DeskDrawLib):
 
     def __init__(self):
         super().__init__(5 / 1, 'A0 M5:1')
@@ -409,7 +409,7 @@ class DaoDraw(DeskDraw):
     # **********************************************************************************
     # **********************************************************************************
 
-    def getPointsDraw(self, pointsDict, prefix, styleName):
+    def getDaoPointsDraw(self, pointsDict, prefix, styleName):
 
         dr = self.makeDraw()
         dr.nm('Point')
@@ -441,6 +441,7 @@ class DaoDraw(DeskDraw):
 
         return dr
 
+    ''' 
     def getDaoOffsetSlide(sc):
         offset = self.aOffset
 
@@ -597,12 +598,12 @@ class DaoDraw(DeskDraw):
 
 
 if __name__ == '__main__':
-    dao = DaoDraw()
-    slide = dao.getDaoClassicSlide()
-    desk = dao.getDeskDrawBoard()
+    daoLib = DaoDrawLib()
+    slide = daoLib.getDaoClassicSlide()
+    desk = daoLib.getDeskDrawBoard()
     screen = Screen()
     slide.drawTo(screen)
-    desk.drawTo(screen, slide.makeMove().setMove(0,0,-60))
+    desk.drawTo(screen, daoLib.makeMove().setMove(0, 0, -60))
     screen.show()
 
     ''' 
