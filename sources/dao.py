@@ -116,12 +116,12 @@ def getShapeTranslate(shape, x, y, z):
 
 def makeEdgesFacesIntersectPoints(edgesShape, facesShape):
     def findIntersectPoints(curve, surface):
-        pnts = []
+        ps = []
         tool = GeomAPI_IntCS(curve, surface)
         pCount = tool.NbPoints()
         for i in range(1, pCount + 1):
-            pnts += [tool.Point(i)]
-        return pnts
+            ps += [tool.Point(i)]
+        return ps
 
     intersectPoints = []
     aEdges = getShapeItems(edgesShape, TopAbs_EDGE)
@@ -133,8 +133,8 @@ def makeEdgesFacesIntersectPoints(edgesShape, facesShape):
             edgeTrimmedCurve = Geom_TrimmedCurve(edgeCurves[0], edgeCurves[1], edgeCurves[2])
             # noinspection PyTypeChecker
             faceSurface = BRep_Tool.Surface(aFace)
-            findedIntersectPoints = findIntersectPoints(edgeTrimmedCurve, faceSurface)
-            intersectPoints += findedIntersectPoints
+            foundIntersectPoints = findIntersectPoints(edgeTrimmedCurve, faceSurface)
+            intersectPoints += foundIntersectPoints
     return intersectPoints
 
 
@@ -199,7 +199,7 @@ def initDaoVals(sc):
     sc.setVal('DAO_SLICE_EXAMPLE_K', 0.5)
     sc.setVal('DAO_SLICE_FACE_HEIGHT', 30)
     sc.setVal('DAO_SLICE_COUNT', 10)
-    sc.setVal('DAO_SKINING_SLICES_KS', )
+    sc.setVal('DAO_SKINNING_SLICES_KS', )
     sc.setVal('DAO_CASE_HEIGHT', 30)
     sc.setVal('DAO_CASE_GAP', 1)
 '''
@@ -398,8 +398,8 @@ class DaoDrawLib(DeskDrawLib):
         endVertex = BRepBuilderAPI_MakeVertex(endPoint).Vertex()
         skinner.AddVertex(endVertex)
 
-        skiner.Build()
-        surface = skiner.Shape()
+        skinner.Build()
+        surface = skinner.Shape()
 
         return surface
 
@@ -524,7 +524,7 @@ class DaoDrawLib(DeskDrawLib):
             sc.draw('DaoSliceWire', offset, k)
 
 
-    def drawDaoSkiningSlide(sc):
+    def drawDaoSkinningSlide(sc):
         offset = sc.getVal('DAO_OFFSET')
 
         sc.style('Main')
@@ -533,7 +533,7 @@ class DaoDrawLib(DeskDrawLib):
         sc.label('F')
         sc.draw('DaoFocusPoint')
 
-        ks = sc.getVal('DAO_SKINING_SLICES_KS')
+        ks = sc.getVal('DAO_SKINNING_SLICES_KS')
         for i in range(len(ks)):
             sc.style('Focus')
             sc.draw('DaoSliceLine', offset, ks[i])
@@ -541,7 +541,7 @@ class DaoDrawLib(DeskDrawLib):
             sc.draw('DaoSliceWire', offset, ks[i])
 
         sc.style('Focus')
-        sc.draw('DaoSkiningSurface', offset)
+        sc.draw('DaoSkinningSurface', offset)
 
 
     def drawDaoIngYangSlide(sc):
@@ -572,7 +572,7 @@ class DaoDrawLib(DeskDrawLib):
     def getDaoIngSurface(offset):
         # todo to const
         scaleK = 0.7
-        sourceSurface = sc.get('DaoSkiningSurface', offset)
+        sourceSurface = sc.get('DaoSkinningSurface', offset)
         scaledSurface = utilShapeZScale(sourceSurface, scaleK)
         return scaledSurface
 
@@ -619,7 +619,7 @@ class DaoDrawLib(DeskDrawLib):
             sc.setVal('DAO_SLICE_EXAMPLE_K', 0.5)
             sc.setVal('DAO_SLICE_FACE_HEIGHT', 30)
             sc.setVal('DAO_SLICE_COUNT', 10)
-            sc.setVal('DAO_SKINING_SLICES_KS', [0.03, 0.09, 0.16, 0.24, 0.35, 0.50, 0.70, 0.85])
+            sc.setVal('DAO_SKINNING_SLICES_KS', [0.03, 0.09, 0.16, 0.24, 0.35, 0.50, 0.70, 0.85])
             sc.setVal('DAO_CASE_HEIGHT', 30)
             sc.setVal('DAO_CASE_GAP', 1)
     
@@ -659,7 +659,7 @@ if __name__ == '__main__':
         elif SLIDE_NUM == 3:
             drawManySliceSlide(sc)
         elif SLIDE_NUM == 4:
-            drawDaoSkiningSlide(sc)
+            drawDaoSkinningSlide(sc)
         elif SLIDE_NUM == 5:
             drawDaoIngYangSlide(sc)
         elif SLIDE_NUM == 6:
