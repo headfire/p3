@@ -1,4 +1,4 @@
-from _std import Draw, Screen
+from _std import DrawLib, Screen
 from OCC.Core.gp import gp_Pnt, gp_Vec
 
 WOOD_COLOR = 208, 117, 28
@@ -18,7 +18,7 @@ MATE = 'PLASTIC'
 CHROME = 'CHROME'
 
 
-class DeskDraw(Draw):
+class DeskDraw(DrawLib):
 
     def __init__(self, aScaleK=1 / 1, aScaleText='A0 M1:1'):
         super().__init__()

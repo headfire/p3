@@ -282,90 +282,7 @@ class Screen(RenderLib):
 
 # ************************************************************
 class Draw:
-
-    def __init__(self):
-        self.cache = {}
-
-    def getCached(self, methodName, param1=None, param2=None):
-
-        params = ''
-        if param1 is not None:
-            params += str(param1)
-        if param2 is not None:
-            params += ',' + str(param2)
-
-        cacheKey = methodName + '(' + params + ')'
-
-        method = self.__getattribute__(methodName)
-        if cacheKey in self.cache:
-            print('==> Get from cache', cacheKey)
-            obj = self.cache[cacheKey]
-        else:
-            print('==> Compute', cacheKey)
-            if param1 is None:
-                obj = method()
-            elif param2 is None:
-                obj = method(param1)
-            else:
-                obj = method(param1, param2)
-            self.cache[cacheKey] = obj
-        return obj
-
-    @staticmethod
-    def makeStyle(aColor256=None, aMaterialName=None, aNormedTransparency=None):
-        ret = Style()
-        ret.setColor(aColor256)
-        ret.setMaterial(aMaterialName)
-        ret.setTransparency(aNormedTransparency)
-        return ret
-
-    @staticmethod
-    def makeMove():
-        return Move()
-
-    @staticmethod
-    def makeDraw():
-        return GroupDraw()
-
-    @staticmethod
-    def getHook(aHookPnt, aHookObj=None):
-        return HookDraw(aHookPnt, aHookObj)
-
-    @staticmethod
-    def getLabel(aText, aHeightPx):
-        return LabelDraw(aText, aHeightPx)
-
-    @staticmethod
-    def getBox(aSizeX, aSizeY, aSizeZ):
-        return BoxDraw(aSizeX, aSizeY, aSizeZ)
-
-    @staticmethod
-    def getSphere(aRadius):
-        return SphereDraw(aRadius)
-
-    @staticmethod
-    def getCylinder(aRadius, aHeight):
-        return CylinderDraw(aRadius, aHeight)
-
-    @staticmethod
-    def getCone(aRadius1, aRadius2, aHeight):
-        return ConeDraw(aRadius1, aRadius2, aHeight)
-
-    @staticmethod
-    def getTorus(aRadius1, aRadius2):
-        return TorusDraw(aRadius1, aRadius2)
-
-    @staticmethod
-    def getCircle(aPnt1, aPnt2, aPnt3, aLineWidth):
-        return CircleDraw(aPnt1, aPnt2, aPnt3, aLineWidth)
-
-    @staticmethod
-    def getWire(aWire, aLineRadius):
-        return WireDraw(aWire, aLineRadius)
-
-    @staticmethod
-    def getSurface(aSurface):
-        return SurfaceDraw(aSurface)
+    pass
 
 
 class GroupDraw(Draw):
@@ -409,8 +326,8 @@ class GroupDraw(Draw):
     def add(self, aItem):
         _checkObj(aItem, Draw)
         self.items[self.makeItemName()] = (aItem, self.aNextItemMove, self.aNextItemStyle)
-        self.aNextItemMove = self.makeMove()
-        self.aNextItemStyle = self.makeStyle()
+        self.aNextItemMove = Move()
+        self.aNextItemStyle = Style()
 
     def getItem(self, aPath):
         tokens = aPath.split('.')
@@ -527,3 +444,90 @@ class SurfaceDraw(Draw):
     def drawTo(self, renderLib, aMove=Move(), aStyle=Style()):
         renderLib.prepare(aMove, aStyle)
         renderLib.renderSurface(self.aSurface)
+
+
+class DrawLib:
+
+    def __init__(self):
+        self.cache = {}
+
+    def getCached(self, methodName, param1=None, param2=None):
+
+        params = ''
+        if param1 is not None:
+            params += str(param1)
+        if param2 is not None:
+            params += ',' + str(param2)
+
+        cacheKey = methodName + '(' + params + ')'
+
+        method = self.__getattribute__(methodName)
+        if cacheKey in self.cache:
+            print('==> Get from cache', cacheKey)
+            obj = self.cache[cacheKey]
+        else:
+            print('==> Compute', cacheKey)
+            if param1 is None:
+                obj = method()
+            elif param2 is None:
+                obj = method(param1)
+            else:
+                obj = method(param1, param2)
+            self.cache[cacheKey] = obj
+        return obj
+
+    @staticmethod
+    def makeStyle(aColor256=None, aMaterialName=None, aNormedTransparency=None):
+        ret = Style()
+        ret.setColor(aColor256)
+        ret.setMaterial(aMaterialName)
+        ret.setTransparency(aNormedTransparency)
+        return ret
+
+    @staticmethod
+    def makeMove():
+        return Move()
+
+    @staticmethod
+    def makeDraw():
+        return GroupDraw()
+
+    @staticmethod
+    def getHook(aHookPnt, aHookObj=None):
+        return HookDraw(aHookPnt, aHookObj)
+
+    @staticmethod
+    def getLabel(aText, aHeightPx):
+        return LabelDraw(aText, aHeightPx)
+
+    @staticmethod
+    def getBox(aSizeX, aSizeY, aSizeZ):
+        return BoxDraw(aSizeX, aSizeY, aSizeZ)
+
+    @staticmethod
+    def getSphere(aRadius):
+        return SphereDraw(aRadius)
+
+    @staticmethod
+    def getCylinder(aRadius, aHeight):
+        return CylinderDraw(aRadius, aHeight)
+
+    @staticmethod
+    def getCone(aRadius1, aRadius2, aHeight):
+        return ConeDraw(aRadius1, aRadius2, aHeight)
+
+    @staticmethod
+    def getTorus(aRadius1, aRadius2):
+        return TorusDraw(aRadius1, aRadius2)
+
+    @staticmethod
+    def getCircle(aPnt1, aPnt2, aPnt3, aLineWidth):
+        return CircleDraw(aPnt1, aPnt2, aPnt3, aLineWidth)
+
+    @staticmethod
+    def getWire(aWire, aLineRadius):
+        return WireDraw(aWire, aLineRadius)
+
+    @staticmethod
+    def getSurface(aSurface):
+        return SurfaceDraw(aSurface)
