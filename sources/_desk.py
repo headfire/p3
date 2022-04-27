@@ -159,6 +159,15 @@ class DeskDrawLib(DrawLib):
 
         return dr
 
+    def getDeskSurface(self, aSurface, aDeskStyleName):
+        dr = self.makeDraw()
+
+        dr.nm('aSurface')
+        dr.st(self.getDeskStyle(aDeskStyleName, 'FaceGeom'))
+        dr.add(self.getSurface(aSurface))
+
+        return dr
+
     # **************************************
 
     def getDeskPin(self, x, y):
@@ -278,7 +287,7 @@ class DeskDrawLib(DrawLib):
 
 
 if __name__ == '__main__':
-    desk = DeskDraw(5 / 1, 'A0 M5:1')
+    desk = DeskDrawLib(5 / 1, 'A0 M5:1')
     screen = Screen()
     desk.getDeskDemo().drawTo(screen)
     screen.show()

@@ -2,10 +2,10 @@ from _desk import DeskDrawLib
 from _std import Screen
 
 from OCC.Core.gp import gp_Pnt, gp_Trsf, gp_Dir, gp_Vec, gp_Ax1, gp_OZ  # gp_Ax2, gp_GTrsf
-# from OCC.Core.Geom import Geom_TrimmedCurve
-# from OCC.Core.GeomAPI import GeomAPI_IntCS
+from OCC.Core.Geom import Geom_TrimmedCurve
+from OCC.Core.GeomAPI import GeomAPI_IntCS
 from OCC.Core.TopExp import TopExp_Explorer
-from OCC.Core.TopAbs import TopAbs_VERTEX  # TopAbs_FACE, TopAbs_EDGE,
+from OCC.Core.TopAbs import TopAbs_VERTEX, TopAbs_FACE, TopAbs_EDGE
 
 from OCC.Core.GC import GC_MakeArcOfCircle, GC_MakeCircle
 
@@ -114,7 +114,6 @@ def getShapeTranslate(shape, x, y, z):
 # *******************************************************************************
 # *******************************************************************************
 
-'''
 def makeEdgesFacesIntersectPoints(edgesShape, facesShape):
     def findIntersectPoints(curve, surface):
         pnts = []
@@ -135,7 +134,6 @@ def makeEdgesFacesIntersectPoints(edgesShape, facesShape):
             findedIntersectPoints = findIntersectPoints(edgeTrimmedCurve, faceSurface)
             intersectPoints += findedIntersectPoints
     return intersectPoints
-'''
 
 
 def utilGetShapePoints(shape):
@@ -189,6 +187,7 @@ Todo = None
 DAO_BASE_RADIUS = 40
 DAO_OFFSET = 3
 DAO_SLICE_FACE_HEIGHT = 30
+DAO_SLICE_EXAMPLE_K = 0.5
 DAO_SKINNING_SLICES_KS = [0.03, 0.09, 0.16, 0.24, 0.35, 0.50, 0.70, 0.85]
 
 '''
@@ -212,6 +211,7 @@ class DaoDrawLib(DeskDrawLib):
         self.aOffset = DAO_OFFSET
         self.aSliceFaceHeight = DAO_SLICE_FACE_HEIGHT
         self.aSkinningSlicesKs = DAO_SKINNING_SLICES_KS
+        self.aSliceExampleK = DAO_SLICE_EXAMPLE_K
 
     def getDaoBasePoints(self):
 
@@ -351,7 +351,7 @@ class DaoDrawLib(DeskDrawLib):
 
         return face
 
-    '''
+
     def getDaoSlicePoints(self, offset, sliceK):
 
         aWire = self.getCached('getDaoOffsetWire', offset)
@@ -360,7 +360,6 @@ class DaoDrawLib(DeskDrawLib):
         farPoint, nearPoint = makeEdgesFacesIntersectPoints(aWire, aFace)
 
         return {'Near': nearPoint, 'Far': farPoint}
-    '''
 
     def getDaoSliceWire(self, offset, sliceK):
 
@@ -465,27 +464,46 @@ class DaoDrawLib(DeskDrawLib):
 
         return dr
 
-    ''' 
 
-    def drawDaoExampleSliceSlide(sc):
-        offset = sc.getVal('DAO_OFFSET')
+    def getDaoExampleSliceSlide(self):
 
-        sc.style('Main')
-        sc.draw('DaoOffsetWire', offset)
+        offset = self.aOffset
+        wire = self.getCached('getDaoOffsetWire', offset)
+        focus = self.getCached('getDaoFocusPoint')
+        boundCircleWire = self.getCached('getDaoBoundCircleWire', offset)
 
-        sc.label('F')
-        sc.draw('DaoFocusPoint')
+        dr = self.makeDraw()
 
-        sc.style('Focus')
-        k = sc.getVal('DAO_SLICE_EXAMPLE_K')
-        sc.draw('DaoSliceLine', offset, k)
-        sc.draw('DaoSliceSurface', offset, k)
-        sc.label('x')
-        sc.draw('DaoSlicePoints', offset, k)
+        dr.nm('wire')
+        dr.add(self.getDeskWire(wire, 'MainStyle'))
 
-        sc.draw('DaoSliceWire', offset, k)
+        dr.nm('focus')
+        dr.add(self.getDeskPoint(focus, 'MainStyle'))
 
+        dr.nm('focusLabel')
+        dr.add(self.getDeskLabel(focus,'F' ,'MainStyle'))
 
+        k = self.aSliceExampleK
+        sliceLineP1, sliceLineP2 = self.getCached('getDaoSliceLine', offset, k)
+        sliceSurface = self.getCached('getDaoSliceSurface', offset, k)
+        slicePoints = self.getCached('getDaoSlicePoints', offset, k)
+        sliceWire = self.getCached('getDaoSliceWire', offset, k)
+
+        dr.nm('sliceLine')
+        dr.add(self.getDeskLine(sliceLineP1, sliceLineP2, 'FocusStyle'))
+        dr.nm('sliceSurface')
+        dr.add(self.getDeskSurface(sliceSurface, 'FocusStyle'))
+        dr.nm('slicePoints')
+        dr.add(self.getDaoPointsDraw(slicePoints, 's', 'FocusStyle'))
+        dr.nm('sliceWire')
+        dr.add(self.getDeskWire(sliceWire, 'FocusStyle'))
+
+        dr.nm('BoundCircleWire')
+        dr.add(self.getDeskWire(boundCircleWire, 'InfoStyle'))
+
+        return dr
+
+    '''
     def drawManySliceSlide(sc):
         offset = sc.getVal('DAO_OFFSET')
 
@@ -611,7 +629,10 @@ class DaoDrawLib(DeskDrawLib):
 if __name__ == '__main__':
     daoLib = DaoDrawLib()
     #slide = daoLib.getDaoClassicSlide()
-    slide = daoLib.getDaoOffsetSlide()
+    #slide = daoLib.getDaoOffsetSlide()
+    slide = daoLib.getDaoExampleSliceSlide()
+
+
     desk = daoLib.getDeskDrawBoard()
     screen = Screen()
     slide.drawTo(screen)
