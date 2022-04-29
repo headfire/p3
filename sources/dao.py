@@ -190,6 +190,7 @@ DAO_BASE_RADIUS = 40
 DAO_OFFSET = 3
 DAO_SLICE_FACE_HEIGHT = 30
 DAO_SLICE_EXAMPLE_K = 0.5
+DAO_SLICE_COUNT = 20
 DAO_SKINNING_SLICES_KS = [0.03, 0.09, 0.16, 0.24, 0.35, 0.50, 0.70, 0.85]
 
 '''
@@ -214,6 +215,7 @@ class DaoDrawLib(DeskDrawLib):
         self.aSliceFaceHeight = DAO_SLICE_FACE_HEIGHT
         self.aSkinningSlicesKs = DAO_SKINNING_SLICES_KS
         self.aSliceExampleK = DAO_SLICE_EXAMPLE_K
+        self.aSliceCount = DAO_SLICE_COUNT
 
     def getDaoBasePoints(self):
 
@@ -503,27 +505,45 @@ class DaoDrawLib(DeskDrawLib):
 
         return dr
 
-    '''
-    def drawManySliceSlide(sc):
-        offset = sc.getVal('DAO_OFFSET')
+    def getManySliceSlide(self):
 
-        sc.style('Main')
-        sc.draw('DaoOffsetWire', offset)
+        offset = self.aOffset
+        wire = self.getCached('getDaoOffsetWire', offset)
+        focus = self.getCached('getDaoFocusPoint')
+        boundCircleWire = self.getCached('getDaoBoundCircleWire', offset)
 
-        sc.label('F')
-        sc.draw('DaoFocusPoint')
+        dr = self.makeDraw()
 
-        cnt = sc.getVal('DAO_SLICE_COUNT')
+        dr.nm('wire')
+        dr.add(self.getDeskWire(wire, 'MainStyle'))
+
+        dr.nm('focus')
+        dr.add(self.getDeskPoint(focus, 'MainStyle'))
+
+        dr.nm('focusLabel')
+        dr.add(self.getDeskLabel(focus, 'F', 'MainStyle'))
+
+        cnt = self.aSliceCount
         bK = 1 / (cnt + 1)
         eK = 1 - 1 / (cnt + 1)
         for i in range(cnt):
             k = bK + i * (eK - bK) / (cnt - 1)
-            sc.style('Focus')
-            sc.draw('DaoSliceLine', offset, k)
-            sc.style('Main')
-            sc.draw('DaoSliceWire', offset, k)
 
+            sliceLineP1, sliceLineP2 = self.getCached('getDaoSliceLine', offset, k)
+            sliceWire = self.getCached('getDaoSliceWire', offset, k)
 
+            dr.nm('sliceLine'+str(i))
+            dr.add(self.getDeskLine(sliceLineP1, sliceLineP2, 'FocusStyle'))
+
+            dr.nm('sliceWire'+str(i))
+            dr.add(self.getDeskWire(sliceWire, 'MainStyle'))
+
+        dr.nm('BoundCircleWire')
+        dr.add(self.getDeskWire(boundCircleWire, 'InfoStyle'))
+
+        return dr
+
+    '''
     def drawDaoSkinningSlide(sc):
         offset = sc.getVal('DAO_OFFSET')
 
@@ -630,7 +650,8 @@ if __name__ == '__main__':
     daoLib = DaoDrawLib()
     # slide = daoLib.getDaoClassicSlide()
     # slide = daoLib.getDaoOffsetSlide()
-    slide = daoLib.getDaoExampleSliceSlide()
+    # slide = daoLib.getDaoExampleSliceSlide()
+    slide = daoLib.getManySliceSlide()
 
     desk = daoLib.getDeskDrawBoard()
     screen = Screen()
