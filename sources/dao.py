@@ -1,7 +1,7 @@
 from _desk import DeskDrawLib
 from _std import Screen
 
-from OCC.Core.gp import gp_Pnt, gp_Trsf, gp_Dir, gp_Vec, gp_Ax1, gp_OZ  # gp_Ax2, gp_GTrsf
+from OCC.Core.gp import gp_Pnt, gp_Trsf, gp_Dir, gp_Vec, gp_Ax1, gp_OZ, gp_GTrsf, gp_Ax2
 from OCC.Core.Geom import Geom_TrimmedCurve
 from OCC.Core.GeomAPI import GeomAPI_IntCS
 from OCC.Core.TopExp import TopExp_Explorer
@@ -12,12 +12,13 @@ from OCC.Core.GC import GC_MakeArcOfCircle, GC_MakeCircle
 from OCC.Core.BRep import BRep_Tool
 from OCC.Core.BRepBuilderAPI import (BRepBuilderAPI_MakeEdge, BRepBuilderAPI_MakeWire,
                                      BRepBuilderAPI_Transform, BRepBuilderAPI_MakeFace,
-                                     BRepBuilderAPI_MakeVertex)  # BRepBuilderAPI_GTransform,
+                                     BRepBuilderAPI_MakeVertex, BRepBuilderAPI_GTransform)
 from OCC.Core.BRepOffsetAPI import BRepOffsetAPI_MakeOffset, BRepOffsetAPI_ThruSections
-# from OCC.Core.BRepPrimAPI import BRepPrimAPI_MakeSphere, BRepPrimAPI_MakeBox
-# from OCC.Core.BRepAlgoAPI import BRepAlgoAPI_Common, BRepAlgoAPI_Cut
+from OCC.Core.BRepPrimAPI import BRepPrimAPI_MakeSphere, BRepPrimAPI_MakeBox
+from OCC.Core.BRepAlgoAPI import BRepAlgoAPI_Common, BRepAlgoAPI_Cut
 
 from math import pi
+
 
 EQUAL_POINTS_PRECISION = 0.001
 
@@ -73,9 +74,9 @@ def getAngle(gpPnt0, gpPnt1, gpPnt2):
     return v2.AngleWithRef(v1, gp_Vec(0, 0, 1))
 
 
-def getShapeItems(shape, topoType):
+def getShapeItems(shape, topologyType):
     items = []
-    ex = TopExp_Explorer(shape, topoType)
+    ex = TopExp_Explorer(shape, topologyType)
     while ex.More():
         items.append(ex.Current())
         ex.Next()
@@ -181,6 +182,15 @@ def slide_07_DaoWithCase(sc, r, offset, caseH, caseZMove, gap):
     sc.shape(case, 'StyleDaoCase')
 
 '''
+
+
+def utilShapeZScale(shape, scaleK):
+    transform = gp_GTrsf()
+    transform.SetAffinity(gp_Ax2(gp_Pnt(0, 0, 0), gp_Dir(0, 0, 1), gp_Dir(0, 1, 0)), scaleK)
+    shape = BRepBuilderAPI_GTransform(shape, transform).Shape()
+    return shape
+
+
 # *********************************************************************************
 # *********************************************************************************
 # *********************************************************************************
@@ -192,18 +202,9 @@ DAO_SLICE_FACE_HEIGHT = 30
 DAO_SLICE_EXAMPLE_K = 0.5
 DAO_SLICE_COUNT = 20
 DAO_SKINNING_SLICES_KS = [0.03, 0.09, 0.16, 0.24, 0.35, 0.50, 0.70, 0.85]
-
-'''
-def initDaoVals(sc):
-    sc.setVal('DAO_BASE_RADIUS', 40)
-    sc.setVal('DAO_OFFSET', 3)
-    sc.setVal('DAO_SLICE_EXAMPLE_K', 0.5)
-    sc.setVal('DAO_SLICE_FACE_HEIGHT', 30)
-    sc.setVal('DAO_SLICE_COUNT', 10)
-    sc.setVal('DAO_SKINNING_SLICES_KS', )
-    sc.setVal('DAO_CASE_HEIGHT', 30)
-    sc.setVal('DAO_CASE_GAP', 1)
-'''
+DAO_SURFACE_Z_SCALE = 0.7
+DAO_CASE_HEIGHT = 30
+DAO_CASE_GAP = 1
 
 
 class DaoDrawLib(DeskDrawLib):
@@ -216,6 +217,9 @@ class DaoDrawLib(DeskDrawLib):
         self.aSkinningSlicesKs = DAO_SKINNING_SLICES_KS
         self.aSliceExampleK = DAO_SLICE_EXAMPLE_K
         self.aSliceCount = DAO_SLICE_COUNT
+        self.aSurfaceZScale = DAO_SURFACE_Z_SCALE
+        self.aCaseHeight = DAO_CASE_HEIGHT
+        self.aCaseGap = DAO_CASE_GAP
 
     def getDaoBasePoints(self):
 
@@ -404,6 +408,44 @@ class DaoDrawLib(DeskDrawLib):
 
         return surface
 
+    def getDaoIngSurface(self, offset):
+        scale = self.aSurfaceZScale
+        sourceSurface = self.getCached('getDaoSkinningSurface', offset)
+        scaledSurface = utilShapeZScale(sourceSurface, scale)
+        return scaledSurface
+
+    def getDaoYangSurface(self, offset):
+        sourceSurface = self.getCached('getDaoIngSurface', offset)
+        rotatedSurface = utilGetZRotatedShape(sourceSurface, pi)
+        return rotatedSurface
+
+    def getDaoCaseSurface(self):
+
+        r = self.aBaseRadius
+        r2 = r * 2
+        h = self.aCaseHeight
+        h2 = h / 2
+        offset = self.aOffset
+        gap = self.aCaseGap
+        rTop = r + offset + gap
+
+        rSphere = gp_Vec(0, rTop, h2).Magnitude()
+        sphere = BRepPrimAPI_MakeSphere(rSphere).Shape()
+
+        limit = BRepPrimAPI_MakeBox(gp_Pnt(-r2, -r2, -h2), gp_Pnt(r2, r2, h2)).Shape()
+        step01Surface = BRepAlgoAPI_Common(sphere, limit).Shape()
+
+        step02Surface = getShapeTranslate(step01Surface, 0, 0, -h2)
+
+        cutIngSurface = self.getCached('getDaoIngSurface', offset - gap)
+        cutYangSurface = self.getCached('getDaoYangSurface', offset - gap)
+        step03Surface = BRepAlgoAPI_Cut(step02Surface, cutIngSurface).Shape()
+        step04Surface = BRepAlgoAPI_Cut(step03Surface, cutYangSurface).Shape()
+
+        step05Surface = getShapeTranslate(step04Surface, 0, 0, -h2)
+
+        return step05Surface
+
     # **********************************************************************************
     # **********************************************************************************
     # **********************************************************************************
@@ -571,87 +613,48 @@ class DaoDrawLib(DeskDrawLib):
 
         return dr
 
-    '''
-    def drawDaoIngYangSlide(sc):
-        offset = sc.getVal('DAO_OFFSET')
-        sc.style('Main', (100, 35, 24))
-        sc.draw('DaoIngSurface', offset)
-        sc.style('Main', (52, 51, 100))
-        sc.draw('DaoYangSurface', offset)
+    def getDaoIngYangSlide(self):
 
+        offset = self.aOffset
 
-    def drawDaoCaseSlide(sc):
-        offset = sc.getVal('DAO_OFFSET')
-        sc.style('Main', (100, 35, 24))
-        sc.draw('DaoIngSurface', offset)
-        sc.style('Main', (52, 51, 100))
-        sc.draw('DaoYangSurface', offset)
-        sc.style('Main', (50, 50, 50))
-        sc.draw('DaoCaseSurface')
+        dr = self.makeDraw()
 
+        ingSurface = self.getCached('getDaoIngSurface', offset)
+        yangSurface = self.getCached('getDaoYangSurface', offset)
 
-    def utilShapeZScale(shape, scaleK):
-        transform = gp_GTrsf()
-        transform.SetAffinity(gp_Ax2(gp_Pnt(0, 0, 0), gp_Dir(0, 0, 1), gp_Dir(0, 1, 0)), scaleK)
-        shape = BRepBuilderAPI_GTransform(shape, transform).Shape()
-        return shape
+        dr.nm('ingSurface')
+        dr.st(self.makeStyle((100, 100, 255), 'CHROME', 0))
+        dr.add(self.getSurface(ingSurface))
 
+        dr.nm('yangSurface')
+        dr.st(self.makeStyle((255, 100, 100), 'CHROME', 0))
+        dr.add(self.getSurface(yangSurface))
 
-    def getDaoIngSurface(offset):
-        # todo to const
-        scaleK = 0.7
-        sourceSurface = sc.get('DaoSkinningSurface', offset)
-        scaledSurface = utilShapeZScale(sourceSurface, scaleK)
-        return scaledSurface
+        return dr
 
+    def getDaoCaseSlide(self):
 
-    def getDaoYangSurface(offset):
-        sourceSurface = sc.get('DaoIngSurface', offset)
-        rotatedSurface = utilGetZRotatedShape(sourceSurface, pi)
-        return rotatedSurface
+        offset = self.aOffset
 
-    def getDaoCaseSurface():
-        r = sc.getVal('DAO_BASE_RADIUS')
-        r2 = r * 2
-        h = sc.getVal('DAO_CASE_HEIGHT')
-        h2 = h / 2
-        offset = sc.getVal('DAO_OFFSET')
-        gap = sc.getVal('DAO_CASE_GAP')
-        rTop = r + offset + gap
+        dr = self.makeDraw()
 
-        rSphere = gp_Vec(0, rTop, h2).Magnitude()
-        sphere = BRepPrimAPI_MakeSphere(rSphere).Shape()
+        ingSurface = self.getCached('getDaoIngSurface', offset)
+        yangSurface = self.getCached('getDaoYangSurface', offset)
+        caseSurface = self.getCached('getDaoCaseSurface')
 
-        limit = BRepPrimAPI_MakeBox(gp_Pnt(-r2, -r2, -h2), gp_Pnt(r2, r2, h2)).Shape()
-        step01Surface = BRepAlgoAPI_Common(sphere, limit).Shape()
+        dr.nm('ingSurface')
+        dr.st(self.makeStyle((100, 100, 255), 'CHROME', 0))
+        dr.add(self.getSurface(ingSurface))
 
-        step02Surface = getShapeTranslate(step01Surface, 0, 0, -h2)
+        dr.nm('yangSurface')
+        dr.st(self.makeStyle((255, 100, 100), 'CHROME', 0))
+        dr.add(self.getSurface(yangSurface))
 
-        cutIngSurface = sc.get('DaoIngSurface', offset - gap)
-        cutYangSurface = sc.get('DaoYangSurface', offset - gap)
-        step03Surface = BRepAlgoAPI_Cut(step02Surface, cutIngSurface).Shape()
-        step04Surface = BRepAlgoAPI_Cut(step03Surface, cutYangSurface).Shape()
+        dr.nm('caseSurface')
+        dr.st(self.makeStyle((100, 100, 100), 'CHROME', 0))
+        dr.add(self.getSurface(caseSurface))
 
-        step05Surface = getShapeTranslate(step04Surface, 0, 0, -h2)
-
-        return step05Surface
-
-
-        # **********************************************************************************
-        # **********************************************************************************
-        # **********************************************************************************
-    
-        def initDaoVals(sc):
-            sc.setVal('DAO_BASE_RADIUS', 40)
-            sc.setVal('DAO_OFFSET', 3)
-            sc.setVal('DAO_SLICE_EXAMPLE_K', 0.5)
-            sc.setVal('DAO_SLICE_FACE_HEIGHT', 30)
-            sc.setVal('DAO_SLICE_COUNT', 10)
-            sc.setVal('DAO_SKINNING_SLICES_KS', [0.03, 0.09, 0.16, 0.24, 0.35, 0.50, 0.70, 0.85])
-            sc.setVal('DAO_CASE_HEIGHT', 30)
-            sc.setVal('DAO_CASE_GAP', 1)
-    
-        '''
+        return dr
 
 
 if __name__ == '__main__':
@@ -660,60 +663,12 @@ if __name__ == '__main__':
     # slide = daoLib.getDaoOffsetSlide()
     # slide = daoLib.getDaoExampleSliceSlide()
     # slide = daoLib.getManySliceSlide()
-    slide = daoLib.getDaoSkinningSlide()
+    # slide = daoLib.getDaoSkinningSlide()
+    # slide = daoLib.getDaoIngYangSlide()
+    slide = daoLib.getDaoCaseSlide()
 
     desk = daoLib.getDeskDrawBoard()
     screen = Screen()
     slide.drawTo(screen)
     desk.drawTo(screen, daoLib.makeMove().setMove(0, 0, -60))
     screen.show()
-
-    ''' 
-        sc = Scene(globals())
-
-        sc.setVal('SLIDE_NUM', 2)
-        sc.setVal('SLIDE_NAME', 'dao')
-
-        sc.setVal('SCENE_SCALE', '5:1')
-        sc.setVal('SCENE_ORIGIN', (0, 0, 60))
-
-        initDaoVals(sc)
-
-        SLIDE_NUM = sc.getVal('SLIDE_NUM')
-        if SLIDE_NUM == 0:
-            drawDaoClassicSlide(sc)
-        elif SLIDE_NUM == 1:
-            drawDaoOffsetSlide(sc)
-        elif SLIDE_NUM == 2:
-            drawDaoExampleSliceSlide(sc)
-        elif SLIDE_NUM == 3:
-            drawManySliceSlide(sc)
-        elif SLIDE_NUM == 4:
-            drawDaoSkinningSlide(sc)
-        elif SLIDE_NUM == 5:
-            drawDaoIngYangSlide(sc)
-        elif SLIDE_NUM == 6:
-            drawDaoCaseSlide(sc)
-
-        sc.render()
-
-        self.getVal('SLIDE_NAME'), self.getVal('SLIDE_NUM')
-            self.setVal('RENDER_TARGET', 'screen')
-    
-            self.setVal('SCENE_SCALE', '1:1')
-            self.setVal('SCENE_IS_DESK', True)
-            self.setVal('SCENE_IS_AXIS', True)
-            self.setVal('SCENE_ORIGIN', (0,0,0))
-    
-            self.setVal('SLIDE_NUM', 0)
-            self.setVal('SLIDE_NAME', 'noname')
-    
-            self.styler.setBounds(self.getVal('SCENE_SCALE'), self.getVal('SCENE_ORIGIN'))
-    
-            self.styler.setStyle('Info')
-    
-            if self.getVal('SCENE_IS_DESK'):
-                self.putToRender( Desk(None, self.styler) )         
-            if self.getVal('SCENE_IS_AXIS'):
-                self.putToRender( Axis(None, self.styler) )
-        '''
