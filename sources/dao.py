@@ -93,7 +93,6 @@ def getPointsFromVertexes(vertexes):
 # ********************************************************
 # ********************************************************
 # ********************************************************
-# ********************************************************
 
 
 def getShapeMirror(shape):
@@ -109,11 +108,10 @@ def getShapeTranslate(shape, x, y, z):
     shape = BRepBuilderAPI_Transform(shape, transform).Shape()
     return shape
 
+# *******************************************************************************
+# *******************************************************************************
+# *******************************************************************************
 
-# *******************************************************************************
-# *******************************************************************************
-# *******************************************************************************
-# *******************************************************************************
 
 def makeEdgesFacesIntersectPoints(edgesShape, facesShape):
     def findIntersectPoints(curve, surface):
@@ -162,28 +160,6 @@ def utilGetZRotatedShape(aShape, angle):
     return rotatedShape
 
 
-'''
-def slide_06_DaoComplete(sc, r, offset):
-    solidDao0 = getSolidDao(r, offset)
-    sc.shape(solidDao0, stDao0)
-    solidDao1 = getShapeOZRotate(solidDao0, pi)
-    sc.shape(solidDao1, stDao1)
-
-
-def slide_07_DaoWithCase(sc, r, offset, caseH, caseZMove, gap):
-    solidDao0 = getSolidDao(r, offset + gap)
-    sc.shape(solidDao0, 'StyleDaoIng')
-    solidDao1 = getShapeOZRotate(solidDao0, pi)
-    sc.shape(solidDao1, 'StyleDaoYang')
-
-    case = getDaoCase(r, offset, caseH)
-
-    case = getShapeTranslate(case, 0, 0, caseZMove)
-    sc.shape(case, 'StyleDaoCase')
-
-'''
-
-
 def utilShapeZScale(shape, scaleK):
     transform = gp_GTrsf()
     transform.SetAffinity(gp_Ax2(gp_Pnt(0, 0, 0), gp_Dir(0, 0, 1), gp_Dir(0, 1, 0)), scaleK)
@@ -195,31 +171,21 @@ def utilShapeZScale(shape, scaleK):
 # *********************************************************************************
 # *********************************************************************************
 
-Todo = None
-DAO_BASE_RADIUS = 40
-DAO_OFFSET = 3
-DAO_SLICE_FACE_HEIGHT = 30
-DAO_SLICE_EXAMPLE_K = 0.5
-DAO_SLICE_COUNT = 20
-DAO_SKINNING_SLICES_KS = [0.03, 0.09, 0.16, 0.24, 0.35, 0.50, 0.70, 0.85]
-DAO_SURFACE_Z_SCALE = 0.7
-DAO_CASE_HEIGHT = 30
-DAO_CASE_GAP = 1
-
 
 class DaoDrawLib(DeskDrawLib):
 
     def __init__(self):
         super().__init__(5 / 1, 'A0 M5:1')
-        self.aBaseRadius = DAO_BASE_RADIUS
-        self.aOffset = DAO_OFFSET
-        self.aSliceFaceHeight = DAO_SLICE_FACE_HEIGHT
-        self.aSkinningSlicesKs = DAO_SKINNING_SLICES_KS
-        self.aSliceExampleK = DAO_SLICE_EXAMPLE_K
-        self.aSliceCount = DAO_SLICE_COUNT
-        self.aSurfaceZScale = DAO_SURFACE_Z_SCALE
-        self.aCaseHeight = DAO_CASE_HEIGHT
-        self.aCaseGap = DAO_CASE_GAP
+
+        self.aBaseRadius = 40
+        self.aOffset = 3
+        self.aSliceFaceHeight = 30
+        self.aSkinningSlicesKs = [0.03, 0.09, 0.16, 0.24, 0.35, 0.50, 0.70, 0.85]
+        self.aSliceExampleK = 0.5
+        self.aSliceCount = 20
+        self.aSurfaceZScale = 0.7
+        self.aCaseHeight = 30
+        self.aCaseGap = 1
 
     def getDaoBasePoints(self):
 
