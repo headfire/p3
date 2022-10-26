@@ -95,7 +95,9 @@ function mainSlideMakeDefault() {
 }
  
 function mainLoadSlide(slide) {
-   var filename = 'slides' + '/' + slide + '/' + 'slide.js?time='+ new Date().getTime();;
+   prjName=slide.split('_')[0];	
+   var path = 'projects' + '/' + prjName + '/' + 'slides' + '/' + slide + '/';
+   var filename = path +'slide.js?time='+ new Date().getTime();;
    var slideGetParam = mainSlideGetParamDefault;
    var slideMake = mainSlideMakeDefault;
    var xmlhttp = new XMLHttpRequest();
@@ -110,7 +112,7 @@ function mainLoadSlide(slide) {
  		 } catch(e) { console.log(e); }
         }
      param = slideGetParam() 
-     zdeskInit(document.getElementById( 'webgl' ),'assets/images/textures/', 'slides'+'/'+slide+'/', param);
+     zdeskInit(document.getElementById( 'webgl' ),'viewer/images/textures/', path, param);
 	 slideMake();
      mainOnAnimationFrame()
    	 zdeskSetRenderMode('mono-mode');  				
