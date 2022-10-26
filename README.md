@@ -44,7 +44,7 @@
 - [Построение символа Дао в 3D](https://headfire.github.io/p3/docs/dao_article.pdf)
 
 Слайды (WebGL)
-- [Слайд 01 - Контур классического Дао](v.htm?s=dao_01)
+- [Слайд 01 - Контур классического Дао](https://headfire.github.io/p3/v.htm?s=dao_01)
 - [Слайд 02 - Контур Дао с отступом](https://headfire.github.io/p3/v.htm?s=dao_02)
 - [Слайд 03 - Принцип построения сечений ](https://headfire.github.io/p3/v.htm?s=dao_03)
 - [Слайд 04 - Форма Дао из сечений](https://headfire.github.io/p3/v.htm?s=dao_04)
