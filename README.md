@@ -4,14 +4,14 @@
 
 ## Особо прочный сплав из вдохновения, хаоса и конструкторской точности
 
-Результатом работы мастерской "Точка сборки - 3D" являются презентационные, конструкторские
+Результатом работы мастерской "Точка сборки - 3D" являются сувенирные, презентационные, конструкторские
 и научные материалы, созданные с применением трехмерного моделирования:
 
 - STL-модели, 
 - DXF-чертежи и развертки,
 - инструкции в формате PDF, 
 - видео в формате YouTube,
-- а также самое интересное - **Трехмерные интерактивные стерео-слайды**
+- а также самое интересное - трехмерные интерактивные стерео-слайды
 
 ## Трехмерные интерактивные стерео-слайды
 
@@ -22,29 +22,7 @@
 
 <img src="viewer/images/3d_modes.png" />
 
-## Технологии и программные продукты
-
-В проекте использованы следующие технологии: 
-- [OpenCascade](https://ru.wikipedia.org/wiki/Open_Cascade_Technology) - конструкторское ядро с открытым кодом,
-используется для 3D-моделирования, геометрических построений, численного решения геометрических задач.
-- [Python OCC](https://github.com/tpaviot/pythonocc-core) - надстройка над OpenCascade, позволяющее работать с ней 
-при помощи языка Python.
-- [Three.js](https://ru.wikipedia.org/wiki/Three.js) - JavaScript библиотека, позволяющая отображать
-в браузере трехмерные сцены. Основана на технологии WebGL.
-- А также [HTML](https://ru.wikipedia.org/wiki/HTML),
-[CSS](https://ru.wikipedia.org/wiki/CSS),
-[JavaScript](https://ru.wikipedia.org/wiki/JavaScript),
-[WebGL](https://ru.wikipedia.org/wiki/WebGL),
-[Python](https://ru.wikipedia.org/wiki/Python),
-[Markdown](https://ru.wikipedia.org/wiki/Markdown),
-[PDF](https://ru.wikipedia.org/wiki/Portable_Document_Format),
-[QR-code](https://ru.wikipedia.org/wiki/QR-%D0%BA%D0%BE%D0%B4),
-[STL](https://ru.wikipedia.org/wiki/STL_(%D1%84%D0%BE%D1%80%D0%BC%D0%B0%D1%82_%D1%84%D0%B0%D0%B9%D0%BB%D0%B0)),
-[PNG](https://ru.wikipedia.org/wiki/PNG),
-[Git](https://ru.wikipedia.org/wiki/Git),
-[GitHub](https://ru.wikipedia.org/wiki/GitHub)
-
-## Пример 1: Построение символа Дао в объеме
+## Проект 1: Построение символа Дао в объеме
 
 Статьи (PDF)
 - [Построение символа Дао в 3D](https://headfire.github.io/p3/docs/dao_article.pdf)
@@ -64,6 +42,31 @@
 - [Основание](https://headfire.github.io/p3/projects/dao/models/exp_003_shape.stl)
 
 Не перепутайте Инь и Янь :) (отличий нет, но мало ли чего)
+
+
+## Технологии и программные продукты используемые в мастерской
+
+В проекте использованы следующие технологии: 
+- [OpenCascade](https://ru.wikipedia.org/wiki/Open_Cascade_Technology) - конструкторское ядро с открытым кодом,
+используется для 3D-моделирования, геометрических построений, численного решения геометрических задач.
+- [Python OCC](https://github.com/tpaviot/pythonocc-core) - надстройка над OpenCascade, позволяющее работать с ней 
+при помощи языка Python.
+- [OpenSCAD](https://openscad.org/) - система параметрического моделирования на основе функционального языка программирвания.
+- [Three.js](https://ru.wikipedia.org/wiki/Three.js) - JavaScript библиотека, позволяющая отображать
+в браузере трехмерные сцены. Основана на технологии WebGL.
+- А также [HTML](https://ru.wikipedia.org/wiki/HTML),
+[CSS](https://ru.wikipedia.org/wiki/CSS),
+[JavaScript](https://ru.wikipedia.org/wiki/JavaScript),
+[WebGL](https://ru.wikipedia.org/wiki/WebGL),
+[Python](https://ru.wikipedia.org/wiki/Python),
+[Markdown](https://ru.wikipedia.org/wiki/Markdown),
+[PDF](https://ru.wikipedia.org/wiki/Portable_Document_Format),
+[QR-code](https://ru.wikipedia.org/wiki/QR-%D0%BA%D0%BE%D0%B4),
+[STL](https://ru.wikipedia.org/wiki/STL_(%D1%84%D0%BE%D1%80%D0%BC%D0%B0%D1%82_%D1%84%D0%B0%D0%B9%D0%BB%D0%B0)),
+[PNG](https://ru.wikipedia.org/wiki/PNG),
+[Git](https://ru.wikipedia.org/wiki/Git),
+[GitHub](https://ru.wikipedia.org/wiki/GitHub)
+
 
 ## Для разработчиков
 
