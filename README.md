@@ -1,6 +1,6 @@
 # Точка сборки - 3D
 
-<img src="brand/logo.png" width="300" />
+<img src="projects/brand/logo.png" width="300" />
 
 ## Cистема для создания объемных стереоскопических иллюстраций   
 
