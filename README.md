@@ -1,6 +1,6 @@
 # Точка сборки - 3D
 
-<img src="assets/images/logo.png" style="zoom:50%;" />
+<img src="brand/logo.png" width="300" />
 
 ## Cистема для создания объемных стереоскопических иллюстраций   
 
@@ -69,7 +69,7 @@ Cайт проекта: [https://headfire.github.io/p3](https://headfire.github.
 Репозиторий проекта: [https://github.com/headfire/p3](https://github.com/headfire/p3)  
 E-mail автора: [headfire@yandex.ru](mailto:headfire@yandex.ru)
 
-Спонсор проекта:
+Спонсор проекта: спонсор пока отсутствует
 
 ## Путь
 
