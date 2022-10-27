@@ -22,7 +22,7 @@
 
 <img src="viewer/images/3d_modes.png" />
 
-## Проект 1: Построение символа Дао в объеме
+## Проект DAO: Построение символа Дао в объеме
 
 Статьи (PDF)
 - [Построение символа Дао в 3D](https://headfire.github.io/p3/docs/dao_article.pdf)
