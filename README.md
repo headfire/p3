@@ -22,7 +22,7 @@
 
 <img src="viewer/images/3d_modes.png" />
 
-## Проект DAO: Построение символа Дао в объеме
+## Проект DAO: Идея для сувенира Дао
 
 Статьи (PDF)
 - [Построение символа Дао в 3D](https://headfire.github.io/p3/docs/dao_article.pdf)
@@ -43,6 +43,12 @@
 
 Не перепутайте Инь и Янь :) (отличий нет, но мало ли чего)
 
+## Проект DREAM: Идея для рекламы офисного центра
+
+[Сценарий](https://headfire.github.io/p3/dream/dream.md)
+[OpenSСAD модель](https://headfire.github.io/p3/dream/dream.scad)
+[Концепт-видео](https://youtu.be/nTueqlaXfzI)
+[Окончательное видео](https://youtu.be/v7JT4rnEYXI)
 
 ## Технологии и программные продукты используемые в мастерской
 
