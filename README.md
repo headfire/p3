@@ -75,7 +75,7 @@
 
 ---
 
-## О проекте
+## О творческой мастерской "Точка сборки 3D"
 
 ### Про трехмерные интерактивные стерео-слайды
 
@@ -93,13 +93,9 @@
 ### Контакты
 
 Cайт проекта: [https://headfire.github.io/p3](https://headfire.github.io/p3)  
-
 Репозиторий проекта: [https://github.com/headfire/p3](https://github.com/headfire/p3)  
-
-Канал YouTube:
-
-E-mail автора: [headfire@yandex.ru](mailto:headfire@yandex.ru)
-
+Канал YouTube: https://www.youtube.com/channel/UCM4ZKGjRaWpOrHx_RuSHyig   
+E-mail автора: [headfire@yandex.ru](mailto:headfire@yandex.ru)  
 Спонсор проекта: ищу спонсора
 
 ---
