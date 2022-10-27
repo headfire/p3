@@ -87,8 +87,8 @@
 
 Cайт проекта: [https://headfire.github.io/p3](https://headfire.github.io/p3)  
 Репозиторий проекта: [https://github.com/headfire/p3](https://github.com/headfire/p3)  
-E-mail автора: [headfire@yandex.ru](mailto:headfire@yandex.ru)
-Видео: [Канал YouTube "Точка сборки 3D"](https://www.youtube.com/channel/UCM4ZKGjRaWpOrHx_RuSHyig/)
+E-mail автора: [headfire@yandex.ru](mailto:headfire@yandex.ru)   
+Канал YouTube: [Точка сборки 3D](https://www.youtube.com/channel/UCM4ZKGjRaWpOrHx_RuSHyig/)
 
 Спонсор проекта: ищу спонсора
 
