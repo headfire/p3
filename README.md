@@ -43,8 +43,8 @@
 
 ## Проект DREAM: Идея для рекламы офисного центра
 
-- [Сценарий](https://headfire.github.io/p3/dream/dream.md)
-- [OpenSСAD модель](https://headfire.github.io/p3/dream/dream.scad)
+- [Сценарий](https://headfire.github.io/p3/projects/dream/dream.md)
+- [OpenSСAD модель](https://headfire.github.io/p3/projects/dream/dream.scad)
 - [Концепт-видео](https://youtu.be/nTueqlaXfzI)
 - [Окончательное видео](https://youtu.be/v7JT4rnEYXI)
 
