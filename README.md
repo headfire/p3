@@ -45,10 +45,10 @@
 
 ## Проект DREAM: Идея для рекламы офисного центра
 
-[Сценарий](https://headfire.github.io/p3/dream/dream.md)
-[OpenSСAD модель](https://headfire.github.io/p3/dream/dream.scad)
-[Концепт-видео](https://youtu.be/nTueqlaXfzI)
-[Окончательное видео](https://youtu.be/v7JT4rnEYXI)
+- [Сценарий](https://headfire.github.io/p3/dream/dream.md)
+- [OpenSСAD модель](https://headfire.github.io/p3/dream/dream.scad)
+- [Концепт-видео](https://youtu.be/nTueqlaXfzI)
+- [Окончательное видео](https://youtu.be/v7JT4rnEYXI)
 
 ## Технологии и программные продукты используемые в мастерской
 
