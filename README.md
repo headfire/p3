@@ -1,3 +1,5 @@
+---
+
 <img src="projects/brand/logo-header.png">
 
 # Творческая мастерская "Точка сборки - 3D"
