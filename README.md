@@ -96,6 +96,7 @@ Cайт проекта: [https://headfire.github.io/p3](https://headfire.github.
 Репозиторий проекта: [https://github.com/headfire/p3](https://github.com/headfire/p3)  
 Канал YouTube: https://www.youtube.com/channel/UCM4ZKGjRaWpOrHx_RuSHyig   
 E-mail автора: [headfire@yandex.ru](mailto:headfire@yandex.ru)  
+Публикации на Хабрe: [https://habr.com/ru/users/headfire/posts/](https://habr.com/ru/users/headfire/posts/)
 Спонсор проекта: ищу спонсора
 
 ---
