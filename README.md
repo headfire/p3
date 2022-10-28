@@ -18,7 +18,7 @@
 
 ## Проект DAO: Идея для сувенира Дао
 
-![Идея для сувенира Дао](projects/dao/dao_prj_face.png)
+![Идея для сувенира Дао](projects/dao/dao.png)
 
 Статьи (PDF)
 - [Построение символа Дао в 3D](https://headfire.github.io/p3/docs/dao_article.pdf)
