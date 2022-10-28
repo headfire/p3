@@ -70,7 +70,7 @@ sim-карт и денежных купюр в полевых, неблагоп�
 Для защиты от влаги и пыли может прилагаться герметичный пакет.
 
 - [OpenSСAD модель](https://headfire.github.io/p3/projects/safe/safe.scad)
-- [Презентация (PDF)](https://headfire.github.io/p3/projects/safe/safe_present.html)
+- [Презентация (PDF)](https://headfire.github.io/p3/projects/safe/safe_present.pdf)
 - [Развертка основания (SVG)](https://headfire.github.io/p3/projects/safe/draw/base.svg)
 - [Развертка крышки (SVG)](https://headfire.github.io/p3/projects/safe/draw/cap.svg)
 
