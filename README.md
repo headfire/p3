@@ -1,7 +1,7 @@
 
 ---
 
-![Точка сборки 3D](brand/logo-header.png)
+[Точка сборки 3D](brand/logo-header.png)
 
 ---
 
