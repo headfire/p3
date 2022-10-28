@@ -24,8 +24,8 @@
 способ построения объемного символа даосизма. В результате получается модель
 из трех частей, которую вполне можно напечатать на 3D-принтере.
 
-Статьи (PDF)
-- [Построение символа Дао в 3D](https://headfire.github.io/p3/docs/dao_article.pdf)
+Презентации (PDF)
+- [Построение символа Дао в 3D](https://headfire.github.io/p3/projects/dao/dao_present.pdf)
 
 Слайды (WebGL)
 - [Слайд 01 - Контур классического Дао](https://headfire.github.io/p3/v.htm?s=dao_01)
