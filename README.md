@@ -90,7 +90,7 @@
 
 ### Для разработчиков
 
-[Установка среды разработки OpenCascade - Python 3.7 - Win64](https://headfire.github.io/p3/libs/xcascade/docs/setup.md) 
+[Установка среды разработки OpenCascade - Python 3.7 - Win64](https://headfire.github.io/p3/libs/xcascade/docs/setup.html) 
 
 ### Контакты
 
