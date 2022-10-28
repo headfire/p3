@@ -1,7 +1,7 @@
 
 ---
 
-[Точка сборки 3D](brand/logo-header.png)
+<img src="brand/logo-header.png">
 
 ---
 
