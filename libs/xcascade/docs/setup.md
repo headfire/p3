@@ -47,9 +47,13 @@ python core\_helloworld.py
 <https://github.com/tpaviot/pythonocc-core/issues/987>
 
 ```
-Can you please open the file F:\zapoye\anaconda3\envs\pyocc\lib\site-packages\OCC\Display\qtDisplay.py, and change the line 38 from:
+Can you please open the file  
+F:\zapoye\anaconda3\envs\pyocc\lib\site-packages\OCC\Display\qtDisplay.py,  
+and change the line 38 
+
+from:    
 class qtBaseViewer(QtOpenGL.QGLWidget):
-to
+to:  
 class qtBaseViewer(QtWidgets.QWidget):
 ```
 
