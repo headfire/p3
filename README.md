@@ -25,7 +25,7 @@
 из трех частей, которую вполне можно напечатать на 3D-принтере. Не перепутайте Инь и Янь :) 
 (отличий нет, но мало ли чего)
 
-- [Презентация (PDF)](https://headfire.github.io/p3/projects/dao/dao_present.pdf)
+- [Презентация (PDF)](https://headfire.github.io/p3/projects/dao/dao.pdf)
 - [Слайд 01 - Контур классического Дао (WebGL)](https://headfire.github.io/p3/v.htm?s=dao_01)
 - [Слайд 02 - Контур Дао с отступом (WebGL)](https://headfire.github.io/p3/v.htm?s=dao_02)
 - [Слайд 03 - Принцип построения сечений (WebGL)](https://headfire.github.io/p3/v.htm?s=dao_03)
@@ -63,7 +63,7 @@
 sim-карт и денежных купюр в полевых, неблагоприятных и враждебных условиях. 
 Для защиты от влаги и пыли может прилагаться герметичный пакет.
 
-- [Презентация (PDF)](https://headfire.github.io/p3/projects/safe/safe_present.pdf)
+- [Презентация (PDF)](https://headfire.github.io/p3/projects/safe/safe.pdf)
 - [Параметрическая модель (SCAD)](https://headfire.github.io/p3/projects/safe/safe.scad)
 - [Развертка основания (SVG)](https://headfire.github.io/p3/projects/safe/draw/base.svg)
 - [Развертка крышки (SVG)](https://headfire.github.io/p3/projects/safe/draw/cap.svg)
