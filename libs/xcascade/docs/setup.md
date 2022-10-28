@@ -24,7 +24,9 @@ conda install -c dlr-sc pythonocc-core
 
 ## **Скачивание и запуск примеров**
 
-Устанавливаем Git. Загружаем и запускаем отсюда <https://git-scm.com/download/win>. Все настройки оставляем по умолчанию.
+Устанавливаем Git: 
+- Загружаем и запускаем отсюда <https://git-scm.com/download/win>. 
+- Все настройки оставляем по умолчанию.
 
 Клонируем репозиторий с примерами
 
@@ -59,13 +61,16 @@ class qtBaseViewer(QtWidgets.QWidget):
 
 Клонируем проект headfire/p3
 
+```
 c:
 cd c:\projects
 git clone https://github.com/headfire/p3.git
 cd p3/projects/dao
 python makeDaoShape.py
+```
 
 ## **Полезные ссылки**
+
 - <https://www.opencascade.com/>
 - <https://www.opencascade.com/doc/occt-6.9.1/refman/html/index.html>
 - <https://docs.conda.io/en/latest/miniconda.html>
