@@ -22,27 +22,21 @@
 
 Как выглядел бы символ Дао в объеме? Предлагается математически точный
 способ построения объемного символа даосизма. В результате получается модель
-из трех частей, которую вполне можно напечатать на 3D-принтере.
+из трех частей, которую вполне можно напечатать на 3D-принтере. Не перепутайте Инь и Янь :) 
+(отличий нет, но мало ли чего)
 
-Презентации (PDF)
-- [Построение символа Дао в 3D](https://headfire.github.io/p3/projects/dao/dao_present.pdf)
-
-Слайды (WebGL)
-- [Слайд 01 - Контур классического Дао](https://headfire.github.io/p3/v.htm?s=dao_01)
-- [Слайд 02 - Контур Дао с отступом](https://headfire.github.io/p3/v.htm?s=dao_02)
-- [Слайд 03 - Принцип построения сечений ](https://headfire.github.io/p3/v.htm?s=dao_03)
-- [Слайд 04 - Форма Дао из сечений](https://headfire.github.io/p3/v.htm?s=dao_04)
-- [Слайд 05 - Протягивание поверхности через сечения](https://headfire.github.io/p3/v.htm?s=dao_05)
-- [Слайд 06 - Окончательная форма Дао](https://headfire.github.io/p3/v.htm?s=dao_06)
-- [Слайд 07 - Форма Дао с основанием](https://headfire.github.io/p3/v.htm?s=dao_07)
-
-Файлы моделей (STL) - Не перепутайте Инь и Янь :) (отличий нет, но мало ли чего)
-- [Инь](https://headfire.github.io/p3/projects/dao/models/exp_001_shape.stl)
-- [Янь](https://headfire.github.io/p3/projects/dao/models/exp_002_shape.stl)
-- [Основание](https://headfire.github.io/p3/projects/dao/models/exp_003_shape.stl)
-
-Статья на Хабре
-- [OpenCASCADE и Невидимое солнце Дао](https://habr.com/ru/post/518378/)
+- [Презентация (PDF)](https://headfire.github.io/p3/projects/dao/dao_present.pdf)
+- [Слайд 01 - Контур классического Дао (WebGL)](https://headfire.github.io/p3/v.htm?s=dao_01)
+- [Слайд 02 - Контур Дао с отступом (WebGL)](https://headfire.github.io/p3/v.htm?s=dao_02)
+- [Слайд 03 - Принцип построения сечений (WebGL)](https://headfire.github.io/p3/v.htm?s=dao_03)
+- [Слайд 04 - Форма Дао из сечений (WebGL)](https://headfire.github.io/p3/v.htm?s=dao_04)
+- [Слайд 05 - Протягивание поверхности через сечения (WebGL)](https://headfire.github.io/p3/v.htm?s=dao_05)
+- [Слайд 06 - Окончательная форма Дао (WebGL)](https://headfire.github.io/p3/v.htm?s=dao_06)
+- [Слайд 07 - Форма Дао с основанием (WebGL)](https://headfire.github.io/p3/v.htm?s=dao_07)
+- [Инь (STL)](https://headfire.github.io/p3/projects/dao/models/exp_001_shape.stl)
+- [Янь (STL)](https://headfire.github.io/p3/projects/dao/models/exp_002_shape.stl)
+- [Основание (STL)](https://headfire.github.io/p3/projects/dao/models/exp_003_shape.stl)
+- [OpenCASCADE и Невидимое солнце Дао (habr.com)](https://habr.com/ru/post/518378/)
 
 ---
 
