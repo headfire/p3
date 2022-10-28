@@ -52,6 +52,17 @@
 
 ---
 
+## Проект SAFE: Идея сейфа-пряжки на ремень
+
+![Идея сейфа-пряжки на ремень](projects/safe/safe.png)
+
+- [Сценарий](https://headfire.github.io/p3/projects/dream/dream.html)
+- [OpenSСAD модель](https://headfire.github.io/p3/projects/dream/dream.scad)
+- [Концепт-видео](https://youtu.be/nTueqlaXfzI)
+- [Окончательное видео](https://youtu.be/v7JT4rnEYXI)
+
+---
+
 ## О творческой мастерской "Точка сборки 3D"
 
 ### Технологии и программные продукты используемые в мастерской
