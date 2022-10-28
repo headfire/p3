@@ -20,6 +20,10 @@
 
 ![Идея для сувенира Дао](projects/dao/dao.png)
 
+Как выглядел бы символ Дао в объеме? Предлагается математически точный
+способ построения объемного символа даосизма. В результате получается модель
+из трех частей, которую вполне можно напечатать на 3D-принтере.
+
 Статьи (PDF)
 - [Построение символа Дао в 3D](https://headfire.github.io/p3/docs/dao_article.pdf)
 
@@ -43,6 +47,10 @@
 
 ## Проект DREAM: Идея для рекламы офисного центра
 
+Необычная идея для рекламы офисного центра. Сначала он выглядит как простой ящик.
+Потом появляются помещения и коридоры, двери, окна и другие элементы. А потом
+начинают твориться вообще странные вещи...
+
 ![Идея для рекламы офисного центра](projects/dream/dream.png)
 
 - [Сценарий](https://headfire.github.io/p3/projects/dream/dream.html)
@@ -60,11 +68,10 @@
 sim-карт и денежных купюр в полевых, неблагоприятных и враждебных условиях. 
 Для защиты от влаги и пыли может прилагаться герметичный пакет.
 
-
-- [Сценарий](https://headfire.github.io/p3/projects/dream/dream.html)
-- [OpenSСAD модель](https://headfire.github.io/p3/projects/dream/dream.scad)
-- [Концепт-видео](https://youtu.be/nTueqlaXfzI)
-- [Окончательное видео](https://youtu.be/v7JT4rnEYXI)
+- [OpenSСAD модель](https://headfire.github.io/p3/projects/safe/safe.scad)
+- [Презентация (PDF)](https://headfire.github.io/p3/projects/safe/safe_present.html)
+- [Развертка основания (SVG)](https://headfire.github.io/p3/projects/safe/draw/base.svg)
+- [Развертка крышки (SVG)](https://headfire.github.io/p3/projects/safe/draw/cap.svg)
 
 ---
 
