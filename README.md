@@ -36,12 +36,13 @@
 - [Слайд 06 - Окончательная форма Дао](https://headfire.github.io/p3/v.htm?s=dao_06)
 - [Слайд 07 - Форма Дао с основанием](https://headfire.github.io/p3/v.htm?s=dao_07)
 
-Файлы моделей (STL) 
+Файлы моделей (STL) - Не перепутайте Инь и Янь :) (отличий нет, но мало ли чего)
 - [Инь](https://headfire.github.io/p3/projects/dao/models/exp_001_shape.stl)
 - [Янь](https://headfire.github.io/p3/projects/dao/models/exp_002_shape.stl)
 - [Основание](https://headfire.github.io/p3/projects/dao/models/exp_003_shape.stl)
 
-Не перепутайте Инь и Янь :) (отличий нет, но мало ли чего)
+Статья на Хабре
+- [OpenCASCADE и Невидимое солнце Дао](https://habr.com/ru/post/518378/)
 
 ---
 
