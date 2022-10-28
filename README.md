@@ -36,7 +36,7 @@
 - [Инь (STL)](https://headfire.github.io/p3/projects/dao/models/exp_001_shape.stl)
 - [Янь (STL)](https://headfire.github.io/p3/projects/dao/models/exp_002_shape.stl)
 - [Основание (STL)](https://headfire.github.io/p3/projects/dao/models/exp_003_shape.stl)
-- [OpenCASCADE и Невидимое солнце Дао (habr.com)](https://habr.com/ru/post/518378/)
+- [OpenCASCADE и Невидимое солнце Дао (Статья на Хабре)](https://habr.com/ru/post/518378/)
 
 ---
 
@@ -48,10 +48,10 @@
 
 ![Идея для рекламы офисного центра](projects/dream/dream.png)
 
-- [Сценарий](https://headfire.github.io/p3/projects/dream/dream.html)
-- [OpenSСAD модель](https://headfire.github.io/p3/projects/dream/dream.scad)
-- [Концепт-видео](https://youtu.be/nTueqlaXfzI)
-- [Окончательное видео](https://youtu.be/v7JT4rnEYXI)
+- [Сценарий (MD)](https://headfire.github.io/p3/projects/dream/dream.html)
+- [Параметрическая модель (SСAD)](https://headfire.github.io/p3/projects/dream/dream.scad)
+- [Концепт-видео (YouTube)](https://youtu.be/nTueqlaXfzI)
+- [Окончательное видео (YouTube)](https://youtu.be/v7JT4rnEYXI)
 
 ---
 
@@ -63,8 +63,8 @@
 sim-карт и денежных купюр в полевых, неблагоприятных и враждебных условиях. 
 Для защиты от влаги и пыли может прилагаться герметичный пакет.
 
-- [OpenSСAD модель](https://headfire.github.io/p3/projects/safe/safe.scad)
 - [Презентация (PDF)](https://headfire.github.io/p3/projects/safe/safe_present.pdf)
+- [Параметрическая модель (SCAD)](https://headfire.github.io/p3/projects/safe/safe.scad)
 - [Развертка основания (SVG)](https://headfire.github.io/p3/projects/safe/draw/base.svg)
 - [Развертка крышки (SVG)](https://headfire.github.io/p3/projects/safe/draw/cap.svg)
 
