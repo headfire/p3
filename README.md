@@ -18,7 +18,7 @@
 
 ## Проект DAO: Идея для сувенира Дао
 
-<img src="projects/dao/dao_prj_face.png" width="300">
+![Идея для сувенира Дао](projects/dao/dao_prj_face.png)
 
 Статьи (PDF)
 - [Построение символа Дао в 3D](https://headfire.github.io/p3/docs/dao_article.pdf)
@@ -43,7 +43,7 @@
 
 ## Проект DREAM: Идея для рекламы офисного центра
 
-<img src="projects/dream/dream.png" width="300">
+![Идея для рекламы офисного центра](projects/dream/dream.png)
 
 - [Сценарий](https://headfire.github.io/p3/projects/dream/dream.html)
 - [OpenSСAD модель](https://headfire.github.io/p3/projects/dream/dream.scad)
