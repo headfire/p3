@@ -1,6 +1,4 @@
 
----
-
 <img src="brand/logo-header.png">
 
 ---
@@ -155,7 +153,5 @@ E-mail автора: [headfire@yandex.ru](mailto:headfire@yandex.ru)
 *Хочу я видеть как*  
 *Рука творит, а не слова*  
 *Слетают с языка.*
-
----
 
 
