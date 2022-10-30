@@ -48,7 +48,7 @@
 
 ![Идея для рекламы офисного центра](projects/dream/dream.png)
 
-- [Сценарий (MD)](https://headfire.github.io/p3/projects/dream/dream.html)
+- [Сценарий (HTML)](https://headfire.github.io/p3/projects/dream/dream.html)
 - [Параметрическая модель (SСAD)](https://headfire.github.io/p3/projects/dream/dream.scad)
 - [Концепт-видео (YouTube)](https://youtu.be/nTueqlaXfzI)
 - [Окончательное видео (YouTube)](https://youtu.be/v7JT4rnEYXI)
