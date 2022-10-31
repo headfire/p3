@@ -35,7 +35,7 @@ c:
 cd c:\projects
 git clone https://github.com/tpaviot/pythonocc-demos.git
 cd pythonocc-demos\examples
-python core\_helloworld.py
+python core_helloworld.py
 ```
 
 Должно открыться окно с следующей картинкой
