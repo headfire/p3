@@ -5,7 +5,7 @@
 Путем экспериментов установлено что наиболее стабильно все работает на версии Python 3.7. Создаем среду с требуемой версией. Для нашей версии достаточно пакета "Миниконда".
 
 - Скачиваем установщик: <https://repo.anaconda.com/miniconda/Miniconda3-py37_4.10.3-Windows-x86_64.exe>
-- Выбираем опцию **All Users** и папку **d:\conda** (например).
+- Запускаем установщик и соглашаемся со всеми опциями по умолчанию
 - В списке программ кнопки Пуск появилось меню Anaconda3. Копируем из него ярлык Anaconda Prompt на рабочий стол
 
 ## Устанавливаем библиотеки
@@ -35,7 +35,7 @@ c:
 cd c:\projects
 git clone https://github.com/tpaviot/pythonocc-demos.git
 cd pythonocc-demos\examples
-python core\_helloworld.py
+python core_helloworld.py
 ```
 
 Должно открыться окно с следующей картинкой
