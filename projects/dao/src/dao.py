@@ -1,6 +1,3 @@
-# import sys
-# sys.path.insert(1, '../../../libs/pydesk')
-
 from desk import DeskDrawLib
 from std import Screen
 
@@ -627,17 +624,42 @@ class DaoDrawLib(DeskDrawLib):
 
 
 if __name__ == '__main__':
-    daoLib = DaoDrawLib()
-    # slide = daoLib.getDaoClassicSlide()
-    # slide = daoLib.getDaoOffsetSlide()
-    # slide = daoLib.getDaoExampleSliceSlide()
-    # slide = daoLib.getManySliceSlide()
-    # slide = daoLib.getDaoSkinningSlide()
-    # slide = daoLib.getDaoIngYangSlide()
-    slide = daoLib.getDaoCaseSlide()
+    import sys
 
-    desk = daoLib.getDeskDrawBoard()
-    screen = Screen()
-    slide.drawTo(screen)
-    desk.drawTo(screen, daoLib.makeMove().setMove(0, 0, -60))
-    screen.show()
+    slideNum = 7
+    slideTarget = 'screen'
+    if len(sys.argv) > 1:
+        slideNum = sys.argv[1]
+    if len(sys.argv) > 2:
+        slideTarget = sys.argv[2]
+
+    daoLib = DaoDrawLib()
+
+    slide = None
+
+    if slideNum == 'dao_01':
+        slide = daoLib.getDaoClassicSlide()
+    elif slideNum == 'dao_02':
+        slide = daoLib.getDaoOffsetSlide()
+    elif slideNum == 'dao_03':
+        slide = daoLib.getDaoExampleSliceSlide()
+    elif slideNum == 'dao_04':
+        slide = daoLib.getManySliceSlide()
+    elif slideNum == 'dao_05':
+        slide = daoLib.getDaoSkinningSlide()
+    elif slideNum == 'dao_06':
+        slide = daoLib.getDaoIngYangSlide()
+    elif slideNum == 'dao_07':
+        slide = daoLib.getDaoCaseSlide()
+
+    if slideTarget == 'screen':
+        desk = daoLib.getDeskDrawBoard()
+        screen = Screen()
+        slide.drawTo(screen)
+        desk.drawTo(screen, daoLib.makeMove().setMove(0, 0, -60))
+        screen.show()
+    elif slideTarget == 'web':
+        web = Web()
+        slide.drawTo(web)
+    elif slideTarget == 'stl':
+        pass
