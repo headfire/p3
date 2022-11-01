@@ -10,7 +10,7 @@ from OCC.Core.BRep import BRep_Tool
 from OCC.Core.BRepTools import BRepTools_WireExplorer
 from OCC.Core.gp import gp_Pnt, gp_Dir, gp_Vec
 from OCC.Core.Graphic3d import Graphic3d_MaterialAspect, Graphic3d_NameOfMaterial
-from lib import ThreeJsLib, StlLib
+from saver import WebSaverLib, StlSaverLib
 
 from std import Style, Move
 
@@ -120,7 +120,7 @@ class RenderLib:
         self.renderShapeObj(aSurface)
 
 
-class DrawToScreen(DrawToLib):
+class ScreenRenderLib(RenderLib):
 
     def __init__(self):
         super().__init__()
@@ -149,12 +149,11 @@ class DrawToScreen(DrawToLib):
         self.display.Context.Display(ais, False)
 
 
-class DrawToWebLib(DrawToLib):
+class WebRenderLib(RenderLib):
 
-    def __init__(self):
+    def __init__(self, decoration, precision, path):
         super().__init__()
-        self.webLib = ThreeJSlib()
-        )
+        self.webLib = WebSaverLib(decoration, precision, path)
 
     def renderTextObj(self, aText, aHeightPx):
         pnt = gp_Pnt(0, 0, 0).Transformed(self.aMove.getTrsf())
@@ -171,8 +170,7 @@ class StlRenderLib(RenderLib):
 
     def __init__(self):
         super().__init__()
-        self.webLib = SthRender()
-        )
+        self.saver = StlSaver()
 
     def renderTextObj(self, aText, aHeightPx):
         pnt = gp_Pnt(0, 0, 0).Transformed(self.aMove.getTrsf())

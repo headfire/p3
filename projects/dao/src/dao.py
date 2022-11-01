@@ -1,5 +1,5 @@
 from desk import DeskDrawLib
-from std import Screen
+from render import ScreenRenderLib, WebRenderLib, StlRenderLib
 
 from OCC.Core.gp import gp_Pnt, gp_Trsf, gp_Dir, gp_Vec, gp_Ax1, gp_OZ, gp_GTrsf, gp_Ax2
 from OCC.Core.Geom import Geom_TrimmedCurve
@@ -18,7 +18,6 @@ from OCC.Core.BRepPrimAPI import BRepPrimAPI_MakeSphere, BRepPrimAPI_MakeBox
 from OCC.Core.BRepAlgoAPI import BRepAlgoAPI_Common, BRepAlgoAPI_Cut
 
 from math import pi
-
 
 EQUAL_POINTS_PRECISION = 0.001
 
@@ -175,7 +174,9 @@ def utilShapeZScale(shape, scaleK):
 class DaoDrawLib(DeskDrawLib):
 
     def __init__(self):
-        super().__init__(5 / 1, 'A0 M5:1')
+        self.scaleA = 5
+        self.scaleB = 1
+        super().__init__(self.scaleA / self.scaleB, 'A0 M5:1')
 
         self.aBaseRadius = 40
         self.aOffset = 3
@@ -628,10 +629,14 @@ if __name__ == '__main__':
 
     slideNum = 7
     slideTarget = 'screen'
+    pathlib.Path(__file__).parent.resolve()
+    slidePath = 'd:/temp'
     if len(sys.argv) > 1:
         slideNum = sys.argv[1]
     if len(sys.argv) > 2:
         slideTarget = sys.argv[2]
+    if len(sys.argv) > 3:
+        slidePath = sys.argv[3]
 
     daoLib = DaoDrawLib()
 
@@ -654,12 +659,13 @@ if __name__ == '__main__':
 
     if slideTarget == 'screen':
         desk = daoLib.getDeskDrawBoard()
-        screen = Screen()
+        screen = ScreenRenderLib()
         slide.drawTo(screen)
         desk.drawTo(screen, daoLib.makeMove().setMove(0, 0, -60))
         screen.show()
     elif slideTarget == 'web':
-        web = Web()
+        decoration = (True, True, daoLib.scaleA, daoLib.scaleB, 0, 0, -60)
+        web = WebRenderLib(decoration, 0.01, slidePath)
         slide.drawTo(web)
     elif slideTarget == 'stl':
         pass

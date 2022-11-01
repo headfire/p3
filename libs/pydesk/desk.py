@@ -1,4 +1,4 @@
-from std import DrawLib, Screen
+from std import DrawLib
 from OCC.Core.gp import gp_Pnt, gp_Vec
 
 WOOD_COLOR = 208, 117, 28
@@ -287,7 +287,8 @@ class DeskDrawLib(DrawLib):
 
 
 if __name__ == '__main__':
+    from render import ScreenRender
     desk = DeskDrawLib(5 / 1, 'A0 M5:1')
-    screen = Screen()
+    screen = ScreenRender()
     desk.getDeskDemo().drawTo(screen)
     screen.show()
