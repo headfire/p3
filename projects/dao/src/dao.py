@@ -1,5 +1,5 @@
-import sys
-sys.path.insert(1, '../../../libs/pydesk')
+# import sys
+# sys.path.insert(1, '../../../libs/pydesk')
 
 from desk import DeskDrawLib
 from std import Screen
