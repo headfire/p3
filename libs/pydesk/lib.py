@@ -8,7 +8,7 @@ from OCC.Extend.TopologyUtils import is_edge, is_wire, discretize_edge, discreti
 from OCC.Extend.DataExchange import write_stl_file
 
 
-class StlRenderer:
+class StlLib:
 
     def __init__(self, precision, path):
         if not path:
@@ -84,7 +84,7 @@ def export_edgedata_to_json(edge_hash, point_set):
     return json.dumps(edges_data)
 
 
-class ThreeJsRenderer:
+class ThreeJsLib:
 
     def __init__(self, decoration, precision, path):
         if not path:

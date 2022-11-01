@@ -15,7 +15,7 @@ from OCC.Core.TopAbs import TopAbs_EDGE, TopAbs_VERTEX
 from OCC.Core.TopoDS import TopoDS_Shape
 from OCC.Core.GC import  GC_MakeCircle
 
-from threejs import ThreeJsRenderer, StlRenderer
+from lib import ThreeJsRenderer, StlRenderer
 
 
 import json
