@@ -89,12 +89,11 @@ def export_edge_data_to_json(edge_hash, point_set):
 
 class WebSaverLib:
 
-    def __init__(self, decoration, precision, path):
+    def __init__(self, webRenderHints, path):
 
         self._path = path
         self._js_filename = os.path.join(self._path, "slide.js")
-        self.decoration = decoration
-        self.precision = precision
+        self.webRenderHints = webRenderHints
         self.shapeNum = 1
         self.stringList = []
 
@@ -119,7 +118,8 @@ class WebSaverLib:
         # if the shape is an edge or a wire, use the related functions
         shininess = 0.9
         specular_color = (0.2, 0.2, 0.2)
-        shape_precision, wire_precision = self.precision
+        shape_precision = self.webRenderHints.shapePrecision
+        wire_precision = self.webRenderHints.wirePrecision
         if is_edge(shape):
             print("discretize an edge")
             points = discretize_edge(shape, wire_precision)
@@ -173,16 +173,16 @@ class WebSaverLib:
 
     def save(self):
         with open(self._js_filename, "w") as fp:
-            isDesk, isAxis, scaleA, scaleB, deskDX, deskDY, deskDZ = self.decoration
+            isDesk, isAxis, scaleA, scaleB, deskDX, deskDY, deskDZ = self.webRenderHints
             fp.write('function loadedSlideGetParam() { \n')
             fp.write('    var param = Object(); \n')
-            fp.write('    param.isDesk = %s; \n' % jsBool(isDesk))
-            fp.write('    param.isAxis = %s; \n' % jsBool(isAxis))
-            fp.write('    param.scaleA = %i; \n' % scaleA)
-            fp.write('    param.scaleB = %i; \n' % scaleB)
-            fp.write('    param.deskDX = %i; \n' % deskDX)
-            fp.write('    param.deskDY = %i; \n' % deskDY)
-            fp.write('    param.deskDZ = %i; \n' % deskDZ)
+            fp.write('    param.isDesk = %s; \n' % jsBool(self.webRenderHints.isDesk))
+            fp.write('    param.isAxis = %s; \n' % jsBool(self.webRenderHints.isAxis))
+            fp.write('    param.scaleA = %i; \n' % self.webRenderHints.scaleA)
+            fp.write('    param.scaleB = %i; \n' % self.webRenderHints.scaleB)
+            fp.write('    param.deskDX = %i; \n' % self.webRenderHints.deskDX)
+            fp.write('    param.deskDY = %i; \n' % self.webRenderHints.deskDY)
+            fp.write('    param.deskDZ = %i; \n' % self.webRenderHints.deskDZ)
             fp.write('    return param;\n')
             fp.write('}\n')
             fp.write('\n')

@@ -1,4 +1,3 @@
-import os
 
 from OCC.Display.SimpleGui import init_display
 from OCC.Core.GC import GC_MakeCircle
@@ -65,13 +64,9 @@ def _getWireStartPointAndTangentDir(wire):
 
 class RenderLib:
 
-    def __init__(self, sceneName):
+    def __init__(self):
         self.aStyle = Style()
         self.aMove = Move()
-        self.aSceneName = sceneName
-
-    def getSavePath(self):
-        return os.path.abspath(os.path.join((os.path.dirname(__file__)), '..', '..', 'temp', self.aSceneName))
 
     def prepare(self, aMove, aStyle):
         self.aStyle = aStyle
@@ -124,11 +119,15 @@ class RenderLib:
     def renderSurface(self, aSurface):
         self.renderShapeObj(aSurface)
 
+class ScreenRenderHints:
+    def __init__(self, xSize=800, ySize=600):
+        self.xSize = xSize
+        self.ySize = ySize
 
 class ScreenRenderLib(RenderLib):
 
-    def __init__(self, sceneName):
-        super().__init__(sceneName)
+    def __init__(self):
+        super().__init__()
         self.display, self.start_display, add_menu, add_function_to_menu = init_display(
             None, (700, 500), True, [128, 128, 128], [128, 128, 128]
         )
@@ -154,11 +153,27 @@ class ScreenRenderLib(RenderLib):
         self.display.Context.Display(ais, False)
 
 
+class WebRenderHints:
+    def __init__(self, scaleA=1, scaleB=1):
+        self.scaleA = scaleA
+        self.scaleB = scaleB
+        self.scale = scaleB/scaleA
+        self.shapePrecision = 1*self.scale
+        self.wirePrecision = 1*self.scale
+        self.deskDX = 0
+        self.deskDY = 0
+        self.deskDZ = -100*self.scale
+        self.isDesk = True
+        self.isAxis = True
+        self.scaleStr = 'A0 M' + str(scaleA) + ':' + str(scaleB)
+
+
 class WebRenderLib(RenderLib):
 
-    def __init__(self, sceneName, precision, decoration):
-        super().__init__(sceneName)
-        self.saver = WebSaverLib(decoration, precision, self.getSavePath())
+    def __init__(self, webRenderHints, pathToSave):
+        super().__init__()
+        self.webRenderHints = webRenderHints
+        self.saver = WebSaverLib(webRenderHints, pathToSave)
 
     def renderTextObj(self, aText, aHeightPx):
         pnt = gp_Pnt(0, 0, 0).Transformed(self.aMove.getTrsf())
@@ -174,11 +189,21 @@ class WebRenderLib(RenderLib):
     def render(self):
         self.saver.save()
 
+
+class StlRenderHints:
+    def __init__(self, scaleA=1, scaleB=1):
+        self.scaleA = scaleA
+        self.scaleB = scaleB
+        self.scale = scaleB/scaleA
+        self.shapePrecision = 1*self.scale
+        self.wirePrecision = 1*self.scale
+
+
 class StlRenderLib(RenderLib):
 
-    def __init__(self, sceneName, precision):
-        super().__init__(sceneName)
-        self.saver = StlSaverLib(precision, self.getSavePath())
+    def __init__(self, stlRenderHints, pathToSave):
+        super().__init__()
+        self.saver = StlSaverLib(stlRenderHints, pathToSave)
 
     def renderTextObj(self, aText, aHeightPx):
         pass
