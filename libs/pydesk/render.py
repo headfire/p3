@@ -1,3 +1,5 @@
+import os
+
 from OCC.Display.SimpleGui import init_display
 from OCC.Core.GC import GC_MakeCircle
 from OCC.Core.AIS import AIS_Shape
@@ -9,7 +11,7 @@ from OCC.Core.BRepPrimAPI import BRepPrimAPI_MakeSphere, BRepPrimAPI_MakeBox, \
 from OCC.Core.BRep import BRep_Tool
 from OCC.Core.BRepTools import BRepTools_WireExplorer
 from OCC.Core.gp import gp_Pnt, gp_Dir, gp_Vec
-from OCC.Core.Graphic3d import Graphic3d_MaterialAspect, Graphic3d_NameOfMaterial
+from OCC.Core.Graphic3d import Graphic3d_NameOfMaterial, Graphic3d_MaterialAspect
 from saver import WebSaverLib, StlSaverLib
 
 from std import Style, Move
@@ -43,7 +45,6 @@ MATERIAL_CONSTS = {
     'DEFAULT': Graphic3d_NameOfMaterial.Graphic3d_NOM_DEFAULT
 }
 
-from OCC.Core.Graphic3d import Graphic3d_NameOfMaterial, Graphic3d_MaterialAspect
 
 def _getVectorTangentToCurveAtPoint(edge, uRatio):
     aCurve, aFP, aLP = BRep_Tool.Curve(edge)
@@ -64,19 +65,23 @@ def _getWireStartPointAndTangentDir(wire):
 
 class RenderLib:
 
-    def __init__(self):
+    def __init__(self, sceneName):
         self.aStyle = Style()
         self.aMove = Move()
+        self.aSceneName = sceneName
+
+    def getSavePath(self):
+        return os.path.abspath(os.path.join((os.path.dirname(__file__)), '..', '..', 'temp', self.aSceneName))
 
     def prepare(self, aMove, aStyle):
         self.aStyle = aStyle
         self.aMove = aMove
 
-    def renderTextObj(self, aText, aHeightPx):
-        pass
+    def render(self): pass
 
-    def renderShapeObj(self, aShape):
-        pass
+    def renderTextObj(self, aText, aHeightPx): pass
+
+    def renderShapeObj(self, aShape): pass
 
     def renderWire(self, aWire, aWireRadius):
         startPoint, tangentDir = _getWireStartPointAndTangentDir(aWire)
@@ -93,28 +98,28 @@ class RenderLib:
 
     def renderBox(self, aSizeX, aSizeY, aSizeZ):
         shape = BRepPrimAPI_MakeBox(aSizeX, aSizeY, aSizeZ).Shape()
-        self._renderShapeObj(shape)
+        self.renderShapeObj(shape)
 
     def renderSphere(self, aRadius):
         shape = BRepPrimAPI_MakeSphere(aRadius).Shape()
-        self._renderShapeObj(shape)
+        self.renderShapeObj(shape)
 
     def renderCone(self, aRadius1, aRadius2, aHeight):
         shape = BRepPrimAPI_MakeCone(aRadius1, aRadius2, aHeight).Shape()
-        self._renderShapeObj(shape)
+        self.renderShapeObj(shape)
 
     def renderCylinder(self, aRadius, aHeight):
         shape = BRepPrimAPI_MakeCylinder(aRadius, aHeight).Shape()
-        self._renderShapeObj(shape)
+        self.renderShapeObj(shape)
 
     def renderTorus(self, aRadius1, aRadius2):
         shape = BRepPrimAPI_MakeTorus(aRadius1, aRadius2).Shape()
-        self._renderShapeObj(shape)
+        self.renderShapeObj(shape)
 
     def renderCircle(self, aPnt1, aPnt2, aPnt3, aLineWidth):
         geomCircle = GC_MakeCircle(aPnt1, aPnt2, aPnt3).Value()
         wire = BRepBuilderAPI_MakeEdge(geomCircle).Edge()
-        self.renderWireObj(wire, aLineWidth)
+        self.renderWire(wire, aLineWidth)
 
     def renderSurface(self, aSurface):
         self.renderShapeObj(aSurface)
@@ -122,13 +127,13 @@ class RenderLib:
 
 class ScreenRenderLib(RenderLib):
 
-    def __init__(self):
-        super().__init__()
+    def __init__(self, sceneName):
+        super().__init__(sceneName)
         self.display, self.start_display, add_menu, add_function_to_menu = init_display(
             None, (700, 500), True, [128, 128, 128], [128, 128, 128]
         )
 
-    def show(self):
+    def render(self):
         self.display.FitAll()
         self.start_display()
 
@@ -151,35 +156,36 @@ class ScreenRenderLib(RenderLib):
 
 class WebRenderLib(RenderLib):
 
-    def __init__(self, decoration, precision, path):
-        super().__init__()
-        self.webLib = WebSaverLib(decoration, precision, path)
+    def __init__(self, sceneName, precision, decoration):
+        super().__init__(sceneName)
+        self.saver = WebSaverLib(decoration, precision, self.getSavePath())
 
     def renderTextObj(self, aText, aHeightPx):
         pnt = gp_Pnt(0, 0, 0).Transformed(self.aMove.getTrsf())
-        color = self.aStyle.getNormedColor(),
-        self.webLib.drawLabel(pnt, aText, color)
+        color = self.aStyle.getNormedColor()
+        self.saver.drawLabel(pnt, aText, color)
 
     def renderShapeObj(self, aShape):
         shapeTr = BRepBuilderAPI_Transform(aShape, self.aMove.getTrsf()).Shape()
         color = self.aStyle.getNormedColor()
         transparency = self.aStyle.getNormedTransparency()
-        self.webLib.drawShape(shapeTr, color, transparency)
+        self.saver.drawShape(shapeTr, color, transparency)
+
+    def render(self):
+        self.saver.save()
 
 class StlRenderLib(RenderLib):
 
-    def __init__(self):
-        super().__init__()
-        self.saver = StlSaver()
+    def __init__(self, sceneName, precision):
+        super().__init__(sceneName)
+        self.saver = StlSaverLib(precision, self.getSavePath())
 
     def renderTextObj(self, aText, aHeightPx):
-        pnt = gp_Pnt(0, 0, 0).Transformed(self.aMove.getTrsf())
-        color = self.aStyle.getNormedColor(),
-        self.webLib.drawLabel(pnt, aText, color)
+        pass
 
     def renderShapeObj(self, aShape):
         shapeTr = BRepBuilderAPI_Transform(aShape, self.aMove.getTrsf()).Shape()
-        color = self.aStyle.getNormedColor()
-        transparency = self.aStyle.getNormedTransparency()
-        self.webLib.drawShape(shapeTr, color, transparency)
+        self.saver.drawShape(shapeTr)
 
+    def render(self):
+        self.saver.save()

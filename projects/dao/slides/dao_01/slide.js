@@ -2,8 +2,8 @@ function loadedSlideGetParam() {
 	 var param = Object(); 
 	 param.isDesk = true; 
 	 param.isAxis = true; 
-	 param.scaleA = 1; 
-	 param.scaleB = 5; 
+	 param.scaleA = 5; 
+	 param.scaleB = 1; 
 	 param.deskDX = 0; 
 	 param.deskDY = 0; 
 	 param.deskDZ = -60; 

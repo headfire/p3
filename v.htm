@@ -72,12 +72,19 @@
   const queryString = window.location.search;
   console.log(queryString);
   const urlParams = new URLSearchParams(queryString);
-  paper = 'examples'
+  
+  // detect path to slide
   slide = 'start'
   if (urlParams.has('s'))
 	 slide = urlParams.get('s')
+
+  prjName=slide.split('_')[0];	
+  var path = 'projects' + '/' + prjName + '/' + 'slides' + '/' + slide + '/';
+	
+  if (urlParams.has('dev'))
+      path = 'temp' + '/' + slide+'/';
 	 
-  mainLoadSlide(slide);
+  mainLoadSlide(path);
   window.addEventListener( 'resize', mainOnWindowResize , false );
   
 </script>

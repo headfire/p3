@@ -625,47 +625,50 @@ class DaoDrawLib(DeskDrawLib):
 
 
 if __name__ == '__main__':
+
+
     import sys
 
-    slideNum = 7
-    slideTarget = 'screen'
-    pathlib.Path(__file__).parent.resolve()
-    slidePath = 'd:/temp'
+    sceneName = 'dao_07'
+    sceneTarget = 'screen'
+
     if len(sys.argv) > 1:
-        slideNum = sys.argv[1]
+        sceneName = sys.argv[1]
     if len(sys.argv) > 2:
-        slideTarget = sys.argv[2]
+        sceneTarget = sys.argv[2]
     if len(sys.argv) > 3:
         slidePath = sys.argv[3]
 
     daoLib = DaoDrawLib()
+    scene = None
+    sceneDecoration = (True, True, daoLib.scaleA, daoLib.scaleB, 0, 0, -60)
+    scenePrecision = (0.2, 0.2)
 
-    slide = None
+    if sceneName == 'dao_01':
+        scene = daoLib.getDaoClassicSlide()
+    elif sceneName == 'dao_02':
+        scene = daoLib.getDaoOffsetSlide()
+    elif sceneName == 'dao_03':
+        scene = daoLib.getDaoExampleSliceSlide()
+    elif sceneName == 'dao_04':
+        scene = daoLib.getManySliceSlide()
+    elif sceneName == 'dao_05':
+        scene = daoLib.getDaoSkinningSlide()
+    elif sceneName == 'dao_06':
+        scene = daoLib.getDaoIngYangSlide()
+    elif sceneName == 'dao_07':
+        scene = daoLib.getDaoCaseSlide()
 
-    if slideNum == 'dao_01':
-        slide = daoLib.getDaoClassicSlide()
-    elif slideNum == 'dao_02':
-        slide = daoLib.getDaoOffsetSlide()
-    elif slideNum == 'dao_03':
-        slide = daoLib.getDaoExampleSliceSlide()
-    elif slideNum == 'dao_04':
-        slide = daoLib.getManySliceSlide()
-    elif slideNum == 'dao_05':
-        slide = daoLib.getDaoSkinningSlide()
-    elif slideNum == 'dao_06':
-        slide = daoLib.getDaoIngYangSlide()
-    elif slideNum == 'dao_07':
-        slide = daoLib.getDaoCaseSlide()
-
-    if slideTarget == 'screen':
+    if sceneTarget == 'screen':
         desk = daoLib.getDeskDrawBoard()
-        screen = ScreenRenderLib()
-        slide.drawTo(screen)
+        screen = ScreenRenderLib(sceneName)
+        scene.drawTo(screen)
         desk.drawTo(screen, daoLib.makeMove().setMove(0, 0, -60))
-        screen.show()
-    elif slideTarget == 'web':
-        decoration = (True, True, daoLib.scaleA, daoLib.scaleB, 0, 0, -60)
-        web = WebRenderLib(decoration, 0.01, slidePath)
-        slide.drawTo(web)
-    elif slideTarget == 'stl':
-        pass
+        screen.render()
+    elif sceneTarget == 'web':
+        web = WebRenderLib(sceneName, scenePrecision, sceneDecoration)
+        scene.drawTo(web)
+        web.render()
+    elif sceneTarget == 'stl':
+        stl = StlRenderLib(sceneName, scenePrecision)
+        scene.drawTo(stl)

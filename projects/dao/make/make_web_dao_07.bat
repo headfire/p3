@@ -1,1 +1,1 @@
-make dao_07 screen
+make dao_07 web

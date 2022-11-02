@@ -94,9 +94,7 @@ function mainSlideGetParamDefault() {
 function mainSlideMakeDefault() {
 }
  
-function mainLoadSlide(slide) {
-   prjName=slide.split('_')[0];	
-   var path = 'projects' + '/' + prjName + '/' + 'slides' + '/' + slide + '/';
+function mainLoadSlide(path) {
    var filename = path +'slide.js?time='+ new Date().getTime();;
    var slideGetParam = mainSlideGetParamDefault;
    var slideMake = mainSlideMakeDefault;

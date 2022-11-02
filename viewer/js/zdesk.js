@@ -36,7 +36,7 @@ function zdeskXLabel(x,y,z, txt, color) {
     var b = color % 256;
 	clr = 'rgb(' + r + ',' + g + ',' + b + ')';
 	
-	dLabel = 15 * zdeskScaleA/zdeskScaleB;
+	dLabel = 15 * zdeskScaleB/zdeskScaleA;
 
     place = new THREE.Vector3 (x+dLabel, y+dLabel, z+dLabel);
   
@@ -75,7 +75,7 @@ function zdeskXLine(startPlace, endPlace, pColor, pLineWidth) {
     var object = new THREE.Mesh( geometry, zdeskGetMaterial(pColor) );
 	object.position.copy(startPlace);
 	object.position.lerp( endPlace, 0.5 );
-	object.scale.set( pLineWidth*zdeskScaleA/zdeskScaleB/1.5, startPlace.distanceTo( endPlace ), pLineWidth*zdeskScaleA/zdeskScaleB/1.5 );
+	object.scale.set( pLineWidth*zdeskScaleB/zdeskScaleA/1.5, startPlace.distanceTo( endPlace ), pLineWidth*zdeskScaleB/zdeskScaleA/1.5 );
 	object.lookAt( endPlace );
 	object.rotateOnAxis(new THREE.Vector3(1,0,0),Math.PI/2);
 	zdeskScene.add( object );
@@ -282,7 +282,7 @@ function zdeskInit(container, texturePath, slidePath, param) {
 				
 	            zdeskScaleA = param.scaleA;
 				zdeskScaleB = param.scaleB;
-	            scale = zdeskScaleA/zdeskScaleB;
+	            scale = zdeskScaleB/zdeskScaleA;
 			
  			    if ( ! Detector.webgl ) Detector.addGetWebGLMessage();
 

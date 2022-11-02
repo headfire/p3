@@ -1,7 +1,6 @@
 import os
 import uuid
 import json
-import pathlib
 
 from OCC.Core.Tesselator import ShapeTesselator
 
@@ -9,7 +8,7 @@ from OCC.Extend.TopologyUtils import is_edge, is_wire, discretize_edge, discreti
 from OCC.Extend.DataExchange import write_stl_file
 
 
-class StlSaver:
+class StlSaverLib:
 
     def __init__(self, precision, path):
         if not path:
@@ -39,6 +38,8 @@ class StlSaver:
             write_stl_file(shape, shape_full_path, "ascii", shape_precision / 4, 0.5 / 4)
             print("export shape %s to STL done", str(self.shapeNum).zfill(3))
             self.shapeNum += 1
+
+    def save(self): pass
 
 
 def jsBool(boolVar):
@@ -86,18 +87,20 @@ def export_edge_data_to_json(edge_hash, point_set):
     return json.dumps(edges_data)
 
 
-class WebSaver:
+class WebSaverLib:
 
-    def __init__(self, decoration, precision):
+    def __init__(self, decoration, precision, path):
 
-        self._path = pathlib.Path(__file__).parent.parent.resolve()
+        self._path = path
         self._js_filename = os.path.join(self._path, "slide.js")
         self.decoration = decoration
         self.precision = precision
         self.shapeNum = 1
         self.stringList = []
 
-        print("## ThreeJS %s WebGL renderer")
+        print("")
+        print("## ThreeJS WebGL renderer")
+        print("")
 
     def drawPoint(self, pnt, color, size):
         self.stringList.append("\t zdeskXPoint(%g, %g, %g, %s, %g);\n"
@@ -121,28 +124,31 @@ class WebSaver:
             print("discretize an edge")
             points = discretize_edge(shape, wire_precision)
             edge_hash = "exp_%s_edge" % str(self.shapeNum).zfill(3)
+            print("%s, %i segments" % (edge_hash, len(points) - 1))
             self.shapeNum += 1
             str_to_write = export_edge_data_to_json(edge_hash, points)
             edge_full_path = os.path.join(self._path, edge_hash + '.json')
             with open(edge_full_path, "w") as edge_file:
                 edge_file.write(str_to_write)
             # store this edge hash
-            self.stringList.append("\t zdeskXCurve(slidePath+'%s.json', %s, %g);\n"
+            self.stringList.append("\t zdeskXCurve('%s', %s, %g);\n"
                                    % (edge_hash, color_to_hex(color), line_width))
-            print("%s, %i segments" % (edge_hash, len(points) - 1))
         elif is_wire(shape):
             print("discretize a wire")
             points = discretize_wire(shape, wire_precision)
             wire_hash = "exp_%s_wire" % str(self.shapeNum).zfill(3)
+            print("%s, %i segments" % (wire_hash, len(points) - 1))
             self.shapeNum += 1
             str_to_write = export_edge_data_to_json(wire_hash, points)
             wire_full_path = os.path.join(self._path, wire_hash + '.json')
+            print("Try to save file %s" % wire_full_path)
             with open(wire_full_path, "w") as wire_file:
                 wire_file.write(str_to_write)
+            print("Save OK")
+            print("")
             # store this edge hash
-            self.stringList.append("\t zdeskXCurve(slidePath+'%s.json', %s, %g);\n"
+            self.stringList.append("    zdeskXCurve('%s', %s, %g);\n"
                                    % (wire_hash, color_to_hex(color), line_width))
-            print("%s, %i segments" % (wire_hash, len(points) - 1))
         else:  # solid or shell
             print("tessellate a shape")
             shape_uuid = uuid.uuid4().hex
@@ -154,27 +160,30 @@ class WebSaver:
                          mesh_quality=shape_precision,
                          parallel=True)
             # export to 3JS
+            print("%s, %i triangles" % (shape_hash, tess.ObjGetTriangleCount()))
             shape_full_path = os.path.join(self._path, shape_hash + '.json')
+            print("Try to save file %s" % shape_full_path)
             with open(shape_full_path, 'w') as json_file:
                 json_file.write(tess.ExportShapeToThreejsJSONString(shape_uuid))
-            self.stringList.append("\t zdeskXShape(slidePath+'%s.json', %s, %s, %g, %g);\n"
+            print("Save OK")
+            print("")
+            self.stringList.append("    zdeskXShape('%s', %s, %s, %g, %g);\n"
                                    % (shape_hash, color_to_hex(color), color_to_hex(specular_color), shininess,
                                       1 - transparency))
-            print("%s, %i triangles\n" % (shape_hash, tess.ObjGetTriangleCount()))
 
-    def render(self):
+    def save(self):
         with open(self._js_filename, "w") as fp:
             isDesk, isAxis, scaleA, scaleB, deskDX, deskDY, deskDZ = self.decoration
             fp.write('function loadedSlideGetParam() { \n')
-            fp.write('\t var param = Object(); \n')
-            fp.write('\t param.isDesk = %s; \n' % jsBool(isDesk))
-            fp.write('\t param.isAxis = %s; \n' % jsBool(isAxis))
-            fp.write('\t param.scaleA = %i; \n' % scaleA)
-            fp.write('\t param.scaleB = %i; \n' % scaleB)
-            fp.write('\t param.deskDX = %i; \n' % deskDX)
-            fp.write('\t param.deskDY = %i; \n' % deskDY)
-            fp.write('\t param.deskDZ = %i; \n' % deskDZ)
-            fp.write('\t return param;\n')
+            fp.write('    var param = Object(); \n')
+            fp.write('    param.isDesk = %s; \n' % jsBool(isDesk))
+            fp.write('    param.isAxis = %s; \n' % jsBool(isAxis))
+            fp.write('    param.scaleA = %i; \n' % scaleA)
+            fp.write('    param.scaleB = %i; \n' % scaleB)
+            fp.write('    param.deskDX = %i; \n' % deskDX)
+            fp.write('    param.deskDY = %i; \n' % deskDY)
+            fp.write('    param.deskDZ = %i; \n' % deskDZ)
+            fp.write('    return param;\n')
             fp.write('}\n')
             fp.write('\n')
             fp.write('function loadedSlideMake(slidePath) { \n')
