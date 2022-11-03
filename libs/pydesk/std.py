@@ -21,8 +21,6 @@ def _getValue(aValue, aDefaultValue):
     return aDefaultValue
 
 
-
-
 class Style:
     def __init__(self):
         self.aColor = None
@@ -140,7 +138,7 @@ class EnvParamLib:
         else:
             return defaultValue
 
-# ************************************************************
+
 class Draw:
     pass
 

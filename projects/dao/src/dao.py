@@ -1,6 +1,5 @@
 from desk import DeskDrawLib
-from render import ScreenRenderLib, WebRenderLib, StlRenderLib
-from render import ScreenRenderHints, WebRenderHints, StlRenderHints
+from render import ScreenRenderLib, WebRenderLib, WebFastRenderLib, StlRenderLib, RenderHints
 
 from OCC.Core.gp import gp_Pnt, gp_Trsf, gp_Dir, gp_Vec, gp_Ax1, gp_OZ, gp_GTrsf, gp_Ax2
 from OCC.Core.Geom import Geom_TrimmedCurve
@@ -658,26 +657,25 @@ if __name__ == '__main__':
     elif sceneName == 'dao_07':
         scene = daoLib.getDaoCaseSlide()
 
-    pathToSave = os.path.abspath(os.path.join((os.path.dirname(__file__)), '..', '..', 'temp', sceneName))
+    hints = RenderHints()
+    hints.setScriin(1000, 800)
+    hints.setScale(5, 1)
+    hints.pathToSave(os.path.abspath(os.path.join((os.path.dirname(__file__)), '..', '..', 'temp', sceneName)))
+
+    desk = daoLib.getDeskDrawBoard()
+
+    target = None
 
     if sceneTarget == 'screen':
-        desk = daoLib.getDeskDrawBoard()
-        hints = ScreenRenderHints()
-        screen = ScreenRenderLib(hints)
-        scene.drawTo(screen)
-        desk.drawTo(screen, daoLib.makeMove().setMove(0, 0, -60))
-        screen.render()
+        target = ScreenRenderLib(hints)
     elif sceneTarget == 'web':
-        hints = WebRenderHints(daoLib.scaleA, daoLib.scaleB)
-        web = WebRenderLib(hints, pathToSave)
-        scene.drawTo(web)
-        web.render()
-    elif sceneTarget == 'webfine':
-        hints = WebRenderHints(daoLib.scaleA, daoLib.scaleB)
-        web = WebFineRenderLib(hints)
-        scene.drawTo(web)
-        web.render()
+        target = WebRenderLib(hints)
+    elif sceneTarget == 'webfast':
+        target = WebFastRenderLib(hints)
     elif sceneTarget == 'stl':
-        hints = StlRenderHints(daoLib.scaleA, daoLib.scaleB)
-        stl = StlRenderLib(hints, pathToSave)
-        scene.drawTo(stl)
+        target = StlRenderLib
+
+    target.startRender()
+    target.render(scene)
+    target.render(desk, daoLib.makeMove().setMove(0, 0, -60))
+    target.finishRender()

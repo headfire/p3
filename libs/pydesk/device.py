@@ -2,19 +2,21 @@ import os
 import uuid
 import json
 
+from OCC.Display.SimpleGui import init_display
 from OCC.Core.Tesselator import ShapeTesselator
-
 from OCC.Extend.TopologyUtils import is_edge, is_wire, discretize_edge, discretize_wire
 from OCC.Extend.DataExchange import write_stl_file
 
+class ScreenDevice:
+    def __init__(self, hints):
+        self.display, self.start_display, add_menu, add_function_to_menu = init_display(
+            None, (self.hints.deviceX, self.hints.deviceY), True, [128, 128, 128], [128, 128, 128]
+        )
 
-class StlSaverLib:
 
-    def __init__(self, precision, path):
-        if not path:
-            raise Exception('StlRenderer need path for exported files')
-        self._path = path
-        self.precision = precision
+class StlDevice:
+
+    def __init__(self, hints):
         self.shapeNum = 1
 
         print("Stl renderer init")
@@ -87,13 +89,13 @@ def export_edge_data_to_json(edge_hash, point_set):
     return json.dumps(edges_data)
 
 
-class WebSaverLib:
+class WebDevice:
 
-    def __init__(self, webRenderHints, path):
+    def __init__(self, params):
 
         self._path = path
         self._js_filename = os.path.join(self._path, "slide.js")
-        self.webRenderHints = webRenderHints
+        self.params = params
         self.shapeNum = 1
         self.stringList = []
 

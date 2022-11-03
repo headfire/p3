@@ -1,5 +1,4 @@
 
-from OCC.Display.SimpleGui import init_display
 from OCC.Core.GC import GC_MakeCircle
 from OCC.Core.AIS import AIS_Shape
 from OCC.Core.Quantity import Quantity_Color, Quantity_TypeOfColor
@@ -11,7 +10,7 @@ from OCC.Core.BRep import BRep_Tool
 from OCC.Core.BRepTools import BRepTools_WireExplorer
 from OCC.Core.gp import gp_Pnt, gp_Dir, gp_Vec
 from OCC.Core.Graphic3d import Graphic3d_NameOfMaterial, Graphic3d_MaterialAspect
-from saver import WebSaverLib, StlSaverLib
+from device import WebSaverLib, StlSaverLib
 
 from std import Style, Move
 
@@ -62,31 +61,136 @@ def _getWireStartPointAndTangentDir(wire):
     return BRep_Tool.Pnt(vertex), gp_Dir(v)
 
 
-class RenderLib:
-
+class RenderHints:
     def __init__(self):
+
+        self.sceneName = None
+
+        # device size
+        self.deviceX = None
+        self.sdeviceY = None
+
+        # scale factor
+        self.scaleA = None
+        self.scaleB = None
+        self.scale = None
+        self.scaleStr = None
+
+        # primitive sizes
+        self.basePointRadius = None
+        self.baseLineRadius = None
+
+        # precision
+        self.wirePrecision = None
+        self.shapePrecision = None
+
+        # desk position
+        self.deskDX = None
+        self.deskDY = None
+        self.deskDZ = None
+
+        # draw limits
+        self.limitMinX = None
+        self.limitMaxX = None
+        self.limitMinY = None
+        self.limitMaxY = None
+        self.limitMinZ = None
+        self.limitMaxZ = None
+
+        # decoration flags
+        self.isDesk = None
+        self.isAxis = None
+        self.isLimits = None
+
+        # path to save
+        self.pathToSave = None
+
+        # default init
+        self.setScale(1, 1)
+        self.setDeviceSize(800, 600)
+        self.setDecoration(True, True, True)
+        self.setPathToSave('.')
+
+    def setDeviceSize(self, deviceX, deviceY):
+        self.deviceX = deviceX
+        self.deviceY = deviceY
+
+    def setScale(self, scaleA, scaleB):
+        self.scaleA = 1
+        self.scaleB = 1
+        self.scale = scaleB / scaleA
+        self.scaleStr = 'A0 M' + str(scaleA) + ':' + str(scaleB)
+
+        self.basePointRadius = 5*self.scale
+        self.baseLineRadius = 3*self.scale
+
+        self.shapePrecision = 1*self.scale
+        self.wirePrecision = 1*self.scale
+
+        self.deskDX = 0
+        self.deskDY = 0
+        self.deskDZ = 300 * self.scale
+
+        self.limitMinX = -200 * self.scale
+        self.limitMaxX = 200 * self.scale
+        self.limitMinY = -200 * self.scale
+        self.limitMaxY = 200 * self.scale
+        self.limitMinZ = -200 * self.scale
+        self.limitMaxZ = 200 * self.scale
+
+    def setPathToSave(self, pathToSave):
+        self.pathToSave = pathToSave
+
+    def setPrecision(self, wirePrecision, shapePrecision):
+        self.wirePrecision = wirePrecision
+        self.shapePrecision = shapePrecision
+
+    def setBaseSize(self, basePointRadius, baseLineRadius):
+        self.basePointRadius = basePointRadius
+        self.baseLineRadius = baseLineRadius
+
+    def setDeskPosition(self, deskDX, deskDY, deskDZ):
+        self.deskDX = deskDX
+        self.deskDY = deskDY
+        self.deskDZ = deskDZ
+
+    def setDrawLimits(self, limitMinX, limitMaxX, limitMinY, limitMaxY, limitMinZ, limitMaxZ):
+        self.limitMinX = limitMinX
+        self.limitMaxX = limitMaxX
+        self.limitMinY = limitMinY
+        self.limitMaxY = limitMaxY
+        self.limitMinZ = limitMinZ
+        self.limitMaxZ = limitMaxZ
+
+    def setDecoration(self, isDesk, isAxis, isLimits):
+        self.isDesk = isDesk
+        self.isAxis = isAxis
+        self.isLimits = isLimits
+
+
+class RenderLib:
+    def __init__(self, hints=RenderHints()):
+        self.hints = hints
         self.aStyle = Style()
         self.aMove = Move()
+        self.device = None
 
-    def prepare(self, aMove, aStyle):
+    def startRender(self): pass
+
+    def render(self, aDraw, aMove, aStyle):
+        aDraw.renderTo(self, aMove, aStyle)
+
+    def finishRender(self): pass
+
+    def setMoveAndStyle(self, aMove, aStyle):
         self.aStyle = aStyle
         self.aMove = aMove
-
-    def render(self): pass
 
     def renderTextObj(self, aText, aHeightPx): pass
 
     def renderShapeObj(self, aShape): pass
 
-    def renderWire(self, aWire, aWireRadius):
-        startPoint, tangentDir = _getWireStartPointAndTangentDir(aWire)
-        profileCircle = GC_MakeCircle(startPoint, tangentDir, aWireRadius).Value()
-        profileEdge = BRepBuilderAPI_MakeEdge(profileCircle).Edge()
-        profileWire = BRepBuilderAPI_MakeWire(profileEdge).Wire()
-
-        shape = BRepOffsetAPI_MakePipe(aWire, profileWire).Shape()
-
-        self.renderShapeObj(shape)
+    def renderWireObj(self, aWire, aWireRadius): pass
 
     def renderLabel(self, aText, aHeightPx):
         self.renderTextObj(aText, aHeightPx)
@@ -111,34 +215,57 @@ class RenderLib:
         shape = BRepPrimAPI_MakeTorus(aRadius1, aRadius2).Shape()
         self.renderShapeObj(shape)
 
-    def renderCircle(self, aPnt1, aPnt2, aPnt3, aLineWidth):
-        geomCircle = GC_MakeCircle(aPnt1, aPnt2, aPnt3).Value()
-        wire = BRepBuilderAPI_MakeEdge(geomCircle).Edge()
-        self.renderWire(wire, aLineWidth)
+    def renderWire(self, aWire, aWireRadius):
+        self.renderWireObj(aWire, aWireRadius)
 
     def renderSurface(self, aSurface):
         self.renderShapeObj(aSurface)
 
-class ScreenRenderHints:
+    def renderPoint(self, aPnt, aPointRadius):
+        Move().setMove(aPnt.X, aPnt.Y, aPnt.Z)
+        self.renderSphere(aPointRadius)
+
+    def renderLine(self, aPnt1, aPnt2, aLineRadius):
+        Move().setMove(aPnt1.X, aPnt1.Y, aPnt1.Z)
+        Move().setMove(aPnt2.X, aPnt2.Y, aPnt2.Z)
+        self.renderCylinder(aLineRadius, 10)
+
+    def renderCircle(self, aPnt1, aPnt2, aPnt3, aLineWidth):
+        geomCircle = GC_MakeCircle(aPnt1, aPnt2, aPnt3).Value()
+        wire = BRepBuilderAPI_MakeEdge(geomCircle).Edge()
+        self.renderWireObj(wire, aLineWidth)
+
+    def renderDesk(self): pass
+    def renderAxis(self): pass
+    def renderLimits(self): pass
+
+    def renderDecoration(self):
+        if self.hints.isDesk:
+            self.renderDesk()
+        if self.hints.isAxis:
+            self.renderAxis()
+        if self.hints.isLimits:
+            self.renderLimits()
+
+
+class ScreenRenderLibParams:
     def __init__(self, xSize=800, ySize=600):
         self.xSize = xSize
         self.ySize = ySize
 
+
 class ScreenRenderLib(RenderLib):
 
-    def __init__(self):
-        super().__init__()
-        self.display, self.start_display, add_menu, add_function_to_menu = init_display(
-            None, (700, 500), True, [128, 128, 128], [128, 128, 128]
-        )
+    def startRender(self):
+        self.device = ScreenDevice(hints)
 
-    def render(self):
-        self.display.FitAll()
-        self.start_display()
+    def finishRender(self):
+        self.device.display.FitAll()
+        self.device.start_display()
 
     def renderTextObj(self, aText, aHeightPx):
         pnt = gp_Pnt(0, 0, 0).Transformed(self.aMove.getTrsf())
-        self.display.DisplayMessage(pnt, aText, aHeightPx, self.aStyle.getNormedColor(), False)
+        self.device.display.DisplayMessage(pnt, aText, aHeightPx, self.aStyle.getNormedColor(), False)
 
     def renderShapeObj(self, aShape):
         shapeTr = BRepBuilderAPI_Transform(aShape, self.aMove.getTrsf()).Shape()
@@ -150,30 +277,23 @@ class ScreenRenderLib(RenderLib):
         ais.SetTransparency(self.aStyle.getNormedTransparency())
         aspect = Graphic3d_MaterialAspect(MATERIAL_CONSTS[self.aStyle.getMaterial()])
         ais.SetMaterial(aspect)
-        self.display.Context.Display(ais, False)
+        self.device.display.Context.Display(ais, False)
 
+    def renderWireObj(self, aWire, aWireRadius):
+        startPoint, tangentDir = _getWireStartPointAndTangentDir(aWire)
+        profileCircle = GC_MakeCircle(startPoint, tangentDir, aWireRadius).Value()
+        profileEdge = BRepBuilderAPI_MakeEdge(profileCircle).Edge()
+        profileWire = BRepBuilderAPI_MakeWire(profileEdge).Wire()
 
-class WebRenderHints:
-    def __init__(self, scaleA=1, scaleB=1):
-        self.scaleA = scaleA
-        self.scaleB = scaleB
-        self.scale = scaleB/scaleA
-        self.shapePrecision = 1*self.scale
-        self.wirePrecision = 1*self.scale
-        self.deskDX = 0
-        self.deskDY = 0
-        self.deskDZ = -100*self.scale
-        self.isDesk = True
-        self.isAxis = True
-        self.scaleStr = 'A0 M' + str(scaleA) + ':' + str(scaleB)
+        shape = BRepOffsetAPI_MakePipe(aWire, profileWire).Shape()
+
+        self.renderShapeObj(shape)
 
 
 class WebRenderLib(RenderLib):
 
-    def __init__(self, webRenderHints, pathToSave):
-        super().__init__()
-        self.webRenderHints = webRenderHints
-        self.saver = WebSaverLib(webRenderHints, pathToSave)
+    def startRender(self):
+        self.saver = WebSaverLib(self.hints)
 
     def renderTextObj(self, aText, aHeightPx):
         pnt = gp_Pnt(0, 0, 0).Transformed(self.aMove.getTrsf())
@@ -186,11 +306,15 @@ class WebRenderLib(RenderLib):
         transparency = self.aStyle.getNormedTransparency()
         self.saver.drawShape(shapeTr, color, transparency)
 
-    def render(self):
+    def finishRender(self):
         self.saver.save()
 
 
-class StlRenderHints:
+class WebFastRenderLib(WebRenderLib):
+    pass
+
+
+class StlRenderLibParams:
     def __init__(self, scaleA=1, scaleB=1):
         self.scaleA = scaleA
         self.scaleB = scaleB
@@ -201,16 +325,12 @@ class StlRenderHints:
 
 class StlRenderLib(RenderLib):
 
-    def __init__(self, stlRenderHints, pathToSave):
-        super().__init__()
-        self.saver = StlSaverLib(stlRenderHints, pathToSave)
-
-    def renderTextObj(self, aText, aHeightPx):
-        pass
+    def startRender(self):
+        self.saver = StlSaverLib(self.hints)
 
     def renderShapeObj(self, aShape):
         shapeTr = BRepBuilderAPI_Transform(aShape, self.aMove.getTrsf()).Shape()
         self.saver.drawShape(shapeTr)
 
-    def render(self):
+    def finishRender(self):
         self.saver.save()
