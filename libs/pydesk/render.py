@@ -10,7 +10,8 @@ from OCC.Core.BRep import BRep_Tool
 from OCC.Core.BRepTools import BRepTools_WireExplorer
 from OCC.Core.gp import gp_Pnt, gp_Dir, gp_Vec
 from OCC.Core.Graphic3d import Graphic3d_NameOfMaterial, Graphic3d_MaterialAspect
-from device import WebSaverLib, StlSaverLib
+
+from device import ScreenDevice, WebDevice, StlDevice
 
 from std import Style, Move
 
@@ -68,7 +69,7 @@ class RenderHints:
 
         # device size
         self.deviceX = None
-        self.sdeviceY = None
+        self.deviceY = None
 
         # scale factor
         self.scaleA = None
@@ -177,8 +178,8 @@ class RenderLib:
 
     def startRender(self): pass
 
-    def render(self, aDraw, aMove, aStyle):
-        aDraw.renderTo(self, aMove, aStyle)
+    def render(self, aDraw, aMove=Move(), aStyle=Style()):
+        aDraw.drawTo(self, aMove, aStyle)
 
     def finishRender(self): pass
 
@@ -257,7 +258,7 @@ class ScreenRenderLibParams:
 class ScreenRenderLib(RenderLib):
 
     def startRender(self):
-        self.device = ScreenDevice(hints)
+        self.device = ScreenDevice(self.hints)
 
     def finishRender(self):
         self.device.display.FitAll()
@@ -293,21 +294,21 @@ class ScreenRenderLib(RenderLib):
 class WebRenderLib(RenderLib):
 
     def startRender(self):
-        self.saver = WebSaverLib(self.hints)
+        self.device = WebDevice(self.hints)
 
     def renderTextObj(self, aText, aHeightPx):
         pnt = gp_Pnt(0, 0, 0).Transformed(self.aMove.getTrsf())
         color = self.aStyle.getNormedColor()
-        self.saver.drawLabel(pnt, aText, color)
+        self.device.drawLabel(pnt, aText, color)
 
     def renderShapeObj(self, aShape):
         shapeTr = BRepBuilderAPI_Transform(aShape, self.aMove.getTrsf()).Shape()
         color = self.aStyle.getNormedColor()
         transparency = self.aStyle.getNormedTransparency()
-        self.saver.drawShape(shapeTr, color, transparency)
+        self.device.drawShape(shapeTr, color, transparency)
 
     def finishRender(self):
-        self.saver.save()
+        self.device.save()
 
 
 class WebFastRenderLib(WebRenderLib):
@@ -326,11 +327,11 @@ class StlRenderLibParams:
 class StlRenderLib(RenderLib):
 
     def startRender(self):
-        self.saver = StlSaverLib(self.hints)
+        self.device = StlDevice(self.hints)
 
     def renderShapeObj(self, aShape):
         shapeTr = BRepBuilderAPI_Transform(aShape, self.aMove.getTrsf()).Shape()
-        self.saver.drawShape(shapeTr)
+        self.device.drawShape(shapeTr)
 
     def finishRender(self):
-        self.saver.save()
+        self.device.save()

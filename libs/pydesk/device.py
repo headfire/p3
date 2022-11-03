@@ -7,16 +7,18 @@ from OCC.Core.Tesselator import ShapeTesselator
 from OCC.Extend.TopologyUtils import is_edge, is_wire, discretize_edge, discretize_wire
 from OCC.Extend.DataExchange import write_stl_file
 
+
 class ScreenDevice:
     def __init__(self, hints):
         self.display, self.start_display, add_menu, add_function_to_menu = init_display(
-            None, (self.hints.deviceX, self.hints.deviceY), True, [128, 128, 128], [128, 128, 128]
+            None, (hints.deviceX, hints.deviceY), True, [128, 128, 128], [128, 128, 128]
         )
 
 
 class StlDevice:
 
     def __init__(self, hints):
+        self.hints = hints
         self.shapeNum = 1
 
         print("Stl renderer init")
@@ -28,7 +30,7 @@ class StlDevice:
         pass
 
     def drawShape(self, shape):
-        shape_precision, wire_precision = self.precision
+        shape_precision = self.hints.shapePrecision
         if is_edge(shape):
             pass
         elif is_wire(shape):
@@ -36,7 +38,7 @@ class StlDevice:
         else:  # solid or shell
             print("export shape %s to STL start", str(self.shapeNum).zfill(3))
             shape_hash = "exp_%s_shape" % str(self.shapeNum).zfill(3)
-            shape_full_path = os.path.join(self._path, shape_hash + '.stl')
+            shape_full_path = os.path.join(self.hints.pathToSave, shape_hash + '.stl')
             write_stl_file(shape, shape_full_path, "ascii", shape_precision / 4, 0.5 / 4)
             print("export shape %s to STL done", str(self.shapeNum).zfill(3))
             self.shapeNum += 1
@@ -78,7 +80,7 @@ def export_edge_data_to_json(edge_hash, point_set):
     edges_data = {"metadata": {"version": 4.4,
                                "type": "BufferGeometry",
                                "generator": "pythonocc"},
-                  "uuid": edge_hash,
+                # "uuid": edge_hash,
                   "type": "BufferGeometry",
                   "data": {"attributes": {"position": {"itemSize": 3,
                                                        "type": "Float32Array",
@@ -91,11 +93,9 @@ def export_edge_data_to_json(edge_hash, point_set):
 
 class WebDevice:
 
-    def __init__(self, params):
+    def __init__(self, hints):
 
-        self._path = path
-        self._js_filename = os.path.join(self._path, "slide.js")
-        self.params = params
+        self.hints = hints
         self.shapeNum = 1
         self.stringList = []
 
@@ -104,11 +104,11 @@ class WebDevice:
         print("")
 
     def drawPoint(self, pnt, color, size):
-        self.stringList.append("\t zdeskXPoint(%g, %g, %g, %s, %g);\n"
+        self.stringList.append("    zdeskXPoint(%g, %g, %g, %s, %g);\n"
                                % (pnt.X(), pnt.Y(), pnt.Z(), color_to_hex(color), size))
 
     def drawLabel(self, pnt, text, color):
-        self.stringList.append("\t zdeskXLabel(%g, %g, %g, '%s', %s);\n"
+        self.stringList.append("    zdeskXLabel(%g, %g, %g, '%s', %s);\n"
                                % (pnt.X(), pnt.Y(), pnt.Z(), text, color_to_hex(color)))
 
     def drawShape(self,
@@ -120,8 +120,8 @@ class WebDevice:
         # if the shape is an edge or a wire, use the related functions
         shininess = 0.9
         specular_color = (0.2, 0.2, 0.2)
-        shape_precision = self.webRenderHints.shapePrecision
-        wire_precision = self.webRenderHints.wirePrecision
+        shape_precision = self.hints.shapePrecision
+        wire_precision = self.hints.wirePrecision
         if is_edge(shape):
             print("discretize an edge")
             points = discretize_edge(shape, wire_precision)
@@ -129,11 +129,11 @@ class WebDevice:
             print("%s, %i segments" % (edge_hash, len(points) - 1))
             self.shapeNum += 1
             str_to_write = export_edge_data_to_json(edge_hash, points)
-            edge_full_path = os.path.join(self._path, edge_hash + '.json')
+            edge_full_path = os.path.join(self.hints.pathToSave, edge_hash + '.json')
             with open(edge_full_path, "w") as edge_file:
                 edge_file.write(str_to_write)
             # store this edge hash
-            self.stringList.append("\t zdeskXCurve('%s', %s, %g);\n"
+            self.stringList.append("    zdeskXCurve('%s', %s, %g);\n"
                                    % (edge_hash, color_to_hex(color), line_width))
         elif is_wire(shape):
             print("discretize a wire")
@@ -142,7 +142,7 @@ class WebDevice:
             print("%s, %i segments" % (wire_hash, len(points) - 1))
             self.shapeNum += 1
             str_to_write = export_edge_data_to_json(wire_hash, points)
-            wire_full_path = os.path.join(self._path, wire_hash + '.json')
+            wire_full_path = os.path.join(self.hints.pathToSave, wire_hash + '.json')
             print("Try to save file %s" % wire_full_path)
             with open(wire_full_path, "w") as wire_file:
                 wire_file.write(str_to_write)
@@ -163,7 +163,7 @@ class WebDevice:
                          parallel=True)
             # export to 3JS
             print("%s, %i triangles" % (shape_hash, tess.ObjGetTriangleCount()))
-            shape_full_path = os.path.join(self._path, shape_hash + '.json')
+            shape_full_path = os.path.join(self.hints.pathToSave, shape_hash + '.json')
             print("Try to save file %s" % shape_full_path)
             with open(shape_full_path, 'w') as json_file:
                 json_file.write(tess.ExportShapeToThreejsJSONString(shape_uuid))
@@ -174,17 +174,18 @@ class WebDevice:
                                       1 - transparency))
 
     def save(self):
-        with open(self._js_filename, "w") as fp:
-            isDesk, isAxis, scaleA, scaleB, deskDX, deskDY, deskDZ = self.webRenderHints
+        js_filename = os.path.join(self.hints.pathToSave, "slide.js")
+        with open(js_filename, "w") as fp:
             fp.write('function loadedSlideGetParam() { \n')
             fp.write('    var param = Object(); \n')
-            fp.write('    param.isDesk = %s; \n' % jsBool(self.webRenderHints.isDesk))
-            fp.write('    param.isAxis = %s; \n' % jsBool(self.webRenderHints.isAxis))
-            fp.write('    param.scaleA = %i; \n' % self.webRenderHints.scaleA)
-            fp.write('    param.scaleB = %i; \n' % self.webRenderHints.scaleB)
-            fp.write('    param.deskDX = %i; \n' % self.webRenderHints.deskDX)
-            fp.write('    param.deskDY = %i; \n' % self.webRenderHints.deskDY)
-            fp.write('    param.deskDZ = %i; \n' % self.webRenderHints.deskDZ)
+            fp.write('    param.isDesk = %s; \n' % jsBool(self.hints.isDesk))
+            fp.write('    param.isAxis = %s; \n' % jsBool(self.hints.isAxis))
+            fp.write('    param.isLimits = %s; \n' % jsBool(self.hints.isLimits))
+            fp.write('    param.scaleA = %i; \n' % self.hints.scaleA)
+            fp.write('    param.scaleB = %i; \n' % self.hints.scaleB)
+            fp.write('    param.deskDX = %i; \n' % self.hints.deskDX)
+            fp.write('    param.deskDY = %i; \n' % self.hints.deskDY)
+            fp.write('    param.deskDZ = %i; \n' % self.hints.deskDZ)
             fp.write('    return param;\n')
             fp.write('}\n')
             fp.write('\n')

@@ -658,7 +658,7 @@ if __name__ == '__main__':
         scene = daoLib.getDaoCaseSlide()
 
     hints = RenderHints()
-    hints.setScriin(1000, 800)
+    hints.setDeviceSize(1000, 800)
     hints.setScale(5, 1)
     hints.pathToSave(os.path.abspath(os.path.join((os.path.dirname(__file__)), '..', '..', 'temp', sceneName)))
 
