@@ -169,69 +169,14 @@ class RenderHints:
         self.isLimits = isLimits
 
 
-class RenderLib:
+class RenderLib(RenderLib):
+
     def __init__(self, hints=RenderHints()):
         self.hints = hints
         self.aStyle = Style()
         self.aMove = Move()
         self.device = None
         self.localMove = Move()
-
-    def startRender(self): pass
-
-    def render(self, aDraw, aMove=Move(), aStyle=Style()):
-        aDraw.drawTo(self, aMove, aStyle)
-
-    def finishRender(self): pass
-
-    def renderDesk(self): pass
-    def renderAxis(self): pass
-    def renderLimits(self): pass
-
-    def renderDecoration(self):
-        if self.hints.isDesk:
-            self.renderDesk()
-        if self.hints.isAxis:
-            self.renderAxis()
-        if self.hints.isLimits:
-            self.renderLimits()
-
-    def setMoveAndStyle(self, aMove, aStyle):
-        self.aStyle = aStyle
-        self.aMove = aMove
-
-    def renderLabel(self, aText, aHeightPx): pass
-
-    def renderPoint(self, aPnt): pass
-
-    def renderLine(self, aPnt1, aPnt2): pass
-
-    def renderVector(self, aPnt1, aPnt2): pass
-
-    def renderCircle(self, aPnt1, aPnt2, aPnt3, aLineWidth): pass
-
-    def renderBox(self, aSizeX, aSizeY, aSizeZ): pass
-
-    def renderSphere(self, aRadius): pass
-
-    def renderCone(self, aRadius1, aRadius2, aHeight): pass
-
-    def renderCylinder(self, aRadius, aHeight): pass
-
-    def renderTorus(self, aRadius1, aRadius2): pass
-
-    def renderWire(self, aWire): pass
-
-    def renderSurface(self, aSurface): pass
-
-
-class ScreenRenderLibParams:
-    def __init__(self, xSize=800, ySize=600):
-        self.xSize = xSize
-        self.ySize = ySize
-
-
-class ScreenRenderLib(RenderLib):
 
     def startRender(self):
         self.device = ScreenDevice(self.hints)
@@ -320,6 +265,28 @@ class ScreenRenderLib(RenderLib):
         pnt = gp_Pnt(0, 0, 0).Transformed(self.aMove.getTrsf())
         self.device.display.DisplayMessage(pnt, aText, aHeightPx, self.aStyle.getNormedColor(), False)
 
+
+    def render(self, aDraw, aMove=Move(), aStyle=Style()):
+        aDraw.drawTo(self, aMove, aStyle)
+
+
+    def renderDesk(self): pass
+    def renderAxis(self): pass
+    def renderLimits(self): pass
+
+    def renderDecoration(self):
+        if self.hints.isDesk:
+            self.renderDesk()
+        if self.hints.isAxis:
+            self.renderAxis()
+        if self.hints.isLimits:
+            self.renderLimits()
+
+    def setMoveAndStyle(self, aMove, aStyle):
+        self.aStyle = aStyle
+        self.aMove = aMove
+
+class ScreenRenderLib(RenderLin): pass
 
 class WebRenderLib(RenderLib):
 
