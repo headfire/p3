@@ -1,13 +1,6 @@
 from OCC.Core.gp import gp_Pnt, gp_Dir, gp_Vec, gp_Ax1, gp_Trsf
-
-
 import sys
 
-
-DEFAULT_NORMED_COLOR = 0.5, 0.5, 0.5
-DEFAULT_MATERIAL = 'CHROME'
-DEFAULT_NORMED_TRANSPARENCY = 0.0
-DEFAULT_LAYER_NAME = 'DefaultLayer'
 
 
 def _checkObj(aObj, aClass):
@@ -21,68 +14,6 @@ def _getValue(aValue, aDefaultValue):
     return aDefaultValue
 
 
-class Style:
-    def __init__(self):
-        self.aColor = None
-        self.aMaterial = None
-        self.aTransparency = None
-        self.aLineRadius = None
-        self.aPointRadius = None
-        self.aLabelHeightPx = None
-        self.aLabelDelta = None
-        self.aArrowRFactor = None
-        self.aArrowHFactor = None
-
-    @staticmethod
-    def mergeStyle(aItemStyle, aSuperStyle):
-        ret = Style()
-        ret.aColor = _getValue(aItemStyle.aColor, aSuperStyle.aColor)
-        ret.aTransparency = _getValue(aItemStyle.aTransparency, aSuperStyle.aTransparency)
-        ret.aMaterial = _getValue(aItemStyle.aMaterial, aSuperStyle.aMaterial)
-        return ret
-
-    def setColor(self, aColor_RGB_256):
-        if aColor_RGB_256 is None:
-            self.aColor = None
-        else:
-            r256, g256, b256 = aColor_RGB_256
-            self.aColor = (r256 / 255, g256 / 255, b256 / 255)
-        return self
-
-    def setTransparency(self, aNormedTransparency):
-        self.aTransparency = aNormedTransparency
-        return self
-
-    def setMaterial(self, aMaterialName):
-        self.aMaterial = aMaterialName
-        return self
-
-    def getNormedColor(self):
-        return self.aColor
-
-    def getNormedTransparency(self):
-        return self.aTransparency
-
-    def getMaterial(self):
-        return self.aMaterial
-
-    def getLineRadius(self, scale):
-        return self.aLineRadius * scale
-
-    def getPointRadius(self, scale):
-        return self.aPointRadius * scale
-
-    def getLabelHeightPx(self):
-        return self.aLabelHeightPx  # not scale
-
-    def getLabelDelta(self, scale):
-        return self.aLabelDelta * scale
-
-    def getArrowRadius(self, scale):
-        return self.aArrowRFactor * scale
-
-    def getArrowHeight(self, scale):
-        return self.aArrowHFactor * scale
 
 
 class Move:

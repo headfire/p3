@@ -1,4 +1,3 @@
-
 from OCC.Core.GC import GC_MakeCircle
 from OCC.Core.AIS import AIS_Shape
 from OCC.Core.Quantity import Quantity_Color, Quantity_TypeOfColor
@@ -13,10 +12,29 @@ from OCC.Core.Graphic3d import Graphic3d_NameOfMaterial, Graphic3d_MaterialAspec
 
 from device import ScreenDevice, WebDevice, StlDevice
 
-from std import Style, Move
+from std import Move
 
+DEFAULT_NORMED_COLOR = 0.5, 0.5, 0.5
+DEFAULT_MATERIAL_TYPE = 'CHROME'
+DEFAULT_NORMED_TRANSPARENCY = 0.0
 
-MATERIAL_CONSTS = {
+WOOD_COLOR = 208, 117, 28
+PAPER_COLOR = 230, 230, 230
+STEEL_COLOR = 100, 100, 100
+
+NICE_WHITE_COLOR = 240, 240, 240
+NICE_GRAY_COLOR = 100, 100, 100
+NICE_RED_COLOR = 200, 30, 30
+NICE_BLUE_COLOR = 100, 100, 255
+NICE_YELLOW_COLOR = 255, 255, 100
+NICE_ORIGINAL_COLOR = 241, 79, 160
+
+AO_SIZE_XYZ = 1189, 841, 1
+
+MATE = 'PLASTIC'
+CHROME = 'CHROME'
+
+MATERIAL_TYPE_CONSTS = {
     'BRASS': Graphic3d_NameOfMaterial.Graphic3d_NOM_BRASS,
     'BRONZE': Graphic3d_NameOfMaterial.Graphic3d_NOM_BRONZE,
     'COPPER': Graphic3d_NameOfMaterial.Graphic3d_NOM_COPPER,
@@ -61,83 +79,116 @@ def _getWireStartPointAndTangentDir(wire):
     v = _getVectorTangentToCurveAtPoint(edge, 0)
     return BRep_Tool.Pnt(vertex), gp_Dir(v)
 
+class Material:
+    def __init__(self, aColor, aType, aTransp):
+        self.aColor, self.aType,  self.aTransp = aColor, aType, aTransp
 
-class RenderHints:
+
+class Style:
     def __init__(self):
 
-        self.sceneName = None
+        self.pointRadius = 3
+        self.lineRadius = 5
+        self.faceHalfWidth = 1.5
+        self.arrowRadius = 3
+        self.arrowLen = 15
+        self.labelDelta = 5
+        self.labelHeightPx = 20
+
+        self.pointMaterial = Material(NICE_YELLOW_COLOR, CHROME, 0.0)
+        self.lineMaterial = Material(NICE_BLUE_COLOR, CHROME, 0.0)
+        self.faceMaterial = Material(NICE_ORIGINAL_COLOR, CHROME, 0.0)
+        self.labelMaterial = Material(NICE_ORIGINAL_COLOR, CHROME, 0.0)
+
+    def scale(self, scale):
+        self.pointRadius *= scale
+        self.lineRadius *= scale
+        self.faceHalfWidth *= scale
+        self.arrowRadius *= scale
+        self.arrowLen *= scale
+        self.labelDelta *= scale
+
+
+class RenderHints:
+    def __init__(self, sceneName='', scaleA=1, scaleB=1):
 
         # device size
-        self.deviceX = None
-        self.deviceY = None
+        self.deviceX = 800
+        self.deviceY = 600
 
         # scale factor
-        self.scaleA = None
-        self.scaleB = None
-        self.scale = None
-        self.scaleStr = None
+        scale = scaleB / scaleA
+        self.sceneLabel = sceneName + '- A0 M' + str(scaleA) + ':' + str(scaleB)
 
-        # primitive sizes
-        self.basePointRadius = None
-        self.baseLineRadius = None
+        self.basePointRadius = 5 * scale
+        self.baseLineRadius = 3 * scale
 
-        # precision
-        self.wirePrecision = None
-        self.shapePrecision = None
+        self.shapePrecision = 1 * scale
+        self.wirePrecision = 1 * scale
+
+        self.deskDX = 0 * scale
+        self.deskDY = 0 * scale
+        self.deskDZ = 300 * scale
+
+        self.limitMinX = -200 * scale
+        self.limitMaxX = 200 * scale
+        self.limitMinY = -200 * scale
+        self.limitMaxY = 200 * scale
+        self.limitMinZ = -200 * scale
+        self.limitMaxZ = 200 * scale
 
         # desk position
-        self.deskDX = None
-        self.deskDY = None
-        self.deskDZ = None
-
-        # draw limits
-        self.limitMinX = None
-        self.limitMaxX = None
-        self.limitMinY = None
-        self.limitMaxY = None
-        self.limitMinZ = None
-        self.limitMaxZ = None
+        self.deskDX = 0
+        self.deskDY = 0
+        self.deskDZ = -250 * scale
 
         # decoration flags
-        self.isDesk = None
-        self.isAxis = None
-        self.isLimits = None
+        self.isDesk = True
+        self.isAxis = True
+        self.isLimits = True
 
         # path to save
         self.pathToSave = None
 
-        # default init
-        self.setScale(1, 1)
-        self.setDeviceSize(800, 600)
-        self.setDecoration(True, True, True)
-        self.setPathToSave('.')
+        # styles
+        mainStyle = Style()
+        mainStyle.scale(scale * 1)
+
+        infoStyle = Style()
+        infoStyle.scale(scale * 0.7)
+        infoStyle.pointMaterial = Material(NICE_GRAY_COLOR, MATE, 0.5)
+        infoStyle.lineMaterial = Material(NICE_GRAY_COLOR, MATE, 0.5)
+        infoStyle.faceMaterial = Material(NICE_GRAY_COLOR, MATE, 0.5)
+        infoStyle.labelMaterial = Material(NICE_GRAY_COLOR, MATE, 0.0)
+
+        focusStyle = Style()
+        focusStyle.scale(scale * 0.7)
+        focusStyle.pointMaterial = Material(NICE_RED_COLOR, MATE, 0.0)
+        focusStyle.lineMaterial = Material(NICE_RED_COLOR, MATE, 0.0)
+        focusStyle.faceMaterial = Material(NICE_RED_COLOR, MATE, 0.5)
+        focusStyle.labelMaterial = Material(NICE_RED_COLOR, MATE, 0.0)
+
+        self.styles = {
+            'MainStyle': mainStyle,
+            'InfoStyle': infoStyle,
+            'FocusStyle': focusStyle,
+        }
+
+        self.aBoardH = 20 * scale
+        self.aBoardBorderSize = 60 * scale
+        self.aBoardWoodStyle = Material(WOOD_COLOR, MATE, 0)
+
+        self.aPaperSizes = 1189 * scale, 841* scale, 1* scale
+        self.aPaperStyle = Material(PAPER_COLOR, MATE, 0)
+
+        self.aPinOffset = 30 * scale
+        self.aPinR = 10 * scale
+        self.aPinH = 2 * scale
+        self.aPinStyle = Material(STEEL_COLOR, CHROME, 0)
 
     def setDeviceSize(self, deviceX, deviceY):
         self.deviceX = deviceX
         self.deviceY = deviceY
-
-    def setScale(self, scaleA, scaleB):
-        self.scaleA = 1
-        self.scaleB = 1
-        self.scale = scaleB / scaleA
-        self.scaleStr = 'A0 M' + str(scaleA) + ':' + str(scaleB)
-
-        self.basePointRadius = 5*self.scale
-        self.baseLineRadius = 3*self.scale
-
-        self.shapePrecision = 1*self.scale
-        self.wirePrecision = 1*self.scale
-
-        self.deskDX = 0
-        self.deskDY = 0
-        self.deskDZ = 300 * self.scale
-
-        self.limitMinX = -200 * self.scale
-        self.limitMaxX = 200 * self.scale
-        self.limitMinY = -200 * self.scale
-        self.limitMaxY = 200 * self.scale
-        self.limitMinZ = -200 * self.scale
-        self.limitMaxZ = 200 * self.scale
 
     def setPathToSave(self, pathToSave):
         self.pathToSave = pathToSave
@@ -145,10 +196,6 @@ class RenderHints:
     def setPrecision(self, wirePrecision, shapePrecision):
         self.wirePrecision = wirePrecision
         self.shapePrecision = shapePrecision
-
-    def setBaseSize(self, basePointRadius, baseLineRadius):
-        self.basePointRadius = basePointRadius
-        self.baseLineRadius = baseLineRadius
 
     def setDeskPosition(self, deskDX, deskDY, deskDZ):
         self.deskDX = deskDX
@@ -169,7 +216,7 @@ class RenderHints:
         self.isLimits = isLimits
 
 
-class RenderLib(RenderLib):
+class RenderLib():
 
     def __init__(self, hints=RenderHints()):
         self.hints = hints
@@ -185,20 +232,23 @@ class RenderLib(RenderLib):
         self.device.display.FitAll()
         self.device.start_display()
 
-    def renderShape(self, aShape):
+    def renderShapeObj(self, aShape, aMaterial):
         shapeTr = BRepBuilderAPI_Transform(aShape, self.aMove.getTrsf()).Shape()
         ais = AIS_Shape(shapeTr)
-        r, g, b = self.aStyle.getNormedColor()
+        r, g, b = aMaterial.aColor
         aisColor = Quantity_Color(r, g, b,
                                   Quantity_TypeOfColor(Quantity_TypeOfColor.Quantity_TOC_RGB))
         ais.SetColor(aisColor)
         ais.SetTransparency(self.aStyle.getNormedTransparency())
-        aspect = Graphic3d_MaterialAspect(MATERIAL_CONSTS[self.aStyle.getMaterial()])
+        aspect = Graphic3d_MaterialAspect(MATERIAL_TYPE_CONSTS[self.aStyle.getMaterial()])
         ais.SetMaterial(aspect)
         self.device.display.Context.Display(ais, False)
 
+    def renderShape(self, aShape):
+        self.renderShapeObj(aShape, self.aStyle.faceMaterial)
+
     def renderWire(self, aWire):
-        aWireRadius = self.aStyle.getLineRadius(self.hints.scale)
+        aWireRadius = self.aStyle.lineRadius
         startPoint, tangentDir = _getWireStartPointAndTangentDir(aWire)
         profileCircle = GC_MakeCircle(startPoint, tangentDir, aWireRadius).Value()
         profileEdge = BRepBuilderAPI_MakeEdge(profileCircle).Edge()
@@ -206,40 +256,40 @@ class RenderLib(RenderLib):
 
         shape = BRepOffsetAPI_MakePipe(aWire, profileWire).Shape()
 
-        self.renderShapeObj(shape)
+        self.renderShapeObj(shape, self.aStyle.lineMaterial)
 
     def renderBox(self, aSizeX, aSizeY, aSizeZ):
         shape = BRepPrimAPI_MakeBox(aSizeX, aSizeY, aSizeZ).Shape()
-        self.renderShapeObj(shape)
+        self.renderShapeObj(shape, self.aStyle.faceMaterial)
 
     def renderSphere(self, aRadius):
         shape = BRepPrimAPI_MakeSphere(aRadius).Shape()
-        self.renderShapeObj(shape)
+        self.renderShapeObj(shape, self.aStyle.faceMaterial)
 
     def renderCone(self, aRadius1, aRadius2, aHeight):
         shape = BRepPrimAPI_MakeCone(aRadius1, aRadius2, aHeight).Shape()
-        self.renderShapeObj(shape)
+        self.renderShapeObj(shape, self.aStyle.faceMaterial)
 
     def renderCylinder(self, aRadius, aHeight):
         shape = BRepPrimAPI_MakeCylinder(aRadius, aHeight).Shape()
-        self.renderShapeObj(shape)
+        self.renderShapeObj(shape, self.aStyle.faceMaterial)
 
     def renderTorus(self, aRadius1, aRadius2):
         shape = BRepPrimAPI_MakeTorus(aRadius1, aRadius2).Shape()
-        self.renderShapeObj(shape)
+        self.renderShapeObj(shape, self.aStyle.faceMaterial)
 
     def renderPoint(self, aPnt):
         self.localMove.setMove(aPnt.X, aPnt.Y, aPnt.Z)
-        aPointRadius = self.aStyle.getPointRadius(self.hints.scale)
-        self.renderSphere(aPointRadius)
+        shape = BRepPrimAPI_MakeSphere(self.aStyle.pointRadius).Shape()
+        self.renderShapeObj(shape, self.aStyle.faceMaterial)
 
     def renderLine(self, aPnt1, aPnt2):
 
-        lineR = self.aStyle.getLineRadius(self.hints.scale)
         vec = gp_Vec(aPnt1, aPnt2)
-
         self.localMove.setDirect(aPnt1, aPnt2)
-        self.renderCylinder(lineR, vec.Magnitude())
+        self.renderCylinder(self.aStyle.lineRadius, vec.Magnitude())
+        shape = BRepPrimAPI_MakeCylinder(aRadius, aHeight).Shape()
+        self.renderShapeObj(shape, self.aStyle.lineMaterial)
 
     def renderVector(self, aPnt1, aPnt2):
         rArrow = self.aStyle.getArrowRadius(self.hints.scale)
@@ -286,7 +336,7 @@ class RenderLib(RenderLib):
         self.aStyle = aStyle
         self.aMove = aMove
 
-class ScreenRenderLib(RenderLin): pass
+class ScreenRenderLib(RenderLib): pass
 
 class WebRenderLib(RenderLib):
 

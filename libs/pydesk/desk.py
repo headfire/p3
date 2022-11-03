@@ -1,21 +1,6 @@
 from std import DrawLib
 from OCC.Core.gp import gp_Pnt, gp_Vec
 
-WOOD_COLOR = 208, 117, 28
-PAPER_COLOR = 230, 230, 230
-STEEL_COLOR = 100, 100, 100
-
-NICE_WHITE_COLOR = 240, 240, 240
-NICE_GRAY_COLOR = 100, 100, 100
-NICE_RED_COLOR = 200, 30, 30
-NICE_BLUE_COLOR = 100, 100, 255
-NICE_YELLOW_COLOR = 255, 255, 100
-NICE_ORIGINAL_COLOR = 241, 79, 160
-
-AO_SIZE_XYZ = 1189, 841, 1
-
-MATE = 'PLASTIC'
-CHROME = 'CHROME'
 
 
 class DeskDrawLib(DrawLib):
@@ -24,57 +9,6 @@ class DeskDrawLib(DrawLib):
         super().__init__()
 
         self.palette = Dict()
-        st = Style()
-        st.setSizeValues(5, 20, 5)
-        st.setPointGeom()
-        st.setLineGeom()
-        st.setShapeGeom()
-
-
-        self.aScale = aScaleK
-        self.aScaleText = aScaleText
-
-        self.aStyleSizeValues = {
-            # [BaseLineR, TextHeightPx, TextDelta]
-
-            'MainStyle': [],
-            'InfoStyle': [3, 20, 5],
-            'FocusStyle': [3, 20, 5]
-        }
-
-        self.aPointRFactor = 3
-        self.aArrowRFactor = 3
-        self.aArrowHFactor = 15
-
-        self.aStyleValues = {
-            # [color, material, transparency]
-            'MainStylePointGeom': self.makeStyle(NICE_YELLOW_COLOR, CHROME, 0.0),
-            'MainStyleLineGeom': self.makeStyle(NICE_BLUE_COLOR, CHROME, 0.0),
-            'MainStyleFaceGeom': self.makeStyle(NICE_ORIGINAL_COLOR, CHROME, 0.0),
-            'MainStyleLabelGeom': self.makeStyle(NICE_WHITE_COLOR, MATE, 0.0),
-
-            'InfoStylePointGeom': self.makeStyle(NICE_GRAY_COLOR, MATE, 0.5),
-            'InfoStyleLineGeom': self.makeStyle(NICE_GRAY_COLOR, MATE, 0.5),
-            'InfoStyleFaceGeom': self.makeStyle(NICE_GRAY_COLOR, MATE, 0.5),
-            'InfoStyleLabelGeom': self.makeStyle(NICE_GRAY_COLOR, MATE, 0.0),
-
-            'FocusStylePointGeom': self.makeStyle(NICE_RED_COLOR, MATE, 0.0),
-            'FocusStyleLineGeom': self.makeStyle(NICE_RED_COLOR, MATE, 0.0),
-            'FocusStyleFaceGeom': self.makeStyle(NICE_RED_COLOR, MATE, 0.5),
-            'FocusStyleLabelGeom': self.makeStyle(NICE_RED_COLOR, MATE, 0.0),
-        }
-
-        self.aBoardH = 20
-        self.aBoardBorderSize = 60
-        self.aBoardWoodStyle = self.makeStyle(WOOD_COLOR, MATE, 0)
-
-        self.aPaperSizes = AO_SIZE_XYZ
-        self.aPaperStyle = self.makeStyle(PAPER_COLOR, MATE, 0)
-
-        self.aPinOffset = 30
-        self.aPinR = 10
-        self.aPinH = 2
-        self.aPinStyle = self.makeStyle(STEEL_COLOR, CHROME, 0)
 
 
     def getDeskStyle(self, aDeskStyleName, aDeskGeomType):
