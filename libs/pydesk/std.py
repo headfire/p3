@@ -218,7 +218,7 @@ class LabelDraw(Draw):
         self.aText, self.aHeightPx = aText, aHeightPx
 
     def drawTo(self, renderLib, aMove=Move(), aStyle=Style()):
-        renderLib.prepare(aMove, aStyle)
+        renderLib.setMoveAndStyle(aMove, aStyle)
         renderLib.renderLabel(self.aText, self.aHeightPx)
 
 
@@ -228,7 +228,7 @@ class BoxDraw(Draw):
         self.aSizeX, self.aSizeY, self.aSizeZ = aSizeX, aSizeY, aSizeZ
 
     def drawTo(self, renderLib, aMove=Move(), aStyle=Style()):
-        renderLib.prepare(aMove, aStyle)
+        renderLib.setMoveAndStyle(aMove, aStyle)
         renderLib.renderBox(self.aSizeX, self.aSizeY, self.aSizeZ)
 
 
@@ -238,7 +238,7 @@ class SphereDraw(Draw):
         self.aRadius = aRadius
 
     def drawTo(self, renderLib, aMove=Move(), aStyle=Style()):
-        renderLib.prepare(aMove, aStyle)
+        renderLib.setMoveAndStyle(aMove, aStyle)
         renderLib.renderSphere(self.aRadius)
 
 
@@ -248,7 +248,7 @@ class CylinderDraw(Draw):
         self.aRadius, self.aHeight = aRadius, aHeight
 
     def drawTo(self, renderLib, aMove=Move(), aStyle=Style()):
-        renderLib.prepare(aMove, aStyle)
+        renderLib.setMoveAndStyle(aMove, aStyle)
         renderLib.renderCylinder(self.aRadius, self.aHeight)
 
 
@@ -258,7 +258,7 @@ class ConeDraw(Draw):
         self.aRadius1, self.aRadius2, self.aHeight = aRadius1, aRadius2, aHeight
 
     def drawTo(self, renderLib, aMove=Move(), aStyle=Style()):
-        renderLib.prepare(aMove, aStyle)
+        renderLib.setMoveAndStyle(aMove, aStyle)
         renderLib.renderCone(self.aRadius1, self.aRadius2, self.aHeight)
 
 
@@ -269,7 +269,7 @@ class TorusDraw(Draw):
 
     def drawTo(self, renderLib, aMove=Move(), aStyle=Style()):
         super().__init__()
-        renderLib.prepare(aMove, aStyle)
+        renderLib.setMoveAndStyle(aMove, aStyle)
         renderLib.renderTorus(self.aRadius1, self.aRadius2)
 
 
@@ -280,7 +280,7 @@ class CircleDraw(Draw):
 
     def drawTo(self, renderLib, aMove=Move(), aStyle=Style()):
         super().__init__()
-        renderLib.prepare(aMove, aStyle)
+        renderLib.setMoveAndStyle(aMove, aStyle)
         renderLib.renderCircle(self.aPnt1, self.aPnt2, self.aPnt3, self.aLineWidth)
 
 
@@ -290,7 +290,7 @@ class WireDraw(Draw):
         self.aWire, self.aLineRadius = aWire, aLineRadius
 
     def drawTo(self, renderLib, aMove=Move(), aStyle=Style()):
-        renderLib.prepare(aMove, aStyle)
+        renderLib.setMoveAndStyle(aMove, aStyle)
         renderLib.renderWire(self.aWire, self.aLineRadius)
 
 
@@ -300,7 +300,7 @@ class SurfaceDraw(Draw):
         self.aSurface = aSurface
 
     def drawTo(self, renderLib, aMove=Move(), aStyle=Style()):
-        renderLib.prepare(aMove, aStyle)
+        renderLib.setMoveAndStyle(aMove, aStyle)
         renderLib.renderSurface(self.aSurface)
 
 

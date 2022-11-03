@@ -631,13 +631,14 @@ if __name__ == '__main__':
 
     sceneName = 'dao_07'
     sceneTarget = 'screen'
+    scenePath = '.'
 
     if len(sys.argv) > 1:
         sceneName = sys.argv[1]
     if len(sys.argv) > 2:
         sceneTarget = sys.argv[2]
     if len(sys.argv) > 3:
-        slidePath = sys.argv[3]
+        scenePath = sys.argv[3]
 
     daoLib = DaoDrawLib()
     scene = None
@@ -660,7 +661,7 @@ if __name__ == '__main__':
     hints = RenderHints()
     hints.setDeviceSize(1000, 800)
     hints.setScale(5, 1)
-    hints.pathToSave(os.path.abspath(os.path.join((os.path.dirname(__file__)), '..', '..', 'temp', sceneName)))
+    hints.setPathToSave(scenePath)
 
     desk = daoLib.getDeskDrawBoard()
 
