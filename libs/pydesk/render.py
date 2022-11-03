@@ -175,6 +175,7 @@ class RenderLib:
         self.aStyle = Style()
         self.aMove = Move()
         self.device = None
+        self.localMove = Move()
 
     def startRender(self): pass
 
@@ -183,18 +184,84 @@ class RenderLib:
 
     def finishRender(self): pass
 
+    def renderDesk(self): pass
+    def renderAxis(self): pass
+    def renderLimits(self): pass
+
+    def renderDecoration(self):
+        if self.hints.isDesk:
+            self.renderDesk()
+        if self.hints.isAxis:
+            self.renderAxis()
+        if self.hints.isLimits:
+            self.renderLimits()
+
     def setMoveAndStyle(self, aMove, aStyle):
         self.aStyle = aStyle
         self.aMove = aMove
 
-    def renderTextObj(self, aText, aHeightPx): pass
+    def renderLabel(self, aText, aHeightPx): pass
 
-    def renderShapeObj(self, aShape): pass
+    def renderPoint(self, aPnt): pass
 
-    def renderWireObj(self, aWire, aWireRadius): pass
+    def renderLine(self, aPnt1, aPnt2): pass
 
-    def renderLabel(self, aText, aHeightPx):
-        self.renderTextObj(aText, aHeightPx)
+    def renderVector(self, aPnt1, aPnt2): pass
+
+    def renderCircle(self, aPnt1, aPnt2, aPnt3, aLineWidth): pass
+
+    def renderBox(self, aSizeX, aSizeY, aSizeZ): pass
+
+    def renderSphere(self, aRadius): pass
+
+    def renderCone(self, aRadius1, aRadius2, aHeight): pass
+
+    def renderCylinder(self, aRadius, aHeight): pass
+
+    def renderTorus(self, aRadius1, aRadius2): pass
+
+    def renderWire(self, aWire): pass
+
+    def renderSurface(self, aSurface): pass
+
+
+class ScreenRenderLibParams:
+    def __init__(self, xSize=800, ySize=600):
+        self.xSize = xSize
+        self.ySize = ySize
+
+
+class ScreenRenderLib(RenderLib):
+
+    def startRender(self):
+        self.device = ScreenDevice(self.hints)
+
+    def finishRender(self):
+        self.device.display.FitAll()
+        self.device.start_display()
+
+    def renderShape(self, aShape):
+        shapeTr = BRepBuilderAPI_Transform(aShape, self.aMove.getTrsf()).Shape()
+        ais = AIS_Shape(shapeTr)
+        r, g, b = self.aStyle.getNormedColor()
+        aisColor = Quantity_Color(r, g, b,
+                                  Quantity_TypeOfColor(Quantity_TypeOfColor.Quantity_TOC_RGB))
+        ais.SetColor(aisColor)
+        ais.SetTransparency(self.aStyle.getNormedTransparency())
+        aspect = Graphic3d_MaterialAspect(MATERIAL_CONSTS[self.aStyle.getMaterial()])
+        ais.SetMaterial(aspect)
+        self.device.display.Context.Display(ais, False)
+
+    def renderWire(self, aWire):
+        aWireRadius = self.aStyle.getLineRadius(self.hints.scale)
+        startPoint, tangentDir = _getWireStartPointAndTangentDir(aWire)
+        profileCircle = GC_MakeCircle(startPoint, tangentDir, aWireRadius).Value()
+        profileEdge = BRepBuilderAPI_MakeEdge(profileCircle).Edge()
+        profileWire = BRepBuilderAPI_MakeWire(profileEdge).Wire()
+
+        shape = BRepOffsetAPI_MakePipe(aWire, profileWire).Shape()
+
+        self.renderShapeObj(shape)
 
     def renderBox(self, aSizeX, aSizeY, aSizeZ):
         shape = BRepPrimAPI_MakeBox(aSizeX, aSizeY, aSizeZ).Shape()
@@ -216,79 +283,42 @@ class RenderLib:
         shape = BRepPrimAPI_MakeTorus(aRadius1, aRadius2).Shape()
         self.renderShapeObj(shape)
 
-    def renderWire(self, aWire, aWireRadius):
-        self.renderWireObj(aWire, aWireRadius)
-
-    def renderSurface(self, aSurface):
-        self.renderShapeObj(aSurface)
-
-    def renderPoint(self, aPnt, aPointRadius):
-        Move().setMove(aPnt.X, aPnt.Y, aPnt.Z)
+    def renderPoint(self, aPnt):
+        self.localMove.setMove(aPnt.X, aPnt.Y, aPnt.Z)
+        aPointRadius = self.aStyle.getPointRadius(self.hints.scale)
         self.renderSphere(aPointRadius)
 
-    def renderLine(self, aPnt1, aPnt2, aLineRadius):
-        Move().setMove(aPnt1.X, aPnt1.Y, aPnt1.Z)
-        Move().setMove(aPnt2.X, aPnt2.Y, aPnt2.Z)
-        self.renderCylinder(aLineRadius, 10)
+    def renderLine(self, aPnt1, aPnt2):
 
-    def renderCircle(self, aPnt1, aPnt2, aPnt3, aLineWidth):
+        lineR = self.aStyle.getLineRadius(self.hints.scale)
+        vec = gp_Vec(aPnt1, aPnt2)
+
+        self.localMove.setDirect(aPnt1, aPnt2)
+        self.renderCylinder(lineR, vec.Magnitude())
+
+    def renderVector(self, aPnt1, aPnt2):
+        rArrow = self.aStyle.getArrowRadius(self.hints.scale)
+        hArrow = self.aStyle.getArrowHeight(self.hints.scale)
+        v = gp_Vec(aPnt1, aPnt2)
+        vLen = v.Magnitude()
+        v *= (vLen - hArrow) / vLen
+        pntM = aPnt1.Translated(v)
+
+        self.renderLine(aPnt1, pntM)
+        self.localMove.setDirect(pntM, aPnt2)
+        self.renderCone(rArrow, 0, hArrow)
+        self.localMove = Move()
+
+    def renderCircle(self, aPnt1, aPnt2, aPnt3):
         geomCircle = GC_MakeCircle(aPnt1, aPnt2, aPnt3).Value()
         wire = BRepBuilderAPI_MakeEdge(geomCircle).Edge()
-        self.renderWireObj(wire, aLineWidth)
+        self.renderWireObj(wire)
 
-    def renderDesk(self): pass
-    def renderAxis(self): pass
-    def renderLimits(self): pass
-
-    def renderDecoration(self):
-        if self.hints.isDesk:
-            self.renderDesk()
-        if self.hints.isAxis:
-            self.renderAxis()
-        if self.hints.isLimits:
-            self.renderLimits()
-
-
-class ScreenRenderLibParams:
-    def __init__(self, xSize=800, ySize=600):
-        self.xSize = xSize
-        self.ySize = ySize
-
-
-class ScreenRenderLib(RenderLib):
-
-    def startRender(self):
-        self.device = ScreenDevice(self.hints)
-
-    def finishRender(self):
-        self.device.display.FitAll()
-        self.device.start_display()
-
-    def renderTextObj(self, aText, aHeightPx):
+    def renderLabel(self, aPnt, aText):
+        self.localMove.setMove(aPnt.X, aPnt.Y, aPnt.Z)
+        aHeightPx = self.aStyle.getLabelHeight()
         pnt = gp_Pnt(0, 0, 0).Transformed(self.aMove.getTrsf())
         self.device.display.DisplayMessage(pnt, aText, aHeightPx, self.aStyle.getNormedColor(), False)
-
-    def renderShapeObj(self, aShape):
-        shapeTr = BRepBuilderAPI_Transform(aShape, self.aMove.getTrsf()).Shape()
-        ais = AIS_Shape(shapeTr)
-        r, g, b = self.aStyle.getNormedColor()
-        aisColor = Quantity_Color(r, g, b,
-                                  Quantity_TypeOfColor(Quantity_TypeOfColor.Quantity_TOC_RGB))
-        ais.SetColor(aisColor)
-        ais.SetTransparency(self.aStyle.getNormedTransparency())
-        aspect = Graphic3d_MaterialAspect(MATERIAL_CONSTS[self.aStyle.getMaterial()])
-        ais.SetMaterial(aspect)
-        self.device.display.Context.Display(ais, False)
-
-    def renderWireObj(self, aWire, aWireRadius):
-        startPoint, tangentDir = _getWireStartPointAndTangentDir(aWire)
-        profileCircle = GC_MakeCircle(startPoint, tangentDir, aWireRadius).Value()
-        profileEdge = BRepBuilderAPI_MakeEdge(profileCircle).Edge()
-        profileWire = BRepBuilderAPI_MakeWire(profileEdge).Wire()
-
-        shape = BRepOffsetAPI_MakePipe(aWire, profileWire).Shape()
-
-        self.renderShapeObj(shape)
 
 
 class WebRenderLib(RenderLib):

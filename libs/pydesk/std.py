@@ -26,6 +26,12 @@ class Style:
         self.aColor = None
         self.aMaterial = None
         self.aTransparency = None
+        self.aLineRadius = None
+        self.aPointRadius = None
+        self.aLabelHeightPx = None
+        self.aLabelDelta = None
+        self.aArrowRFactor = None
+        self.aArrowHFactor = None
 
     @staticmethod
     def mergeStyle(aItemStyle, aSuperStyle):
@@ -60,12 +66,33 @@ class Style:
     def getMaterial(self):
         return self.aMaterial
 
+    def getLineRadius(self, scale):
+        return self.aLineRadius * scale
+
+    def getPointRadius(self, scale):
+        return self.aPointRadius * scale
+
+    def getLabelHeightPx(self):
+        return self.aLabelHeightPx  # not scale
+
+    def getLabelDelta(self, scale):
+        return self.aLabelDelta * scale
+
+    def getArrowRadius(self, scale):
+        return self.aArrowRFactor * scale
+
+    def getArrowHeight(self, scale):
+        return self.aArrowHFactor * scale
+
 
 class Move:
 
     def __init__(self):
         self.aTrsf = gp_Trsf()
         self.aLayer = None
+
+    def clear(self):
+        self.aTrsf = gp_Trsf()
 
     @staticmethod
     def mergeMove(aItemMove, aSuperMove):
@@ -84,7 +111,7 @@ class Move:
                 prn += '  ' + str(trsf.Value(iRow, iCol))
             print(prn)
 
-    def setMove(self, dx, dy, dz):
+    def applyMove(self, dx, dy, dz):
         trsf = gp_Trsf()
         trsf.SetTranslation(gp_Vec(dx, dy, dz))
         self.aTrsf *= trsf
@@ -92,7 +119,7 @@ class Move:
 
     # todo setScale K and XYZ
 
-    def setRotate(self, pntAxFrom, pntAxTo, angle):
+    def applyRotate(self, pntAxFrom, pntAxTo, angle):
 
         trsf = gp_Trsf()
         ax1 = gp_Ax1(pntAxFrom, gp_Dir(gp_Vec(pntAxFrom, pntAxTo)))
@@ -101,7 +128,7 @@ class Move:
 
         return self
 
-    def setDirect(self, pnt1, pnt2):
+    def applyDirect(self, pnt1, pnt2):
 
         dirVec = gp_Vec(pnt1, pnt2)
         targetDir = gp_Dir(dirVec)
@@ -213,13 +240,54 @@ class HookDraw(Draw):
 
 
 class LabelDraw(Draw):
-    def __init__(self, aText, aHeightPx):
+    def __init__(self, aText):
         super().__init__()
-        self.aText, self.aHeightPx = aText, aHeightPx
+        self.aText = aText
 
     def drawTo(self, renderLib, aMove=Move(), aStyle=Style()):
         renderLib.setMoveAndStyle(aMove, aStyle)
-        renderLib.renderLabel(self.aText, self.aHeightPx)
+        renderLib.renderLabel(self.aText)
+
+
+class PointDraw(Draw):
+    def __init__(self, aPnt):
+        super().__init__()
+        self.aPnt = aPnt
+
+    def drawTo(self, renderLib, aMove=Move(), aStyle=Style()):
+        renderLib.setMoveAndStyle(aMove, aStyle)
+        renderLib.renderPoint(self.aPnt)
+
+
+class LineDraw(Draw):
+    def __init__(self, aPnt1, aPnt2):
+        super().__init__()
+        self.aPnt1, self.aPnt2 = aPnt1, aPnt2
+
+    def drawTo(self, renderLib, aMove=Move(), aStyle=Style()):
+        renderLib.setMoveAndStyle(aMove, aStyle)
+        renderLib.renderLine(self.aPnt1, self.aPnt2)
+
+
+class VectorDraw(Draw):
+    def __init__(self, aPnt1, aPnt2):
+        super().__init__()
+        self.aPnt1, self.aPnt2 = aPnt1, aPnt2
+
+    def drawTo(self, renderLib, aMove=Move(), aStyle=Style()):
+        renderLib.setMoveAndStyle(aMove, aStyle)
+        renderLib.renderVector(self.aPnt1, self.aPnt2)
+
+
+class CircleDraw(Draw):
+    def __init__(self, aPnt1, aPnt2, aPnt3):
+        super().__init__()
+        self.aPnt1, self.aPnt2, self.aPnt3 = aPnt1, aPnt2, aPnt3
+
+    def drawTo(self, renderLib, aMove=Move(), aStyle=Style()):
+        super().__init__()
+        renderLib.setMoveAndStyle(aMove, aStyle)
+        renderLib.renderCircle(self.aPnt1, self.aPnt2, self.aPnt3)
 
 
 class BoxDraw(Draw):
@@ -273,25 +341,14 @@ class TorusDraw(Draw):
         renderLib.renderTorus(self.aRadius1, self.aRadius2)
 
 
-class CircleDraw(Draw):
-    def __init__(self, aPnt1, aPnt2, aPnt3, aLineWidth):
-        super().__init__()
-        self.aPnt1, self.aPnt2, self.aPnt3, self.aLineWidth = aPnt1, aPnt2, aPnt3, aLineWidth
-
-    def drawTo(self, renderLib, aMove=Move(), aStyle=Style()):
-        super().__init__()
-        renderLib.setMoveAndStyle(aMove, aStyle)
-        renderLib.renderCircle(self.aPnt1, self.aPnt2, self.aPnt3, self.aLineWidth)
-
-
 class WireDraw(Draw):
-    def __init__(self, aWire, aLineRadius):
+    def __init__(self, aWire):
         super().__init__()
-        self.aWire, self.aLineRadius = aWire, aLineRadius
+        self.aWire = aWire
 
     def drawTo(self, renderLib, aMove=Move(), aStyle=Style()):
         renderLib.setMoveAndStyle(aMove, aStyle)
-        renderLib.renderWire(self.aWire, self.aLineRadius)
+        renderLib.renderWire(self.aWire)
 
 
 class SurfaceDraw(Draw):
@@ -355,8 +412,24 @@ class DrawLib:
         return HookDraw(aHookPnt, aHookObj)
 
     @staticmethod
-    def getLabel(aText, aHeightPx):
-        return LabelDraw(aText, aHeightPx)
+    def getLabel(aText):
+        return LabelDraw(aText)
+
+    @staticmethod
+    def getPoint(aPnt):
+        return PointDraw(aPnt)
+
+    @staticmethod
+    def getVector(aPnt1, aPnt2):
+        return LineDraw(aPnt1, aPnt2)
+
+    @staticmethod
+    def getLine(aPnt1, aPnt2):
+        return LineDraw(aPnt1, aPnt2)
+
+    @staticmethod
+    def getCircle(aPnt1, aPnt2, aPnt3):
+        return CircleDraw(aPnt1, aPnt2, aPnt3)
 
     @staticmethod
     def getBox(aSizeX, aSizeY, aSizeZ):
@@ -379,12 +452,8 @@ class DrawLib:
         return TorusDraw(aRadius1, aRadius2)
 
     @staticmethod
-    def getCircle(aPnt1, aPnt2, aPnt3, aLineWidth):
-        return CircleDraw(aPnt1, aPnt2, aPnt3, aLineWidth)
-
-    @staticmethod
-    def getWire(aWire, aLineRadius):
-        return WireDraw(aWire, aLineRadius)
+    def getWire(aWire):
+        return WireDraw(aWire)
 
     @staticmethod
     def getSurface(aSurface):

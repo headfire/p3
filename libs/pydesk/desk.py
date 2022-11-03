@@ -23,13 +23,21 @@ class DeskDrawLib(DrawLib):
     def __init__(self, aScaleK=1 / 1, aScaleText='A0 M1:1'):
         super().__init__()
 
+        self.palette = Dict()
+        st = Style()
+        st.setSizeValues(5, 20, 5)
+        st.setPointGeom()
+        st.setLineGeom()
+        st.setShapeGeom()
+
+
         self.aScale = aScaleK
         self.aScaleText = aScaleText
 
         self.aStyleSizeValues = {
             # [BaseLineR, TextHeightPx, TextDelta]
 
-            'MainStyle': [5, 20, 5],
+            'MainStyle': [],
             'InfoStyle': [3, 20, 5],
             'FocusStyle': [3, 20, 5]
         }
@@ -68,14 +76,6 @@ class DeskDrawLib(DrawLib):
         self.aPinH = 2
         self.aPinStyle = self.makeStyle(STEEL_COLOR, CHROME, 0)
 
-    def getBaseRadius(self, aDeskStyleName):
-        return self.aStyleSizeValues[aDeskStyleName][0] / self.aScale
-
-    def getLabelHeightPx(self, aDeskStyleName):
-        return self.aStyleSizeValues[aDeskStyleName][1]  # not scaled
-
-    def getLabelDelta(self, aDeskStyleName):
-        return self.aStyleSizeValues[aDeskStyleName][2] / self.aScale
 
     def getDeskStyle(self, aDeskStyleName, aDeskGeomType):
         return self.aStyleValues[aDeskStyleName + aDeskGeomType]
@@ -155,7 +155,7 @@ class DeskDrawLib(DrawLib):
 
         dr.nm('aWire')
         dr.st(self.getDeskStyle(aDeskStyleName, 'LineGeom'))
-        dr.add(self.getWire(aWire, self.getBaseRadius(aDeskStyleName)))
+        dr.add(self.getWire(aWire))
 
         return dr
 
