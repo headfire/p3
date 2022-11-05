@@ -31,12 +31,8 @@ NICE_ORIGINAL_COLOR = 241, 79, 160
 
 AO_SIZE_XYZ = 1189, 841, 1
 
-MAIN_STYLE = 'MainStyle'
-INFO_STYLE = 'InfoStyle'
-FOCUS_STYLE = 'InfoStyle'
-
-MATE = 'PLASTIC'
-CHROME = 'CHROME'
+PLASTIC_MATERIAL = 'PLASTIC'
+CHROME_MATERIAL = 'CHROME'
 
 MATERIAL_TYPE_CONSTS = {
     'BRASS': Graphic3d_NameOfMaterial.Graphic3d_NOM_BRASS,
@@ -66,6 +62,16 @@ MATERIAL_TYPE_CONSTS = {
     'DEFAULT': Graphic3d_NameOfMaterial.Graphic3d_NOM_DEFAULT
 }
 
+def _checkObj(aObj, aClass):
+    if not isinstance(aObj, aClass):
+        raise Exception('EXPECTED ' + aClass.__name__ + '  - REAL ' + aObj.__class__.__name__)
+
+
+def _getValue(aValue, aDefaultValue):
+    if aValue is not None:
+        return aValue
+    return aDefaultValue
+
 
 def _getVectorTangentToCurveAtPoint(edge, uRatio):
     aCurve, aFP, aLP = BRep_Tool.Curve(edge)
@@ -83,50 +89,42 @@ def _getWireStartPointAndTangentDir(wire):
     v = _getVectorTangentToCurveAtPoint(edge, 0)
     return BRep_Tool.Pnt(vertex), gp_Dir(v)
 
+
+def mergeMove(aItemMove, aSuperMove):
+    ret = Move()
+    ret.trsf = gp_Trsf()
+    ret.trsf *= aItemMove.trsf
+    ret.trsf *= aSuperMove.trsf
+    return ret
+
+
 class Move:
-
     def __init__(self):
-        self.aTrsf = gp_Trsf()
-        self.aLayer = None
+        self.trsf = gp_Trsf()
 
-    def clear(self):
-        self.aTrsf = gp_Trsf()
-
-    @staticmethod
-    def mergeMove(aItemMove, aSuperMove):
-        ret = Move()
-        ret.aTrsf = gp_Trsf()
-        ret.aTrsf *= aItemMove.aTrsf
-        ret.aTrsf *= aSuperMove.aTrsf
-        ret.aLayer = _getValue(aItemMove.aLayer, aSuperMove.aLayer)
-        return ret
-
-    def _dumpTrsf(self):
-        trsf = self.aTrsf
+    def _dump(self):
         for iRow in range(1, 4):
             prn = ''
             for iCol in range(1, 5):
-                prn += '  ' + str(trsf.Value(iRow, iCol))
+                prn += '  ' + str(self.trsf.Value(iRow, iCol))
             print(prn)
 
-    def applyMove(self, dx, dy, dz):
-        trsf = gp_Trsf()
-        trsf.SetTranslation(gp_Vec(dx, dy, dz))
-        self.aTrsf *= trsf
-        return self
+class Translate(Move):
+    def __init__(self, dx, dy, dz):
+        super().__init__()
+        self.trsf.SetTranslation(gp_Vec(dx, dy, dz))
 
-    def applyRotate(self, pntAxFrom, pntAxTo, angle):
-
-        trsf = gp_Trsf()
+class Rotate(Move):
+    def __init__(self, pntAxFrom, pntAxTo, angle):
+        super().__init__()
         ax1 = gp_Ax1(pntAxFrom, gp_Dir(gp_Vec(pntAxFrom, pntAxTo)))
-        trsf.SetRotation(ax1, angle)
-        self.aTrsf *= trsf
+        self.trsf.SetRotation(ax1, angle)
 
-        return self
+class Direct(Move):
+    def __init__(self, pntFrom, pntTo):
+        super().__init__()
 
-    def applyDirect(self, pnt1, pnt2):
-
-        dirVec = gp_Vec(pnt1, pnt2)
+        dirVec = gp_Vec(pntFrom, pntTo)
         targetDir = gp_Dir(dirVec)
 
         rotateAngle = gp_Dir(0, 0, 1).Angle(targetDir)
@@ -136,106 +134,179 @@ class Move:
         else:
             rotateDir = gp_Dir(0, 1, 0)
 
-        trsf = gp_Trsf()
-        trsf.SetRotation(gp_Ax1(gp_Pnt(0, 0, 0), rotateDir), rotateAngle)
-        trsf.SetTranslationPart(gp_Vec(gp_Pnt(0, 0, 0), pnt1))
-        self.aTrsf *= trsf
-
-        return self
-
-    def getTrsf(self):
-        return self.aTrsf
+        self.trsf.SetRotation(gp_Ax1(gp_Pnt(0, 0, 0), rotateDir), rotateAngle)
+        self.trsf.SetTranslationPart(gp_Vec(gp_Pnt(0, 0, 0), pntFrom))
 
 
-class Material:
-    def __init__(self, aColor, aType, aTransp):
-        self.aColor, self.aType,  self.aTransp = aColor, aType, aTransp
+GENERAL_FACTOR = 'GENERAL_FACTOR'
+
+POINT_RADIUS_FACTOR = 'POINT_RADIUS_FACTOR'
+POINT_MATERIAL = 'POINT_MATERIAL'
+POINT_COLOR = 'POINT_COLOR'
+POINT_TRANSPARENCY = 'POINT_TRANSP'
+
+LINE_RADIUS_FACTOR = 'LINE_RADIUS_FACTOR'
+LINE_ARROW_RADIUS_FACTOR = 'LINE_ARROW_RADIUS_FACTOR'
+LINE_ARROW_LENGTH_FACTOR = 'LINE_ARROW_LENGTH_FACTOR'
+LINE_MATERIAL = 'LINE_MATERIAL'
+LINE_COLOR = 'LINE_COLOR'
+LINE_TRANSPARENCY = 'LINE_TRANSPARENCY'
+
+SURFACE_WIDTH_FACTOR = 'SURFACE_WIDTH_FACTOR'
+SURFACE_MATERIAL = 'SURFACE_MATERIAL'
+SURFACE_COLOR = 'SURFACE_COLOR'
+SURFACE_TRANSPARENCY = 'SURFACE_TRANSPARENCY'
+
+TEXT_HEIGHT_FACTOR = 'TEXT_HEIGHT_FACTOR'
+TEXT_DELTA_FACTOR = 'TEXT_DELTA_FACTOR'
+TEXT_MATERIAL = 'TEXT_MATERIAL'
+TEXT_COLOR = 'TEXT_COLOR'
+TEXT_TRANSPARENCY = 'TEXT_TRANSPARENCY'
+
+DEFAULT_STYLE_RULES = [
+
+    ('',GENERAL_FACTOR, 1),
+    ('',POINT_RADIUS_FACTOR,  1),
+    ('',POINT_MATERIAL,  CHROME_MATERIAL),
+    ('',POINT_COLOR,  NICE_YELLOW_COLOR),
+    ('',POINT_TRANSPARENCY,  0),
+
+    ('',LINE_RADIUS_FACTOR,  1),
+    ('',LINE_ARROW_RADIUS_FACTOR,  1),
+    ('',LINE_ARROW_LENGTH_FACTOR,  1),
+    ('',LINE_MATERIAL, CHROME_MATERIAL),
+    ('',LINE_COLOR,  NICE_BLUE_COLOR),
+    ('',LINE_TRANSPARENCY,  0),
+
+    ('',SURFACE_WIDTH_FACTOR,  1),
+    ('',SURFACE_MATERIAL,  CHROME_MATERIAL),
+    ('',SURFACE_COLOR,  NICE_ORIGINAL_COLOR),
+    ('',SURFACE_TRANSPARENCY,  0),
+
+    ('',LABEL_DELTA_FACTOR,  1),
+    ('',LABEL_HEIGHT_FACTOR,  1),
+    ('',LABEL_MATERIAL,  PLASTIC_MATERIAL),
+    ('',LABEL_COLOR,  NICE_WHITE_COLOR),
+    ('',LABEL_TRANSPARENCY, 0)
+
+    ('Decoration.Board.Wood', SURFACE_COLOR, WOOD_COLOR)
+    ('Decoration.Board.Paper', SURFACE_COLOR, PAPER_COLOR)
+    ('Decoration.Board.Pins', SURFACE_COLOR, STEEL_COLOR)
+
+]
+
+def isSubTokenOk(maskSub, nameSub):
+    if maskSub == '*':
+        return True
+    return maskSub == nameSub
 
 
-class Style:
+def isTokenOk(tokenMask, tokenName):
+
+    if tokenMask == '*':
+        return True
+
+    maskSubTokens = tokenName.split('-')
+    nameSubTokens = tokenMask.split('-')
+    if len(nameSubTokens) != len(maskSubTokens):
+        return False
+
+    i = 0
+    while i<len(maskSubTokens):
+        if not isSubTokenOk(maskSubTokens[i],nameSubTokens[i]):
+            return False
+    return True
+
+def isMaskOk(mask, fullName):
+
+    if mask == '':
+        return True
+
+    maskTokens = mask.split('.')
+    nameTokens = fullName.split('.')
+
+    iMask = 0
+    iName = 0
+    while iName<len(nameTokens) and iMask<len(maskTokens):
+        if isTokenOk(maskTokens[iMask],nameTokens[iName]):
+            iMask+=1
+            iName+=1
+        else:
+            iName+=1
+
+    return iMask == len(maskTokens)
+
+class StyleRules:
+
     def __init__(self):
+        self.rules = list
 
-        self.scale = 1
-        self.factor = 1
+    def addRule(self, objNameMask, styleName, value):
+        self.rules.append((objNameMask, styleName, value))
 
-        self.pointRadius = 3
-        self.lineRadius = 5
-        self.faceHalfWidth = 1.5
-        self.arrowRadius = 3
-        self.arrowLen = 15
-        self.labelDelta = 5
+    def addRules(self, rules):
+        self.rules.extend(rules)
 
-        self.labelHeightPx = 20
+    def getStyle(self, styleName, fullObjName):
+        for ruleMask, ruleStyleName, ruleStyleValue in self.rules.reverse():
+            if ruleStyleName == styleName and isMaskOk(ruleMask, fullObjName):
+                return ruleStyleValue
+        return None
 
-        self.pointMaterial = Material(NICE_YELLOW_COLOR, CHROME, 0.0)
-        self.lineMaterial = Material(NICE_BLUE_COLOR, CHROME, 0.0)
-        self.faceMaterial = Material(NICE_ORIGINAL_COLOR, CHROME, 0.0)
-        self.labelMaterial = Material(NICE_ORIGINAL_COLOR, CHROME, 0.0)
+class Decoration: pass
 
-    def getRealPointRadius(self):
-        return self.pointRadius * self.scale * self.factor
+class Board(Decoration):
+    def __init__(self, scale, move):
 
-    def getRealLineRadius(self):
-        return self.lineRadius * self.scale * self.factor
+            self.scale = scale
+            self.move = move
+            self.renderName = 'Decoration.Board'
 
-    def getRealFaceHalfWidth(self):
-        return self.faceHalfWidth * self.scale * self.factor
+            self.boardH = 20
+            self.boardBorderSize = 60
 
-    def getRealArrowRadius(self):
-        return self.arrowRadius * self.scale * self.factor
+            self.paperSizes = 1189, 841, 1
 
-    def getRealArrowLen(self):
-        return self.arrowRadius * self.scale * self.factor
+            self.pinOffset = 30
+            self.pinR = 10
+            self.pinH = 2
 
-    def getRealLabelHeight(self):
-        return self.labelHeightPx
+    def renderPin(self, renderLib, pinName ,x, y):
+        pinMove = Translate(x/self.scale, y/self.scale, 0)
+        renderLib.setRenderObjName(self.renderName+'.'+pinName)
+        renderLib.setRenderObjMove(mergeMove(pinMove, self.move))
+        renderLib.renderCylinder(self.pinR / self.scale, self.pinH / self.scale)
 
-class Draw:
-    def drawTo(self, aRenderLib, aMove, styleName): pass
+    def render(self, renderLib, aMove):
 
-class Board(scale):
+        objName = 'Decoration.Board'
 
-    def __init__(self):
-
-        self.scale = 1
-
-        self.aBoardH = 20
-        self.aBoardBorderSize = 60
-        self.aBoardWoodStyle = Material(WOOD_COLOR, MATE, 0)
-
-        self.aPaperSizes = AO_SIZE_XYZ
-        self.aPaperMaterial = Material(PAPER_COLOR, MATE, 0)
-
-        self.aPinOffset = 30
-        self.aPinR = 10
-        self.aPinH = 2
-        self.aPinMaterial = Material(STEEL_COLOR, CHROME, 0)
-
-    def drawPin(self, x, y):
-        dr.nm('pinCylinder')
-        dr.st(self.aPinStyle)
-        Move().setMove(x, y, 0)
-        self.renderlib.renderCylinder(self.aPinR / self.aScale, self.aPinH / self.aScale),
-            Move().setMove(x, y, 0), PIN_STYLE)
-
-    def drawTo(self, renderLib, aMove, styleName)
         paperSizeX, paperSizeY, paperSizeZ = self.aPaperSizes
         psx, psy, psz = paperSizeX / self.aScale, paperSizeY / self.aScale, paperSizeZ / self.aScale
         bsx = (paperSizeX + self.aBoardBorderSize * 2) / self.aScale
         bsy = (paperSizeY + self.aBoardBorderSize * 2) / self.aScale
         bsz = self.aBoardH / self.aScale
 
-        renderLib.renderBox(psx, psy, psz),Move().setMove(-psx / 2, -psy / 2, -psz), PAPER_STYLE)
-        renderLib.renderBox(psx, psy, psz), Move().setMove(-bsx / 2, -bsy / 2, -psz - bsz), WOOD_STYLE)
+        renderLib.setRenderName(self.renderName+'.Paper')
+        renderLib.setRenderMove(Translate(-psx / 2, -psy / 2, -psz))
+        renderLib.renderBox(psx, psy, psz)
+
+        renderLib.setRenderName(self.renderName + '.Wood')
+        renderLib.setRenderMove(Translate((-bsx / 2, -bsy / 2, -psz - bsz))
+        renderLib.renderBox(bsx, bsy, bsz)
+
+        renderLib.setRenderName(self.renderName + '.Wood')
         renderLib.renderLabel(gp_Pnt(-bsx / 2, -bsy / 2, -psz), self.aScaleText, INFO_STYLE))
 
         dx = (paperSizeX / 2 - self.aPinOffset) / self.aScale
         dy = (paperSizeY / 2 - self.aPinOffset) / self.aScale
 
-        self.drawPin(-dx, -dy)
-        self.drawPin(dx, -dy)
-        self.drawPin(dx, dy)
-        self.drawPin(-dx, dy)
+        self.drawPin('Pin-1',-dx, -dy)
+        self.drawPin('Pin-2',dx, -dy)
+        self.drawPin('Pin-3',dx, dy)
+        self.drawPin('Pin-4',-dx, dy)
+
+
 
 class RenderHints:
     def __init__(self, sceneName='', scaleA=1, scaleB=1):

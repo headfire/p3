@@ -1,6 +1,8 @@
 from std import DrawLib
 from OCC.Core.gp import gp_Pnt, gp_Vec
 
+class Draw:
+    def drawTo(self, aRenderLib, fullObjectName, aMove): pass
 
 
 class DeskDrawLib(DrawLib):

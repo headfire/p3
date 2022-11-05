@@ -2,16 +2,6 @@ import sys
 
 
 
-def _checkObj(aObj, aClass):
-    if not isinstance(aObj, aClass):
-        raise Exception('EXPECTED ' + aClass.__name__ + '  - REAL ' + aObj.__class__.__name__)
-
-
-def _getValue(aValue, aDefaultValue):
-    if aValue is not None:
-        return aValue
-    return aDefaultValue
-
 
 
 
