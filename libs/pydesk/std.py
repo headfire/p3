@@ -1,4 +1,3 @@
-from OCC.Core.gp import gp_Pnt, gp_Dir, gp_Vec, gp_Ax1, gp_Trsf
 import sys
 
 
@@ -16,71 +15,6 @@ def _getValue(aValue, aDefaultValue):
 
 
 
-class Move:
-
-    def __init__(self):
-        self.aTrsf = gp_Trsf()
-        self.aLayer = None
-
-    def clear(self):
-        self.aTrsf = gp_Trsf()
-
-    @staticmethod
-    def mergeMove(aItemMove, aSuperMove):
-        ret = Move()
-        ret.aTrsf = gp_Trsf()
-        ret.aTrsf *= aItemMove.aTrsf
-        ret.aTrsf *= aSuperMove.aTrsf
-        ret.aLayer = _getValue(aItemMove.aLayer, aSuperMove.aLayer)
-        return ret
-
-    def _dumpTrsf(self):
-        trsf = self.aTrsf
-        for iRow in range(1, 4):
-            prn = ''
-            for iCol in range(1, 5):
-                prn += '  ' + str(trsf.Value(iRow, iCol))
-            print(prn)
-
-    def applyMove(self, dx, dy, dz):
-        trsf = gp_Trsf()
-        trsf.SetTranslation(gp_Vec(dx, dy, dz))
-        self.aTrsf *= trsf
-        return self
-
-    # todo setScale K and XYZ
-
-    def applyRotate(self, pntAxFrom, pntAxTo, angle):
-
-        trsf = gp_Trsf()
-        ax1 = gp_Ax1(pntAxFrom, gp_Dir(gp_Vec(pntAxFrom, pntAxTo)))
-        trsf.SetRotation(ax1, angle)
-        self.aTrsf *= trsf
-
-        return self
-
-    def applyDirect(self, pnt1, pnt2):
-
-        dirVec = gp_Vec(pnt1, pnt2)
-        targetDir = gp_Dir(dirVec)
-
-        rotateAngle = gp_Dir(0, 0, 1).Angle(targetDir)
-        if not gp_Dir(0, 0, 1).IsParallel(targetDir, 0.001):
-            rotateDir = gp_Dir(0, 0, 1)
-            rotateDir.Cross(targetDir)
-        else:
-            rotateDir = gp_Dir(0, 1, 0)
-
-        trsf = gp_Trsf()
-        trsf.SetRotation(gp_Ax1(gp_Pnt(0, 0, 0), rotateDir), rotateAngle)
-        trsf.SetTranslationPart(gp_Vec(gp_Pnt(0, 0, 0), pnt1))
-        self.aTrsf *= trsf
-
-        return self
-
-    def getTrsf(self):
-        return self.aTrsf
-
 
 class EnvParamLib:
 
@@ -96,9 +30,6 @@ class EnvParamLib:
         else:
             return defaultValue
 
-
-class Draw:
-    pass
 
 
 class GroupDraw(Draw):
