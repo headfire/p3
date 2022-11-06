@@ -9,10 +9,8 @@ from OCC.Core.BRep import BRep_Tool
 from OCC.Core.BRepTools import BRepTools_WireExplorer
 from OCC.Core.gp import gp_Pnt, gp_Dir, gp_Vec
 from OCC.Core.Graphic3d import Graphic3d_NameOfMaterial, Graphic3d_MaterialAspect
-
-from device import WebDevice, StlDevice
-
 from OCC.Core.gp import gp_Pnt, gp_Dir, gp_Vec, gp_Ax1, gp_Trsf
+
 from OCC.Display.SimpleGui import init_display
 
 
@@ -273,62 +271,7 @@ class StyleRules:
                 return ruleStyleValue
         return None
 
-
-
-class RenderComplex:
-    def __init__(self, renderLib, renderName, renderPosition):
-        self.renderLib = renderLib
-        self.renderPosition = renderPosition
-        self.renderName = renderName
-
-    def setRenderName(self, subName):
-        self.renderLib.setRenderName(self.renderName + '.' + subName)
-
-    def setRenderPosition(self, subPosition):
-        position = Position().next(subPosition).next(self.renderPosition)
-        self.renderLib.setRenderPosition(position)
-
-
 class DeskComplex(RenderComplex):
-
-    def renderPin(self, pinName ,x, y):
-        scale = self.renderLib.scale
-        pinMove = Translate(x/self.scale, y/self.scale, 0)
-        self.setRenderName(pinName)
-        self.setRenderPosition(pinMove)
-        self.renderLib.renderCylinder(self.pinR / self.scale, self.pinH / self.scale)
-
-    def render(self):
-
-        scale = self.renderLib.scale
-        labelText = self.renderLib.formatLabelText
-
-        paperSizeX, paperSizeY, paperSizeZ = DESK_PAPER_SIZE
-        psx, psy, psz = paperSizeX / scale, paperSizeY / scale, paperSizeZ / scale
-        bsx = (paperSizeX + scale * 2) / scale
-        bsy = (paperSizeY + DESK_BORDER_SIZE * 2) / scale
-        bsz = DESK_HEIGHT / scale
-
-        self.setRenderName('Paper')
-        self.setRenderPosition(Translate(-psx / 2, -psy / 2, -psz))
-        self.renderLib.renderBox(psx, psy, psz)
-
-        self.setRenderName('Board')
-        self.setRenderPosition(Translate((-bsx / 2, -bsy / 2, -psz - bsz)))
-        self.renderLib.renderBox(bsx, bsy, bsz)
-
-        self.setRenderName('Label')
-        self.setRenderPosition(Position())
-        self.renderLib.renderLabel(gp_Pnt(-bsx / 2, -bsy / 2, -psz), labelText)
-
-        dx = (paperSizeX / 2 - self.aPinOffset) / self.aScale
-        dy = (paperSizeY / 2 - self.aPinOffset) / self.aScale
-
-        self.drawPin('Pin-1',-dx, -dy)
-        self.drawPin('Pin-2',dx, -dy)
-        self.drawPin('Pin-3',dx, dy)
-        self.drawPin('Pin-4',-dx, dy)
-
 
 
 class Prim:
@@ -339,30 +282,40 @@ class BoxPrim(Prim):
     def __init__(self, x, y, z):
         self.x, self.y, self.z = x, y, z
 
-
-class SpherePrim(Prim):
-    def __init__(self, r):
-        self.r = r
+    def getShape(self):
+        return BRepPrimAPI_MakeBox(xSize, ySize, zSize).Shape()
 
 
 class SpherePrim(Prim):
     def __init__(self, r):
         self.r = r
+
+    def getShape(self):
+        return BRepPrimAPI_MakeSphere(gp_Pnt(0,0,0), radius).Shape()
 
 
 class ConePrim(Prim):
     def __init__(self, r1, r2, h):
         self.r1, self.r2, self.h = r1, r2, h
 
+    def getShape(self):
+        return BRepPrimAPI_MakeCone(self.r1, self.r2, self.h).Shape()
+
 
 class CylinderPrim(Prim):
     def __init__(self, r, h):
         self.r, self.h = r, h
 
+    def getShape(self):
+        return BRepPrimAPI_MakeCylinder(r, h).Shape()
+
 
 class TorusPrim(Prim):
     def __init__(self, r1, r2):
         self.r1, self.r2 = r1, r2
+
+    def getShape(self):
+        return BRepPrimAPI_MakeTorus(self.r1, self.r2).Shape()
 
 
 class RenderLib:
@@ -378,17 +331,10 @@ class RenderLib:
     def renderSetName(self, renderName):
         self.renderName = renderName
 
-    def renderStart(self):
-        self.deviceStart()
-        self.renderDecoration()
+    def renderStart(self): pass
+    def renderFinish(self):pass
 
-    def renderFinish(self):
-        self.deviceFinish()
-
-    def deviceStart(self): pass
-    def deviceFinish(self): pass
-
-    def renderDecor(self, shape): pass
+    def renderDesk(self): pass
     def renderShape(self, shape): pass
     def renderSolid(self, prim): pass
     def renderWire(self, wire): pass
@@ -408,28 +354,28 @@ class StyledRenderLib(RenderLib):
 
         # scale setting
         scaleA, scaleB = scaleAB
-        self.styleScale = scaleB / scaleA
-        self.styleFormatLabelText = 'A0 M' + str(scaleA) + ':' + str(scaleB)
+        self.scale = scaleB / scaleA
 
         # decoration setting
+        self.decorFormatLabelText = 'A0 M' + str(scaleA) + ':' + str(scaleB)
         limit =  (DESK_DEFAULT_DRAW_AREA_SIZE / 2) * self.styleScale
-        self.styleLimitMinX = -limit
-        self.styleLimitMaxX = limit
-        self.styleLimitMinY = -limit
-        self.styleLimitMaxY = limit
-        self.styleLimitMinZ = -limit
-        self.styleLimitMaxZ = limit
-        self.styleDeskDX = 0
-        self.styleDeskDY = 0
-        self.styleDeskDZ = -limit * 1.2
-        self.styleIsDesk = True
-        self.styleIsAxis = True
-        self.styleIsLimits = True
+        self.decorLimitMinX = -limit
+        self.decorLimitMaxX = limit
+        self.decorLimitMinY = -limit
+        self.decorLimitMaxY = limit
+        self.decorLimitMinZ = -limit
+        self.decorLimitMaxZ = limit
+        self.decorDeskDX = 0
+        self.decorDeskDY = 0
+        self.decorDeskDZ = -limit * 1.2
+        self.decorIsDesk = True
+        self.decorIsAxis = True
+        self.decorIsLimits = True
 
         # style stateful
         self.styleMaterial = None
         self.styleColor = None
-        self.styleTransparent = None
+        self.styleTransparency = None
         self.stylePointRadius = None
         self.styleLineRadius = None
         self.styleFaceHalfWidth = None
@@ -439,17 +385,17 @@ class StyledRenderLib(RenderLib):
         self.styleLabelHeightPx = None
 
     def initDeskPosition(self, deskDX, deskDY, deskDZ):
-        self.styleDeskDX = deskDX
-        self.styleDeskDY = deskDY
-        self.styleDeskDZ = deskDZ
+        self.decorDeskDX = deskDX
+        self.decorDeskDY = deskDY
+        self.decorDeskDZ = deskDZ
 
     def initDrawLimits(self, limitMinX, limitMaxX, limitMinY, limitMaxY, limitMinZ, limitMaxZ):
-        self.styleLimitMinX = limitMinX
-        self.styleLimitMaxX = limitMaxX
-        self.styleLimitMinY = limitMinY
-        self.styleLimitMaxY = limitMaxY
-        self.styleLimitMinZ = limitMinZ
-        self.styleLimitMaxZ = limitMaxZ
+        self.decorLimitMinX = limitMinX
+        self.decorLimitMaxX = limitMaxX
+        self.decorLimitMinY = limitMinY
+        self.decorLimitMaxY = limitMaxY
+        self.decorLimitMinZ = limitMinZ
+        self.decorLimitMaxZ = limitMaxZ
 
     def initDecor(self, isDesk, isAxis, isLimits):
         self.styleIsDesk = isDesk
@@ -524,9 +470,43 @@ class StyledRenderLib(RenderLib):
                                 * self.styleGet(ARROW_LENGTH_FACTOR_STYLE)\
                                 * self.styleScale
 
-    def styleDesk(self): pass
-    def styleAxis(self): pass
-    def styleLimits(self): pass
+    def decorPin(self, pinName ,x, y):
+        scale = self.renderLib.scale
+        pinMove = Translate(x/self.scale, y/self.scale, 0)
+        self.setRenderName(pinName)
+        self.setRenderPosition(pinMove)
+        self.renderLib.renderCylinder(self.pinR / self.scale, self.pinH / self.scale)
+
+    def decorDesk(self):
+
+        scale = self.scale
+        labelText = self.decorFormatLabelText
+
+        paperSizeX, paperSizeY, paperSizeZ = DESK_PAPER_SIZE
+        psx, psy, psz = paperSizeX / scale, paperSizeY / scale, paperSizeZ / scale
+        bsx = (paperSizeX + scale * 2) / scale
+        bsy = (paperSizeY + DESK_BORDER_SIZE * 2) / scale
+        bsz = DESK_HEIGHT / scale
+
+        self.basePosition(Translate(-psx / 2, -psy / 2, -psz))
+        self.renderLib.renderBox(psx, psy, psz)
+
+        self.setRenderName('Board')
+        self.setRenderPosition(Translate((-bsx / 2, -bsy / 2, -psz - bsz)))
+        self.renderLib.renderBox(bsx, bsy, bsz)
+
+        self.setRenderName('Label')
+        self.setRenderPosition(Position())
+        self.renderLib.renderLabel(gp_Pnt(-bsx / 2, -bsy / 2, -psz), labelText)
+
+        dx = (paperSizeX / 2 - self.aPinOffset) / self.aScale
+        dy = (paperSizeY / 2 - self.aPinOffset) / self.aScale
+
+        self.drawPin('Pin-1',-dx, -dy)
+        self.drawPin('Pin-2',dx, -dy)
+        self.drawPin('Pin-3',dx, dy)
+        self.drawPin('Pin-4',-dx, dy)
+
     def styleShape(self, shape): pass
     def stylePrim(self, prim): pass
     def styleWire(self, wire): pass
@@ -535,14 +515,6 @@ class StyledRenderLib(RenderLib):
     def styleArrow(self, pnt1, pnt2): pass
     def styleCircle(self, pnt1, pnt2, pnt3): pass
     def styleLabel(self, pnt, text): pass
-
-    def renderDecoration(self):
-        if self.styleIsDesk:
-            self.styleDesk()
-        if self.styleIsAxis:
-            self.styleAxis()
-        if self.styleIsLimits:
-            self.styleLimits()
 
     def renderSolid(self, prim):
         self.styleBrashForSolid()
@@ -613,6 +585,7 @@ class BaseRenderLib(StyledRenderLib):
         self.baseFinish()
 
     def styleDesk(self): pass
+
     def styleAxis(self): pass
     def styleLimit(self): pass
 
@@ -682,13 +655,11 @@ class BaseRenderLib(StyledRenderLib):
         aHeightPx = self.styleLabelHeightPx
         self.baseLabel(text, aHeightPx)
 
+
 class FineRenderLib(BaseRenderLib):
 
     def fineShape(self, shape):pass
     def fineLabel(self, text): pass
-
-    def baseStart(self): pass
-    def baseFinish(self): pass
 
     def baseShape(self, shape):
         self.fineShape(shape)
@@ -707,21 +678,21 @@ class FineRenderLib(BaseRenderLib):
 
 
 
-class ScreenRenderLib(FineRenderLib):
+class DisplayRenderLib(FineRenderLib):
     def __init__(self, scaleAB=M_1_1_SCALE, screenX=800, screenY=600):
         super().__init__(scaleAB)
-        self.screenX = screenX
-        self.screenY = screenY
+        self.displayX = screenX
+        self.displayY = screenY
         self.display = None
-        self.start_display_call = None
+        self.display_start = None
 
     def deviceStart(self):
-       self.display, self.start_display_call, add_menu, add_function_to_menu = init_display(
-                None, (hints.deviceX, hints.deviceY), True, [128, 128, 128], [128, 128, 128]
+       self.screen, self.display_start, add_menu, add_function_to_menu = init_display(
+                None, (self.screenX, self.screenY), True, [128, 128, 128], [128, 128, 128])
 
     def deviceFinish(self):
         self.display.FitAll()
-        self.start_display_call()
+        self.display_start()
 
     def fineShape(self, shape):
         shapeTr = BRepBuilderAPI_Transform(shape, self.basePosition.getTrsf()).Shape()
