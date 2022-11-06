@@ -348,8 +348,11 @@ class RenderLib:
     def renderSetName(self, renderName):
         self.renderName = renderName
 
-    def renderShape(self, aShape):
-        self.log('renderShape: %s' % self.renderName)
+    def renderSurface(self, aShape):
+        self.log('renderSurface: %s' % self.renderName)
+
+    def renderSolid(self, aShape):
+        self.log('renderSolid: %s' % self.renderName)
 
     def renderWire(self, aWire):
         self.log('renderWire: %s' % self.renderName)
@@ -566,6 +569,106 @@ class StyledRenderLib(RenderLib):
         super().renderLabel(pnt, aText)
         self.styleBrashForLabel()
         self.styleSizeForLabel()
+
+class BaseRenderLib(StyledRenderLib):
+    def __init__(self, scaleAB=M_1_1_SCALE):
+        super().__init__(scaleAB)
+
+        # brash stateful
+        self.baseMaterial = None
+        self.baseTransparent = None
+        self.baseColor = None
+
+    def baseSetStyleBrash(self):
+        self.baseMaterial = self.styleMaterial
+        self.baseTransparent = self.styleMaterial
+        self.baseColor = self.baseColor
+
+    def baseSetPosition(self, subPosition=Position()):
+        self.basePosition = Position().next(subPosition).next(self.renderPosition)
+
+    def renderStart(self):
+        super().renderStart()
+
+    def renderFinish(self):
+        super().renderFinish()
+
+    def renderSolid(self, shape):
+        super().renderSolid(shape)
+        self.baseStyleBrash()
+        self.basePosition()
+        self.baseShape(shape)
+
+    def renderSurface(self, shape):
+        super().renderSurface(shape)
+        self.baseStyleBrash()
+        self.basePosition()
+        self.baseShape(shape)
+
+    def renderWire(self, wire):
+        super().renderWire(wire)
+        self.baseStyleBrash()
+        self.basePosition()
+        self.baseWire(wire)
+
+    def renderBox(self, x, y, z):
+        super().renderBox( x, y, z)
+        self.baseStyleBrash()
+        self.basePosition()
+        self.baseBox(x, y, z)
+
+    def renderSphere(self, r):
+        super().renderSphere(r)
+        self.baseStyleBrash()
+        self.basePosition()
+        self.baseSphere(r)
+
+    def renderCone(self, r1, r2, h):
+        super().renderCone(r1, r2, h)
+        self.baseStyleBrash()
+        self.basePosition()
+        self.baseCone(r1, r2, h)
+
+    def renderCylinder(self, r, h):
+        super().renderCylinder(r, h)
+        self.baseStyleBrash()
+        self.basePosition()
+        self.baseCylinder(r, h)
+
+    def renderTorus(self, r1, r2):
+        super().renderTorus(r1, r2)
+        self.baseStyleBrash()
+        self.basePosition()
+        self.baseTorus(r1, r2)
+
+    def renderPoint(self, pnt):
+        super().renderPoint(pnt)
+        self.baseSetStyleBrash()
+        self.baseSetPosition(Translate(pnt.X, pnt.Y, pnt.Z))
+        self.baseSphere(self.stylePointRadius)
+        self.styleBrashForPoint()
+        self.styleSizeForPoint()
+
+    def renderLine(self, pnt1, pnt2):
+        super().renderLine(pnt1, pnt2)
+        self.styleBrashForLine()
+        self.styleSizeForLine()
+
+    def renderArrow(self, pnt1, pnt2):
+        super().renderArrow(pnt1, pnt2)
+        self.styleBrashForLine()
+        self.styleSizeForLine()
+        self.styleSizeForArrow()
+
+    def renderCircle(self, pnt1, pnt2, pnt3):
+        super().renderCircle(pnt1, pnt2, pnt3)
+        self.styleBrashForLine()
+
+    def renderLabel(self, pnt, aText):
+        super().renderLabel(pnt, aText)
+        self.styleBrashForLabel()
+        self.styleSizeForLabel()
+
 
 
 class ScreenRenderLib(RenderLib):
