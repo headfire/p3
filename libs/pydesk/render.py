@@ -10,9 +10,11 @@ from OCC.Core.BRepTools import BRepTools_WireExplorer
 from OCC.Core.gp import gp_Pnt, gp_Dir, gp_Vec
 from OCC.Core.Graphic3d import Graphic3d_NameOfMaterial, Graphic3d_MaterialAspect
 
-from device import ScreenDevice, WebDevice, StlDevice
+from device import WebDevice, StlDevice
 
 from OCC.Core.gp import gp_Pnt, gp_Dir, gp_Vec, gp_Ax1, gp_Trsf
+from OCC.Display.SimpleGui import init_display
+
 
 DEFAULT_NORMED_COLOR = 0.5, 0.5, 0.5
 DEFAULT_MATERIAL_TYPE = 'CHROME'
@@ -31,36 +33,31 @@ NICE_ORIGINAL_COLOR = 241, 79, 160
 
 AO_SIZE_XYZ = 1189, 841, 1
 
-PLASTIC_MATERIAL = 'PLASTIC'
-CHROME_MATERIAL = 'CHROME'
-
-MATERIAL_TYPE_CONSTS = {
-    'BRASS': Graphic3d_NameOfMaterial.Graphic3d_NOM_BRASS,
-    'BRONZE': Graphic3d_NameOfMaterial.Graphic3d_NOM_BRONZE,
-    'COPPER': Graphic3d_NameOfMaterial.Graphic3d_NOM_COPPER,
-    'GOLD': Graphic3d_NameOfMaterial.Graphic3d_NOM_GOLD,
-    'PEWTER': Graphic3d_NameOfMaterial.Graphic3d_NOM_PEWTER,
-    'PLASTER': Graphic3d_NameOfMaterial.Graphic3d_NOM_PLASTER,
-    'PLASTIC': Graphic3d_NameOfMaterial.Graphic3d_NOM_PLASTIC,
-    'SILVER': Graphic3d_NameOfMaterial.Graphic3d_NOM_SILVER,
-    'STEEL': Graphic3d_NameOfMaterial.Graphic3d_NOM_STEEL,
-    'STONE': Graphic3d_NameOfMaterial.Graphic3d_NOM_STONE,
-    'SHINY_PLASTIC': Graphic3d_NameOfMaterial.Graphic3d_NOM_SHINY_PLASTIC,
-    'SATIN': Graphic3d_NameOfMaterial.Graphic3d_NOM_SATIN,
-    'METALIZED': Graphic3d_NameOfMaterial.Graphic3d_NOM_METALIZED,
-    'NEON_GNC': Graphic3d_NameOfMaterial.Graphic3d_NOM_NEON_GNC,
-    'CHROME': Graphic3d_NameOfMaterial.Graphic3d_NOM_CHROME,
-    'ALUMINIUM': Graphic3d_NameOfMaterial.Graphic3d_NOM_ALUMINIUM,
-    'OBSIDIAN': Graphic3d_NameOfMaterial.Graphic3d_NOM_OBSIDIAN,
-    'NEON_PHC': Graphic3d_NameOfMaterial.Graphic3d_NOM_NEON_PHC,
-    'JADE': Graphic3d_NameOfMaterial.Graphic3d_NOM_JADE,
-    'CHARCOAL': Graphic3d_NameOfMaterial.Graphic3d_NOM_CHARCOAL,
-    'WATER': Graphic3d_NameOfMaterial.Graphic3d_NOM_WATER,
-    'GLASS': Graphic3d_NameOfMaterial.Graphic3d_NOM_GLASS,
-    'DIAMOND': Graphic3d_NameOfMaterial.Graphic3d_NOM_DIAMOND,
-    'TRANSPARENT': Graphic3d_NameOfMaterial.Graphic3d_NOM_TRANSPARENT,
-    'DEFAULT': Graphic3d_NameOfMaterial.Graphic3d_NOM_DEFAULT
-}
+BRASS_MATERIAL = Graphic3d_NameOfMaterial.Graphic3d_NOM_BRASS,
+BRONZE_MATERIAL = Graphic3d_NameOfMaterial.Graphic3d_NOM_BRONZE,
+COPPER_MATERIAL = Graphic3d_NameOfMaterial.Graphic3d_NOM_COPPER,
+GOLD_MATERIAL = Graphic3d_NameOfMaterial.Graphic3d_NOM_GOLD,
+PEWTER_MATERIAL = Graphic3d_NameOfMaterial.Graphic3d_NOM_PEWTER,
+PLASTER_MATERIAL = Graphic3d_NameOfMaterial.Graphic3d_NOM_PLASTER,
+PLASTIC_MATERIAL = Graphic3d_NameOfMaterial.Graphic3d_NOM_PLASTIC,
+SILVER_MATERIAL = Graphic3d_NameOfMaterial.Graphic3d_NOM_SILVER,
+STEEL_MATERIAL = Graphic3d_NameOfMaterial.Graphic3d_NOM_STEEL,
+STONE_MATERIAL = Graphic3d_NameOfMaterial.Graphic3d_NOM_STONE,
+SHINY_PLASTIC_MATERIAL = Graphic3d_NameOfMaterial.Graphic3d_NOM_SHINY_PLASTIC,
+SATIN_MATERIAL = Graphic3d_NameOfMaterial.Graphic3d_NOM_SATIN,
+METALIZED_MATERIAL = Graphic3d_NameOfMaterial.Graphic3d_NOM_METALIZED,
+NEON_GNC_MATERIAL = Graphic3d_NameOfMaterial.Graphic3d_NOM_NEON_GNC,
+CHROME_MATERIAL = Graphic3d_NameOfMaterial.Graphic3d_NOM_CHROME,
+ALUMINIUM_MATERIAL = Graphic3d_NameOfMaterial.Graphic3d_NOM_ALUMINIUM,
+OBSIDIAN_MATERIAL = Graphic3d_NameOfMaterial.Graphic3d_NOM_OBSIDIAN,
+NEON_PHC_MATERIAL = Graphic3d_NameOfMaterial.Graphic3d_NOM_NEON_PHC,
+JADE_MATERIAL = Graphic3d_NameOfMaterial.Graphic3d_NOM_JADE,
+CHARCOAL_MATERIAL = Graphic3d_NameOfMaterial.Graphic3d_NOM_CHARCOAL,
+WATER_MATERIAL = Graphic3d_NameOfMaterial.Graphic3d_NOM_WATER,
+GLASS_MATERIAL = Graphic3d_NameOfMaterial.Graphic3d_NOM_GLASS,
+DIAMOND_MATERIAL = Graphic3d_NameOfMaterial.Graphic3d_NOM_DIAMOND,
+TRANSPARENT_MATERIAL = Graphic3d_NameOfMaterial.Graphic3d_NOM_TRANSPARENT,
+DEFAULT_MATERIAL = Graphic3d_NameOfMaterial.Graphic3d_NOM_DEFAULT
 
 def _checkObj(aObj, aClass):
     if not isinstance(aObj, aClass):
@@ -90,17 +87,13 @@ def _getWireStartPointAndTangentDir(wire):
     return BRep_Tool.Pnt(vertex), gp_Dir(v)
 
 
-def mergeMove(aItemMove, aSuperMove):
-    ret = Move()
-    ret.trsf = gp_Trsf()
-    ret.trsf *= aItemMove.trsf
-    ret.trsf *= aSuperMove.trsf
-    return ret
-
-
-class Move:
+class Position:
     def __init__(self):
         self.trsf = gp_Trsf()
+
+    def next(self, nextChange):
+        self.trsf *= nextChange.trsf
+        return self
 
     def _dump(self):
         for iRow in range(1, 4):
@@ -109,18 +102,18 @@ class Move:
                 prn += '  ' + str(self.trsf.Value(iRow, iCol))
             print(prn)
 
-class Translate(Move):
+class Translate(Position):
     def __init__(self, dx, dy, dz):
         super().__init__()
         self.trsf.SetTranslation(gp_Vec(dx, dy, dz))
 
-class Rotate(Move):
+class Rotate(Position):
     def __init__(self, pntAxFrom, pntAxTo, angle):
         super().__init__()
         ax1 = gp_Ax1(pntAxFrom, gp_Dir(gp_Vec(pntAxFrom, pntAxTo)))
         self.trsf.SetRotation(ax1, angle)
 
-class Direct(Move):
+class Direct(Position):
     def __init__(self, pntFrom, pntTo):
         super().__init__()
 
@@ -138,62 +131,72 @@ class Direct(Move):
         self.trsf.SetTranslationPart(gp_Vec(gp_Pnt(0, 0, 0), pntFrom))
 
 
-GENERAL_FACTOR = 'GENERAL_FACTOR'
+DESK_HEIGHT = 20
+DESK_BORDER_SIZE = 60
+DESK_PAPER_SIZE = 1189, 841, 1
+DESK_PIN_OFFSET = 30
+DESK_PIN_RADIUS = 10
+DESK_PIN_HEIGHT = 2
+DESK_DEFAULT_DRAW_AREA_SIZE = 400
 
-POINT_RADIUS_FACTOR = 'POINT_RADIUS_FACTOR'
-POINT_MATERIAL = 'POINT_MATERIAL'
-POINT_COLOR = 'POINT_COLOR'
-POINT_TRANSPARENCY = 'POINT_TRANSP'
+BASE_POINT_RADIUS = 5
+BASE_LINE_RADIUS = BASE_POINT_RADIUS * 0.6
+BASE_FACE_HALF_WIDTH = BASE_POINT_RADIUS * 0.3
 
-LINE_RADIUS_FACTOR = 'LINE_RADIUS_FACTOR'
-LINE_ARROW_RADIUS_FACTOR = 'LINE_ARROW_RADIUS_FACTOR'
-LINE_ARROW_LENGTH_FACTOR = 'LINE_ARROW_LENGTH_FACTOR'
-LINE_MATERIAL = 'LINE_MATERIAL'
-LINE_COLOR = 'LINE_COLOR'
-LINE_TRANSPARENCY = 'LINE_TRANSPARENCY'
+GENERAL_FACTOR_STYLE = 'GENERAL_FACTOR_STYLE'
 
-SURFACE_WIDTH_FACTOR = 'SURFACE_WIDTH_FACTOR'
-SURFACE_MATERIAL = 'SURFACE_MATERIAL'
-SURFACE_COLOR = 'SURFACE_COLOR'
-SURFACE_TRANSPARENCY = 'SURFACE_TRANSPARENCY'
+POINT_RADIUS_FACTOR_STYLE = 'POINT_RADIUS_FACTOR_STYLE'
+POINT_MATERIAL_STYLE = 'POINT_MATERIAL_STYLE'
+POINT_COLOR_STYLE = 'POINT_COLOR_STYLE'
+POINT_TRANSPARENCY_STYLE = 'POINT_TRANSP_STYLE'
 
-TEXT_HEIGHT_FACTOR = 'TEXT_HEIGHT_FACTOR'
-TEXT_DELTA_FACTOR = 'TEXT_DELTA_FACTOR'
-TEXT_MATERIAL = 'TEXT_MATERIAL'
-TEXT_COLOR = 'TEXT_COLOR'
-TEXT_TRANSPARENCY = 'TEXT_TRANSPARENCY'
+LINE_RADIUS_FACTOR_STYLE = 'LINE_RADIUS_FACTOR_STYLE'
+LINE_ARROW_RADIUS_FACTOR_STYLE = 'LINE_ARROW_RADIUS_FACTOR_STYLE'
+LINE_ARROW_LENGTH_FACTOR_STYLE = 'LINE_ARROW_LENGTH_FACTOR_STYLE'
+LINE_MATERIAL_STYLE = 'LINE_MATERIAL_STYLE'
+LINE_COLOR_STYLE = 'LINE_COLOR_STYLE'
+LINE_TRANSPARENCY_STYLE = 'LINE_TRANSPARENCY_STYLE'
+
+SURFACE_WIDTH_FACTOR_STYLE = 'SURFACE_WIDTH_FACTOR_STYLE'
+SURFACE_MATERIAL_STYLE = 'SURFACE_MATERIAL_STYLE'
+SURFACE_COLOR_STYLE = 'SURFACE_COLOR_STYLE'
+SURFACE_TRANSPARENCY_STYLE = 'SURFACE_TRANSPARENCY_STYLE'
+
+LABEL_HEIGHT_FACTOR_STYLE = 'TEXT_HEIGHT_FACTOR_STYLE'
+LABEL_DELTA_FACTOR_STYLE = 'TEXT_DELTA_FACTOR_STYLE'
+LABEL_MATERIAL_STYLE = 'TEXT_MATERIAL_STYLE'
+LABEL_COLOR_STYLE = 'TEXT_COLOR_STYLE'
+LABEL_TRANSPARENCY_STYLE = 'TEXT_TRANSPARENCY_STYLE'
 
 DEFAULT_STYLE_RULES = [
 
-    ('',GENERAL_FACTOR, 1),
-    ('',POINT_RADIUS_FACTOR,  1),
-    ('',POINT_MATERIAL,  CHROME_MATERIAL),
-    ('',POINT_COLOR,  NICE_YELLOW_COLOR),
-    ('',POINT_TRANSPARENCY,  0),
+    ('', GENERAL_FACTOR_STYLE, 1),
 
-    ('',LINE_RADIUS_FACTOR,  1),
-    ('',LINE_ARROW_RADIUS_FACTOR,  1),
-    ('',LINE_ARROW_LENGTH_FACTOR,  1),
-    ('',LINE_MATERIAL, CHROME_MATERIAL),
-    ('',LINE_COLOR,  NICE_BLUE_COLOR),
-    ('',LINE_TRANSPARENCY,  0),
+    ('', POINT_RADIUS_FACTOR_STYLE,  1),
+    ('', POINT_MATERIAL_STYLE,  CHROME_MATERIAL),
+    ('', POINT_COLOR_STYLE,  NICE_YELLOW_COLOR),
+    ('', POINT_TRANSPARENCY_STYLE,  0),
 
-    ('',SURFACE_WIDTH_FACTOR,  1),
-    ('',SURFACE_MATERIAL,  CHROME_MATERIAL),
-    ('',SURFACE_COLOR,  NICE_ORIGINAL_COLOR),
-    ('',SURFACE_TRANSPARENCY,  0),
+    ('', LINE_RADIUS_FACTOR_STYLE,  1),
+    ('', LINE_ARROW_RADIUS_FACTOR_STYLE,  1),
+    ('', LINE_ARROW_LENGTH_FACTOR_STYLE,  1),
+    ('', LINE_MATERIAL_STYLE, CHROME_MATERIAL),
+    ('', LINE_COLOR_STYLE,  NICE_BLUE_COLOR),
+    ('', LINE_TRANSPARENCY_STYLE,  0),
 
-    ('',LABEL_DELTA_FACTOR,  1),
-    ('',LABEL_HEIGHT_FACTOR,  1),
-    ('',LABEL_MATERIAL,  PLASTIC_MATERIAL),
-    ('',LABEL_COLOR,  NICE_WHITE_COLOR),
-    ('',LABEL_TRANSPARENCY, 0)
+    ('', SURFACE_WIDTH_FACTOR_STYLE,  1),
+    ('', SURFACE_MATERIAL_STYLE,  CHROME_MATERIAL),
+    ('', SURFACE_COLOR_STYLE,  NICE_ORIGINAL_COLOR),
+    ('', SURFACE_TRANSPARENCY_STYLE,  0),
 
-    ('Decoration.Board.Wood', SURFACE_COLOR, WOOD_COLOR)
-    ('Decoration.Board.Paper', SURFACE_COLOR, PAPER_COLOR)
-    ('Decoration.Board.Pins', SURFACE_COLOR, STEEL_COLOR)
+    ('', LABEL_DELTA_FACTOR_STYLE,  1),
+    ('', LABEL_HEIGHT_FACTOR_STYLE,  1),
+    ('', LABEL_MATERIAL_STYLE,  PLASTIC_MATERIAL),
+    ('', LABEL_COLOR_STYLE,  NICE_WHITE_COLOR),
+    ('', LABEL_TRANSPARENCY_STYLE, 0)
 
 ]
+
 
 def isSubTokenOk(maskSub, nameSub):
     if maskSub == '*':
@@ -244,7 +247,7 @@ class StyleRules:
     def addRule(self, objNameMask, styleName, value):
         self.rules.append((objNameMask, styleName, value))
 
-    def addRules(self, rules):
+    def extendRules(self, rules):
         self.rules.extend(rules)
 
     def getStyle(self, styleName, fullObjName):
@@ -253,50 +256,51 @@ class StyleRules:
                 return ruleStyleValue
         return None
 
-class Decoration: pass
+class RenderComplex:
+    def __init__(self, renderLib, renderName, renderPosition):
+        self.renderLib = renderLib
+        self.renderPosition = renderPosition
+        self.renderName = renderName
 
-class Board(Decoration):
-    def __init__(self, scale, move):
+    def setRenderName(self, subName):
+        self.renderLib.setRenderName(self.renderName + '.' + subName)
 
-            self.scale = scale
-            self.move = move
-            self.renderName = 'Decoration.Board'
+    def setRenderPosition(self, subPosition):
+        position = Position().next(subPosition).next(self.renderPosition)
+        self.renderLib.setRenderPosition(position)
 
-            self.boardH = 20
-            self.boardBorderSize = 60
 
-            self.paperSizes = 1189, 841, 1
+class DeskComplex(RenderComplex):
 
-            self.pinOffset = 30
-            self.pinR = 10
-            self.pinH = 2
-
-    def renderPin(self, renderLib, pinName ,x, y):
+    def renderPin(self, pinName ,x, y):
+        scale = self.renderLib.scale
         pinMove = Translate(x/self.scale, y/self.scale, 0)
-        renderLib.setRenderObjName(self.renderName+'.'+pinName)
-        renderLib.setRenderObjMove(mergeMove(pinMove, self.move))
-        renderLib.renderCylinder(self.pinR / self.scale, self.pinH / self.scale)
+        self.setRenderName(pinName)
+        self.setRenderPosition(pinMove)
+        self.renderLib.renderCylinder(self.pinR / self.scale, self.pinH / self.scale)
 
-    def render(self, renderLib, aMove):
+    def render(self):
 
-        objName = 'Decoration.Board'
+        scale = self.renderLib.scale
+        labelText = self.renderLib.formatLabelText
 
-        paperSizeX, paperSizeY, paperSizeZ = self.aPaperSizes
-        psx, psy, psz = paperSizeX / self.aScale, paperSizeY / self.aScale, paperSizeZ / self.aScale
-        bsx = (paperSizeX + self.aBoardBorderSize * 2) / self.aScale
-        bsy = (paperSizeY + self.aBoardBorderSize * 2) / self.aScale
-        bsz = self.aBoardH / self.aScale
+        paperSizeX, paperSizeY, paperSizeZ = DESK_PAPER_SIZE
+        psx, psy, psz = paperSizeX / scale, paperSizeY / scale, paperSizeZ / scale
+        bsx = (paperSizeX + scale * 2) / scale
+        bsy = (paperSizeY + DESK_BORDER_SIZE * 2) / scale
+        bsz = DESK_HEIGHT / scale
 
-        renderLib.setRenderName(self.renderName+'.Paper')
-        renderLib.setRenderMove(Translate(-psx / 2, -psy / 2, -psz))
-        renderLib.renderBox(psx, psy, psz)
+        self.setRenderName('Paper')
+        self.setRenderPosition(Translate(-psx / 2, -psy / 2, -psz))
+        self.renderLib.renderBox(psx, psy, psz)
 
-        renderLib.setRenderName(self.renderName + '.Wood')
-        renderLib.setRenderMove(Translate((-bsx / 2, -bsy / 2, -psz - bsz))
-        renderLib.renderBox(bsx, bsy, bsz)
+        self.setRenderName('Board')
+        self.setRenderPosition(Translate((-bsx / 2, -bsy / 2, -psz - bsz)))
+        self.renderLib.renderBox(bsx, bsy, bsz)
 
-        renderLib.setRenderName(self.renderName + '.Wood')
-        renderLib.renderLabel(gp_Pnt(-bsx / 2, -bsy / 2, -psz), self.aScaleText, INFO_STYLE))
+        self.setRenderName('Label')
+        self.setRenderPosition(Position())
+        self.renderLib.renderLabel(gp_Pnt(-bsx / 2, -bsy / 2, -psz), labelText)
 
         dx = (paperSizeX / 2 - self.aPinOffset) / self.aScale
         dy = (paperSizeY / 2 - self.aPinOffset) / self.aScale
@@ -312,65 +316,13 @@ class RenderHints:
     def __init__(self, sceneName='', scaleA=1, scaleB=1):
 
         # device size
-        self.deviceX = 800
-        self.deviceY = 600
 
         # scale factor
-        scale = scaleB / scaleA
-        self.sceneLabel = sceneName + '- A0 M' + str(scaleA) + ':' + str(scaleB)
 
-        self.shapePrecision = 1 * scale
-        self.wirePrecision = 1 * scale
 
-        self.deskDX = 0 * scale
-        self.deskDY = 0 * scale
-        self.deskDZ = 300 * scale
-
-        self.limitMinX = -200 * scale
-        self.limitMaxX = 200 * scale
-        self.limitMinY = -200 * scale
-        self.limitMaxY = 200 * scale
-        self.limitMinZ = -200 * scale
-        self.limitMaxZ = 200 * scale
-
-        # desk position
-        self.deskDX = 0
-        self.deskDY = 0
-        self.deskDZ = -250 * scale
-
-        # decoration flags
-        self.isDesk = True
-        self.isAxis = True
-        self.isLimits = True
 
         # path to save
         self.pathToSave = None
-
-        # styles
-        mainStyle = Style()
-        mainStyle.scale(scale * 1)
-
-        infoStyle = Style()
-        infoStyle.scale = scale
-        infoStyle.factor=0.7
-        infoStyle.pointMaterial = Material(NICE_GRAY_COLOR, MATE, 0.5)
-        infoStyle.lineMaterial = Material(NICE_GRAY_COLOR, MATE, 0.5)
-        infoStyle.faceMaterial = Material(NICE_GRAY_COLOR, MATE, 0.5)
-        infoStyle.labelMaterial = Material(NICE_GRAY_COLOR, MATE, 0.0)
-
-        focusStyle = Style()
-        focusStyle.scale = scale
-        focusStyle.factor=0.7
-        focusStyle.lineMaterial = Material(NICE_RED_COLOR, MATE, 0.0)
-        focusStyle.faceMaterial = Material(NICE_RED_COLOR, MATE, 0.5)
-        focusStyle.labelMaterial = Material(NICE_RED_COLOR, MATE, 0.0)
-
-        self.styles = {
-            'MainStyle': mainStyle,
-            'InfoStyle': infoStyle,
-            'FocusStyle': focusStyle,
-        }
-
 
     def setDeviceSize(self, deviceX, deviceY):
         self.deviceX = deviceX
@@ -379,9 +331,44 @@ class RenderHints:
     def setPathToSave(self, pathToSave):
         self.pathToSave = pathToSave
 
-    def setPrecision(self, wirePrecision, shapePrecision):
-        self.wirePrecision = wirePrecision
-        self.shapePrecision = shapePrecision
+
+M_1_1_SCALE = (1, 1)
+M_5_1_SCALE = (5, 1)
+
+
+class RenderLib:
+    def __init__(self, scaleAB=M_1_1_SCALE):
+
+        # scale setting
+        scaleA, scaleB = scaleAB
+        self.scale = scaleB / scaleA
+        self.formatLabelText = 'A0 M' + str(scaleA) + ':' + str(scaleB)
+
+        # decoration setting
+        limit =  (DESK_DEFAULT_DRAW_AREA_SIZE / 2) * self.scale
+        self.limitMinX = -limit
+        self.limitMaxX = limit
+        self.limitMinY = -limit
+        self.limitMaxY = limit
+        self.limitMinZ = -limit
+        self.limitMaxZ = limit
+        self.deskDX = 0
+        self.deskDY = 0
+        self.deskDZ = -limit * 1.2 * self.scale
+        self.isDesk = True
+        self.isAxis = True
+        self.isLimits = True
+
+        # render precision setting
+        self.shapePrecision = 1 * self.scale
+        self.wirePrecision = 1 * self.scale
+
+        # style rules
+        self.styleRules = StyleRules()
+
+        # render interface stateful variable
+        self.renderPosition = Position()
+        self.renderName = ''
 
     def setDeskPosition(self, deskDX, deskDY, deskDZ):
         self.deskDX = deskDX
@@ -401,39 +388,73 @@ class RenderHints:
         self.isAxis = isAxis
         self.isLimits = isLimits
 
+    def setPrecision(self, wirePrecision, shapePrecision):
+        self.wirePrecision = wirePrecision
+        self.shapePrecision = shapePrecision
 
-class RenderLib():
+    def setRenderPosition(self, renderPosition):
+        self.renderName = renderPosition
 
-    def __init__(self, hints=RenderHints()):
-        self.hints = hints
-        self.aStyle = Style()
-        self.aMove = Move()
-        self.device = None
-        self.localMove = Move()
+    def setRenderName(self, renderName):
+        self.renderName = renderName
 
-    def startRender(self):
-        self.device = ScreenDevice(self.hints)
+    def getStyle(self, styleName):
+        self.styleRules.getStyle(styleName, self.renderName)
+
+    def extendStyles(self, exRulesList):
+        self.styleRules.extendRules(exRulesList)
+
+
+class ScreenRenderLib(RenderLib):
+
+    def __init__(self, scaleAB=M_1_1_SCALE, screenX=800, screenY=600):
+        super().__init__(scaleAB)
+
+        # device setting
+        self.screenX = screenX
+        self.screenY = screenY
+        self.display = None
+        self.start_display_call = None
+
+        # ais render stateful
+        self.aisPosition = None
+        self.aisColor = None
+        self.aisTransparency = None
+
+
+    def renderStart(self):
+        def __init__(self, hints):
+            self.display, self.start_display_call, add_menu, add_function_to_menu = init_display(
+                None, (hints.deviceX, hints.deviceY), True, [128, 128, 128], [128, 128, 128]
+            )
         self.renderDecoration()
 
-    def finishRender(self):
-        self.device.display.FitAll()
-        self.device.start_display()
+    def renderFinish(self):
+        self.display.FitAll()
+        self.start_display_call()
 
-    def renderShapeObj(self, aShape, aMaterial):
-        shapeTr = BRepBuilderAPI_Transform(aShape, self.aMove.getTrsf()).Shape()
+    def aisShape(self, shape):
+        shapeTr = BRepBuilderAPI_Transform(shape, self.aisPosition.getTrsf()).Shape()
         ais = AIS_Shape(shapeTr)
-        r, g, b = aMaterial.aColor
-        aisColor = Quantity_Color(r, g, b,
+        r, g, b = self.aisColor
+        qColor = Quantity_Color(r, g, b,
                                   Quantity_TypeOfColor(Quantity_TypeOfColor.Quantity_TOC_RGB))
-        ais.SetColor(aisColor)
-        ais.SetTransparency(self.aStyle.getNormedTransparency())
-        aspect = Graphic3d_MaterialAspect(MATERIAL_TYPE_CONSTS[self.aStyle.getMaterial()])
+        ais.SetColor(qColor)
+        ais.SetTransparency(self.aisTransparency)
+        aspect = Graphic3d_MaterialAspect(self.aisMaterial)
         ais.SetMaterial(aspect)
-        self.device.display.Context.Display(ais, False)
+        self.display.Context.Display(ais, False)
+
+    def baseCylinder(self, radius, height):
+        self.aisShape = BRepPrimAPI_MakeCylinder(radius, height).Shape()
+        self.aisPosition = Position().next(basePosition).next(renderPosition)
+        self.aisColor = self.baseColor
+        self.aisMaterial = self.baseMaterial
+        self.aisTransparency = self.baseTransparency
+        self.aisShape()
 
     def renderShape(self, aShape):
         self.renderShapeObj(aShape, self.aStyle.faceMaterial)
-        self.resetMoveAndStyle()
 
     def renderWire(self, aWire):
         aWireRadius = self.aStyle.lineRadius
@@ -445,7 +466,6 @@ class RenderLib():
         shape = BRepOffsetAPI_MakePipe(aWire, profileWire).Shape()
 
         self.renderShapeObj(shape, self.aStyle.lineMaterial)
-        self.resetMoveAndStyle()
 
     def renderBox(self, aSizeX, aSizeY, aSizeZ):
         shape = BRepPrimAPI_MakeBox(aSizeX, aSizeY, aSizeZ).Shape()
@@ -473,19 +493,19 @@ class RenderLib():
         self.resetMoveAndStyle()
 
     def renderPoint(self, aPnt):
-        self.localMove.setMove(aPnt.X, aPnt.Y, aPnt.Z)
-        shape = BRepPrimAPI_MakeSphere(self.aStyle.pointRadius).Shape()
-        self.renderShapeObj(shape, self.aStyle.faceMaterial)
+        aisShape = BRepPrimAPI_MakeSphere(self.aStyle.pointRadius).Shape()
+        aisPosition = Position().next(Translate(aPnt.X, aPnt.Y, aPnt.Z)).next(self.renderPosition())
+        aisMaterial = self.getStyle(POINT_MATERIAL_STYLE)
+        aisColor = self.getStyle(POINT_COLOR_STYLE)
+        aisTransparency = self.getStyle(POINT_TRANSPARENCY_STYLE)
+        self.renderShapeAis(aisShape, aisPosition, aisMaterial, aisColor, aisTransparency)
         self.resetMoveAndStyle()
 
-    def renderLine(self, aPnt1, aPnt2):
-
-        vec = gp_Vec(aPnt1, aPnt2)
-        self.localMove.setDirect(aPnt1, aPnt2)
-        self.renderCylinder(self.aStyle.lineRadius, vec.Magnitude())
-        shape = BRepPrimAPI_MakeCylinder(aRadius, aHeight).Shape()
-        self.renderShapeObj(shape, self.aStyle.lineMaterial)
-        self.resetMoveAndStyle()
+    def renderLine(self, pnt1, pnt2):
+        vec = gp_Vec(pnt1, pnt2)
+        self.localMove.setDirect(pnt1, pnt2)
+        r = BASE_LINE_RADIUS * self.getStyle(GENERAL_FACTOR_STYLE) * self.getStyle(LINE_RADIUS_FACTOR_STYLE)
+        self.renderCylinder(r, vec.Magnitude())
 
     def renderVector(self, aPnt1, aPnt2):
         rArrow = self.aStyle.getArrowRadius(self.hints.scale)
@@ -520,17 +540,12 @@ class RenderLib():
 
     def renderDecoration(self):
         if self.hints.isDesk:
-            DeskDecor(scale).drawTo(self, Move().applyMove(self.deskDX, self.deskDY, self.deskDZ))
+            DeskComplex(scale).drawTo(self, Move().applyMove(self.deskDX, self.deskDY, self.deskDZ))
         if self.hints.isAxis:
-            AxisDecor(self.limits).drawTo(self)
+            AxisComplex(self.limits).drawTo(self)
         if self.hints.isLimits:
-            LimitsDecor(self.limits).drawTo(self)
+            LimitsComplex(self.limits).drawTo(self)
 
-    def setMove(self, aMove):
-            self.aMove = aMove
-
-    def setStyle(self, styleName):
-            self.aStyle = self.hints.styles[styleName]
 
     def resetMoveAndStyle(self):
         self.aMove = None

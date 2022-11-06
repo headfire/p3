@@ -19,6 +19,31 @@ from OCC.Core.BRepAlgoAPI import BRepAlgoAPI_Common, BRepAlgoAPI_Cut
 
 from math import pi
 
+# styles
+mainStyle = Style()
+mainStyle.scale(scale * 1)
+
+infoStyle = Style()
+infoStyle.scale = scale
+infoStyle.factor = 0.7
+infoStyle.pointMaterial = Material(NICE_GRAY_COLOR, MATE, 0.5)
+infoStyle.lineMaterial = Material(NICE_GRAY_COLOR, MATE, 0.5)
+infoStyle.faceMaterial = Material(NICE_GRAY_COLOR, MATE, 0.5)
+infoStyle.labelMaterial = Material(NICE_GRAY_COLOR, MATE, 0.0)
+
+focusStyle = Style()
+focusStyle.scale = scale
+focusStyle.factor = 0.7
+focusStyle.lineMaterial = Material(NICE_RED_COLOR, MATE, 0.0)
+focusStyle.faceMaterial = Material(NICE_RED_COLOR, MATE, 0.5)
+focusStyle.labelMaterial = Material(NICE_RED_COLOR, MATE, 0.0)
+
+self.styles = {
+    'MainStyle': mainStyle,
+    'InfoStyle': infoStyle,
+    'FocusStyle': focusStyle,
+}
+
 EQUAL_POINTS_PRECISION = 0.001
 
 

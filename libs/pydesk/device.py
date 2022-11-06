@@ -2,7 +2,6 @@ import os
 import uuid
 import json
 
-from OCC.Display.SimpleGui import init_display
 from OCC.Core.Tesselator import ShapeTesselator
 from OCC.Extend.TopologyUtils import is_edge, is_wire, discretize_edge, discretize_wire
 from OCC.Extend.DataExchange import write_stl_file
