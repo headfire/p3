@@ -7,12 +7,10 @@ from OCC.Core.BRepPrimAPI import BRepPrimAPI_MakeSphere, BRepPrimAPI_MakeBox, \
     BRepPrimAPI_MakeCylinder, BRepPrimAPI_MakeCone, BRepPrimAPI_MakeTorus
 from OCC.Core.BRep import BRep_Tool
 from OCC.Core.BRepTools import BRepTools_WireExplorer
-from OCC.Core.gp import gp_Pnt, gp_Dir, gp_Vec
 from OCC.Core.Graphic3d import Graphic3d_NameOfMaterial, Graphic3d_MaterialAspect
 from OCC.Core.gp import gp_Pnt, gp_Dir, gp_Vec, gp_Ax1, gp_Trsf
 
 from OCC.Display.SimpleGui import init_display
-
 
 DEFAULT_NORMED_COLOR = 0.5, 0.5, 0.5
 DEFAULT_MATERIAL_TYPE = 'CHROME'
@@ -57,81 +55,6 @@ DIAMOND_MATERIAL = Graphic3d_NameOfMaterial.Graphic3d_NOM_DIAMOND,
 TRANSPARENT_MATERIAL = Graphic3d_NameOfMaterial.Graphic3d_NOM_TRANSPARENT,
 DEFAULT_MATERIAL = Graphic3d_NameOfMaterial.Graphic3d_NOM_DEFAULT
 
-def _checkObj(aObj, aClass):
-    if not isinstance(aObj, aClass):
-        raise Exception('EXPECTED ' + aClass.__name__ + '  - REAL ' + aObj.__class__.__name__)
-
-
-def _getValue(aValue, aDefaultValue):
-    if aValue is not None:
-        return aValue
-    return aDefaultValue
-
-
-def _getVectorTangentToCurveAtPoint(edge, uRatio):
-    aCurve, aFP, aLP = BRep_Tool.Curve(edge)
-    aP = aFP + (aLP - aFP) * uRatio
-    v1 = gp_Vec()
-    p1 = gp_Pnt()
-    aCurve.D1(aP, p1, v1)
-    return v1
-
-
-def _getWireStartPointAndTangentDir(wire):
-    ex = BRepTools_WireExplorer(wire)
-    edge = ex.Current()
-    vertex = ex.CurrentVertex()
-    v = _getVectorTangentToCurveAtPoint(edge, 0)
-    return BRep_Tool.Pnt(vertex), gp_Dir(v)
-
-
-class Position:
-    def __init__(self):
-        self.trsf = gp_Trsf()
-
-    def next(self, nextChange):
-        self.trsf *= nextChange.trsf
-        return self
-
-    def _dump(self):
-        for iRow in range(1, 4):
-            prn = ''
-            for iCol in range(1, 5):
-                prn += '  ' + str(self.trsf.Value(iRow, iCol))
-            print(prn)
-
-class Translate(Position):
-    def __init__(self, dx, dy, dz):
-        super().__init__()
-        self.trsf.SetTranslation(gp_Vec(dx, dy, dz))
-
-class TranslateToPnt(Translate):
-    def __init__(self, pnt):
-        super().__init__(pnt.X, pnt.Y, pnt.Z)
-
-class Rotate(Position):
-    def __init__(self, pntAxFrom, pntAxTo, angle):
-        super().__init__()
-        ax1 = gp_Ax1(pntAxFrom, gp_Dir(gp_Vec(pntAxFrom, pntAxTo)))
-        self.trsf.SetRotation(ax1, angle)
-
-class Direct(Position):
-    def __init__(self, pntFrom, pntTo):
-        super().__init__()
-
-        dirVec = gp_Vec(pntFrom, pntTo)
-        targetDir = gp_Dir(dirVec)
-
-        rotateAngle = gp_Dir(0, 0, 1).Angle(targetDir)
-        if not gp_Dir(0, 0, 1).IsParallel(targetDir, 0.001):
-            rotateDir = gp_Dir(0, 0, 1)
-            rotateDir.Cross(targetDir)
-        else:
-            rotateDir = gp_Dir(0, 1, 0)
-
-        self.trsf.SetRotation(gp_Ax1(gp_Pnt(0, 0, 0), rotateDir), rotateAngle)
-        self.trsf.SetTranslationPart(gp_Vec(gp_Pnt(0, 0, 0), pntFrom))
-
 M_1_1_SCALE = (1, 1)
 M_5_1_SCALE = (5, 1)
 
@@ -142,7 +65,6 @@ DESK_PIN_OFFSET = 30
 DESK_PIN_RADIUS = 10
 DESK_PIN_HEIGHT = 2
 DESK_DEFAULT_DRAW_AREA_SIZE = 400
-
 
 NORMAL_POINT_RADIUS = 5
 NORMAL_LINE_RADIUS = NORMAL_POINT_RADIUS * 0.6
@@ -156,7 +78,7 @@ GENERAL_FACTOR_STYLE = 'GENERAL_FACTOR_STYLE'
 POINT_RADIUS_FACTOR_STYLE = 'POINT_RADIUS_FACTOR_STYLE'
 POINT_MATERIAL_STYLE = 'POINT_MATERIAL_STYLE'
 POINT_COLOR_STYLE = 'POINT_COLOR_STYLE'
-POINT_TRANSPARENCY_STYLE = 'POINT_TRANSP_STYLE'
+POINT_TRANSPARENCY_STYLE = 'POINT_TRANSPARENCY_STYLE'
 
 LINE_RADIUS_FACTOR_STYLE = 'LINE_RADIUS_FACTOR_STYLE'
 LINE_MATERIAL_STYLE = 'LINE_MATERIAL_STYLE'
@@ -186,41 +108,129 @@ DEFAULT_STYLE_RULES = [
 
     ('', GENERAL_FACTOR_STYLE, 1),
 
-    ('', POINT_RADIUS_FACTOR_STYLE,  1),
-    ('', POINT_MATERIAL_STYLE,  CHROME_MATERIAL),
-    ('', POINT_COLOR_STYLE,  NICE_YELLOW_COLOR),
-    ('', POINT_TRANSPARENCY_STYLE,  0),
+    ('', POINT_RADIUS_FACTOR_STYLE, 1),
+    ('', POINT_MATERIAL_STYLE, CHROME_MATERIAL),
+    ('', POINT_COLOR_STYLE, NICE_YELLOW_COLOR),
+    ('', POINT_TRANSPARENCY_STYLE, 0),
 
-    ('', LINE_RADIUS_FACTOR_STYLE,  1),
+    ('', LINE_RADIUS_FACTOR_STYLE, 1),
     ('', LINE_MATERIAL_STYLE, CHROME_MATERIAL),
-    ('', LINE_COLOR_STYLE,  NICE_BLUE_COLOR),
-    ('', LINE_TRANSPARENCY_STYLE,  0),
+    ('', LINE_COLOR_STYLE, NICE_BLUE_COLOR),
+    ('', LINE_TRANSPARENCY_STYLE, 0),
 
     ('', ARROW_RADIUS_FACTOR_STYLE, 1),
     ('', ARROW_LENGTH_FACTOR_STYLE, 1),
 
-    ('', SURFACE_WIDTH_FACTOR_STYLE,  1),
-    ('', SURFACE_MATERIAL_STYLE,  CHROME_MATERIAL),
-    ('', SURFACE_COLOR_STYLE,  NICE_ORIGINAL_COLOR),
-    ('', SURFACE_TRANSPARENCY_STYLE,  0),
+    ('', SURFACE_WIDTH_FACTOR_STYLE, 1),
+    ('', SURFACE_MATERIAL_STYLE, CHROME_MATERIAL),
+    ('', SURFACE_COLOR_STYLE, NICE_ORIGINAL_COLOR),
+    ('', SURFACE_TRANSPARENCY_STYLE, 0),
 
-    ('', LABEL_DELTA_FACTOR_STYLE,  1),
-    ('', LABEL_HEIGHT_FACTOR_STYLE,  1),
-    ('', LABEL_MATERIAL_STYLE,  PLASTIC_MATERIAL),
-    ('', LABEL_COLOR_STYLE,  NICE_WHITE_COLOR),
+    ('', LABEL_DELTA_FACTOR_STYLE, 1),
+    ('', LABEL_HEIGHT_FACTOR_STYLE, 1),
+    ('', LABEL_MATERIAL_STYLE, PLASTIC_MATERIAL),
+    ('', LABEL_COLOR_STYLE, NICE_WHITE_COLOR),
     ('', LABEL_TRANSPARENCY_STYLE, 0)
 
 ]
 
 
-def isSubTokenOk(maskSub, nameSub):
+def _checkObj(aObj, aClass):
+    if not isinstance(aObj, aClass):
+        raise Exception('EXPECTED ' + aClass.__name__ + '  - REAL ' + aObj.__class__.__name__)
+
+
+def _getValue(aValue, aDefaultValue):
+    if aValue is not None:
+        return aValue
+
+    return aDefaultValue
+
+
+def _getVectorTangentToCurveAtPoint(edge, uRatio):
+    aCurve, aFP, aLP = BRep_Tool.Curve(edge)
+    aP = aFP + (aLP - aFP) * uRatio
+    v1 = gp_Vec()
+    p1 = gp_Pnt()
+    aCurve.D1(aP, p1, v1)
+
+    return v1
+
+
+def _getWireStartPointAndTangentDir(wire):
+    ex = BRepTools_WireExplorer(wire)
+    edge = ex.Current()
+    vertex = ex.CurrentVertex()
+    v = _getVectorTangentToCurveAtPoint(edge, 0)
+
+    return BRep_Tool.Pnt(vertex), gp_Dir(v)
+
+
+class Position:
+
+    def __init__(self):
+        self.trsf = gp_Trsf()
+
+    def next(self, nextChange):
+        self.trsf *= nextChange.trsf
+        return self
+
+    def _dump(self):
+        for iRow in range(1, 4):
+            prn = ''
+            for iCol in range(1, 5):
+                prn += '  ' + str(self.trsf.Value(iRow, iCol))
+            print(prn)
+
+
+class Translate(Position):
+
+    def __init__(self, dx, dy, dz):
+        super().__init__()
+        self.trsf.SetTranslation(gp_Vec(dx, dy, dz))
+
+
+class TranslateToPnt(Translate):
+
+    def __init__(self, pnt):
+        super().__init__(pnt.X, pnt.Y, pnt.Z)
+
+
+class Rotate(Position):
+
+    def __init__(self, pntAxFrom, pntAxTo, angle):
+        super().__init__()
+        ax1 = gp_Ax1(pntAxFrom, gp_Dir(gp_Vec(pntAxFrom, pntAxTo)))
+        self.trsf.SetRotation(ax1, angle)
+
+
+class Direct(Position):
+
+    def __init__(self, pntFrom, pntTo):
+        super().__init__()
+
+        dirVec = gp_Vec(pntFrom, pntTo)
+        targetDir = gp_Dir(dirVec)
+
+        rotateAngle = gp_Dir(0, 0, 1).Angle(targetDir)
+        if not gp_Dir(0, 0, 1).IsParallel(targetDir, 0.001):
+            rotateDir = gp_Dir(0, 0, 1)
+            rotateDir.Cross(targetDir)
+        else:
+            rotateDir = gp_Dir(0, 1, 0)
+
+        self.trsf.SetRotation(gp_Ax1(gp_Pnt(0, 0, 0), rotateDir), rotateAngle)
+        self.trsf.SetTranslationPart(gp_Vec(gp_Pnt(0, 0, 0), pntFrom))
+
+
+def _isSubTokenOk(maskSub, nameSub):
     if maskSub == '*':
         return True
+
     return maskSub == nameSub
 
 
-def isTokenOk(tokenMask, tokenName):
-
+def _isTokenOk(tokenMask, tokenName):
     if tokenMask == '*':
         return True
 
@@ -230,13 +240,14 @@ def isTokenOk(tokenMask, tokenName):
         return False
 
     i = 0
-    while i<len(maskSubTokens):
-        if not isSubTokenOk(maskSubTokens[i],nameSubTokens[i]):
+    while i < len(maskSubTokens):
+        if not _isSubTokenOk(maskSubTokens[i], nameSubTokens[i]):
             return False
+
     return True
 
-def isMaskOk(mask, fullName):
 
+def _isMaskOk(mask, fullName):
     if mask == '':
         return True
 
@@ -245,56 +256,65 @@ def isMaskOk(mask, fullName):
 
     iMask = 0
     iName = 0
-    while iName<len(nameTokens) and iMask<len(maskTokens):
-        if isTokenOk(maskTokens[iMask],nameTokens[iName]):
-            iMask+=1
-            iName+=1
+    while iName < len(nameTokens) and iMask < len(maskTokens):
+        if _isTokenOk(maskTokens[iMask], nameTokens[iName]):
+            iMask += 1
+            iName += 1
         else:
-            iName+=1
+            iName += 1
 
     return iMask == len(maskTokens)
+
 
 class StyleRules:
 
     def __init__(self):
-        self.rules = list
+
+        self.rules = list()
 
     def addRule(self, objNameMask, styleName, value):
-        self.rules.append((objNameMask, styleName, value))
+
+        rule = objNameMask, styleName, value
+        self.rules.append(rule)
 
     def extendRules(self, rules):
+
         self.rules.extend(rules)
 
     def getStyle(self, styleName, fullObjName):
-        for ruleMask, ruleStyleName, ruleStyleValue in self.rules.reverse():
-            if ruleStyleName == styleName and isMaskOk(ruleMask, fullObjName):
-                return ruleStyleValue
-        return None
 
-class DeskComplex(RenderComplex):
+        for ruleMask, ruleStyleName, ruleStyleValue in reversed(self.rules):
+            if ruleStyleName == styleName and _isMaskOk(ruleMask, fullObjName):
+                return ruleStyleValue
+
+        return None
 
 
 class Prim:
+
     def getShape(self): pass
 
 
 class BoxPrim(Prim):
+
     def __init__(self, x, y, z):
         self.x, self.y, self.z = x, y, z
 
     def getShape(self):
-        return BRepPrimAPI_MakeBox(xSize, ySize, zSize).Shape()
+        return BRepPrimAPI_MakeBox(self.x, self.y, self.z).Shape()
 
 
 class SpherePrim(Prim):
+
     def __init__(self, r):
         self.r = r
 
     def getShape(self):
-        return BRepPrimAPI_MakeSphere(gp_Pnt(0,0,0), radius).Shape()
+        return BRepPrimAPI_MakeSphere(gp_Pnt(0, 0, 0), self.r).Shape()
 
 
 class ConePrim(Prim):
+
     def __init__(self, r1, r2, h):
         self.r1, self.r2, self.h = r1, r2, h
 
@@ -303,14 +323,16 @@ class ConePrim(Prim):
 
 
 class CylinderPrim(Prim):
+
     def __init__(self, r, h):
         self.r, self.h = r, h
 
     def getShape(self):
-        return BRepPrimAPI_MakeCylinder(r, h).Shape()
+        return BRepPrimAPI_MakeCylinder(self.r, self.h).Shape()
 
 
 class TorusPrim(Prim):
+
     def __init__(self, r1, r2):
         self.r1, self.r2 = r1, r2
 
@@ -319,11 +341,19 @@ class TorusPrim(Prim):
 
 
 class RenderLib:
-    def __init__(self):
 
-        # render stateful
+    def __init__(self):
+        self.styleRules = StyleRules()
+
         self.renderPosition = Position()
         self.renderName = ''
+
+    def initAdditionRules(self, rulesList):
+        self.styleRules.extendRules(rulesList)
+
+    def getStyle(self, styleName):
+        styleValue = self.styleRules.getStyle(styleName, self.renderName)
+        return styleValue
 
     def renderSetPosition(self, renderPosition):
         self.renderName = renderPosition
@@ -332,47 +362,39 @@ class RenderLib:
         self.renderName = renderName
 
     def renderStart(self): pass
-    def renderFinish(self):pass
 
-    def renderDesk(self): pass
-    def renderShape(self, shape): pass
+    def renderFinish(self): pass
+
     def renderSolid(self, prim): pass
+
+    def renderSurface(self, shape): pass
+
     def renderWire(self, wire): pass
+
     def renderPoint(self, pnt): pass
+
     def renderLine(self, pnt1, pnt2): pass
+
     def renderArrow(self, pnt1, pnt2): pass
+
     def renderCircle(self, pnt1, pnt2, pnt3): pass
+
     def renderLabel(self, pnt, text): pass
 
+    def renderDesk(self): pass
 
-class StyledRenderLib(RenderLib):
+
+class BaseRenderLib(RenderLib):
+
     def __init__(self, scaleAB=M_1_1_SCALE):
         super().__init__()
 
-        # style rules
-        self.styleRules = StyleRules()
-
-        # scale setting
         scaleA, scaleB = scaleAB
         self.scale = scaleB / scaleA
+        self.scaleText = 'A0 M' + str(scaleA) + ':' + str(scaleB)
 
-        # decoration setting
-        self.decorFormatLabelText = 'A0 M' + str(scaleA) + ':' + str(scaleB)
-        limit =  (DESK_DEFAULT_DRAW_AREA_SIZE / 2) * self.styleScale
-        self.decorLimitMinX = -limit
-        self.decorLimitMaxX = limit
-        self.decorLimitMinY = -limit
-        self.decorLimitMaxY = limit
-        self.decorLimitMinZ = -limit
-        self.decorLimitMaxZ = limit
-        self.decorDeskDX = 0
-        self.decorDeskDY = 0
-        self.decorDeskDZ = -limit * 1.2
-        self.decorIsDesk = True
-        self.decorIsAxis = True
-        self.decorIsLimits = True
+        self.basePosition = None
 
-        # style stateful
         self.styleMaterial = None
         self.styleColor = None
         self.styleTransparency = None
@@ -384,103 +406,173 @@ class StyledRenderLib(RenderLib):
         self.styleLabelDelta = None
         self.styleLabelHeightPx = None
 
-    def initDeskPosition(self, deskDX, deskDY, deskDZ):
-        self.decorDeskDX = deskDX
-        self.decorDeskDY = deskDY
-        self.decorDeskDZ = deskDZ
+    def locatePosition(self, subPosition=Position()):
+        self.basePosition = Position().next(subPosition).next(self.renderPosition)
 
-    def initDrawLimits(self, limitMinX, limitMaxX, limitMinY, limitMaxY, limitMinZ, limitMaxZ):
-        self.decorLimitMinX = limitMinX
-        self.decorLimitMaxX = limitMaxX
-        self.decorLimitMinY = limitMinY
-        self.decorLimitMaxY = limitMaxY
-        self.decorLimitMinZ = limitMinZ
-        self.decorLimitMaxZ = limitMaxZ
+    def brashForPoint(self):
+        self.styleMaterial = self.getStyle(LINE_MATERIAL_STYLE)
+        self.styleColor = self.getStyle(LINE_COLOR_STYLE)
+        self.styleTransparency = self.getStyle(LINE_TRANSPARENCY_STYLE)
 
-    def initDecor(self, isDesk, isAxis, isLimits):
-        self.styleIsDesk = isDesk
-        self.styleIsAxis = isAxis
-        self.styleIsLimits = isLimits
+    def brashForLine(self):
+        self.styleMaterial = self.getStyle(LINE_MATERIAL_STYLE)
+        self.styleColor = self.getStyle(LINE_COLOR_STYLE)
+        self.styleTransparency = self.getStyle(LINE_TRANSPARENCY_STYLE)
 
-    def initAdditionRules(self, rulesList):
-        self.styleRules.extendRules(rulesList)
+    def brashForSolid(self):
+        self.styleMaterial = self.getStyle(SOLID_MATERIAL_STYLE)
+        self.styleColor = self.getStyle(SOLID_COLOR_STYLE)
+        self.styleTransparency = self.getStyle(SOLID_TRANSPARENCY_STYLE)
 
-    def styleGet(self, styleName):
-        styleValue = self.styleRules.getStyle(styleName, self.renderName)
-        self.log('getStyle: %s = %s' % (styleName, styleValue))
-        return styleValue
+    def brashForSurface(self):
+        self.styleMaterial = self.getStyle(SURFACE_MATERIAL_STYLE)
+        self.styleColor = self.getStyle(SURFACE_COLOR_STYLE)
+        self.styleTransparency = self.getStyle(SURFACE_TRANSPARENCY_STYLE)
 
-    def styleBrashForPoint(self):
-        self.styleMaterial = self.styleGet(LINE_MATERIAL_STYLE)
-        self.styleColor = self.styleGet(LINE_COLOR_STYLE)
-        self.styleTransparent = self.styleGet(LINE_TRANSPARENCY_STYLE)
+    def brashForLabel(self):
+        self.styleMaterial = self.getStyle(LABEL_MATERIAL_STYLE)
+        self.styleColor = self.getStyle(LABEL_COLOR_STYLE)
+        self.styleTransparency = self.getStyle(LABEL_TRANSPARENCY_STYLE)
 
-    def styleBrashForLine(self):
-        self.styleMaterial = self.styleGet(LINE_MATERIAL_STYLE)
-        self.styleColor = self.styleGet(LINE_COLOR_STYLE)
-        self.styleTransparent = self.styleGet(LINE_TRANSPARENCY_STYLE)
+    def brashForDeskPin(self):
+        self.styleMaterial = STEEL_MATERIAL
+        self.styleColor = NICE_GRAY_COLOR
+        self.styleTransparency = 0
 
-    def styleBrashForSolid(self):
-        self.styleMaterial = self.styleGet(SOLID_MATERIAL_STYLE)
-        self.styleColor = self.styleGet(SOLID_COLOR_STYLE)
-        self.styleTransparent = self.styleGet(SOLID_TRANSPARENCY_STYLE)
+    def brashForDeskPaper(self):
+        self.styleMaterial = PLASTIC_MATERIAL
+        self.styleColor = PAPER_COLOR
+        self.styleTransparency = 0
 
-    def styleBrashForSurface(self):
-        self.styleMaterial = self.styleGet(SURFACE_MATERIAL_STYLE)
-        self.styleColor = self.styleGet(SURFACE_COLOR_STYLE)
-        self.styleTransparent = self.styleGet(SURFACE_TRANSPARENCY_STYLE)
+    def brashForDeskBoard(self):
+        self.styleMaterial = PLASTIC_MATERIAL
+        self.styleColor = WOOD_COLOR
+        self.styleTransparency = 0
 
-    def styleBrashForLabel(self):
-        self.styleMaterial = self.styleGet(LABEL_MATERIAL_STYLE)
-        self.styleColor = self.styleGet(LABEL_COLOR_STYLE)
-        self.styleTransparency = self.styleGet(LABEL_TRANSPARENCY_STYLE)
+    def brashForDeskLabel(self):
+        self.styleMaterial = PLASTIC_MATERIAL
+        self.styleColor = NICE_ORIGINAL_COLOR
+        self.styleTransparency = 0
 
-    def styleSizeForPoint(self):
+    def sizeForPoint(self):
         self.stylePointRadius = NORMAL_POINT_RADIUS \
-                                * self.styleGet(GENERAL_FACTOR_STYLE) \
-                                * self.styleGet(POINT_RADIUS_FACTOR_STYLE) \
-                                * self.styleScale
+                                * self.getStyle(GENERAL_FACTOR_STYLE) \
+                                * self.getStyle(POINT_RADIUS_FACTOR_STYLE) \
+                                * self.scale
 
-    def styleSizeForLine(self):
+    def sizeForLine(self):
         self.stylePointRadius = NORMAL_LINE_RADIUS \
-                                * self.styleGet(GENERAL_FACTOR_STYLE) \
-                                * self.styleGet(LINE_RADIUS_FACTOR_STYLE) \
-                                * self.styleScale
+                                * self.getStyle(GENERAL_FACTOR_STYLE) \
+                                * self.getStyle(LINE_RADIUS_FACTOR_STYLE) \
+                                * self.scale
 
-    def styleSizeForSurface(self):
+    def sizeForSurface(self):
         self.stylePointRadius = NORMAL_SURFACE_HALF_WIDTH \
-                                * self.styleGet(GENERAL_FACTOR_STYLE) \
-                                * self.styleGet(SURFACE_WIDTH_FACTOR_STYLE)\
-                                * self.styleScale
+                                * self.getStyle(GENERAL_FACTOR_STYLE) \
+                                * self.getStyle(SURFACE_WIDTH_FACTOR_STYLE) \
+                                * self.scale
 
-    def styleSizeForLabel(self):
+    def sizeForLabel(self):
         self.styleLabelHeightPx = NORMAL_LABEL_HEIGHT_PX \
-                                * self.styleGet(GENERAL_FACTOR_STYLE) \
-                                * self.styleGet(SURFACE_WIDTH_FACTOR_STYLE)\
-                                * 1  # not scaled
+                                  * self.getStyle(GENERAL_FACTOR_STYLE) \
+                                  * self.getStyle(SURFACE_WIDTH_FACTOR_STYLE) \
+                                  * 1  # not scaled
 
-    def styleSizeForArrow(self):
+    def sizeForArrow(self):
         self.styleArrowRadius = NORMAL_ARROW_RADIUS \
-                                * self.styleGet(GENERAL_FACTOR_STYLE) \
-                                * self.styleGet(ARROW_RADIUS_FACTOR_STYLE)\
-                                * self.styleScale
+                                * self.getStyle(GENERAL_FACTOR_STYLE) \
+                                * self.getStyle(ARROW_RADIUS_FACTOR_STYLE) \
+                                * self.scale
 
         self.styleArrowLength = NORMAL_ARROW_LENGTH \
-                                * self.styleGet(GENERAL_FACTOR_STYLE) \
-                                * self.styleGet(ARROW_LENGTH_FACTOR_STYLE)\
-                                * self.styleScale
+                                * self.getStyle(GENERAL_FACTOR_STYLE) \
+                                * self.getStyle(ARROW_LENGTH_FACTOR_STYLE) \
+                                * self.scale
 
-    def decorPin(self, pinName ,x, y):
-        scale = self.renderLib.scale
-        pinMove = Translate(x/self.scale, y/self.scale, 0)
-        self.setRenderName(pinName)
-        self.setRenderPosition(pinMove)
-        self.renderLib.renderCylinder(self.pinR / self.scale, self.pinH / self.scale)
+    def basePrim(self, prim): pass
 
-    def decorDesk(self):
+    def baseShape(self, shape): pass
 
+    def baseWire(self, wire): pass
+
+    def baseLabel(self, text): pass
+
+    def renderSolid(self, prim):
+        self.brashForSolid()
+        self.locatePosition()
+        self.basePrim(prim)
+
+    def renderSurface(self, shape):
+        self.brashForSurface()
+        self.locatePosition()
+        self.baseShape(shape)
+
+    def renderWire(self, wire):
+        self.brashForLine()
+        self.sizeForLine()
+        self.locatePosition()
+        self.baseWire(wire)
+
+    def renderPoint(self, pnt):
+        self.brashForPoint()
+        self.sizeForPoint()
+        self.locatePosition(TranslateToPnt(pnt))
+        self.basePrim(SpherePrim(self.stylePointRadius))
+
+    def _renderLine(self, pnt1, pnt2):
+        length = gp_Vec(pnt1, pnt2).Magnitude()
+        self.locatePosition(Direct(pnt1, pnt2))
+        self.basePrim(CylinderPrim(self.styleLineRadius, length))
+
+    def renderLine(self, pnt1, pnt2):
+        self.brashForLine()
+        self.sizeForLine()
+        self._renderLine(pnt1, pnt2)
+
+    def renderArrow(self, pnt1, pnt2):
+        self.brashForLine()
+        self.sizeForLine()
+        self.sizeForArrow()
+
+        rArrow = self.styleArrowRadius
+        lArrow = self.styleArrowLength
+        v = gp_Vec(pnt1, pnt2)
+        vLen = v.Magnitude()
+        v *= (vLen - lArrow) / vLen
+        pntM = pnt1.Translated(v)
+
+        self._renderLine(pnt1, pntM)
+
+        self.locatePosition(Direct(pntM, pnt2))
+        self.basePrim(ConePrim(rArrow, 0, lArrow))
+
+    def renderCircle(self, pnt1, pnt2, pnt3):
+        self.brashForLine()
+        self.sizeForLine()
+
+        geomCircle = GC_MakeCircle(pnt1, pnt2, pnt3).Value()
+        wire = BRepBuilderAPI_MakeEdge(geomCircle).Edge()
+
+        self.locatePosition()
+        self.baseWire(wire)
+
+    def renderLabel(self, pnt, text):
+        self.brashForLabel()
+        self.sizeForLabel()
+
+        delta = self.styleLabelDelta
+        totalPos = Position().next(Translate(delta, delta, delta)).next(TranslateToPnt(pnt))
+
+        self.locatePosition(totalPos)
+        self.baseLabel(text)
+
+    def _renderDeskPin(self, x, y):
+        self.locatePosition(Translate(x / self.scale, y / self.scale, 0))
+        self.basePrim(CylinderPrim(DESK_PIN_RADIUS / self.scale, DESK_PIN_HEIGHT / self.scale))
+
+    def renderDesk(self):
         scale = self.scale
-        labelText = self.decorFormatLabelText
+        labelText = self.scaleText
 
         paperSizeX, paperSizeY, paperSizeZ = DESK_PAPER_SIZE
         psx, psy, psz = paperSizeX / scale, paperSizeY / scale, paperSizeZ / scale
@@ -488,177 +580,32 @@ class StyledRenderLib(RenderLib):
         bsy = (paperSizeY + DESK_BORDER_SIZE * 2) / scale
         bsz = DESK_HEIGHT / scale
 
-        self.basePosition(Translate(-psx / 2, -psy / 2, -psz))
-        self.renderLib.renderBox(psx, psy, psz)
+        self.brashForDeskPaper()
+        self.locatePosition(Translate(-psx / 2, -psy / 2, -psz))
+        self.basePrim(BoxPrim(psx, psy, psz))
 
-        self.setRenderName('Board')
-        self.setRenderPosition(Translate((-bsx / 2, -bsy / 2, -psz - bsz)))
-        self.renderLib.renderBox(bsx, bsy, bsz)
+        self.brashForDeskBoard()
+        self.locatePosition(Translate(-bsx / 2, -bsy / 2, -psz - bsz))
+        self.basePrim(BoxPrim(bsx, bsy, bsz))
 
-        self.setRenderName('Label')
-        self.setRenderPosition(Position())
-        self.renderLib.renderLabel(gp_Pnt(-bsx / 2, -bsy / 2, -psz), labelText)
+        self.brashForDeskLabel()
+        self.locatePosition(Translate(-bsx / 2, -bsy / 2, -psz))
+        self.baseLabel(labelText)
 
-        dx = (paperSizeX / 2 - self.aPinOffset) / self.aScale
-        dy = (paperSizeY / 2 - self.aPinOffset) / self.aScale
+        dx = (paperSizeX / 2 - DESK_PIN_OFFSET) / scale
+        dy = (paperSizeY / 2 - DESK_PIN_OFFSET) / scale
 
-        self.drawPin('Pin-1',-dx, -dy)
-        self.drawPin('Pin-2',dx, -dy)
-        self.drawPin('Pin-3',dx, dy)
-        self.drawPin('Pin-4',-dx, dy)
-
-    def styleShape(self, shape): pass
-    def stylePrim(self, prim): pass
-    def styleWire(self, wire): pass
-    def stylePoint(self, pnt): pass
-    def styleLine(self, pnt1, pnt2): pass
-    def styleArrow(self, pnt1, pnt2): pass
-    def styleCircle(self, pnt1, pnt2, pnt3): pass
-    def styleLabel(self, pnt, text): pass
-
-    def renderSolid(self, prim):
-        self.styleBrashForSolid()
-        self.stylePrim(prim)
-
-    def renderSphere(self, r):
-        self.styleBrashForSolid()
-        self.styleSphere(r)
-
-    def renderCone(self, r1, r2, h):
-        self.styleBrashForSolid()
-        self.styleCone(r1, r2, h)
-
-    def renderCylinder(self, r, h):
-        self.styleBrashForSolid()
-        self.styleCylinder(r, h)
-
-    def renderTorus(self, r1, r2):
-        self.styleBrashForSolid()
-        self.styleTorus(r1, r2)
-
-    def renderPoint(self, pnt):
-        self.styleBrashForPoint()
-        self.styleSizeForPoint()
-        self.stylePoint(pnt)
-
-    def renderLine(self, pnt1, pnt2):
-        self.styleBrashForLine()
-        self.styleSizeForLine()
-        self.styleLine(pnt1, pnt2)
-
-    def renderArrow(self, pnt1, pnt2):
-        self.styleBrashForLine()
-        self.styleSizeForLine()
-        self.styleSizeForArrow()
-        self.styleArrow(pnt1, pnt2)
-
-    def renderCircle(self, pnt1, pnt2, pnt3):
-        self.styleBrashForLine()
-        self.styleSizeForLine()
-        self.styleCircle(pnt1, pnt2, pnt3)
-
-    def renderLabel(self, pnt, text):
-        self.styleBrashForLabel()
-        self.styleSizeForLabel()
-        self.styleCircle(pnt, text)
-
-
-class BaseRenderLib(StyledRenderLib):
-    def __init__(self, scaleAB=M_1_1_SCALE):
-        super().__init__(scaleAB)
-        self.basePosition = None
-
-    def baseSetPosition(self, subPosition=Position()):
-        self.basePosition = Position().next(subPosition).next(self.renderPosition)
-
-    def baseStart(self): pass
-    def baseFinish(self): pass
-    def baseShape(self, shape): pass
-    def baseWire(self, wire): pass
-    def basePrim(self, prim): pass
-    def baseLabel(self, pnt, text): pass
-
-    def styleStart(self):
-        self.baseStart()
-
-    def styleFinish(self):
-        self.baseFinish()
-
-    def styleDesk(self): pass
-
-    def styleAxis(self): pass
-    def styleLimit(self): pass
-
-    def styleSolid(self, shape):
-        self.baseSetStyleBrash()
-        self.baseSetPosition()
-        self.baseShape(shape)
-
-    def styleSurface(self, shape):
-        self.baseSetStyleBrash()
-        self.baseSetPosition()
-        self.baseShape(shape)
-
-    def styleWire(self, wire):
-        self.baseSetStyleBrash()
-        self.baseSetPosition()
-        self.baseWire(wire)
-
-    def stylePrim(self, prim):
-        self.baseSetStyleBrash()
-        self.baseSetPosition()
-        self.basePrim(prim)
-
-    def stylePoint(self, pnt):
-        self.baseSetStyleBrash()
-        self.baseSetPosition(TranslateToPnt(pnt))
-        self.basePrim(SpherePrim(self.stylePointRadius))
-
-    def _styleLine(self, pnt1, pnt2):
-        length = gp_Vec(pnt1, pnt2).Magnitude()
-        self.basePrim(CylinderPrim(self.styleLineRadius, length))
-
-    def styleLine(self, pnt1, pnt2):
-        self.baseSetStyleBrash()
-        self.baseSetPosition(Direct(pnt1, pnt2))
-        self._styleLine(pnt1, pnt2)
-
-    def styleArrow(self, pnt1, pnt2):
-
-        self.baseSetStyleBrash()
-
-        rArrow = self.styleArrowRadius
-        hArrow = self.styleArrowHeigth
-        v = gp_Vec(pnt1, pnt2)
-        vLen = v.Magnitude()
-        v *= (vLen - hArrow) / vLen
-        pntM = pnt1.Translated(v)
-
-        self.baseSetPosition()
-        self._styleLine(pnt1, pntM)
-
-        self.self.baseSetPosition(Direct(pntM, pnt2))
-        self.basePrim(ConePrim(rArrow, 0, hArrow))
-
-    def styleCircle(self, pnt1, pnt2, pnt3):
-
-        self.baseSetStyleBrash()
-        self.baseSetPosition()
-
-        geomCircle = GC_MakeCircle(pnt1, pnt2, pnt3).Value()
-        wire = BRepBuilderAPI_MakeEdge(geomCircle).Edge()
-        self.baseWire(wire)
-
-    def styleLabel(self, pnt, text):
-        delta = self.styleLabelDelta
-        self.baseSetPosition(Position().next(Translate(delta, delta, delta)).next(TranslateToPnt(pnt)))
-        aHeightPx = self.styleLabelHeightPx
-        self.baseLabel(text, aHeightPx)
+        self.brashForDeskPin()
+        self._renderDeskPin(-dx, -dy)
+        self._renderDeskPin(dx, -dy)
+        self._renderDeskPin(dx, dy)
+        self._renderDeskPin(-dx, dy)
 
 
 class FineRenderLib(BaseRenderLib):
 
-    def fineShape(self, shape):pass
+    def fineShape(self, shape): pass
+
     def fineLabel(self, text): pass
 
     def baseShape(self, shape):
@@ -666,29 +613,36 @@ class FineRenderLib(BaseRenderLib):
 
     def baseWire(self, wire):
         aWireRadius = self.styleLineRadius
+
         startPoint, tangentDir = _getWireStartPointAndTangentDir(wire)
         profileCircle = GC_MakeCircle(startPoint, tangentDir, aWireRadius).Value()
         profileEdge = BRepBuilderAPI_MakeEdge(profileCircle).Edge()
         profileWire = BRepBuilderAPI_MakeWire(profileEdge).Wire()
         shape = BRepOffsetAPI_MakePipe(wire, profileWire).Shape()
+
         self.fineShape(shape)
 
     def basePrim(self, prim):
         self.fineShape(prim.getShape())
 
+    def baseLabel(self, text):
+        self.fineLabel(text)
 
 
 class DisplayRenderLib(FineRenderLib):
+
     def __init__(self, scaleAB=M_1_1_SCALE, screenX=800, screenY=600):
         super().__init__(scaleAB)
+
         self.displayX = screenX
         self.displayY = screenY
+
         self.display = None
         self.display_start = None
 
     def deviceStart(self):
-       self.screen, self.display_start, add_menu, add_function_to_menu = init_display(
-                None, (self.screenX, self.screenY), True, [128, 128, 128], [128, 128, 128])
+        self.display, self.display_start, add_menu, add_function_to_menu = init_display(
+            None, (self.displayX, self.displayY), True, [128, 128, 128], [128, 128, 128])
 
     def deviceFinish(self):
         self.display.FitAll()
@@ -699,16 +653,16 @@ class DisplayRenderLib(FineRenderLib):
         ais = AIS_Shape(shapeTr)
         r, g, b = self.styleColor
         qColor = Quantity_Color(r, g, b,
-                    Quantity_TypeOfColor(Quantity_TypeOfColor.Quantity_TOC_RGB))
+                                Quantity_TypeOfColor(Quantity_TypeOfColor.Quantity_TOC_RGB))
         ais.SetColor(qColor)
         ais.SetTransparency(self.styleTransparency)
         aspect = Graphic3d_MaterialAspect(self.styleMaterial)
         ais.SetMaterial(aspect)
+
         self.display.Context.Display(ais, False)
 
     def fineLabel(self, text):
         pnt = gp_Pnt(0, 0, 0).Transformed(self.basePosition)
-        self.device.display.DisplayMessage(pnt, text, self.styleLabelHeightPx,
-                                           self.styleColor, False)
 
-
+        self.display.DisplayMessage(pnt, text, self.styleLabelHeightPx,
+                                    self.styleColor, False)

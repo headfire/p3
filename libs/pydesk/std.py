@@ -1,9 +1,39 @@
 import sys
 
+limit = (DESK_DEFAULT_DRAW_AREA_SIZE / 2) * self.scale
+self.decorLimitMinX = -limit
+self.decorLimitMaxX = limit
+self.decorLimitMinY = -limit
+self.decorLimitMaxY = limit
+self.decorLimitMinZ = -limit
+self.decorLimitMaxZ = limit
+self.decorDeskDX = 0
+self.decorDeskDY = 0
+self.decorDeskDZ = -limit * 1.2
+self.decorIsDesk = True
+self.decorIsAxis = True
+self.decorIsLimits = True
 
 
+def initDeskPosition(self, deskDX, deskDY, deskDZ):
+    self.decorDeskDX = deskDX
+    self.decorDeskDY = deskDY
+    self.decorDeskDZ = deskDZ
 
 
+def initDrawLimits(self, limitMinX, limitMaxX, limitMinY, limitMaxY, limitMinZ, limitMaxZ):
+    self.decorLimitMinX = limitMinX
+    self.decorLimitMaxX = limitMaxX
+    self.decorLimitMinY = limitMinY
+    self.decorLimitMaxY = limitMaxY
+    self.decorLimitMinZ = limitMinZ
+    self.decorLimitMaxZ = limitMaxZ
+
+
+def initDecor(self, isDesk, isAxis, isLimits):
+    self.styleIsDesk = isDesk
+    self.styleIsAxis = isAxis
+    self.styleIsLimits = isLimits
 
 
 class EnvParamLib:
