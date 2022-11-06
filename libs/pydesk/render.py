@@ -342,52 +342,7 @@ class TorusPrim(Prim):
 
 class RenderLib:
 
-    def __init__(self):
-        self.styleRules = StyleRules()
-
-        self.renderPosition = Position()
-        self.renderName = ''
-
-    def initAdditionRules(self, rulesList):
-        self.styleRules.extendRules(rulesList)
-
-    def getStyle(self, styleName):
-        styleValue = self.styleRules.getStyle(styleName, self.renderName)
-        return styleValue
-
-    def renderSetPosition(self, renderPosition):
-        self.renderName = renderPosition
-
-    def renderSetName(self, renderName):
-        self.renderName = renderName
-
-    def renderStart(self): pass
-
-    def renderFinish(self): pass
-
-    def renderSolid(self, prim): pass
-
-    def renderSurface(self, shape): pass
-
-    def renderWire(self, wire): pass
-
-    def renderPoint(self, pnt): pass
-
-    def renderLine(self, pnt1, pnt2): pass
-
-    def renderArrow(self, pnt1, pnt2): pass
-
-    def renderCircle(self, pnt1, pnt2, pnt3): pass
-
-    def renderLabel(self, pnt, text): pass
-
-    def renderDesk(self): pass
-
-
-class BaseRenderLib(RenderLib):
-
-    def __init__(self, scaleAB=M_1_1_SCALE):
-        super().__init__()
+    def __init__(self, scaleAB):
 
         scaleA, scaleB = scaleAB
         self.scale = scaleB / scaleA
@@ -395,6 +350,7 @@ class BaseRenderLib(RenderLib):
 
         self.basePosition = None
 
+        self.styleRules = StyleRules()
         self.styleMaterial = None
         self.styleColor = None
         self.styleTransparency = None
@@ -405,6 +361,16 @@ class BaseRenderLib(RenderLib):
         self.styleArrowRadius = None
         self.styleLabelDelta = None
         self.styleLabelHeightPx = None
+
+        self.renderPosition = Position()
+        self.renderName = ''
+
+    def initAdditionRules(self, rulesList):
+        self.styleRules.extendRules(rulesList)
+
+    def getStyle(self, styleName):
+        styleValue = self.styleRules.getStyle(styleName, self.renderName)
+        return styleValue
 
     def locatePosition(self, subPosition=Position()):
         self.basePosition = Position().next(subPosition).next(self.renderPosition)
@@ -489,53 +455,102 @@ class BaseRenderLib(RenderLib):
                                 * self.getStyle(ARROW_LENGTH_FACTOR_STYLE) \
                                 * self.scale
 
-    def basePrim(self, prim): pass
+    def outStart(self): pass
 
-    def baseShape(self, shape): pass
+    def outFinish(self): pass
 
-    def baseWire(self, wire): pass
+    def outShape(self, shape): pass
 
-    def baseLabel(self, text): pass
+    def outLabel(self, text): pass
+
+    def baseShape(self, shape):
+
+        self.outShape(shape)
+
+    def baseWire(self, wire):
+
+        aWireRadius = self.styleLineRadius
+
+        startPoint, tangentDir = _getWireStartPointAndTangentDir(wire)
+        profileCircle = GC_MakeCircle(startPoint, tangentDir, aWireRadius).Value()
+        profileEdge = BRepBuilderAPI_MakeEdge(profileCircle).Edge()
+        profileWire = BRepBuilderAPI_MakeWire(profileEdge).Wire()
+        shape = BRepOffsetAPI_MakePipe(wire, profileWire).Shape()
+
+        self.outShape(shape)
+
+    def basePrim(self, prim):
+
+        self.outShape(prim.getShape())
+
+    def baseLabel(self, text):
+
+        self.outLabel(text)
+
+    def renderStart(self):
+
+        self.outStart()
+
+    def renderFinish(self):
+
+        self.outFinish()
+
+    def renderSetPosition(self, renderPosition):
+
+        self.renderName = renderPosition
+
+    def renderSetName(self, renderName):
+
+        self.renderName = renderName
 
     def renderSolid(self, prim):
+
         self.brashForSolid()
         self.locatePosition()
         self.basePrim(prim)
 
     def renderSurface(self, shape):
+
         self.brashForSurface()
         self.locatePosition()
         self.baseShape(shape)
 
     def renderWire(self, wire):
+
         self.brashForLine()
         self.sizeForLine()
         self.locatePosition()
         self.baseWire(wire)
 
     def renderPoint(self, pnt):
+
         self.brashForPoint()
         self.sizeForPoint()
         self.locatePosition(TranslateToPnt(pnt))
         self.basePrim(SpherePrim(self.stylePointRadius))
 
     def _renderLine(self, pnt1, pnt2):
+
         length = gp_Vec(pnt1, pnt2).Magnitude()
+
         self.locatePosition(Direct(pnt1, pnt2))
         self.basePrim(CylinderPrim(self.styleLineRadius, length))
 
     def renderLine(self, pnt1, pnt2):
+
         self.brashForLine()
         self.sizeForLine()
         self._renderLine(pnt1, pnt2)
 
     def renderArrow(self, pnt1, pnt2):
+
         self.brashForLine()
         self.sizeForLine()
         self.sizeForArrow()
 
         rArrow = self.styleArrowRadius
         lArrow = self.styleArrowLength
+
         v = gp_Vec(pnt1, pnt2)
         vLen = v.Magnitude()
         v *= (vLen - lArrow) / vLen
@@ -547,6 +562,7 @@ class BaseRenderLib(RenderLib):
         self.basePrim(ConePrim(rArrow, 0, lArrow))
 
     def renderCircle(self, pnt1, pnt2, pnt3):
+
         self.brashForLine()
         self.sizeForLine()
 
@@ -557,6 +573,7 @@ class BaseRenderLib(RenderLib):
         self.baseWire(wire)
 
     def renderLabel(self, pnt, text):
+
         self.brashForLabel()
         self.sizeForLabel()
 
@@ -567,10 +584,12 @@ class BaseRenderLib(RenderLib):
         self.baseLabel(text)
 
     def _renderDeskPin(self, x, y):
+
         self.locatePosition(Translate(x / self.scale, y / self.scale, 0))
         self.basePrim(CylinderPrim(DESK_PIN_RADIUS / self.scale, DESK_PIN_HEIGHT / self.scale))
 
     def renderDesk(self):
+
         scale = self.scale
         labelText = self.scaleText
 
@@ -602,34 +621,7 @@ class BaseRenderLib(RenderLib):
         self._renderDeskPin(-dx, dy)
 
 
-class FineRenderLib(BaseRenderLib):
-
-    def fineShape(self, shape): pass
-
-    def fineLabel(self, text): pass
-
-    def baseShape(self, shape):
-        self.fineShape(shape)
-
-    def baseWire(self, wire):
-        aWireRadius = self.styleLineRadius
-
-        startPoint, tangentDir = _getWireStartPointAndTangentDir(wire)
-        profileCircle = GC_MakeCircle(startPoint, tangentDir, aWireRadius).Value()
-        profileEdge = BRepBuilderAPI_MakeEdge(profileCircle).Edge()
-        profileWire = BRepBuilderAPI_MakeWire(profileEdge).Wire()
-        shape = BRepOffsetAPI_MakePipe(wire, profileWire).Shape()
-
-        self.fineShape(shape)
-
-    def basePrim(self, prim):
-        self.fineShape(prim.getShape())
-
-    def baseLabel(self, text):
-        self.fineLabel(text)
-
-
-class DisplayRenderLib(FineRenderLib):
+class DisplayRenderLib(RenderLib):
 
     def __init__(self, scaleAB=M_1_1_SCALE, screenX=800, screenY=600):
         super().__init__(scaleAB)
@@ -648,7 +640,7 @@ class DisplayRenderLib(FineRenderLib):
         self.display.FitAll()
         self.display_start()
 
-    def fineShape(self, shape):
+    def outShape(self, shape):
         shapeTr = BRepBuilderAPI_Transform(shape, self.basePosition.getTrsf()).Shape()
         ais = AIS_Shape(shapeTr)
         r, g, b = self.styleColor
@@ -661,7 +653,7 @@ class DisplayRenderLib(FineRenderLib):
 
         self.display.Context.Display(ais, False)
 
-    def fineLabel(self, text):
+    def outLabel(self, text):
         pnt = gp_Pnt(0, 0, 0).Transformed(self.basePosition)
 
         self.display.DisplayMessage(pnt, text, self.styleLabelHeightPx,
