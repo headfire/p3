@@ -6,6 +6,53 @@ from OCC.Core.Tesselator import ShapeTesselator
 from OCC.Extend.TopologyUtils import is_edge, is_wire, discretize_edge, discretize_wire
 from OCC.Extend.DataExchange import write_stl_file
 
+class WebRenderLib(RenderLib):
+    # render precision setting
+    self.shapePrecision = 1 * self.scale
+    self.wirePrecision = 1 * self.scale
+
+    def startRender(self):
+        self.device = WebDevice(self.hints)
+
+    def renderTextObj(self, aText, aHeightPx):
+        pnt = gp_Pnt(0, 0, 0).Transformed(self.aMove.getTrsf())
+        color = self.aStyle.getNormedColor()
+        self.device.drawLabel(pnt, aText, color)
+
+    def renderShapeObj(self, aShape):
+        shapeTr = BRepBuilderAPI_Transform(aShape, self.aMove.getTrsf()).Shape()
+        color = self.aStyle.getNormedColor()
+        transparency = self.aStyle.getNormedTransparency()
+        self.device.drawShape(shapeTr, color, transparency)
+
+    def finishRender(self):
+        self.device.save()
+
+
+class WebFastRenderLib(WebRenderLib):
+    pass
+
+
+class StlRenderLibParams:
+    def __init__(self, scaleA=1, scaleB=1):
+        self.scaleA = scaleA
+        self.scaleB = scaleB
+        self.scale = scaleB/scaleA
+        self.shapePrecision = 1*self.scale
+        self.wirePrecision = 1*self.scale
+
+
+class StlRenderLib(RenderLib):
+
+    def startRender(self):
+        self.device = StlDevice(self.hints)
+
+    def renderShapeObj(self, aShape):
+        shapeTr = BRepBuilderAPI_Transform(aShape, self.aMove.getTrsf()).Shape()
+        self.device.drawShape(shapeTr)
+
+    def finishRender(self):
+        self.device.save()
 
 class ScreenDevice:
     def __init__(self, hints):
