@@ -290,55 +290,6 @@ class StyleRules:
         return None
 
 
-class Prim:
-
-    def getShape(self): pass
-
-
-class BoxPrim(Prim):
-
-    def __init__(self, x, y, z):
-        self.x, self.y, self.z = x, y, z
-
-    def getShape(self):
-        return BRepPrimAPI_MakeBox(self.x, self.y, self.z).Shape()
-
-
-class SpherePrim(Prim):
-
-    def __init__(self, r):
-        self.r = r
-
-    def getShape(self):
-        return BRepPrimAPI_MakeSphere(gp_Pnt(0, 0, 0), self.r).Shape()
-
-
-class ConePrim(Prim):
-
-    def __init__(self, r1, r2, h):
-        self.r1, self.r2, self.h = r1, r2, h
-
-    def getShape(self):
-        return BRepPrimAPI_MakeCone(self.r1, self.r2, self.h).Shape()
-
-
-class CylinderPrim(Prim):
-
-    def __init__(self, r, h):
-        self.r, self.h = r, h
-
-    def getShape(self):
-        return BRepPrimAPI_MakeCylinder(self.r, self.h).Shape()
-
-
-class TorusPrim(Prim):
-
-    def __init__(self, r1, r2):
-        self.r1, self.r2 = r1, r2
-
-    def getShape(self):
-        return BRepPrimAPI_MakeTorus(self.r1, self.r2).Shape()
-
 
 class RenderLib:
 

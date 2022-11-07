@@ -15,6 +15,51 @@ self.decorIsAxis = True
 self.decorIsLimits = True
 
 
+class Prim:
+
+    def getShape(self): pass
+
+class BoxPrim(Prim):
+
+    def __init__(self, x, y, z):
+        self.x, self.y, self.z = x, y, z
+
+    def getShape(self):
+        return BRepPrimAPI_MakeBox(self.x, self.y, self.z).Shape()
+
+class SpherePrim(Prim):
+
+    def __init__(self, r):
+        self.r = r
+
+    def getShape(self):
+        return BRepPrimAPI_MakeSphere(gp_Pnt(0, 0, 0), self.r).Shape()
+
+class ConePrim(Prim):
+
+    def __init__(self, r1, r2, h):
+        self.r1, self.r2, self.h = r1, r2, h
+
+    def getShape(self):
+        return BRepPrimAPI_MakeCone(self.r1, self.r2, self.h).Shape()
+
+class CylinderPrim(Prim):
+
+    def __init__(self, r, h):
+        self.r, self.h = r, h
+
+    def getShape(self):
+        return BRepPrimAPI_MakeCylinder(self.r, self.h).Shape()
+
+class TorusPrim(Prim):
+
+    def __init__(self, r1, r2):
+        self.r1, self.r2 = r1, r2
+
+    def getShape(self):
+        return BRepPrimAPI_MakeTorus(self.r1, self.r2).Shape()
+
+
 def initDeskPosition(self, deskDX, deskDY, deskDZ):
     self.decorDeskDX = deskDX
     self.decorDeskDY = deskDY
@@ -36,59 +81,16 @@ def initDecor(self, isDesk, isAxis, isLimits):
     self.styleIsLimits = isLimits
 
 
-class EnvParamLib:
-
-    def __init__(self):
-        self.envParams = {}
-        for param in sys.argv:
-            key, sep, val = param.partition('=')
-            self.envParams[key] = val
-
-    def get(self, paramName, defaultValue):
-        if paramName in self.envParams:
-            return self.envParams[paramName]
-        else:
-            return defaultValue
-
-
-
-class GroupDraw(Draw):
+class Draw(Draw):
 
     def __init__(self):
         super().__init__()
         self.items = {}
-        self.aNextItemName = 'Obj'
-        self.aNextItemNum = 0
-        self.aNextItemMove = Move()
-        self.aNextItemStyle = Style()
 
     def _dump(self, prefix=''):
         print(prefix + self.__class__.__name__)
         for key in self.items:
             self.items[key].dump(prefix + '[' + key + ']')
-
-    def makeItemName(self):
-        if self.aNextItemNum is None:
-            itemName = self.aNextItemName
-            self.aNextItemNum = 1
-        else:
-            itemName = self.aNextItemName + '{0:3}'.format(self.aNextItemNum)
-            self.aNextItemNum += 1
-        return itemName
-
-    def nm(self, aNextItemName, aNextItemNum=None):
-        self.aNextItemName = aNextItemName
-        self.aNextItemNum = aNextItemNum
-
-    def mv(self, aMove=None):
-        if aMove is not None:
-            self.aNextItemMove = aMove
-        return self.aNextItemMove
-
-    def st(self, aStyle=None):
-        if aStyle is not None:
-            self.aNextItemStyle = aStyle
-        return self.aNextItemStyle
 
     def add(self, aItem):
         _checkObj(aItem, Draw)
@@ -103,42 +105,29 @@ class GroupDraw(Draw):
             ret = ret.children[token]
         return ret
 
-    def drawTo(self, renderLib, aMove=Move(), aStyle=Style()):
-        for key in self.items:
+    def render(self, renderLib): pass
+
+    def draw(self, renderLib, renderName, position=Position()):
+        renderLib.renderSetName(renderName)
+        renderLib.renderSetPosition(position)
+        self.render(renderLib)
+        for itemName in self.items:
             item, itemMove, itemStyle = self.items[key]
             mergedMove = Move.mergeMove(itemMove, aMove)
-            mergedStyle = Style.mergeStyle(itemStyle, aStyle)
-            item.drawTo(renderLib, mergedMove, mergedStyle)
-
-
-class HookDraw(Draw):
-    def __init__(self, aHookPnt, aHookObj):
-        super().__init__()
-        self.aHookPnt = aHookPnt
-        self.aHookObj = aHookObj
-
-    def drawTo(self, renderLib, aMove=Move(), aStyle=Style()):
-        pass
-
-
-class LabelDraw(Draw):
-    def __init__(self, aText):
-        super().__init__()
-        self.aText = aText
-
-    def drawTo(self, renderLib, aMove=Move(), aStyle=Style()):
-        renderLib.setMoveAndStyle(aMove, aStyle)
-        renderLib.renderLabel(self.aText)
+            item.draw(renderLib, renderName + '.' + itemName, mergedMove)
 
 
 class PointDraw(Draw):
-    def __init__(self, aPnt):
-        super().__init__()
-        self.aPnt = aPnt
 
-    def drawTo(self, renderLib, aMove=Move(), aStyle=Style()):
-        renderLib.setMoveAndStyle(aMove, aStyle)
-        renderLib.renderPoint(self.aPnt)
+    def __init__(self, pnt, isVisible=True, labelText=None):
+        super().__init__()
+        self.pnt = pnt
+
+    def render(self, renderLib, aMove=Move(), aStyle=Style()):
+        if self.isVisible:
+            renderLib.renderPoint(self.apnt)
+        if self.labelText is not None:
+            renderLib.renderPoint(self.pnt, self.labelText)
 
 
 class LineDraw(Draw):
@@ -146,8 +135,7 @@ class LineDraw(Draw):
         super().__init__()
         self.aPnt1, self.aPnt2 = aPnt1, aPnt2
 
-    def drawTo(self, renderLib, aMove=Move(), aStyle=Style()):
-        renderLib.setMoveAndStyle(aMove, aStyle)
+    def render(self, renderLib):
         renderLib.renderLine(self.aPnt1, self.aPnt2)
 
 
@@ -157,8 +145,7 @@ class VectorDraw(Draw):
         self.aPnt1, self.aPnt2 = aPnt1, aPnt2
 
     def drawTo(self, renderLib, aMove=Move(), aStyle=Style()):
-        renderLib.setMoveAndStyle(aMove, aStyle)
-        renderLib.renderVector(self.aPnt1, self.aPnt2)
+        renderLib.renderArrow(self.aPnt1, self.aPnt2)
 
 
 class CircleDraw(Draw):
@@ -166,9 +153,8 @@ class CircleDraw(Draw):
         super().__init__()
         self.aPnt1, self.aPnt2, self.aPnt3 = aPnt1, aPnt2, aPnt3
 
-    def drawTo(self, renderLib, aMove=Move(), aStyle=Style()):
+    def render(self, renderLib, aMove=Move(), aStyle=Style()):
         super().__init__()
-        renderLib.setMoveAndStyle(aMove, aStyle)
         renderLib.renderCircle(self.aPnt1, self.aPnt2, self.aPnt3)
 
 
