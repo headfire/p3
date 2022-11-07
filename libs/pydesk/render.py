@@ -3,14 +3,14 @@ from OCC.Core.AIS import AIS_Shape
 from OCC.Core.Quantity import Quantity_Color, Quantity_TypeOfColor
 from OCC.Core.BRepBuilderAPI import BRepBuilderAPI_MakeEdge, BRepBuilderAPI_MakeWire, BRepBuilderAPI_Transform
 from OCC.Core.BRepOffsetAPI import BRepOffsetAPI_MakePipe
-from OCC.Core.BRepPrimAPI import BRepPrimAPI_MakeSphere, BRepPrimAPI_MakeBox, \
-    BRepPrimAPI_MakeCylinder, BRepPrimAPI_MakeCone, BRepPrimAPI_MakeTorus
 from OCC.Core.BRep import BRep_Tool
 from OCC.Core.BRepTools import BRepTools_WireExplorer
 from OCC.Core.Graphic3d import Graphic3d_NameOfMaterial, Graphic3d_MaterialAspect
 from OCC.Core.gp import gp_Pnt, gp_Dir, gp_Vec, gp_Ax1, gp_Trsf
 
 from OCC.Display.SimpleGui import init_display
+
+from draw import *
 
 DEFAULT_NORMED_COLOR = 0.5, 0.5, 0.5
 DEFAULT_MATERIAL_TYPE = 'CHROME'
@@ -290,8 +290,109 @@ class StyleRules:
         return None
 
 
+class StyledRenderLib:
+            self.sceneName = None
 
-class RenderLib:
+            # device size
+            self.deviceX = None
+            self.deviceY = None
+
+            # scale factor
+            self.scaleA = None
+            self.scaleB = None
+            self.scale = None
+            self.scaleStr = None
+
+            # primitive sizes
+            self.basePointRadius = None
+            self.baseLineRadius = None
+
+            # precision
+            self.wirePrecision = None
+            self.shapePrecision = None
+
+            # desk position
+            self.deskDX = None
+            self.deskDY = None
+            self.deskDZ = None
+
+            # draw limits
+            self.limitMinX = None
+            self.limitMaxX = None
+            self.limitMinY = None
+            self.limitMaxY = None
+            self.limitMinZ = None
+            self.limitMaxZ = None
+
+            # decoration flags
+            self.isDesk = None
+            self.isAxis = None
+            self.isLimits = None
+
+            # path to save
+            self.pathToSave = None
+
+            # default init
+            self.setScale(1, 1)
+            self.setDeviceSize(800, 600)
+            self.setDecoration(True, True, True)
+            self.setPathToSave('.')
+
+        def setDeviceSize(self, deviceX, deviceY):
+            self.deviceX = deviceX
+            self.deviceY = deviceY
+
+        def setScale(self, scaleA, scaleB):
+            self.scaleA = 1
+            self.scaleB = 1
+            self.scale = scaleB / scaleA
+            self.scaleStr = 'A0 M' + str(scaleA) + ':' + str(scaleB)
+
+            self.basePointRadius = 5 * self.scale
+            self.baseLineRadius = 3 * self.scale
+
+            self.shapePrecision = 1 * self.scale
+            self.wirePrecision = 1 * self.scale
+
+            self.deskDX = 0
+            self.deskDY = 0
+            self.deskDZ = 300 * self.scale
+
+            self.limitMinX = -200 * self.scale
+            self.limitMaxX = 200 * self.scale
+            self.limitMinY = -200 * self.scale
+            self.limitMaxY = 200 * self.scale
+            self.limitMinZ = -200 * self.scale
+            self.limitMaxZ = 200 * self.scale
+
+        def setPathToSave(self, pathToSave):
+            self.pathToSave = pathToSave
+
+        def setPrecision(self, wirePrecision, shapePrecision):
+            self.wirePrecision = wirePrecision
+            self.shapePrecision = shapePrecision
+
+        def setBaseSize(self, basePointRadius, baseLineRadius):
+            self.basePointRadius = basePointRadius
+            self.baseLineRadius = baseLineRadius
+
+        def setDeskPosition(self, deskDX, deskDY, deskDZ):
+            self.deskDX = deskDX
+            self.deskDY = deskDY
+            self.deskDZ = deskDZ
+
+        def setDrawLimits(self, limitMinX, limitMaxX, limitMinY, limitMaxY, limitMinZ, limitMaxZ):
+            self.limitMinX = limitMinX
+            self.limitMaxX = limitMaxX
+            self.limitMinY = limitMinY
+            self.limitMaxY = limitMaxY
+            self.limitMinZ = limitMinZ
+            self.limitMaxZ = limitMaxZ
+
+        def setDecoration(self, isDesk, isAxis, isLimits):
+            self.isDesk = isDesk
+            self.isAxis = isAxis
+            self.isLimits = isLimits
 
     def __init__(self, scaleAB):
 
@@ -572,26 +673,27 @@ class RenderLib:
         self._renderDeskPin(-dx, dy)
 
 
-class DisplayRenderLib(RenderLib):
+class ScreenRenderLib(RenderLib):
 
     def __init__(self, scaleAB=M_1_1_SCALE, screenX=800, screenY=600):
         super().__init__(scaleAB)
 
-        self.displayX = screenX
-        self.displayY = screenY
+        self.screenX = screenX
+        self.screenY = screenY
 
         self.display = None
         self.display_start = None
 
-    def deviceStart(self):
+    def outStart(self):
         self.display, self.display_start, add_menu, add_function_to_menu = init_display(
-            None, (self.displayX, self.displayY), True, [128, 128, 128], [128, 128, 128])
+            None, (self.screenX, self.screenY), True, [128, 128, 128], [128, 128, 128])
 
-    def deviceFinish(self):
+    def outFinish(self):
         self.display.FitAll()
         self.display_start()
 
     def outShape(self, shape):
+
         shapeTr = BRepBuilderAPI_Transform(shape, self.basePosition.getTrsf()).Shape()
         ais = AIS_Shape(shapeTr)
         r, g, b = self.styleColor
@@ -605,6 +707,7 @@ class DisplayRenderLib(RenderLib):
         self.display.Context.Display(ais, False)
 
     def outLabel(self, text):
+
         pnt = gp_Pnt(0, 0, 0).Transformed(self.basePosition)
 
         self.display.DisplayMessage(pnt, text, self.styleLabelHeightPx,

@@ -1,4 +1,4 @@
-from std import DrawLib
+from draw import DrawLib
 from OCC.Core.gp import gp_Pnt, gp_Vec
 
 

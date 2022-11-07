@@ -1,37 +1,81 @@
 import sys
 
-limit = (DESK_DEFAULT_DRAW_AREA_SIZE / 2) * self.scale
-self.decorLimitMinX = -limit
-self.decorLimitMaxX = limit
-self.decorLimitMinY = -limit
-self.decorLimitMaxY = limit
-self.decorLimitMinZ = -limit
-self.decorLimitMaxZ = limit
-self.decorDeskDX = 0
-self.decorDeskDY = 0
-self.decorDeskDZ = -limit * 1.2
-self.decorIsDesk = True
-self.decorIsAxis = True
-self.decorIsLimits = True
+class IRenderLib:
+
+    # init section
+    # scaleSetting is (scaleA, scaleB, axisStep)
+    def initScale(self, scaleSetting):
+    def initWorkPath(self, path): pass
+    def initPrecisionUp(self, factor_1_10): pass
+    def initPrecisionDown(self, factor_1_10): pass
+    def initOutDeviceSize(self,x,y): pass
+    def initDeskPosition(self, position): pass
+    def initDrawLimits(self, pnt1, pnt2): pass
+    def initDecorVisible(self, isDesk, isAxis, isLimits): pass
+    def initStyle(self, renderNameMask, styleName, styleValue): pass
+
+    # style system
+    def getStyle(self, styleName): pass
+    def brashForPoint(self): pass
+    def brashForLine(self): pass
+    def brashForSolid(self): pass
+    def brashForSurface(self): pass
+    def brashForLabel(self): pass
+    def brashForDeskPin(self): pass
+    def brashForDeskPaper(self): pass
+    def brashForDeskBoard(self): pass
+    def brashForDeskLabel(self): pass
+    def sizeForPoint(self): pass
+    def sizeForLine(self): pass
+    def sizeForSurface(self): pass
+    def sizeForLabel(self): pass
+    def sizeForArrow(self): pass
+
+    # out level setting
+    def outStart(self): pass
+    def outFinish(self): pass
+    # out level drawing
+    def outShape(self, shape): pass
+    def outLabel(self, text): pass
+
+    # base level setting
+    def baseSetPosition(self, subPosition): pass
+    # base level drawing
+    def baseShape(self, shape): pass
+    def baseWire(self, wire): pass
+    def basePrim(self, prim): pass
+    def baseLabel(self, text): pass
+
+    # render level setting
+    def renderStart(self):
+    def renderFinish(self):
+    def renderSetPosition(self, renderPosition):
+    def renderSetName(self, renderName):
+    # render level drawing
+    def renderSolid(self, solid):
+    def renderSurface(self, shape):
+    def renderWire(self, wire):
+    def renderPoint(self, pnt):
+    def renderLine(self, pnt1, pnt2):
+    def renderArrow(self, pnt1, pnt2):
+    def renderCircle(self, pnt1, pnt2, pnt3):
+    def renderLabel(self, pnt, text):
+
+    def renderDecor(self):
 
 
-class Prim:
-
+class ISolid:
     def getShape(self): pass
 
-class BoxPrim(Prim):
-
+class BoxSolid(ISolid):
     def __init__(self, x, y, z):
         self.x, self.y, self.z = x, y, z
-
     def getShape(self):
         return BRepPrimAPI_MakeBox(self.x, self.y, self.z).Shape()
 
-class SpherePrim(Prim):
-
+class SphereSolid(ISolid):
     def __init__(self, r):
         self.r = r
-
     def getShape(self):
         return BRepPrimAPI_MakeSphere(gp_Pnt(0, 0, 0), self.r).Shape()
 
