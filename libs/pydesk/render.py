@@ -266,143 +266,62 @@ def _isMaskOk(mask, fullName):
     return iMask == len(maskTokens)
 
 
-class StyleRules:
-
+class Styles:
     def __init__(self):
+        self.styleList = list()
 
-        self.rules = list()
+    def setStyle(self, renderNameMask, styleName, styleValue):
+        style = renderNameMask, styleName, styleValue
+        self.styleList.append(style)
 
-    def addRule(self, objNameMask, styleName, value):
 
-        rule = objNameMask, styleName, value
-        self.rules.append(rule)
-
-    def extendRules(self, rules):
-
-        self.rules.extend(rules)
-
-    def getStyle(self, styleName, fullObjName):
-
-        for ruleMask, ruleStyleName, ruleStyleValue in reversed(self.rules):
-            if ruleStyleName == styleName and _isMaskOk(ruleMask, fullObjName):
-                return ruleStyleValue
-
+    def getStyle(self, renderName, styleName):
+        for renderNameMask, styleName, styleValue in reversed(self.styleList):
+            if styleName == styleName and _isMaskOk(renderNameMask, renderName):
+                return styleValue
         return None
 
 
 class StyledRenderLib:
-            self.sceneName = None
+    def __init__(self):
 
-            # device size
-            self.deviceX = None
-            self.deviceY = None
+        # sel out device size
+        self.deviceX = None
+        self.deviceY = None
 
-            # scale factor
-            self.scaleA = None
-            self.scaleB = None
-            self.scale = None
-            self.scaleStr = None
+        # scale
+        self.scaleA = None
+        self.scaleB = None
+        self.scale = None
+        self.scaleText = None
+        self.axisStep = None
 
-            # primitive sizes
-            self.basePointRadius = None
-            self.baseLineRadius = None
+        # precision
+        self.precision = None
 
-            # precision
-            self.wirePrecision = None
-            self.shapePrecision = None
+        # desk position
+        self.deskPosition = None
 
-            # desk position
-            self.deskDX = None
-            self.deskDY = None
-            self.deskDZ = None
+        # draw limits
+        self.limitMinPnt = None
+        self.limitMaxPnt = None
 
-            # draw limits
-            self.limitMinX = None
-            self.limitMaxX = None
-            self.limitMinY = None
-            self.limitMaxY = None
-            self.limitMinZ = None
-            self.limitMaxZ = None
+        # decoration flags
+        self.isDesk = None
+        self.isAxis = None
+        self.isLimits = None
 
-            # decoration flags
-            self.isDesk = None
-            self.isAxis = None
-            self.isLimits = None
+        # dir to save
+        self.pathToWorkDir = None
 
-            # path to save
-            self.pathToSave = None
+        # default init
+        self.initScale(M_1_1_SCALE)
+        self.initOutDeviceSize(800, 600)
+        self.initDecorVisible(True, True, True)
+        self.initWorkDir('.')
 
-            # default init
-            self.setScale(1, 1)
-            self.setDeviceSize(800, 600)
-            self.setDecoration(True, True, True)
-            self.setPathToSave('.')
-
-        def setDeviceSize(self, deviceX, deviceY):
-            self.deviceX = deviceX
-            self.deviceY = deviceY
-
-        def setScale(self, scaleA, scaleB):
-            self.scaleA = 1
-            self.scaleB = 1
-            self.scale = scaleB / scaleA
-            self.scaleStr = 'A0 M' + str(scaleA) + ':' + str(scaleB)
-
-            self.basePointRadius = 5 * self.scale
-            self.baseLineRadius = 3 * self.scale
-
-            self.shapePrecision = 1 * self.scale
-            self.wirePrecision = 1 * self.scale
-
-            self.deskDX = 0
-            self.deskDY = 0
-            self.deskDZ = 300 * self.scale
-
-            self.limitMinX = -200 * self.scale
-            self.limitMaxX = 200 * self.scale
-            self.limitMinY = -200 * self.scale
-            self.limitMaxY = 200 * self.scale
-            self.limitMinZ = -200 * self.scale
-            self.limitMaxZ = 200 * self.scale
-
-        def setPathToSave(self, pathToSave):
-            self.pathToSave = pathToSave
-
-        def setPrecision(self, wirePrecision, shapePrecision):
-            self.wirePrecision = wirePrecision
-            self.shapePrecision = shapePrecision
-
-        def setBaseSize(self, basePointRadius, baseLineRadius):
-            self.basePointRadius = basePointRadius
-            self.baseLineRadius = baseLineRadius
-
-        def setDeskPosition(self, deskDX, deskDY, deskDZ):
-            self.deskDX = deskDX
-            self.deskDY = deskDY
-            self.deskDZ = deskDZ
-
-        def setDrawLimits(self, limitMinX, limitMaxX, limitMinY, limitMaxY, limitMinZ, limitMaxZ):
-            self.limitMinX = limitMinX
-            self.limitMaxX = limitMaxX
-            self.limitMinY = limitMinY
-            self.limitMaxY = limitMaxY
-            self.limitMinZ = limitMinZ
-            self.limitMaxZ = limitMaxZ
-
-        def setDecoration(self, isDesk, isAxis, isLimits):
-            self.isDesk = isDesk
-            self.isAxis = isAxis
-            self.isLimits = isLimits
-
-    def __init__(self, scaleAB):
-
-        scaleA, scaleB = scaleAB
-        self.scale = scaleB / scaleA
-        self.scaleText = 'A0 M' + str(scaleA) + ':' + str(scaleB)
-
-        self.basePosition = None
-
-        self.styleRules = StyleRules()
+        # style stateful
+        self.styles = Styles()
         self.styleMaterial = None
         self.styleColor = None
         self.styleTransparency = None
@@ -414,15 +333,56 @@ class StyledRenderLib:
         self.styleLabelDelta = None
         self.styleLabelHeightPx = None
 
+        # base level stateful
+        self.basePosition = Position()
+
+        # render level stateful
         self.renderPosition = Position()
         self.renderName = ''
 
-    def initAdditionRules(self, rulesList):
-        self.styleRules.extendRules(rulesList)
+
+    def initScale(self, scaleSetting):
+        scaleA, scaleB, axisStep = scaleSetting
+        self.scale = scaleB / scaleA
+        self.scaleText = 'A0 M' + str(scaleA) + ':' + str(scaleB)
+        self.axisStep = axisStep
+
+        lim = 200 * self.scale
+        self.limitMinPnt = gp_Pnt(-lim, -lim, -lim)
+        self.limitMaxPnt = gp_Pnt(lim, lim, lim)
+
+        self.deskPosition = Translate(0, 0, -lim * 1.2)
+
+    def initOutDeviceSize(self, x, y):
+        self.deviceX = x
+        self.deviceY = y
+
+    def initWorkDir(self, path):
+        self.pathToWorkDir = path
+
+    def initPrecisionUp(self, factor_1_10):
+        self.precision /= factor_1_10
+
+    def initPrecisionDown(self, factor_1_10):
+        self.precision /= factor_1_10
+
+    def initDeskPosition(self, position):
+        self.deskPosition = Position
+
+    def initDrawLimits(self, minPnt, maxPnt):
+        self.limitMinPnt = minPnt
+        self.limitMaxPnt = maxPnt
+
+    def initDecorVisible(self, isDesk, isAxis, isLimits):
+        self.isDesk = isDesk
+        self.isAxis = isAxis
+        self.isLimits = isLimits
+
+    def setStyle(self, renderNameMask, styleName, styleValue):
+        self.styles.setStyle(renderNameMask, styleName, styleValue)
 
     def getStyle(self, styleName):
-        styleValue = self.styleRules.getStyle(styleName, self.renderName)
-        return styleValue
+        return self.styles.getStyle(styleName, self.renderName)
 
     def locatePosition(self, subPosition=Position()):
         self.basePosition = Position().next(subPosition).next(self.renderPosition)
@@ -508,19 +468,14 @@ class StyledRenderLib:
                                 * self.scale
 
     def outStart(self): pass
-
     def outFinish(self): pass
-
     def outShape(self, shape): pass
-
     def outLabel(self, text): pass
 
     def baseShape(self, shape):
-
         self.outShape(shape)
 
     def baseWire(self, wire):
-
         aWireRadius = self.styleLineRadius
 
         startPoint, tangentDir = _getWireStartPointAndTangentDir(wire)
@@ -531,71 +486,58 @@ class StyledRenderLib:
 
         self.outShape(shape)
 
-    def basePrim(self, prim):
-
+    def baseSolid(self, prim):
         self.outShape(prim.getShape())
 
     def baseLabel(self, text):
-
         self.outLabel(text)
 
     def renderStart(self):
-
         self.outStart()
 
     def renderFinish(self):
-
         self.outFinish()
 
     def renderSetPosition(self, renderPosition):
-
         self.renderName = renderPosition
 
     def renderSetName(self, renderName):
-
         self.renderName = renderName
 
-    def renderSolid(self, prim):
-
+    def renderSolid(self, solid):
         self.brashForSolid()
         self.locatePosition()
-        self.basePrim(prim)
+        self.baseSolid(solid)
 
     def renderSurface(self, shape):
-
         self.brashForSurface()
         self.locatePosition()
         self.baseShape(shape)
 
     def renderWire(self, wire):
-
         self.brashForLine()
         self.sizeForLine()
         self.locatePosition()
         self.baseWire(wire)
 
     def renderPoint(self, pnt):
-
         self.brashForPoint()
         self.sizeForPoint()
         self.locatePosition(TranslateToPnt(pnt))
-        self.basePrim(SpherePrim(self.stylePointRadius))
+        self.baseSolid(SphereSolid(self.stylePointRadius))
 
     def _renderLine(self, pnt1, pnt2):
-
         length = gp_Vec(pnt1, pnt2).Magnitude()
 
         self.locatePosition(Direct(pnt1, pnt2))
-        self.basePrim(CylinderPrim(self.styleLineRadius, length))
+        self.baseSolid(CylinderSolid(self.styleLineRadius, length))
 
     def renderLine(self, pnt1, pnt2):
-
         self.brashForLine()
         self.sizeForLine()
         self._renderLine(pnt1, pnt2)
 
     def renderArrow(self, pnt1, pnt2):
-
         self.brashForLine()
         self.sizeForLine()
         self.sizeForArrow()
@@ -614,7 +556,6 @@ class StyledRenderLib:
         self.basePrim(ConePrim(rArrow, 0, lArrow))
 
     def renderCircle(self, pnt1, pnt2, pnt3):
-
         self.brashForLine()
         self.sizeForLine()
 
@@ -625,7 +566,6 @@ class StyledRenderLib:
         self.baseWire(wire)
 
     def renderLabel(self, pnt, text):
-
         self.brashForLabel()
         self.sizeForLabel()
 
@@ -636,12 +576,10 @@ class StyledRenderLib:
         self.baseLabel(text)
 
     def _renderDeskPin(self, x, y):
-
         self.locatePosition(Translate(x / self.scale, y / self.scale, 0))
-        self.basePrim(CylinderPrim(DESK_PIN_RADIUS / self.scale, DESK_PIN_HEIGHT / self.scale))
+        self.baseSolid(CylinderPrim(DESK_PIN_RADIUS / self.scale, DESK_PIN_HEIGHT / self.scale))
 
-    def renderDesk(self):
-
+    def _renderDesk(self):
         scale = self.scale
         labelText = self.scaleText
 
@@ -653,11 +591,11 @@ class StyledRenderLib:
 
         self.brashForDeskPaper()
         self.locatePosition(Translate(-psx / 2, -psy / 2, -psz))
-        self.basePrim(BoxPrim(psx, psy, psz))
+        self.baseSolid(BoxSolid(psx, psy, psz))
 
         self.brashForDeskBoard()
         self.locatePosition(Translate(-bsx / 2, -bsy / 2, -psz - bsz))
-        self.basePrim(BoxPrim(bsx, bsy, bsz))
+        self.baseSolid(BoxSolid(bsx, bsy, bsz))
 
         self.brashForDeskLabel()
         self.locatePosition(Translate(-bsx / 2, -bsy / 2, -psz))
@@ -671,6 +609,18 @@ class StyledRenderLib:
         self._renderDeskPin(dx, -dy)
         self._renderDeskPin(dx, dy)
         self._renderDeskPin(-dx, dy)
+
+    def _renderAxis(self): pass  # todo
+    def _renderLimits(self): pass  # todo
+
+    def renderDecor(self):
+        if self.isDesk:
+            self._renderDesk()
+        if self.isAxis:
+            self._renderAxis()
+        if self.isLimits:
+            self._renderLimits()
+
 
 
 class ScreenRenderLib(RenderLib):

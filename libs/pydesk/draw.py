@@ -1,11 +1,24 @@
-import sys
+from OCC.Core.BRepPrimAPI import BRepPrimAPI_MakeSphere, BRepPrimAPI_MakeBox, \
+    BRepPrimAPI_MakeCylinder, BRepPrimAPI_MakeCone, BRepPrimAPI_MakeTorus
+from OCC.Core.gp import gp_Pnt, gp_Dir, gp_Vec, gp_Ax1, gp_Trsf
 
-class IRenderLib:
+def _checkObj(aObj, aClass):
+    if not isinstance(aObj, aClass):
+        raise Exception('EXPECTED ' + aClass.__name__ + '  - REAL ' + aObj.__class__.__name__)
+
+
+def _getValue(aValue, aDefaultValue):
+    if aValue is not None:
+        return aValue
+
+    return aDefaultValue
+
+class RenderLib:
 
     # init section
     # scaleSetting is (scaleA, scaleB, axisStep)
-    def initScale(self, scaleSetting):
-    def initWorkPath(self, path): pass
+    def initScale(self, scaleSetting): pass
+    def initWorkDir(self, path): pass
     def initPrecisionUp(self, factor_1_10): pass
     def initPrecisionDown(self, factor_1_10): pass
     def initOutDeviceSize(self,x,y): pass
@@ -15,6 +28,7 @@ class IRenderLib:
     def initStyle(self, renderNameMask, styleName, styleValue): pass
 
     # style system
+    def setStyle(self, renderNameMask, styleName, styleValue): pass
     def getStyle(self, styleName): pass
     def brashForPoint(self): pass
     def brashForLine(self): pass
@@ -47,56 +61,57 @@ class IRenderLib:
     def baseLabel(self, text): pass
 
     # render level setting
-    def renderStart(self):
-    def renderFinish(self):
-    def renderSetPosition(self, renderPosition):
-    def renderSetName(self, renderName):
+    def renderStart(self): pass
+    def renderFinish(self): pass
+    def renderDecor(self): pass
+    def renderSetPosition(self, renderPosition): pass
+    def renderSetName(self, renderName): pass
     # render level drawing
-    def renderSolid(self, solid):
-    def renderSurface(self, shape):
-    def renderWire(self, wire):
-    def renderPoint(self, pnt):
-    def renderLine(self, pnt1, pnt2):
-    def renderArrow(self, pnt1, pnt2):
-    def renderCircle(self, pnt1, pnt2, pnt3):
-    def renderLabel(self, pnt, text):
+    def renderSolid(self, solid): pass
+    def renderSurface(self, shape): pass
+    def renderWire(self, wire): pass
+    def renderPoint(self, pnt): pass
+    def renderLine(self, pnt1, pnt2): pass
+    def renderArrow(self, pnt1, pnt2): pass
+    def renderCircle(self, pnt1, pnt2, pnt3): pass
+    def renderLabel(self, pnt, text): pass
+    # render decor
 
-    def renderDecor(self):
 
-
-class ISolid:
+class Solid:
     def getShape(self): pass
 
-class BoxSolid(ISolid):
+class BoxSolid(Solid):
     def __init__(self, x, y, z):
         self.x, self.y, self.z = x, y, z
+
     def getShape(self):
         return BRepPrimAPI_MakeBox(self.x, self.y, self.z).Shape()
 
-class SphereSolid(ISolid):
+class SphereSolid(Solid):
     def __init__(self, r):
         self.r = r
     def getShape(self):
         return BRepPrimAPI_MakeSphere(gp_Pnt(0, 0, 0), self.r).Shape()
 
-class ConePrim(Prim):
+class ConeSolid(Solid):
 
     def __init__(self, r1, r2, h):
+        super().__init__()
         self.r1, self.r2, self.h = r1, r2, h
 
     def getShape(self):
         return BRepPrimAPI_MakeCone(self.r1, self.r2, self.h).Shape()
 
-class CylinderPrim(Prim):
-
+class CylinderSolid(Solid):
     def __init__(self, r, h):
+        super().__init__()
         self.r, self.h = r, h
 
     def getShape(self):
         return BRepPrimAPI_MakeCylinder(self.r, self.h).Shape()
 
-class TorusPrim(Prim):
-
+class TorusSolid(Solid):
     def __init__(self, r1, r2):
         self.r1, self.r2 = r1, r2
 
@@ -104,29 +119,7 @@ class TorusPrim(Prim):
         return BRepPrimAPI_MakeTorus(self.r1, self.r2).Shape()
 
 
-def initDeskPosition(self, deskDX, deskDY, deskDZ):
-    self.decorDeskDX = deskDX
-    self.decorDeskDY = deskDY
-    self.decorDeskDZ = deskDZ
-
-
-def initDrawLimits(self, limitMinX, limitMaxX, limitMinY, limitMaxY, limitMinZ, limitMaxZ):
-    self.decorLimitMinX = limitMinX
-    self.decorLimitMaxX = limitMaxX
-    self.decorLimitMinY = limitMinY
-    self.decorLimitMaxY = limitMaxY
-    self.decorLimitMinZ = limitMinZ
-    self.decorLimitMaxZ = limitMaxZ
-
-
-def initDecor(self, isDesk, isAxis, isLimits):
-    self.styleIsDesk = isDesk
-    self.styleIsAxis = isAxis
-    self.styleIsLimits = isLimits
-
-
-class Draw(Draw):
-
+class Draw():
     def __init__(self):
         super().__init__()
         self.items = {}
@@ -142,19 +135,22 @@ class Draw(Draw):
         self.aNextItemMove = Move()
         self.aNextItemStyle = Style()
 
-    def getItem(self, aPath):
-        tokens = aPath.split('.')
+    def getItem(self, pathToItem):
+        tokens = pathToItem.split('.')
         ret = self
         for token in tokens:
             ret = ret.children[token]
         return ret
 
-    def render(self, renderLib): pass
+    def getHook(self): pass  # todo
+    def getItemHook(self, pathToItem): pass  # todo
 
-    def draw(self, renderLib, renderName, position=Position()):
+    def drawSelf(self, renderLib): pass
+
+    def draw(self, renderLib, renderName, position):
         renderLib.renderSetName(renderName)
         renderLib.renderSetPosition(position)
-        self.render(renderLib)
+        self.drawSelf(renderLib)
         for itemName in self.items:
             item, itemMove, itemStyle = self.items[key]
             mergedMove = Move.mergeMove(itemMove, aMove)
