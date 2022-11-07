@@ -142,6 +142,8 @@ class Draw():
             ret = ret.children[token]
         return ret
 
+    # todo item to child
+
     def getHook(self): pass  # todo
     def getItemHook(self, pathToItem): pass  # todo
 
