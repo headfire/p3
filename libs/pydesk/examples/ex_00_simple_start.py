@@ -1,4 +1,7 @@
 from render import ScreenRenderLib
-from draw import BoxDraw
+from draw import SphereDraw
 
-ScreenRenderLib().render(BoxDraw(100,100,100))
+screen = ScreenRenderLib()
+screen.renderStart()
+screen.render(SphereDraw(100))
+screen.renderFinish()

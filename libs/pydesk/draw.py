@@ -28,5 +28,5 @@ class SphereDraw(Draw):
     def getStyledScene(self, styles: Styles):
         sphereShape = BRepPrimAPI_MakeSphere(gp_Pnt(0, 0, 0), self.r).Shape()
         return {
-                 ('sphereShape', sphereShape, Position(), styles.getStyle(SOLID_BRASH_STYLE))
+                 'sphereShape': (ShapeDraw(sphereShape), Position(), styles.getStyle(SOLID_BRASH_STYLE))
                 }
