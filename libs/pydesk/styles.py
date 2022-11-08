@@ -1,29 +1,29 @@
 from OCC.Core.Graphic3d import Graphic3d_NameOfMaterial
 
-BRASS_MATERIAL = Graphic3d_NameOfMaterial.Graphic3d_NOM_BRASS,
-BRONZE_MATERIAL = Graphic3d_NameOfMaterial.Graphic3d_NOM_BRONZE,
-COPPER_MATERIAL = Graphic3d_NameOfMaterial.Graphic3d_NOM_COPPER,
-GOLD_MATERIAL = Graphic3d_NameOfMaterial.Graphic3d_NOM_GOLD,
-PEWTER_MATERIAL = Graphic3d_NameOfMaterial.Graphic3d_NOM_PEWTER,
-PLASTER_MATERIAL = Graphic3d_NameOfMaterial.Graphic3d_NOM_PLASTER,
-PLASTIC_MATERIAL = Graphic3d_NameOfMaterial.Graphic3d_NOM_PLASTIC,
-SILVER_MATERIAL = Graphic3d_NameOfMaterial.Graphic3d_NOM_SILVER,
-STEEL_MATERIAL = Graphic3d_NameOfMaterial.Graphic3d_NOM_STEEL,
-STONE_MATERIAL = Graphic3d_NameOfMaterial.Graphic3d_NOM_STONE,
-SHINY_PLASTIC_MATERIAL = Graphic3d_NameOfMaterial.Graphic3d_NOM_SHINY_PLASTIC,
-SATIN_MATERIAL = Graphic3d_NameOfMaterial.Graphic3d_NOM_SATIN,
-METALIZED_MATERIAL = Graphic3d_NameOfMaterial.Graphic3d_NOM_METALIZED,
-NEON_GNC_MATERIAL = Graphic3d_NameOfMaterial.Graphic3d_NOM_NEON_GNC,
-CHROME_MATERIAL = Graphic3d_NameOfMaterial.Graphic3d_NOM_CHROME,
-ALUMINIUM_MATERIAL = Graphic3d_NameOfMaterial.Graphic3d_NOM_ALUMINIUM,
-OBSIDIAN_MATERIAL = Graphic3d_NameOfMaterial.Graphic3d_NOM_OBSIDIAN,
-NEON_PHC_MATERIAL = Graphic3d_NameOfMaterial.Graphic3d_NOM_NEON_PHC,
-JADE_MATERIAL = Graphic3d_NameOfMaterial.Graphic3d_NOM_JADE,
-CHARCOAL_MATERIAL = Graphic3d_NameOfMaterial.Graphic3d_NOM_CHARCOAL,
-WATER_MATERIAL = Graphic3d_NameOfMaterial.Graphic3d_NOM_WATER,
-GLASS_MATERIAL = Graphic3d_NameOfMaterial.Graphic3d_NOM_GLASS,
-DIAMOND_MATERIAL = Graphic3d_NameOfMaterial.Graphic3d_NOM_DIAMOND,
-TRANSPARENT_MATERIAL = Graphic3d_NameOfMaterial.Graphic3d_NOM_TRANSPARENT,
+BRASS_MATERIAL = Graphic3d_NameOfMaterial.Graphic3d_NOM_BRASS
+BRONZE_MATERIAL = Graphic3d_NameOfMaterial.Graphic3d_NOM_BRONZE
+COPPER_MATERIAL = Graphic3d_NameOfMaterial.Graphic3d_NOM_COPPER
+GOLD_MATERIAL = Graphic3d_NameOfMaterial.Graphic3d_NOM_GOLD
+PEWTER_MATERIAL = Graphic3d_NameOfMaterial.Graphic3d_NOM_PEWTER
+PLASTER_MATERIAL = Graphic3d_NameOfMaterial.Graphic3d_NOM_PLASTER
+PLASTIC_MATERIAL = Graphic3d_NameOfMaterial.Graphic3d_NOM_PLASTIC
+SILVER_MATERIAL = Graphic3d_NameOfMaterial.Graphic3d_NOM_SILVER
+STEEL_MATERIAL = Graphic3d_NameOfMaterial.Graphic3d_NOM_STEEL
+STONE_MATERIAL = Graphic3d_NameOfMaterial.Graphic3d_NOM_STONE
+SHINY_PLASTIC_MATERIAL = Graphic3d_NameOfMaterial.Graphic3d_NOM_SHINY_PLASTIC
+SATIN_MATERIAL = Graphic3d_NameOfMaterial.Graphic3d_NOM_SATIN
+METALIZED_MATERIAL = Graphic3d_NameOfMaterial.Graphic3d_NOM_METALIZED
+NEON_GNC_MATERIAL = Graphic3d_NameOfMaterial.Graphic3d_NOM_NEON_GNC
+CHROME_MATERIAL = Graphic3d_NameOfMaterial.Graphic3d_NOM_CHROME
+ALUMINIUM_MATERIAL = Graphic3d_NameOfMaterial.Graphic3d_NOM_ALUMINIUM
+OBSIDIAN_MATERIAL = Graphic3d_NameOfMaterial.Graphic3d_NOM_OBSIDIAN
+NEON_PHC_MATERIAL = Graphic3d_NameOfMaterial.Graphic3d_NOM_NEON_PHC
+JADE_MATERIAL = Graphic3d_NameOfMaterial.Graphic3d_NOM_JADE
+CHARCOAL_MATERIAL = Graphic3d_NameOfMaterial.Graphic3d_NOM_CHARCOAL
+WATER_MATERIAL = Graphic3d_NameOfMaterial.Graphic3d_NOM_WATER
+GLASS_MATERIAL = Graphic3d_NameOfMaterial.Graphic3d_NOM_GLASS
+DIAMOND_MATERIAL = Graphic3d_NameOfMaterial.Graphic3d_NOM_DIAMOND
+TRANSPARENT_MATERIAL = Graphic3d_NameOfMaterial.Graphic3d_NOM_TRANSPARENT
 DEFAULT_MATERIAL = Graphic3d_NameOfMaterial.Graphic3d_NOM_DEFAULT
 
 DEFAULT_NORMED_COLOR = 0.5, 0.5, 0.5
@@ -126,11 +126,24 @@ DEFAULT_STYLE_RULES = [
 
 
 class Brash:
-    def getTransparency(self): pass
-    def getColor(self): pass
-    def getMaterial(self): pass
+    def __init__(self, material, color256, transparency):
+        self.material, self.color256, self.transparency = material, color256, transparency
+
+    def getMaterial(self):
+        return self.material
+
+    def getColor(self):
+        r, g, b = self.color256
+        return (r/255, g/255, b/255)
+
+    def getTransparency(self):
+        return self.transparency
 
 
 class Styles:
+
     def setRenderName(self, renderName: str): pass
-    def getStyle(self, styleName: str): pass
+
+    def getStyle(self, styleName: str):
+      #  if styleName == 'SOLID_BRASH_STYLE':
+        return Brash(GOLD_MATERIAL, NICE_YELLOW_COLOR, 0.7)

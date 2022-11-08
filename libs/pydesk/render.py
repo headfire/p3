@@ -51,13 +51,17 @@ class ScreenRenderLib(RenderLib):
     def renderShapeDraw(self, draw: ShapeDraw, position: Position, brash: Brash):
         shapeTr = BRepBuilderAPI_Transform(draw.shape, position.getTrsf()).Shape()
         ais = AIS_Shape(shapeTr)
+
+        ais.SetTransparency(brash.getTransparency())
+        # todo None color - original material color
         r, g, b = brash.getColor()
         qColor = Quantity_Color(r, g, b,
                                 Quantity_TypeOfColor(Quantity_TypeOfColor.Quantity_TOC_RGB))
         ais.SetColor(qColor)
-        ais.SetTransparency(brash.getTransparency())
+
         aspect = Graphic3d_MaterialAspect(brash.getMaterial())
         ais.SetMaterial(aspect)
+
 
         self.display.Context.Display(ais, False)
 
