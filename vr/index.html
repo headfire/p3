@@ -4,8 +4,8 @@
     <meta charset="UTF-8" />
     <meta content='width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=0' name='viewport' />
     <title>Точка сборки - 3D</title>
-    <link rel="shortcut icon" href="viewer/images/logo_favicon.png" />
-    <link href="viewer/css/styles.css" rel="stylesheet" type="text/css" />
+    <link rel="shortcut icon" href="assets/images/logo_favicon.png" />
+    <link href="assets/css/styles.css" rel="stylesheet" type="text/css" />
 </head>
 <body style = "">
 
@@ -19,15 +19,15 @@
 <div id='mono-toolbar' class="toolbar" >
 <table><tr><td>
 <a href="#" title="Доску на место" onClick='mainOnHome();'>
-  <img src="viewer/images/black/home.png" />
+  <img src="assets/images/black/home.png" />
   </a>
 </td><td>
 <a href="#" title="3D-режимы" onClick='mainOnMode();'>
-  <img src="viewer/images/3d.png"  />
+  <img src="assets/images/3d.png"  />
 </a>
 </td><td>
 <a href="#" title="Полный экран" onClick='mainOnFullScreen();'>
-  <img src="viewer/images/black/fullscreen.png"  />
+  <img src="assets/images/black/fullscreen.png"  />
 </a>
 </td></tr></table>
 </div>
@@ -54,15 +54,15 @@
 </div>
 
 
-<script type="text/javascript" src="viewer/js/three/three.min.js"></script>
-<!-- <script type="text/javascript" src="viewer/js/three/three.js"></script> -->
-<script type="text/javascript" src="viewer/js/three/Detector.js"></script>
-<!-- <script type="text/javascript" src="viewer/js/three/TrackballControls.js"></script> -->
-<script type="text/javascript" src="viewer/js/three/OrbitControls.js"></script>
-<script type="text/javascript" src="viewer/js/three/CSS2DRenderer.js"></script>
-<script type="text/javascript" src="viewer/js/three/StereoEffect.js"></script>
-<script type="text/javascript" src="viewer/js/zdesk.js"></script>
-<script type="text/javascript" src="viewer/js/main.js"></script>
+<script type="text/javascript" src="assets/js/three/three.min.js"></script>
+<!-- <script type="text/javascript" src="assets/js/three/three.js"></script> -->
+<script type="text/javascript" src="assets/js/three/Detector.js"></script>
+<!-- <script type="text/javascript" src="assets/js/three/TrackballControls.js"></script> -->
+<script type="text/javascript" src="assets/js/three/OrbitControls.js"></script>
+<script type="text/javascript" src="assets/js/three/CSS2DRenderer.js"></script>
+<script type="text/javascript" src="assets/js/three/StereoEffect.js"></script>
+<script type="text/javascript" src="assets/js/zdesk.js"></script>
+<script type="text/javascript" src="assets/js/main.js"></script>
 <script>
 
   // START SYSTEM
@@ -78,8 +78,8 @@
   if (urlParams.has('s'))
 	 slide = urlParams.get('s')
 
-  prjName=slide.split('_')[0];	
-  var path = 'projects' + '/' + prjName + '/' + 'slides' + '/' + slide + '/';
+  // prjName=slide.split('_')[0];	
+  var path = 'slides' + '/' + slide + '/';
 	
   if (urlParams.has('dev'))
       path = 'temp' + '/' + slide+'/';

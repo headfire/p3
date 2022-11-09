@@ -1,3 +1,4 @@
+cd ..
 git add *
 git status
 git commit -m "Development by Headfire"

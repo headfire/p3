@@ -110,7 +110,7 @@ function mainLoadSlide(path) {
  		 } catch(e) { console.log(e); }
         }
      param = slideGetParam() 
-     zdeskInit(document.getElementById( 'webgl' ),'viewer/images/textures/', path, param);
+     zdeskInit(document.getElementById( 'webgl' ),'assets/images/textures/', path, param);
 	 slideMake();
      mainOnAnimationFrame()
    	 zdeskSetRenderMode('mono-mode');  				

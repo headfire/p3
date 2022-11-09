@@ -21,6 +21,7 @@ var zdeskLabelColor;
 
 var zdeskScaleA = 1;
 var zdeskScaleB = 1;
+var zdeskScale = 1;
 
 var zdeskTransparent;
 
@@ -36,7 +37,7 @@ function zdeskXLabel(x,y,z, txt, color) {
     var b = color % 256;
 	clr = 'rgb(' + r + ',' + g + ',' + b + ')';
 	
-	dLabel = 15 * zdeskScaleB/zdeskScaleA;
+	dLabel = 15 * zdeskScale;
 
     place = new THREE.Vector3 (x+dLabel, y+dLabel, z+dLabel);
   
@@ -63,7 +64,7 @@ function zdeskXLabel(x,y,z, txt, color) {
 
 
 function zdeskXPoint(x,y,z, color, size) {
-	var sphereGeometry = new THREE.IcosahedronGeometry( size * zdeskScaleA/zdeskScaleB*2, 2 );
+	var sphereGeometry = new THREE.IcosahedronGeometry( size * zdeskScale * 2, 2 );
     var material = zdeskGetMaterial(color);
 	var mesh = new THREE.Mesh( sphereGeometry, material );
       mesh.position.copy(new THREE.Vector3 (x, y, z));
@@ -75,7 +76,7 @@ function zdeskXLine(startPlace, endPlace, pColor, pLineWidth) {
     var object = new THREE.Mesh( geometry, zdeskGetMaterial(pColor) );
 	object.position.copy(startPlace);
 	object.position.lerp( endPlace, 0.5 );
-	object.scale.set( pLineWidth*zdeskScaleB/zdeskScaleA/1.5, startPlace.distanceTo( endPlace ), pLineWidth*zdeskScaleB/zdeskScaleA/1.5 );
+	object.scale.set( pLineWidth*zdeskScale/1.5, startPlace.distanceTo( endPlace ), pLineWidth*zdeskScale/1.5 );
 	object.lookAt( endPlace );
 	object.rotateOnAxis(new THREE.Vector3(1,0,0),Math.PI/2);
 	zdeskScene.add( object );
@@ -282,7 +283,8 @@ function zdeskInit(container, texturePath, slidePath, param) {
 				
 	            zdeskScaleA = param.scaleA;
 				zdeskScaleB = param.scaleB;
-	            scale = zdeskScaleB/zdeskScaleA;
+	            zdeskScale = zdeskScaleB/zdeskScaleA;
+				scale = zdeskScale
 			
  			    if ( ! Detector.webgl ) Detector.addGetWebGLMessage();
 
@@ -319,7 +321,7 @@ function zdeskInit(container, texturePath, slidePath, param) {
 				deskMesh.position.set(param.deskDX, param.deskDY, param.deskDZ-22*scale); 
 				zdeskScene.add( deskMesh );
 
-		        // zdeskXLabel((-1500/2 + 20)*scale + param.deskDX, (1000/2 + 20)*scale + param.deskDY, param.deskDZ, 'A0 M'+zdeskScaleB+':'+zdeskScaleA, 0xbbbbbb);
+		        zdeskXLabel((-1500/2 + 20)*scale + param.deskDX, (1000/2 + 20)*scale + param.deskDY, param.deskDZ, 'A0 M'+zdeskScaleA+':'+zdeskScaleB, 0xbbbbbb);
 
 				
 				var paperGeometry = new THREE.BoxGeometry( 1189*scale, 841*scale, 2*scale);
@@ -504,7 +506,7 @@ function zdeskPolar( radius, angle, z) {
 // lines and vectors
 
 function zdeskPoint(place) {
-	var sphereGeometry = new THREE.IcosahedronGeometry( 10, 2 );
+	var sphereGeometry = new THREE.IcosahedronGeometry( 10, 2);
     var material = zdeskGetPointMaterial();
 	var object = new THREE.Mesh( sphereGeometry, material );
       object.position.copy(place);
