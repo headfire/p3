@@ -1,5 +1,5 @@
-from render import ScreenRenderLib
-from draw import SphereDraw
+from core_render import ScreenRenderLib
+from core_draw import SphereDraw
 
 screen = ScreenRenderLib()
 screen.renderStart()

@@ -1,5 +1,5 @@
-from styles import Styles, SOLID_BRASH_STYLE
-from position import Position
+from core_styles import Styles, SOLID_BRASH_STYLE
+from core_position import Position
 
 from OCC.Core.gp import gp_Pnt
 from OCC.Core.BRepPrimAPI import BRepPrimAPI_MakeSphere

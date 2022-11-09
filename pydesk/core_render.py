@@ -5,9 +5,9 @@ from OCC.Core.Graphic3d import Graphic3d_MaterialAspect
 
 from OCC.Display.SimpleGui import init_display
 
-from draw import Draw, ShapeDraw, LabelDraw
-from position import Position
-from styles import Brash, Styles
+from core_draw import Draw, ShapeDraw, LabelDraw
+from core_position import Position
+from core_styles import Brash, Styles
 
 
 class RenderLib:
@@ -61,7 +61,6 @@ class ScreenRenderLib(RenderLib):
 
         aspect = Graphic3d_MaterialAspect(brash.getMaterial())
         ais.SetMaterial(aspect)
-
 
         self.display.Context.Display(ais, False)
 
