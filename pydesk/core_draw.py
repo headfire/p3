@@ -3,8 +3,8 @@ from core_styles import Styles
 from core_position import Position
 
 from OCC.Core.gp import gp_Pnt
-from OCC.Core.BRepPrimAPI import BRepPrimAPI_MakeSphere, BRepPrimAPI_MakeBox
-# todo BRepPrimAPI_MakeCylinder, BRepPrimAPI_MakeCone, BRepPrimAPI_MakeTorus
+from OCC.Core.BRepPrimAPI import BRepPrimAPI_MakeSphere, BRepPrimAPI_MakeBox, BRepPrimAPI_MakeCone, BRepPrimAPI_MakeCylinder
+# todo BRepPrimAPI_MakeTorus
 
 
 class Draw:
@@ -21,8 +21,8 @@ class ShapeDraw(Draw):
         self.shape = shape
 
 
-def _solidScene(nm, shape, styles):
-    return { nm: (ShapeDraw(shape), Position(), styles.getStyle(SOLID_BRASH_STYLE)) }
+def _solidScene(shape, styles):
+    return { 'solidShape': (ShapeDraw(shape), Position(), styles.getStyle(SOLID_BRASH_STYLE)) }
 
 
 class SphereDraw(Draw):
@@ -31,7 +31,7 @@ class SphereDraw(Draw):
 
     def getStyledScene(self, styles: Styles):
         shape = BRepPrimAPI_MakeSphere(gp_Pnt(0, 0, 0), self.r).Shape()
-        return _solidScene('sphereShape', shape, styles)
+        return _solidScene(shape, styles)
 
 
 class BoxDraw(Draw):
@@ -40,4 +40,38 @@ class BoxDraw(Draw):
 
     def getStyledScene(self, styles: Styles):
         shape = BRepPrimAPI_MakeBox(self.x, self.y, self.z).Shape()
-        return _solidScene('boxShape', shape, styles)
+        return _solidScene(shape, styles)
+
+
+class ConeDraw(Draw):
+    def __init__(self, r1, r2, h):
+        self.r1, self.r2, self.h = r1, r2, h
+
+    def getStyledScene(self, styles: Styles):
+        shape = BRepPrimAPI_MakeCone(self.r1, self.r2, self.h).Shape()
+        return _solidScene(shape, styles)
+
+
+class CylinderDraw(Draw):
+    def __init__(self, r, h):
+        self.r, self.h = r, h
+
+    def getStyledScene(self, styles: Styles):
+        shape = BRepPrimAPI_MakeCylinder(self.r, self.h).Shape()
+        return _solidScene(shape, styles)
+
+
+'''
+
+class CylinderSolid(Solid):
+
+    def getShape(self):
+        return BRepPrimAPI_MakeCylinder(self.r, self.h).Shape()
+
+class TorusSolid(Solid):
+    def __init__(self, r1, r2):
+        self.r1, self.r2 = r1, r2
+
+    def getShape(self):
+        return BRepPrimAPI_MakeTorus(self.r1, self.r2).Shape()
+'''
