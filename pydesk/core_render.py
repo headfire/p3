@@ -21,7 +21,8 @@ class RenderLib:
             sceneItemDraw, sceneItemPosition, sceneItemBrash = sceneItem
             if brash is not None:
                 sceneItemBrash = brash
-            self.render(sceneItemDraw, sceneItemPosition, sceneItemBrash, renderName + ',' + sceneItemName)
+            subPosition = Position().next(sceneItemPosition).next(position)
+            self.render(sceneItemDraw, subPosition, sceneItemBrash, renderName + ',' + sceneItemName)
 
     def renderStart(self):
         pass
@@ -49,18 +50,25 @@ class ScreenRenderLib(RenderLib):
         self.display_start()
 
     def renderShapeDraw(self, draw: ShapeDraw, position: Position, brash: Brash):
+        print(position.getDescribe())
         shapeTr = BRepBuilderAPI_Transform(draw.shape, position.getTrsf()).Shape()
         ais = AIS_Shape(shapeTr)
 
-        ais.SetTransparency(brash.getTransparency())
-        # todo None color - original material color
-        r, g, b = brash.getColor()
-        qColor = Quantity_Color(r, g, b,
-                                Quantity_TypeOfColor(Quantity_TypeOfColor.Quantity_TOC_RGB))
-        ais.SetColor(qColor)
+        material = brash.getMaterial()
+        if material is not None:
+            aspect = Graphic3d_MaterialAspect(material)
+            ais.SetMaterial(aspect)
 
-        aspect = Graphic3d_MaterialAspect(brash.getMaterial())
-        ais.SetMaterial(aspect)
+        transparency = brash.getTransparency()
+        if transparency is not None:
+            ais.SetTransparency(brash.getTransparency())
+
+        color = brash.getColor()
+        if color is not None:
+            r, g, b = brash.getColor()
+            qColor = Quantity_Color(r, g, b,
+                                    Quantity_TypeOfColor(Quantity_TypeOfColor.Quantity_TOC_RGB))
+            ais.SetColor(qColor)
 
         self.display.Context.Display(ais, False)
 

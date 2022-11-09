@@ -1,24 +1,27 @@
-from OCC.Core.Graphic3d import Graphic3d_NameOfMaterial
+from core_consts import *
+
 
 class Brash:
-    def __init__(self, material, color256, transparency):
-        self.material, self.color256, self.transparency = material, color256, transparency
+    def __init__(self, material=None, color=None, transparency=None):
+        self.material, self.color, self.transparency = material, color, transparency
 
     def getMaterial(self):
         return self.material
 
     def getColor(self):
-        r, g, b = self.color256
-        return (r/255, g/255, b/255)
+        return self.color
 
     def getTransparency(self):
         return self.transparency
 
 
 class Styles:
+    def __init__(self):
+        self.renderName = ''
 
-    def setRenderName(self, renderName: str): pass
+    def setRenderName(self, renderName: str):
+        self.renderName = renderName
 
     def getStyle(self, styleName: str):
-      #  if styleName == 'SOLID_BRASH_STYLE':
-        return Brash(GOLD_MATERIAL, NICE_YELLOW_COLOR, 0.7)
+        if styleName == SOLID_BRASH_STYLE and self.renderName is not None:
+            return Brash(GOLD_MATERIAL)
