@@ -79,10 +79,10 @@ class LineDraw(Draw):
         self.pnt1, self.pnt2 = pnt1, pnt2
 
     def getStyledScene(self, styles: Styles):
-        radius = styles.getScaled(NORMAL_LINE_RADIUS, LINE_RADIUS_FACTOR_STYLE)
+        radius = styles.getScaledSize(NORMAL_LINE_RADIUS, LINE_RADIUS_FACTOR_STYLE)
         position = Direct(self.pnt1, self.pnt2)
         length = gp_Vec(self.pnt1, self.pnt2).Magnitude()
-        brash = styles.getStyle(LINE_BRASH_STYLE)
+        brash = styles.getBrash(LINE_BRASH_STYLE)
         return {'cylinder': (CylinderDraw(radius, length), position, brash)}
 
 
@@ -91,9 +91,9 @@ class ArrowDraw(Draw):
         self.pnt1, self.pnt2 = pnt1, pnt2
 
     def getStyledScene(self, styles: Styles):
-        arrowRadius = styles.getScaled(NORMAL_ARROW_RADIUS, ARROW_RADIUS_FACTOR_STYLE)
-        arrowLength = styles.getScaled(NORMAL_ARROW_LENGTH, ARROW_LENGTH_FACTOR_STYLE)
-        brash = styles.getStyle(LINE_BRASH_STYLE)
+        arrowRadius = styles.getScaledSize(NORMAL_ARROW_RADIUS, ARROW_RADIUS_FACTOR_STYLE)
+        arrowLength = styles.getScaledSize(NORMAL_ARROW_LENGTH, ARROW_LENGTH_FACTOR_STYLE)
+        brash = styles.getBrash(LINE_BRASH_STYLE)
         return {'cone': (ConeDraw(arrowRadius, 0, arrowLength), Direct(self.pnt1, self.pnt2), brash)}
 
 
@@ -102,7 +102,7 @@ class VectorDraw(Draw):
         self.pnt1, self.pnt2 = pnt1, pnt2
 
     def getStyledScene(self, styles: Styles):
-        arrowLength = styles.getScaled(NORMAL_ARROW_LENGTH, ARROW_LENGTH_FACTOR_STYLE)
+        arrowLength = styles.getScaledSize(NORMAL_ARROW_LENGTH, ARROW_LENGTH_FACTOR_STYLE)
         v = gp_Vec(self.pnt1, self.pnt2)
         vLen = v.Magnitude()
         v *= (vLen - arrowLength) / vLen
