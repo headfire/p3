@@ -22,20 +22,19 @@ conda install pyqt
 conda install -c dlr-sc pythonocc-core
 ```
 
-## Скачиваем и запускаем примеры
+## Скачиваем и запускаем проект p3
 
 Устанавливаем Git: 
 - Загружаем и запускаем отсюда <https://git-scm.com/download/win>. 
 - Все настройки оставляем по умолчанию.
 
-Клонируем репозиторий с примерами
+Клонируем проект headfire/p3
 
 ```
-c:
-cd c:\projects
-git clone https://github.com/tpaviot/pythonocc-demos.git
-cd pythonocc-demos\examples
-python core_helloworld.py
+cd [you parent dir for projects]
+git clone https://github.com/headfire/p3.git
+cd p3\make
+test_core_00_hello
 ```
 
 Должно открыться окно со следующей картинкой
@@ -59,15 +58,6 @@ to:
 class qtBaseViewer(QtWidgets.QWidget):
 ```
 
-Клонируем проект headfire/p3
-
-```
-c:
-cd c:\projects
-git clone https://github.com/headfire/p3.git
-cd p3/projects/dao
-python makeDaoShape.py
-```
 
 ## **Полезные ссылки**
 
