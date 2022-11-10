@@ -14,15 +14,41 @@ class RenderLib:
     def __init__(self, styles: Styles = Styles()):
         self.styles = styles
 
-    def render(self, draw: Draw, position: Position = Position(), brash: Brash = None, renderName: str = ''):
+    def render(self, renderName: str = 'Obj', draw: Draw = None, position: Position = None, brash: Brash = None):
+        print()
+        print(renderName)
+        if brash is not None:
+            print('BrashName:'+str(brash.brashName))
+        else:
+            print('None brash')
         self.styles.setRenderName(renderName)
         scene = draw.getStyledScene(self.styles)
         for sceneItemName, sceneItem in scene.items():
+
             sceneItemDraw, sceneItemPosition, sceneItemBrash = sceneItem
+
+            # none processing
+            if sceneItemBrash is None:
+                sceneItemBrash = Brash()
+            if sceneItemPosition is None:
+                sceneItemPosition = Position()
+            if sceneItemDraw is None:
+                sceneItemDraw = Draw()
+
+            # substitution logic
+            itemName = renderName + '.' + sceneItemName
+            itemDraw = sceneItemDraw
             if brash is not None:
-                sceneItemBrash = brash
-            subPosition = Position().next(sceneItemPosition).next(position)
-            self.render(sceneItemDraw, subPosition, sceneItemBrash, renderName + ',' + sceneItemName)
+                itemBrash = brash
+            else:
+                itemBrash = sceneItemBrash
+            if position is not None:
+                itemPosition = Position().next(sceneItemPosition).next(position)
+            else:
+                itemPosition = sceneItemPosition
+
+            # render
+            self.render(itemName, itemDraw, itemPosition, itemBrash)
 
     def renderStart(self):
         pass
@@ -76,10 +102,10 @@ class ScreenRenderLib(RenderLib):
         pnt = draw.pnt.Transformed(position.getTrsf())
         self.display.DisplayMessage(pnt, draw.text, draw.hPx, brash.getColor(), False)
 
-    def render(self, draw: Draw, position: Position = Position(), brash: Brash = None, renderName: str = ''):
+    def render(self, renderName: str = 'Obj', draw: Draw = None, position: Position = None, brash: Brash = None):
         if isinstance(draw, ShapeDraw):
             self.renderShapeDraw(draw, position, brash)
         elif isinstance(draw, LabelDraw):
             self.renderLabelDraw(draw, position, brash)
         else:
-            super().render(draw, position, brash, renderName)
+            super().render(renderName, draw, position, brash)
