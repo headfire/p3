@@ -7,8 +7,12 @@ from core_styles import Brash
 screen = ScreenRenderLib()
 screen.renderStart()
 
-# gold sphere on origin
+# default brash
 screen.render(SphereDraw(100))
+
+# no material - gold default
+screen.render(SphereDraw(50), Translate(-100,0,0), Brash())
+screen.render(SphereDraw(50), Translate(100,0,0), Brash())
 
 # blue plastic sphere on up
 screen.render(SphereDraw(50), Translate(0,0,100), Brash(PLASTIC_MATERIAL, NICE_BLUE_COLOR))
