@@ -3,8 +3,8 @@ from core_styles import Styles
 from core_position import Position
 
 from OCC.Core.gp import gp_Pnt
-from OCC.Core.BRepPrimAPI import BRepPrimAPI_MakeSphere, BRepPrimAPI_MakeBox, BRepPrimAPI_MakeCone, BRepPrimAPI_MakeCylinder
-# todo BRepPrimAPI_MakeTorus
+from OCC.Core.BRepPrimAPI import BRepPrimAPI_MakeSphere, BRepPrimAPI_MakeBox, BRepPrimAPI_MakeCone,\
+    BRepPrimAPI_MakeCylinder, BRepPrimAPI_MakeTorus
 
 
 class Draw:
@@ -60,13 +60,17 @@ class CylinderDraw(Draw):
         shape = BRepPrimAPI_MakeCylinder(self.r, self.h).Shape()
         return _solidScene(shape, styles)
 
+class TorusDraw(Draw):
+    def __init__(self, r1, r2):
+        self.r1, self.r2 = r1, r2
+
+    def getStyledScene(self, styles: Styles):
+        shape = BRepPrimAPI_MakeTorus(self.r1, self.r2).Shape()
+        return _solidScene(shape, styles)
+
 
 '''
 
-class CylinderSolid(Solid):
-
-    def getShape(self):
-        return BRepPrimAPI_MakeCylinder(self.r, self.h).Shape()
 
 class TorusSolid(Solid):
     def __init__(self, r1, r2):

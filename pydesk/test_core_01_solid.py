@@ -1,5 +1,5 @@
 from core_render import ScreenRenderLib
-from core_draw import SphereDraw, BoxDraw, ConeDraw, CylinderDraw
+from core_draw import SphereDraw, BoxDraw, ConeDraw, CylinderDraw, TorusDraw
 from core_position import Translate
 
 screen = ScreenRenderLib()
@@ -13,6 +13,7 @@ drawList = [
     ConeDraw(r, r/1.5, r*1.5),
     ConeDraw(r, 0, r*2),
     CylinderDraw(r, r * 2),
+    TorusDraw(r*0.7, r/3),
 ]
 
 x = 0
