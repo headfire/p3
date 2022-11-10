@@ -1,6 +1,6 @@
 from core_render import ScreenRenderLib
 from core_draw import Pnt, LineDraw, VectorDraw
-from core_position import Translate
+# from core_position import Translate
 
 screen = ScreenRenderLib()
 screen.renderStart()

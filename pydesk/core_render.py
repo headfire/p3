@@ -5,49 +5,38 @@ from OCC.Core.Graphic3d import Graphic3d_MaterialAspect
 
 from OCC.Display.SimpleGui import init_display
 
-from core_draw import Draw, ShapeDraw, LabelDraw
+from core_draw import ShapeDraw, LabelDraw
 from core_position import Position
 from core_styles import Brash, Styles
+
+
+class SceneItem:
+    def __init__(self, renderName, draw, position=Position(), brash=Brash()):
+        self.renderName = renderName
+        self.draw = draw
+        self.position = position
+        self.brash = brash
+
+    def mergeWithParent(self, parent):
+        self.renderName=parent.renderName + '.' + self.renderName
+        self.position.mergeWidhParent(parent.position)
+        self.brash.mergeWidhBrash(parent.brash)
 
 
 class RenderLib:
     def __init__(self, styles: Styles = Styles()):
         self.styles = styles
 
-    def render(self, renderName: str = 'Obj', draw: Draw = None, position: Position = None, brash: Brash = None):
-        print()
+    def render(self, renderName, draw, position=Position(), brash=Brash()):
         print(renderName)
-        if brash is not None:
-            print('BrashName:'+str(brash.brashName))
-        else:
-            print('None brash')
         self.styles.setRenderName(renderName)
         scene = draw.getStyledScene(self.styles)
-        for sceneItemName, sceneItem in scene.items():
-
-            sceneItemDraw, sceneItemPosition, sceneItemBrash = sceneItem
-
-            # none processing
-            if sceneItemBrash is None:
-                sceneItemBrash = Brash()
-            if sceneItemPosition is None:
-                sceneItemPosition = Position()
-            if sceneItemDraw is None:
-                sceneItemDraw = Draw()
-
-            # substitution logic
-            itemName = renderName + '.' + sceneItemName
-            itemDraw = sceneItemDraw
-            if brash is not None:
-                itemBrash = brash
-            else:
-                itemBrash = sceneItemBrash
-            if position is not None:
-                itemPosition = Position().next(sceneItemPosition).next(position)
-            else:
-                itemPosition = sceneItemPosition
-
-            # render
+        for itemName, item in scene.items():
+            print(itemName,':',item)
+            itemDraw, itemPosition, itemBrash = item
+            itemBrash.mergeWithParent(brash)
+            itemPosition.mergeWithParent(position)
+            itemName = renderName + '.' + itemName
             self.render(itemName, itemDraw, itemPosition, itemBrash)
 
     def renderStart(self):
@@ -75,8 +64,7 @@ class ScreenRenderLib(RenderLib):
         self.display.FitAll()
         self.display_start()
 
-    def renderShapeDraw(self, draw: ShapeDraw, position: Position, brash: Brash):
-        # print(position.getDescribe())
+    def _outShapeDraw(self, draw: ShapeDraw, position: Position, brash: Brash):
         shapeTr = BRepBuilderAPI_Transform(draw.shape, position.getTrsf()).Shape()
         ais = AIS_Shape(shapeTr)
 
@@ -98,14 +86,14 @@ class ScreenRenderLib(RenderLib):
 
         self.display.Context.Display(ais, False)
 
-    def renderLabelDraw(self, draw: LabelDraw, position: Position, brash: Brash):
+    def _outLabelDraw(self, draw: LabelDraw, position: Position, brash: Brash):
         pnt = draw.pnt.Transformed(position.getTrsf())
         self.display.DisplayMessage(pnt, draw.text, draw.hPx, brash.getColor(), False)
 
-    def render(self, renderName: str = 'Obj', draw: Draw = None, position: Position = None, brash: Brash = None):
+    def render(self, renderName, draw, position=Position(), brash=Brash()):
         if isinstance(draw, ShapeDraw):
-            self.renderShapeDraw(draw, position, brash)
+            self._outShapeDraw(draw, position, brash)
         elif isinstance(draw, LabelDraw):
-            self.renderLabelDraw(draw, position, brash)
+            self._outLabelDraw(draw, position, brash)
         else:
             super().render(renderName, draw, position, brash)

@@ -2,7 +2,7 @@ from core_consts import *
 
 
 class Brash:
-    def __init__(self, brashName, material, color, transparency):
+    def __init__(self, brashName='NoEffectBrash', material=None, color=None, transparency=None):
         self.brashName = brashName
         self.material, self.color, self.transparency = material, color, transparency
 
@@ -15,8 +15,19 @@ class Brash:
     def getTransparency(self):
         return self.transparency
 
+    def mergeWithParent(self, parentBrash):
+        if parentBrash.material is None:
+            self.material = parentBrash.material
+        if parentBrash.color is None:
+            self.color = parentBrash.color
+        if parentBrash.material is None:
+            self.transparency = parentBrash.transparency
+        self.brashName = parentBrash.brashName + '.' + self.brashName
+
 
 DEFAULT_STYLE_RULES = [
+
+    ('', SOLID_BRASH_STYLE, Brash('DefSolidBrash', GOLD_MATERIAL)),
 
     ('', GENERAL_FACTOR_STYLE, 1),
 
@@ -48,7 +59,7 @@ class Styles:
 
     def _getStyle(self, styleName: str):
         for ruleRenderMask, ruleStyleName, ruleStyleValue in DEFAULT_STYLE_RULES:
-            if ruleStyleName == styleName and self.renderName is not None:
+            if ruleStyleName == styleName:
                 return ruleStyleValue
         return None
 
@@ -64,5 +75,5 @@ class Styles:
     def getBrash(self, styleName):
         brash = self._getStyle(styleName)
         if not isinstance(brash, Brash):
-            raise NameError('No brash style with name '+ styleName)
-
+            raise NameError('No brash style with name ' + styleName)
+        return brash

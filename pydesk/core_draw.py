@@ -25,8 +25,10 @@ class ShapeDraw(Draw):
         self.shape = shape
 
 
+
 def _solidScene(shape, styles):
-    return {'solidShape': (ShapeDraw(shape), Position(), styles.getStyle(SOLID_BRASH_STYLE))}
+    print('***',styles.getBrash(SOLID_BRASH_STYLE))
+    return {'solidShape': (ShapeDraw(shape), Position(), styles.getBrash(SOLID_BRASH_STYLE))}
 
 
 class SphereDraw(Draw):
