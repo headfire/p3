@@ -50,7 +50,7 @@ class ScreenRenderLib(RenderLib):
         self.display_start()
 
     def renderShapeDraw(self, draw: ShapeDraw, position: Position, brash: Brash):
-        print(position.getDescribe())
+        # print(position.getDescribe())
         shapeTr = BRepBuilderAPI_Transform(draw.shape, position.getTrsf()).Shape()
         ais = AIS_Shape(shapeTr)
 

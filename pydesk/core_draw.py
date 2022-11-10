@@ -1,10 +1,14 @@
 from core_consts import *
-from core_styles import Styles
-from core_position import Position
+from core_styles import Styles, Brash
+from core_position import Position, Direct
 
-from OCC.Core.gp import gp_Pnt
+from OCC.Core.gp import gp_Pnt, gp_Vec
 from OCC.Core.BRepPrimAPI import BRepPrimAPI_MakeSphere, BRepPrimAPI_MakeBox, BRepPrimAPI_MakeCone,\
     BRepPrimAPI_MakeCylinder, BRepPrimAPI_MakeTorus
+
+
+class Pnt(gp_Pnt):
+    pass
 
 
 class Draw:
@@ -60,6 +64,7 @@ class CylinderDraw(Draw):
         shape = BRepPrimAPI_MakeCylinder(self.r, self.h).Shape()
         return _solidScene(shape, styles)
 
+
 class TorusDraw(Draw):
     def __init__(self, r1, r2):
         self.r1, self.r2 = r1, r2
@@ -67,6 +72,22 @@ class TorusDraw(Draw):
     def getStyledScene(self, styles: Styles):
         shape = BRepPrimAPI_MakeTorus(self.r1, self.r2).Shape()
         return _solidScene(shape, styles)
+
+
+class LineDraw(Draw):
+    def __init__(self, pnt1, pnt2):
+        self.pnt1, self.pnt2 = pnt1, pnt2
+
+    def getStyledScene(self, styles: Styles):
+        # size
+        scale = styles.getScale()
+        lineRadiusFactor = styles.getStyle(LINE_RADIUS_FACTOR_STYLE)
+        radius = NORMAL_LINE_RADIUS * lineRadiusFactor * scale
+        position = Direct(self.pnt1, self.pnt2)
+        length = gp_Vec(self.pnt1, self.pnt2).Magnitude()
+        # brash
+        brash = Brash(styles.getStyle(LINE_BRASH_STYLE))
+        return {'cylinder': (CylinderDraw(radius, length), position, brash)}
 
 
 '''

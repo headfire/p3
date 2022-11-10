@@ -10,7 +10,7 @@ def _d3(nm, x, y, z):
 
 
 def _dp(nm, pnt):
-    return _d3(nm, pnt.X, pnt.Y, pnt.Z)
+    return _d3(nm, pnt.X(), pnt.Y(), pnt.Z())
 
 
 class Position:
