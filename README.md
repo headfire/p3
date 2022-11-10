@@ -154,7 +154,7 @@ sim-карт и денежных купюр в полевых, неблагоп�
 
 ### Инструкции и мануалы
 
-[Установка среды разработки OpenCascade - Python 3.7 - Win64](https://headfire.github.io/p3/libs/pydesk/docs/setup.html) 
+[Установка среды разработки OpenCascade - Python 3.7 - Win64](https://headfire.github.io/p3/projects/pydesklib/setup.html) 
 
 ### Контакты
 
