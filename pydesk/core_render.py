@@ -5,6 +5,7 @@ from OCC.Core.Graphic3d import Graphic3d_MaterialAspect
 
 from OCC.Display.SimpleGui import init_display
 
+from core_consts import *
 from core_draw import Draw, ShapeDraw, LabelDraw
 from core_position import Position
 from core_styles import Style, Styles
@@ -50,31 +51,29 @@ class ScreenRenderLib(RenderLib):
         self.display.FitAll()
         self.display_start()
 
-    def _outShapeDraw(self, draw: ShapeDraw, position: Position, brash: Style):
+    def _outShapeDraw(self, draw: ShapeDraw, position: Position, style: Style):
         shapeTr = BRepBuilderAPI_Transform(draw.shape, position.getTrsf()).Shape()
         ais = AIS_Shape(shapeTr)
 
-        material = brash.getMaterial()
-        if material is not None:
-            aspect = Graphic3d_MaterialAspect(material)
+        if style.material is not None:
+            aspect = Graphic3d_MaterialAspect(style.material)
             ais.SetMaterial(aspect)
 
-        transparency = brash.getTransparency()
-        if transparency is not None:
-            ais.SetTransparency(brash.getTransparency())
+        if style.transparency is not None:
+            ais.SetTransparency(style.transparency)
 
-        color = brash.getColor()
-        if color is not None:
-            r, g, b = brash.getColor()
+        if style.color is not None:
+            r, g, b = style.color
             qColor = Quantity_Color(r, g, b,
                                     Quantity_TypeOfColor(Quantity_TypeOfColor.Quantity_TOC_RGB))
             ais.SetColor(qColor)
 
         self.display.Context.Display(ais, False)
 
-    def _outLabelDraw(self, draw: LabelDraw, position: Position, brash: Style):
+    def _outLabelDraw(self, draw: LabelDraw, position: Position, style: Style):
         pnt = draw.pnt.Transformed(position.getTrsf())
-        self.display.DisplayMessage(pnt, draw.text, draw.hPx, brash.getColor(), False)
+        heightPx = NORMAL_LABEL_HEIGHT_PX * style.sizeFactor
+        self.display.DisplayMessage(pnt, draw.text, heightPx, style.color, False)
 
     def render(self, draw: Draw, position: Position = Position(), brash: Style = Style(),
                renderName: str = 'Object') -> None:

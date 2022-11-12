@@ -2,25 +2,16 @@ from core_consts import *
 
 
 class Style:
-    def __init__(self, material=None, color=None, transparency=None, sizeFactor=1, lengthFactor=1):
+    def __init__(self, material=None, color=None, transparency=None, sizeFactor=1, sizeSubFactor=1):
         self.material, self.color, self.transparency = material, color, transparency
-        self.sizeFactor, self.lengthFactor = sizeFactor, lengthFactor
-
-    def getMaterial(self):
-        return self.material
-
-    def getColor(self):
-        return self.color
-
-    def getTransparency(self):
-        return self.transparency
+        self.sizeFactor, self.sizeSubFactor = sizeFactor, sizeSubFactor
 
     def mergeWithParent(self, parentBrash):
         if parentBrash.material is not None:
             self.material = parentBrash.material
         if parentBrash.color is not None:
             self.color = parentBrash.color
-        if parentBrash.material is not None:
+        if parentBrash.transparency is not None:
             self.transparency = parentBrash.transparency
 
 
@@ -40,11 +31,11 @@ DEFAULT_STYLE_RULES = [
     ('', ARROW_LENGTH_FACTOR_STYLE, 1),
 
     ('', SURFACE_WIDTH_FACTOR_STYLE, 1),
-    ('', SURFACE_BRASH_STYLE, Style('DefSurfaceBrash', CHROME_MATERIAL, NICE_ORIGINAL_COLOR, None)),
+    ('', SURFACE_BRASH_STYLE, Style(CHROME_MATERIAL, NICE_ORIGINAL_COLOR)),
 
     ('', LABEL_DELTA_FACTOR_STYLE, 1),
     ('', LABEL_HEIGHT_FACTOR_STYLE, 1),
-    ('', LABEL_BRASH_STYLE, Style('DefLabelBrash', PLASTIC_MATERIAL, NICE_WHITE_COLOR, None)),
+    ('', LABEL_BRASH_STYLE, Style(PLASTIC_MATERIAL, NICE_WHITE_COLOR)),
 ]
 
 

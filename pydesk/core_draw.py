@@ -14,10 +14,9 @@ class Pnt(gp_Pnt):
 class Draw:
     def getStyledScene(self, styles: Styles): pass
 
-
 class LabelDraw(Draw):
-    def __init__(self, pnt, text, hPx):
-        self.pnt, self.text, self.hPx = pnt, text, hPx
+    def __init__(self, pnt, text):
+        self.pnt, self.text = pnt, text
 
 
 class ShapeDraw(Draw):
@@ -26,7 +25,7 @@ class ShapeDraw(Draw):
 
 
 def _solidScene(shape, styles):
-    return {'Shape': (ShapeDraw(shape), Position(), styles.getBrash(SOLID_BRASH_STYLE))}
+    return { 'ShapeForSolid': (ShapeDraw(shape), Position()) }
 
 
 class SphereDraw(Draw):
@@ -107,6 +106,6 @@ class VectorDraw(Draw):
         vLen = v.Magnitude()
         v *= (vLen - arrowLength) / vLen
         pntM = self.pnt1.Translated(v)
-        return {'line': (LineDraw(self.pnt1, pntM), None, None),
-                 'arrow': (ArrowDraw(pntM, self.pnt2), None, None)
+        return { 'line': (LineDraw(self.pnt1, pntM), Position()),
+                 'arrow': (ArrowDraw(pntM, self.pnt2), Position())
                 }
