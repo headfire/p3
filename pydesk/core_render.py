@@ -20,7 +20,7 @@ class SceneItem:
     def mergeWithParent(self, parent):
         self.renderName=parent.renderName + '.' + self.renderName
         self.position.mergeWidhParent(parent.position)
-        self.brash.mergeWidhBrash(parent.brash)
+        self.brash.mergeWidhParent(parent.brash)
 
 
 class RenderLib:
@@ -32,7 +32,6 @@ class RenderLib:
         self.styles.setRenderName(renderName)
         scene = draw.getStyledScene(self.styles)
         for itemName, item in scene.items():
-            print(itemName,':',item)
             itemDraw, itemPosition, itemBrash = item
             itemBrash.mergeWithParent(brash)
             itemPosition.mergeWithParent(position)
@@ -92,8 +91,10 @@ class ScreenRenderLib(RenderLib):
 
     def render(self, renderName, draw, position=Position(), brash=Brash()):
         if isinstance(draw, ShapeDraw):
+            print(renderName, '-> outShape')
             self._outShapeDraw(draw, position, brash)
         elif isinstance(draw, LabelDraw):
+            print(renderName, '-> outLabel')
             self._outLabelDraw(draw, position, brash)
         else:
             super().render(renderName, draw, position, brash)

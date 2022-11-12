@@ -27,7 +27,6 @@ class ShapeDraw(Draw):
 
 
 def _solidScene(shape, styles):
-    print('***',styles.getBrash(SOLID_BRASH_STYLE))
     return {'solidShape': (ShapeDraw(shape), Position(), styles.getBrash(SOLID_BRASH_STYLE))}
 
 

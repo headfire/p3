@@ -8,8 +8,12 @@ screen = ScreenRenderLib()
 screen.renderStart()
 
 screen.render('DefaultBrashSphere', SphereDraw(100))
-screen.render('BluePlasticSphere', SphereDraw(50), Translate(0, 0, 100), Brash(PLASTIC_MATERIAL, NICE_BLUE_COLOR))
-screen.render('TransparentSphere', SphereDraw(50), Translate(0, 0, -100), Brash(PLASTIC_MATERIAL, NICE_BLUE_COLOR, 0.7))
+screen.render('BluePlasticSphere', SphereDraw(50), Translate(0, 0, 100),
+              Brash('BlueBrash', PLASTIC_MATERIAL, NICE_BLUE_COLOR)
+              )
+screen.render('TransparentSphere', SphereDraw(50), Translate(0, 0, -100),
+              Brash('BlueBrash', PLASTIC_MATERIAL, NICE_BLUE_COLOR, 0.7)
+              )
 
 
 screen.renderFinish()

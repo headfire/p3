@@ -16,11 +16,11 @@ class Brash:
         return self.transparency
 
     def mergeWithParent(self, parentBrash):
-        if parentBrash.material is None:
+        if parentBrash.material is not None:
             self.material = parentBrash.material
-        if parentBrash.color is None:
+        if parentBrash.color is not None:
             self.color = parentBrash.color
-        if parentBrash.material is None:
+        if parentBrash.material is not None:
             self.transparency = parentBrash.transparency
         self.brashName = parentBrash.brashName + '.' + self.brashName
 

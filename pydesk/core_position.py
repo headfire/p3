@@ -30,6 +30,9 @@ class Position:
         self.describe += ' -> ' + nextChange.describe
         return self
 
+    def mergeWithParent(self, nextChange):
+        self.next(nextChange)
+
     def _dump(self):
         for iRow in range(1, 4):
             prn = ''
