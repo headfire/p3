@@ -8,24 +8,33 @@ from OCC.Display.SimpleGui import init_display
 from core_consts import *
 from core_draw import Draw, ShapeDraw, LabelDraw
 from core_position import Position
-from core_style import Style, Styles
+from core_style import Style
 
 
 class RenderLib:
-    def __init__(self, styles: Styles = Styles()):
-        self.styles = styles
+    def __init__(self):
+        self.rootDrawCounter = 0
+        self.renderPosition = Position()
+        self.renderStyle = Style
+        self.renderNativeSuccess = False
 
-    def render(self, draw: Draw, position=Position(), style=Style(), renderName: str = 'Object'):
-        print(renderName)
-        self.styles.setRenderName(renderName)
-        scene = draw.getStyledScene(self.styles)
-        for itemName, item in scene.items():
-            itemDraw, itemPosition,  = item
-            itemRenderName = renderName + '.' + itemName
-            itemStyle = self.styles.getStyle(itemRenderName)
-            mergedStyle = Style().next(style).next(itemStyle)  # parent first logic
-            mergedPosition = Position().next(itemPosition).next(position)  # child first logic
-            self.render(itemDraw, mergedPosition, mergedStyle, itemRenderName)
+    def _renderNative(self, draw, renderPosition, renderStyle, renderName, level): pass
+
+    def _renderItems(self, draw, renderPosition, renderStyle, renderName, level):
+        for itemName, itemDraw in draw.items():
+            mergedRenderName = renderName + '.' + itemName
+            mergedStyle = Style().next(renderStyle).next(itemDraw.style)  # parent first logic
+            mergedPosition = Position().next(itemDraw.position).next(renderPosition)  # child first logic
+            self._render(itemDraw, mergedPosition, mergedStyle, mergedRenderName, level+1)
+
+    def _render(self, draw, renderPosition, renderStyle, renderName, level):
+        self._renderNative(draw, renderPosition, renderStyle, renderName, level)
+        if not self.renderNativeSuccess:
+            self._renderItems(draw, renderPosition, renderStyle, renderName, level)
+
+    def render(self, draw: Draw):
+        self.rootDrawCounter += 1
+        self._render(draw, Position(), Style(), 'Object'+str(self.rootDrawCounter), 0)
 
     def renderStart(self):
         pass
@@ -35,8 +44,8 @@ class RenderLib:
 
 
 class ScreenRenderLib(RenderLib):
-    def __init__(self, screenX: int = 800, screenY: int = 600, styles=Styles()):
-        super().__init__(styles)
+    def __init__(self, screenX: int = 800, screenY: int = 600):
+        super().__init__()
 
         self.screenX = screenX
         self.screenY = screenY
@@ -52,8 +61,8 @@ class ScreenRenderLib(RenderLib):
         self.display.FitAll()
         self.display_start()
 
-    def _outShapeDraw(self, draw: ShapeDraw, position: Position, style: Style):
-        shapeTr = BRepBuilderAPI_Transform(draw.shape, position.getTrsf()).Shape()
+    def _nativeShape(self, shape, position: Position, style: Style):
+        shapeTr = BRepBuilderAPI_Transform(shape, position.trsf).Shape()
         ais = AIS_Shape(shapeTr)
 
         if style.material is not None:
@@ -71,18 +80,18 @@ class ScreenRenderLib(RenderLib):
 
         self.display.Context.Display(ais, False)
 
-    def _outLabelDraw(self, draw: LabelDraw, position: Position, style: Style):
-        pnt = draw.pnt.Transformed(position.getTrsf())
+    def _nativeLabel(self, pnt, text, position: Position, style: Style):
+        labelPnt = pnt.Transformed(position.trsf)
         heightPx = NORMAL_LABEL_HEIGHT_PX * style.sizeFactor
-        self.display.DisplayMessage(pnt, draw.text, heightPx, style.color, False)
+        self.display.DisplayMessage(labelPnt, text, heightPx, style.color, False)
 
-    def render(self, draw: Draw, position: Position = Position(), style: Style = Style(),
-               renderName: str = 'Object') -> None:
+    def _renderNative(self, draw, renderPosition, renderStyle, renderName, level):
+        self.renderNativeSuccess = True
         if isinstance(draw, ShapeDraw):
             print(renderName, '-> outShape()')
-            self._outShapeDraw(draw, position, style)
+            self._nativeShape(draw.shape, draw.position, draw.style)
         elif isinstance(draw, LabelDraw):
             print(renderName, '-> outLabel()')
-            self._outLabelDraw(draw, position, style)
+            self._nativeLabel(draw.pnt, draw.text, draw.position, draw.style)
         else:
-            super().render(draw, position, style, renderName)
+            self.renderNativeSuccess = False

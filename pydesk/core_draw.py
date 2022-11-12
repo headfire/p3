@@ -1,9 +1,11 @@
 from core_consts import *
-from core_style import Styles
-from core_position import Position, Direct
+from core_style import Style
+from core_position import Position
+# , Direct, Translate
 
-from OCC.Core.gp import gp_Pnt, gp_Vec
-from OCC.Core.BRepPrimAPI import BRepPrimAPI_MakeSphere, BRepPrimAPI_MakeBox, BRepPrimAPI_MakeCone,\
+from OCC.Core.gp import gp_Pnt
+# , gp_Vec
+from OCC.Core.BRepPrimAPI import BRepPrimAPI_MakeSphere, BRepPrimAPI_MakeBox, BRepPrimAPI_MakeCone, \
     BRepPrimAPI_MakeCylinder, BRepPrimAPI_MakeTorus
 
 
@@ -11,68 +13,71 @@ class Pnt(gp_Pnt):
     pass
 
 
+DEF_SOLID_STYLE = Style(GOLD_MATERIAL)
+DEF_SHAPE_STYLE = Style(PLASTIC_MATERIAL)
+DEF_LABEL_STYLE = Style(SILVER_MATERIAL)
+LABEL_DELTA = 20
+
+
 class Draw:
-    def getStyledScene(self, styles: Styles): pass
+    def __init__(self):
+        self.style = Style()
+        self.position = Position()
+        self.items = {}
+        self.exportCommand = 'Draw()'
+
 
 class LabelDraw(Draw):
     def __init__(self, pnt, text):
+        super().__init__()
         self.pnt, self.text = pnt, text
+        self.delta = LABEL_DELTA
+        self.style = DEF_LABEL_STYLE
 
 
 class ShapeDraw(Draw):
     def __init__(self, shape):
+        super().__init__()
         self.shape = shape
+        self.style = DEF_SHAPE_STYLE
 
 
-def _solidScene(shape, styles):
-    return { 'ShapeForSolid': (ShapeDraw(shape), Position()) }
+class SolidDraw(ShapeDraw):
+    def __init__(self, shape):
+        super().__init__(shape)
+        self.style = DEF_SOLID_STYLE
 
 
-class SphereDraw(Draw):
-    def __init__(self, r):
-        self.r = r
-
-    def getStyledScene(self, styles: Styles):
-        shape = BRepPrimAPI_MakeSphere(gp_Pnt(0, 0, 0), self.r).Shape()
-        return _solidScene(shape, styles)
+class SphereDraw(SolidDraw):
+    def __init__(self, centerPnt, radius):
+        shape = BRepPrimAPI_MakeSphere(centerPnt, radius).Shape()
+        super().__init__(shape)
 
 
-class BoxDraw(Draw):
-    def __init__(self, x, y, z):
-        self.x, self.y, self.z = x, y, z
-
-    def getStyledScene(self, styles: Styles):
-        shape = BRepPrimAPI_MakeBox(self.x, self.y, self.z).Shape()
-        return _solidScene(shape, styles)
+class BoxDraw(SolidDraw):
+    def __init__(self, centerPnt, xSize, ySize, zSize):
+        shape = BRepPrimAPI_MakeBox(centerPnt, xSize, ySize, zSize).Shape()
+        super().__init__(shape)
 
 
-class ConeDraw(Draw):
+class ConeDraw(SolidDraw):
     def __init__(self, r1, r2, h):
-        self.r1, self.r2, self.h = r1, r2, h
-
-    def getStyledScene(self, styles: Styles):
-        shape = BRepPrimAPI_MakeCone(self.r1, self.r2, self.h).Shape()
-        return _solidScene(shape, styles)
+        shape = BRepPrimAPI_MakeCone(r1, r2, h).Shape()
+        super().__init__(shape)
 
 
-class CylinderDraw(Draw):
+class CylinderDraw(SolidDraw):
     def __init__(self, r, h):
-        self.r, self.h = r, h
+        shape = BRepPrimAPI_MakeCylinder(r, h).Shape()
+        super().__init__(shape)
 
-    def getStyledScene(self, styles: Styles):
-        shape = BRepPrimAPI_MakeCylinder(self.r, self.h).Shape()
-        return _solidScene(shape, styles)
-
-
-class TorusDraw(Draw):
+class TorusDraw(SolidDraw):
     def __init__(self, r1, r2):
-        self.r1, self.r2 = r1, r2
-
-    def getStyledScene(self, styles: Styles):
-        shape = BRepPrimAPI_MakeTorus(self.r1, self.r2).Shape()
-        return _solidScene(shape, styles)
+        shape = BRepPrimAPI_MakeTorus(r1, r2).Shape()
+        super().__init__(shape)
 
 
+'''
 class LineDraw(Draw):
     def __init__(self, pnt1, pnt2):
         self.pnt1, self.pnt2 = pnt1, pnt2
@@ -109,3 +114,4 @@ class VectorDraw(Draw):
         return { 'line': (LineDraw(self.pnt1, pntM), Position()),
                  'arrow': (ArrowDraw(pntM, self.pnt2), Position())
                 }
+'''

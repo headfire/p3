@@ -38,6 +38,9 @@ DEFAULT_STYLE_RULES = [
     ('', LABEL_BRASH_STYLE, Style(PLASTIC_MATERIAL, NICE_WHITE_COLOR)),
 ]
 
+'''
+ROOT_STYLE_PREFIX = 'Root'
+
 
 class Styles:
     def __init__(self):
@@ -49,3 +52,7 @@ class Styles:
             if ruleStyleName == styleName:
                 return ruleStyleValue
         return Style()
+
+    def set(self, path, style: Style) -> None:
+        self.styleList[path] = Style
+'''
