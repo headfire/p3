@@ -79,10 +79,10 @@ class ScreenRenderLib(RenderLib):
     def render(self, draw: Draw, position: Position = Position(), brash: Style = Style(),
                renderName: str = 'Object') -> None:
         if isinstance(draw, ShapeDraw):
-            print(renderName, '-> outShape')
+            print(renderName, '-> outShape()')
             self._outShapeDraw(draw, position, brash)
         elif isinstance(draw, LabelDraw):
-            print(renderName, '-> outLabel')
+            print(renderName, '-> outLabel()')
             self._outLabelDraw(draw, position, brash)
         else:
             super().render(draw, position, brash, renderName)
