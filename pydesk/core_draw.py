@@ -1,10 +1,8 @@
 from core_consts import *
 from core_style import Style
-from core_position import Position
-# , Direct, Translate
+from core_position import Position, Direct  # , Translate
 
-from OCC.Core.gp import gp_Pnt
-# , gp_Vec
+from OCC.Core.gp import gp_Pnt, gp_Vec
 from OCC.Core.BRepPrimAPI import BRepPrimAPI_MakeSphere, BRepPrimAPI_MakeBox, BRepPrimAPI_MakeCone, \
     BRepPrimAPI_MakeCylinder, BRepPrimAPI_MakeTorus
 
@@ -13,6 +11,7 @@ class Pnt(gp_Pnt):
     pass
 
 
+DEF_LINE_STYLE = Style(CHROME_MATERIAL, NICE_BLUE_COLOR)
 DEF_SOLID_STYLE = Style(GOLD_MATERIAL)
 DEF_SHAPE_STYLE = Style(PLASTIC_MATERIAL)
 DEF_LABEL_STYLE = Style(SILVER_MATERIAL)
@@ -20,8 +19,8 @@ LABEL_DELTA = 20
 
 
 class Draw:
-    def __init__(self):
-        self.style = Style()
+    def __init__(self, style):
+        self.style = style
         self.position = Position()
         self.items = {}
         self.exportCommand = 'Draw()'
@@ -29,15 +28,14 @@ class Draw:
 
 class LabelDraw(Draw):
     def __init__(self, pnt, text):
-        super().__init__()
+        super().__init__(DEF_LABEL_STYLE)
         self.pnt, self.text = pnt, text
         self.delta = LABEL_DELTA
-        self.style = DEF_LABEL_STYLE
 
 
 class ShapeDraw(Draw):
     def __init__(self, shape):
-        super().__init__()
+        super().__init__(DEF_SHAPE_STYLE)
         self.shape = shape
         self.style = DEF_SHAPE_STYLE
 
@@ -77,19 +75,15 @@ class TorusDraw(SolidDraw):
         super().__init__(shape)
 
 
-'''
 class LineDraw(Draw):
     def __init__(self, pnt1, pnt2):
-        self.pnt1, self.pnt2 = pnt1, pnt2
+        super().__init__(DEF_LINE_STYLE)
+        radius = NORMAL_LINE_RADIUS * self.style.sizeFactor
+        position = Direct(pnt1, pnt2)
+        length = gp_Vec(pnt1, pnt2).Magnitude()
+        self.items = {'cylinder': (CylinderDraw(radius, length))}
 
-    def getStyledScene(self, styles: Styles):
-        radius = styles.getScaledSize(NORMAL_LINE_RADIUS, LINE_RADIUS_FACTOR_STYLE)
-        position = Direct(self.pnt1, self.pnt2)
-        length = gp_Vec(self.pnt1, self.pnt2).Magnitude()
-        brash = styles.getBrash(LINE_BRASH_STYLE)
-        return {'cylinder': (CylinderDraw(radius, length), position, brash)}
-
-
+'''
 class ArrowDraw(Draw):
     def __init__(self, pnt1, pnt2):
         self.pnt1, self.pnt2 = pnt1, pnt2
