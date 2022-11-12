@@ -2,7 +2,7 @@ from core_render import ScreenRenderLib
 from core_draw import SphereDraw
 from core_position import Translate
 from core_consts import *
-from core_styles import Style
+from core_style import Style
 
 screen = ScreenRenderLib()
 screen.renderStart()

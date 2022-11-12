@@ -1,5 +1,5 @@
 from core_consts import *
-from core_styles import Styles
+from core_style import Styles
 from core_position import Position, Direct
 
 from OCC.Core.gp import gp_Pnt, gp_Vec

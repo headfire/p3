@@ -19,19 +19,11 @@ class Position:
         self.trsf = gp_Trsf()
         self.describe = 'Position()'
 
-    def getTrsf(self):
-        return self.trsf
-
-    def getDescribe(self):
-        return self.describe
-
     def next(self, nextChange):
         self.trsf *= nextChange.trsf
         self.describe += ' -> ' + nextChange.describe
         return self
 
-    def mergeWithParent(self, nextChange):
-        self.next(nextChange)
 
     def _dump(self):
         for iRow in range(1, 4):

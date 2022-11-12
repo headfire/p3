@@ -8,23 +8,24 @@ from OCC.Display.SimpleGui import init_display
 from core_consts import *
 from core_draw import Draw, ShapeDraw, LabelDraw
 from core_position import Position
-from core_styles import Style, Styles
+from core_style import Style, Styles
 
 
 class RenderLib:
     def __init__(self, styles: Styles = Styles()):
         self.styles = styles
 
-    def render(self, draw: Draw, position=Position(), brash=Style(), renderName: str = 'Object'):
+    def render(self, draw: Draw, position=Position(), style=Style(), renderName: str = 'Object'):
         print(renderName)
         self.styles.setRenderName(renderName)
         scene = draw.getStyledScene(self.styles)
         for itemName, item in scene.items():
-            itemDraw, itemPosition, itemBrash = item
-            itemBrash.mergeWithParent(brash)
-            itemPosition.mergeWithParent(position)
-            newRenderName = renderName + '.' + itemName
-            self.render(itemDraw, itemPosition, itemBrash, newRenderName)
+            itemDraw, itemPosition,  = item
+            itemRenderName = renderName + '.' + itemName
+            itemStyle = self.styles.getStyle(itemRenderName)
+            mergedStyle = Style().next(style).next(itemStyle)  # parent first logic
+            mergedPosition = Position().next(itemPosition).next(position)  # child first logic
+            self.render(itemDraw, mergedPosition, mergedStyle, itemRenderName)
 
     def renderStart(self):
         pass
@@ -75,13 +76,13 @@ class ScreenRenderLib(RenderLib):
         heightPx = NORMAL_LABEL_HEIGHT_PX * style.sizeFactor
         self.display.DisplayMessage(pnt, draw.text, heightPx, style.color, False)
 
-    def render(self, draw: Draw, position: Position = Position(), brash: Style = Style(),
+    def render(self, draw: Draw, position: Position = Position(), style: Style = Style(),
                renderName: str = 'Object') -> None:
         if isinstance(draw, ShapeDraw):
             print(renderName, '-> outShape()')
-            self._outShapeDraw(draw, position, brash)
+            self._outShapeDraw(draw, position, style)
         elif isinstance(draw, LabelDraw):
             print(renderName, '-> outLabel()')
-            self._outLabelDraw(draw, position, brash)
+            self._outLabelDraw(draw, position, style)
         else:
-            super().render(draw, position, brash, renderName)
+            super().render(draw, position, style, renderName)

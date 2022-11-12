@@ -6,13 +6,13 @@ class Style:
         self.material, self.color, self.transparency = material, color, transparency
         self.sizeFactor, self.sizeSubFactor = sizeFactor, sizeSubFactor
 
-    def mergeWithParent(self, parentBrash):
-        if parentBrash.material is not None:
-            self.material = parentBrash.material
-        if parentBrash.color is not None:
-            self.color = parentBrash.color
-        if parentBrash.transparency is not None:
-            self.transparency = parentBrash.transparency
+    def next(self, nextStyle):
+        if nextStyle.material is not None:
+            self.material = nextStyle.material
+        if nextStyle.color is not None:
+            self.color = nextStyle.color
+        if nextStyle.transparency is not None:
+            self.transparency = nextStyle.transparency
 
 
 DEFAULT_STYLE_RULES = [
@@ -41,30 +41,11 @@ DEFAULT_STYLE_RULES = [
 
 class Styles:
     def __init__(self):
-        self.renderName = ''
+        self.renderName = ''  # todo delete this
 
-    @staticmethod
-    def getScale():
-        return 1
-
-    @staticmethod
-    def _getStyle(styleName: str):
+    def getStyle(self, renderName):
+        self.renderName = renderName  # todo  delete this
         for ruleRenderMask, ruleStyleName, ruleStyleValue in DEFAULT_STYLE_RULES:
             if ruleStyleName == styleName:
                 return ruleStyleValue
-        return None
-
-    def setRenderName(self, renderName: str):
-        self.renderName = renderName
-
-    def getScaledSize(self, normalSize, factorStyleName):
-        scale = self.getScale()
-        generalFactor = self._getStyle(GENERAL_FACTOR_STYLE)
-        localFactor = self._getStyle(factorStyleName)
-        return normalSize * scale * generalFactor * localFactor
-
-    def getBrash(self, styleName):
-        brash = self._getStyle(styleName)
-        if not isinstance(brash, Style):
-            raise NameError('No brash style with name ' + styleName)
-        return brash
+        return Style()
