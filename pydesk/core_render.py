@@ -21,9 +21,10 @@ class RenderLib:
     def _renderNative(self, draw, renderPosition, renderStyle, renderName, level): pass
 
     def _renderItems(self, draw, renderPosition, renderStyle, renderName, level):
-        for itemName, itemDraw in draw.items():
+        for itemName, itemDraw in draw.items.items():
             mergedRenderName = renderName + '.' + itemName
-            mergedStyle = Style().next(renderStyle).next(itemDraw.style)  # parent first logic
+            # todo merge style not work
+            mergedStyle = Style().apply(renderStyle).apply(itemDraw.style)  # parent first logic
             mergedPosition = Position().next(itemDraw.position).next(renderPosition)  # child first logic
             self._render(itemDraw, mergedPosition, mergedStyle, mergedRenderName, level+1)
 
@@ -34,7 +35,7 @@ class RenderLib:
 
     def render(self, draw: Draw):
         self.rootDrawCounter += 1
-        self._render(draw, Position(), Style(), 'Object'+str(self.rootDrawCounter), 0)
+        self._render(draw, draw.position, draw.style, 'Object'+str(self.rootDrawCounter), 0)
 
     def renderStart(self):
         pass

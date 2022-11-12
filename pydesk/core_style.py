@@ -6,14 +6,15 @@ class Style:
         self.material, self.color, self.transparency = material, color, transparency
         self.sizeFactor, self.sizeSubFactor = sizeFactor, sizeSubFactor
 
-    def next(self, nextStyle):
-        if nextStyle.material is not None:
-            self.material = nextStyle.material
-        if nextStyle.color is not None:
-            self.color = nextStyle.color
-        if nextStyle.transparency is not None:
-            self.transparency = nextStyle.transparency
-
+    def apply(self, style):
+        if self.material is None:
+            self.material = style.material
+        if self.color is None:
+            self.color = style.color
+        if self.transparency is None:
+            self.transparency = style.transparency
+        # todo factors
+        return self
 
 DEFAULT_STYLE_RULES = [
 

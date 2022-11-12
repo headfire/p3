@@ -69,6 +69,7 @@ class CylinderDraw(SolidDraw):
         shape = BRepPrimAPI_MakeCylinder(r, h).Shape()
         super().__init__(shape)
 
+
 class TorusDraw(SolidDraw):
     def __init__(self, r1, r2):
         shape = BRepPrimAPI_MakeTorus(r1, r2).Shape()
@@ -79,9 +80,11 @@ class LineDraw(Draw):
     def __init__(self, pnt1, pnt2):
         super().__init__(DEF_LINE_STYLE)
         radius = NORMAL_LINE_RADIUS * self.style.sizeFactor
-        position = Direct(pnt1, pnt2)
         length = gp_Vec(pnt1, pnt2).Magnitude()
-        self.items = {'cylinder': (CylinderDraw(radius, length))}
+        cylDraw = CylinderDraw(radius, length)
+        cylDraw.position = Direct(pnt1, pnt2)
+        self.items = {'cylinder': cylDraw}
+
 
 '''
 class ArrowDraw(Draw):
