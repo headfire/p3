@@ -23,12 +23,12 @@ class RenderLib:
     def _renderItems(self, draw, renderPosition, renderStyle, renderName, level):
         for itemName, itemDraw in draw.items.items():
             mergedRenderName = renderName + '.' + itemName
-            # todo merge style not work
             mergedStyle = Style().apply(renderStyle).apply(itemDraw.style)  # parent first logic
             mergedPosition = Position().next(itemDraw.position).next(renderPosition)  # child first logic
             self._render(itemDraw, mergedPosition, mergedStyle, mergedRenderName, level+1)
 
     def _render(self, draw, renderPosition, renderStyle, renderName, level):
+        print(renderName)
         self._renderNative(draw, renderPosition, renderStyle, renderName, level)
         if not self.renderNativeSuccess:
             self._renderItems(draw, renderPosition, renderStyle, renderName, level)
@@ -89,10 +89,10 @@ class ScreenRenderLib(RenderLib):
     def _renderNative(self, draw, renderPosition, renderStyle, renderName, level):
         self.renderNativeSuccess = True
         if isinstance(draw, ShapeDraw):
-            print(renderName, '-> outShape()')
-            self._nativeShape(draw.shape, draw.position, draw.style)
+            print('-> nativeShape()')
+            self._nativeShape(draw.shape, renderPosition, renderStyle)
         elif isinstance(draw, LabelDraw):
-            print(renderName, '-> outLabel()')
-            self._nativeLabel(draw.pnt, draw.text, draw.position, draw.style)
+            print('-> nativeLabel()')
+            self._nativeLabel(draw.pnt, draw.text, renderPosition, renderStyle)
         else:
             self.renderNativeSuccess = False
