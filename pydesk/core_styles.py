@@ -1,10 +1,10 @@
 from core_consts import *
 
 
-class Brash:
-    def __init__(self, brashName='NoEffectBrash', material=None, color=None, transparency=None):
-        self.brashName = brashName
+class Style:
+    def __init__(self, material=None, color=None, transparency=None, sizeFactor=1, lengthFactor=1):
         self.material, self.color, self.transparency = material, color, transparency
+        self.sizeFactor, self.lengthFactor = sizeFactor, lengthFactor
 
     def getMaterial(self):
         return self.material
@@ -22,30 +22,29 @@ class Brash:
             self.color = parentBrash.color
         if parentBrash.material is not None:
             self.transparency = parentBrash.transparency
-        self.brashName = parentBrash.brashName + '.' + self.brashName
 
 
 DEFAULT_STYLE_RULES = [
 
-    ('', SOLID_BRASH_STYLE, Brash('DefSolidBrash', GOLD_MATERIAL)),
+    ('', SOLID_BRASH_STYLE, Style(GOLD_MATERIAL)),
 
     ('', GENERAL_FACTOR_STYLE, 1),
 
     ('', POINT_RADIUS_FACTOR_STYLE, 1),
-    ('', POINT_BRASH_STYLE, Brash('DefPointBrash', CHROME_MATERIAL, NICE_YELLOW_COLOR, None)),
+    ('', POINT_BRASH_STYLE, Style(CHROME_MATERIAL, NICE_YELLOW_COLOR)),
 
     ('', LINE_RADIUS_FACTOR_STYLE, 1),
-    ('', LINE_BRASH_STYLE, Brash('DefLineBrash', CHROME_MATERIAL, NICE_BLUE_COLOR, None)),
+    ('', LINE_BRASH_STYLE, Style(CHROME_MATERIAL, NICE_BLUE_COLOR)),
 
     ('', ARROW_RADIUS_FACTOR_STYLE, 1),
     ('', ARROW_LENGTH_FACTOR_STYLE, 1),
 
     ('', SURFACE_WIDTH_FACTOR_STYLE, 1),
-    ('', SURFACE_BRASH_STYLE, Brash('DefSurfaceBrash', CHROME_MATERIAL, NICE_ORIGINAL_COLOR, None)),
+    ('', SURFACE_BRASH_STYLE, Style('DefSurfaceBrash', CHROME_MATERIAL, NICE_ORIGINAL_COLOR, None)),
 
     ('', LABEL_DELTA_FACTOR_STYLE, 1),
     ('', LABEL_HEIGHT_FACTOR_STYLE, 1),
-    ('', LABEL_BRASH_STYLE, Brash('DefLabelBrash', PLASTIC_MATERIAL, NICE_WHITE_COLOR, None)),
+    ('', LABEL_BRASH_STYLE, Style('DefLabelBrash', PLASTIC_MATERIAL, NICE_WHITE_COLOR, None)),
 ]
 
 
@@ -57,7 +56,8 @@ class Styles:
     def getScale():
         return 1
 
-    def _getStyle(self, styleName: str):
+    @staticmethod
+    def _getStyle(styleName: str):
         for ruleRenderMask, ruleStyleName, ruleStyleValue in DEFAULT_STYLE_RULES:
             if ruleStyleName == styleName:
                 return ruleStyleValue
@@ -74,6 +74,6 @@ class Styles:
 
     def getBrash(self, styleName):
         brash = self._getStyle(styleName)
-        if not isinstance(brash, Brash):
+        if not isinstance(brash, Style):
             raise NameError('No brash style with name ' + styleName)
         return brash

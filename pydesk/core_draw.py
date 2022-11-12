@@ -25,7 +25,6 @@ class ShapeDraw(Draw):
         self.shape = shape
 
 
-
 def _solidScene(shape, styles):
     return {'solidShape': (ShapeDraw(shape), Position(), styles.getBrash(SOLID_BRASH_STYLE))}
 

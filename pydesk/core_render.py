@@ -5,29 +5,16 @@ from OCC.Core.Graphic3d import Graphic3d_MaterialAspect
 
 from OCC.Display.SimpleGui import init_display
 
-from core_draw import ShapeDraw, LabelDraw
+from core_draw import Draw, ShapeDraw, LabelDraw
 from core_position import Position
-from core_styles import Brash, Styles
-
-
-class SceneItem:
-    def __init__(self, renderName, draw, position=Position(), brash=Brash()):
-        self.renderName = renderName
-        self.draw = draw
-        self.position = position
-        self.brash = brash
-
-    def mergeWithParent(self, parent):
-        self.renderName=parent.renderName + '.' + self.renderName
-        self.position.mergeWidhParent(parent.position)
-        self.brash.mergeWidhParent(parent.brash)
+from core_styles import Style, Styles
 
 
 class RenderLib:
     def __init__(self, styles: Styles = Styles()):
         self.styles = styles
 
-    def render(self, renderName, draw, position=Position(), brash=Brash()):
+    def render(self, draw: Draw, position=Position(), brash=Style(), renderName: str = 'Object'):
         print(renderName)
         self.styles.setRenderName(renderName)
         scene = draw.getStyledScene(self.styles)
@@ -35,8 +22,8 @@ class RenderLib:
             itemDraw, itemPosition, itemBrash = item
             itemBrash.mergeWithParent(brash)
             itemPosition.mergeWithParent(position)
-            itemName = renderName + '.' + itemName
-            self.render(itemName, itemDraw, itemPosition, itemBrash)
+            newRenderName = renderName + '.' + itemName
+            self.render(itemDraw, itemPosition, itemBrash, newRenderName)
 
     def renderStart(self):
         pass
@@ -63,7 +50,7 @@ class ScreenRenderLib(RenderLib):
         self.display.FitAll()
         self.display_start()
 
-    def _outShapeDraw(self, draw: ShapeDraw, position: Position, brash: Brash):
+    def _outShapeDraw(self, draw: ShapeDraw, position: Position, brash: Style):
         shapeTr = BRepBuilderAPI_Transform(draw.shape, position.getTrsf()).Shape()
         ais = AIS_Shape(shapeTr)
 
@@ -85,11 +72,12 @@ class ScreenRenderLib(RenderLib):
 
         self.display.Context.Display(ais, False)
 
-    def _outLabelDraw(self, draw: LabelDraw, position: Position, brash: Brash):
+    def _outLabelDraw(self, draw: LabelDraw, position: Position, brash: Style):
         pnt = draw.pnt.Transformed(position.getTrsf())
         self.display.DisplayMessage(pnt, draw.text, draw.hPx, brash.getColor(), False)
 
-    def render(self, renderName, draw, position=Position(), brash=Brash()):
+    def render(self, draw: Draw, position: Position = Position(), brash: Style = Style(),
+               renderName: str = 'Object') -> None:
         if isinstance(draw, ShapeDraw):
             print(renderName, '-> outShape')
             self._outShapeDraw(draw, position, brash)
@@ -97,4 +85,4 @@ class ScreenRenderLib(RenderLib):
             print(renderName, '-> outLabel')
             self._outLabelDraw(draw, position, brash)
         else:
-            super().render(renderName, draw, position, brash)
+            super().render(draw, position, brash, renderName)
