@@ -19,25 +19,76 @@ class Styler:
     def setRenderName(self, renderName):
         self.renderName = renderName
 
-    def getValue(self, styleName, normalValue):
-        # todo
-        if styleName is not None and self.renderName is not None:
-            return normalValue
+    # def getOverride(self, styleName): pass  # todo
+
+    def getValue(self, styleName: str):
+        finalStyleValue = None  # self.findOverride(styleName)  # todo
+        if finalStyleValue is None:
+            finalStyleValue = DEF_STYLES[styleName]
+        if styleName.endswith('_A_SCALED'):
+            a = self.getValue('SCALE_A')
+            finalStyleValue *= a
+        elif styleName.endswith('_B_SCALED'):
+            a = self.getValue('SCALE_A')
+            b = self.getValue('SCALE_B')
+            finalStyleValue *= a * b
+        elif styleName.endswith('_C_SCALED'):
+            a = self.getValue('SCALE_A')
+            b = self.getValue('SCALE_B')
+            c = self.getValue('SCALE_C')
+            finalStyleValue *= a * b * c
+        return finalStyleValue
 
 
-NORMAL_POINT_RADIUS = 5
-NORMAL_LINE_RADIUS = NORMAL_POINT_RADIUS * 0.5
-NORMAL_SURFACE_HALF_WIDTH = NORMAL_POINT_RADIUS * 0.2
-NORMAL_ARROW_RADIUS = NORMAL_POINT_RADIUS
-NORMAL_ARROW_LENGTH = NORMAL_ARROW_RADIUS * 4
-NORMAL_LABEL_HEIGHT_PX = 20
+SCALE_A = 'SCALE_A'
+SCALE_B = 'SCALE_B'
+SCALE_C = 'SCALE_C'
 
-DEF_POINT_BRASH = Brash(CHROME_MATERIAL, NICE_YELLOW_COLOR)
-DEF_LINE_BRASH = Brash(CHROME_MATERIAL, NICE_BLUE_COLOR)
-DEF_SOLID_BRASH = Brash(GOLD_MATERIAL)
-DEF_SHAPE_BRASH = Brash(PLASTIC_MATERIAL)
-DEF_LABEL_BRASH = Brash(SILVER_MATERIAL)
-DEF_LABEL_DELTA = 20
+LABEL_BRASH = 'LABEL_BRASH'
+LABEL_DELTA = 'LABEL_DELTA_A_SCALED'
+LABEL_HEIGHT_PX = 'LABEL_HEIGHT_PX'
+
+POINT_BRASH = 'POINT_BRASH_B_SCALED'
+POINT_RADIUS = 'POINT_RADIUS'
+
+LINE_BRASH = 'LINE_BRASH'
+LINE_RADIUS = 'LINE_RADIUS_B_SCALED'
+LINE_ARROW_RADIUS = 'ARROW_RADIUS_B_SCALED'
+LINE_ARROW_LENGTH = 'ARROW_LENGTH_C_SCALED'
+
+FACE_BRASH = 'FACE_BRASH'
+FACE_WIDTH = 'FACE_WIDTH_B_SCALED'
+
+SOLID_BRASH = 'SOLID_BRASH'
+
+SURFACE_BRASH = 'SURFACE_BRASH'
+
+
+DEF_STYLES = {
+
+    SCALE_A: 1,
+    SCALE_B: 1,
+    SCALE_C: 1,
+
+    LABEL_BRASH: Brash(SILVER_MATERIAL),
+    LABEL_DELTA: 20,
+    LABEL_HEIGHT_PX: 20,
+
+    POINT_BRASH: Brash(CHROME_MATERIAL, NICE_YELLOW_COLOR),
+    POINT_RADIUS: 5,
+
+    LINE_BRASH: Brash(CHROME_MATERIAL, NICE_BLUE_COLOR),
+    LINE_RADIUS: 2.5,
+    LINE_ARROW_RADIUS: 5,
+    LINE_ARROW_LENGTH: 20,
+
+    FACE_BRASH: Brash(CHROME_MATERIAL, NICE_BLUE_COLOR),
+    FACE_WIDTH: 1,
+
+    SOLID_BRASH: Brash(GOLD_MATERIAL),
+
+    SURFACE_BRASH: Brash(PLASTIC_MATERIAL, NICE_GRAY_COLOR)
+}
 
 
 class Draw:
@@ -57,7 +108,7 @@ class Draw:
     def addStyledCodeLines(self, styler): pass
 
 
-class FinalLabelDraw(Draw):
+class FinalTextDraw(Draw):
     def __init__(self, pnt, text, textHeightPx):
         super().__init__()
         self.pnt = pnt
@@ -71,6 +122,9 @@ class FinalShapeDraw(Draw):
         self.shape = shape
 
 
+# ************************************
+
+
 class LabelDraw(Draw):
     def __init__(self, pnt, text):
         super().__init__()
@@ -78,23 +132,26 @@ class LabelDraw(Draw):
         self.text = text
 
     def addStyledItems(self, styler):
-        delta = styler.getValue('LABEL_DELTA', DEF_LABEL_DELTA)
-        finalBrash = styler.getValue('LABEL_BRASH', DEF_LABEL_BRASH)
+        delta = styler.getValue(LABEL_DELTA)
+        heightPx = styler.getValue(LABEL_HEIGHT_PX)
+        finalBrash = styler.getValue(LABEL_BRASH)
         finalPosition = Translate(delta, delta, delta)
-        finalDraw = FinalLabelDraw(self.pnt, self.text)
-        self.add('finalDraw', finalDraw, finalPosition, finalBrash)
+        finalDraw = FinalTextDraw(self.pnt, self.text, heightPx)
+        self.addItem('draw', finalDraw, finalPosition, finalBrash)
 
 
-class ShapeDraw(Draw):
+class SurfaceDraw(Draw):
     def __init__(self, shape):
         super().__init__()
         self.shape = shape
 
     def addStyledItems(self, styler):
-        brash = styler.getValue('SHAPE_BRASH', DEF_SHAPE_BRASH)
-        position = Position()
+        brash = styler.getValue(SURFACE_BRASH)
         draw = FinalShapeDraw(self.shape)
-        self.addItem('draw', draw, position, brash)
+        self.addItem('draw', draw, Position(), brash)
+
+
+# *************************************
 
 
 class SphereDraw(Draw):
@@ -104,19 +161,28 @@ class SphereDraw(Draw):
         self.r = r
 
     def addStyledItems(self, styler):
-        brash = styler.getValue('SOLID_BRASH', DEF_SOLID_BRASH)
+        brash = styler.getValue(SOLID_BRASH)
         shape = BRepPrimAPI_MakeSphere(self.pnt, self.r).Shape()
         draw = FinalShapeDraw(shape)
         self.addItem('draw', draw, Position(), brash)
 
 
+class BoxDraw(Draw):
+    def __init__(self, pnt, x, y, z):
+        super().__init__()
+        self.pnt = pnt
+        self.x = x
+        self.y = y
+        self.z = z
+
+    def addStyledItems(self, styler):
+        brash = styler.getValue(SOLID_BRASH)
+        shape = BRepPrimAPI_MakeBox(self.pnt, self.x, self.y, self.z).Shape()
+        draw = FinalShapeDraw(shape)
+        self.addItem('draw', draw, Position(), brash)
+
+
 '''
-class BoxDraw(SolidDraw):
-    def __init__(self, pnt, xSize, ySize, zSize):
-        shape = BRepPrimAPI_MakeBox(centerPnt, xSize, ySize, zSize).Shape()
-        super().__init__(shape)
-
-
 class ConeDraw(SolidDraw):
     def __init__(self, r1, r2, h):
         shape = BRepPrimAPI_MakeCone(r1, r2, h).Shape()

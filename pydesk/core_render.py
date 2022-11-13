@@ -6,7 +6,7 @@ from OCC.Core.Graphic3d import Graphic3d_MaterialAspect
 from OCC.Display.SimpleGui import init_display
 
 # from core_consts import *
-from core_draw import Draw, Styler, FinalShapeDraw, FinalLabelDraw
+from core_draw import Draw, Styler, FinalShapeDraw, FinalTextDraw
 from core_position import Position
 from core_style import Brash
 
@@ -33,7 +33,6 @@ class RenderLib:
         print(renderName)
         self._renderNative(draw, renderPosition, renderBrash, renderName, level)
         if not self.renderNativeSuccess:
-            print('***** Render items ***')
             draw.addStyledItems(self.styler)
             self._renderItems(draw, renderPosition, renderBrash, renderName, level)
 
@@ -96,7 +95,7 @@ class ScreenRenderLib(RenderLib):
         if isinstance(draw, FinalShapeDraw):
             print('-> nativeShape()')
             self._nativeShape(draw.shape, renderPosition, renderBrash)
-        elif isinstance(draw, FinalLabelDraw):
+        elif isinstance(draw, FinalTextDraw):
             print('-> nativeLabel()')
             self._nativeLabel(draw.pnt, draw.text, draw.textHeightPx, renderPosition, renderBrash)
         else:
