@@ -1,5 +1,5 @@
 from core_consts import *
-from core_style import Style
+from core_style import Brash
 from core_position import Position, Direct, Translate
 
 from OCC.Core.gp import gp_Pnt, gp_Vec
@@ -12,6 +12,19 @@ class Pnt(gp_Pnt):
     pass
 
 
+class Styler:
+    def __init__(self):
+        self.renderName = 'root'
+
+    def setRenderName(self, renderName):
+        self.renderName = renderName
+
+    def getValue(self, styleName, normalValue):
+        # todo
+        if styleName is not None and self.renderName is not None:
+            return normalValue
+
+
 NORMAL_POINT_RADIUS = 5
 NORMAL_LINE_RADIUS = NORMAL_POINT_RADIUS * 0.5
 NORMAL_SURFACE_HALF_WIDTH = NORMAL_POINT_RADIUS * 0.2
@@ -19,38 +32,43 @@ NORMAL_ARROW_RADIUS = NORMAL_POINT_RADIUS
 NORMAL_ARROW_LENGTH = NORMAL_ARROW_RADIUS * 4
 NORMAL_LABEL_HEIGHT_PX = 20
 
-DEF_POINT_STYLE = Style(CHROME_MATERIAL, NICE_YELLOW_COLOR)
-DEF_LINE_STYLE = Style(CHROME_MATERIAL, NICE_BLUE_COLOR)
-DEF_SOLID_STYLE = Style(GOLD_MATERIAL)
-DEF_SHAPE_STYLE = Style(PLASTIC_MATERIAL)
-DEF_LABEL_STYLE = Style(SILVER_MATERIAL)
+DEF_POINT_BRASH = Brash(CHROME_MATERIAL, NICE_YELLOW_COLOR)
+DEF_LINE_BRASH = Brash(CHROME_MATERIAL, NICE_BLUE_COLOR)
+DEF_SOLID_BRASH = Brash(GOLD_MATERIAL)
+DEF_SHAPE_BRASH = Brash(PLASTIC_MATERIAL)
+DEF_LABEL_BRASH = Brash(SILVER_MATERIAL)
 DEF_LABEL_DELTA = 20
 
 
 class Draw:
     def __init__(self):
         self.position = Position()
-        self.exportCommand = 'Draw()'
+        self.brash = Brash()
+        self.items = {}
+        self.code = []
 
-    def getStyledScene(self, styler, position): pass
+    def makeStyledItems(self, styler): pass
+    def makeCode(self, styler): pass
+
+    def add(self, nm, draw, position, brash):
+        self.items[nm] = draw, position, brash
+
+    def makeCode(self, line):
+        self.code.append(line)
 
 
-class LabelFinalDraw(Draw):
-    def __init__(self, pnt, text, style, delta, textHeightPx):
+class FinalLabelDraw(Draw):
+    def __init__(self, pnt, text, textHeightPx):
         super().__init__()
         self.pnt = pnt
         self.text = text
-        self.style = style
-        self.delta = delta
-        self.delta = delta
         self.textHeightPx = textHeightPx
 
 
-class ShapeFinalDraw(Draw):
-    def __init__(self, shape, style):
+class FinalShapeDraw(Draw):
+    def __init__(self, shape):
         super().__init__()
         self.shape = shape
-        self.style = style
 
 
 class LabelDraw(Draw):
@@ -58,51 +76,42 @@ class LabelDraw(Draw):
         super().__init__()
         self.pnt = pnt
         self.text = text
-        self.style = DEF_LABEL_STYLE
-        self.delta = DEF_LABEL_DELTA
 
-    def getStyledScene(self, styler, position):
-        labelStyle = styler.getValue('LABEL_STYLE', self.style)
-        delta = styler.getValue('LABEL_DELTA', self.delta)
-        labelPosition = Position().next(Translate(delta, delta, delta)).next(position)
-        labelPoint = labelPosition.movePnt(self.pnt)
-        return {'finalDraw': LabelFinalDraw(labelPoint, self.text, labelStyle)}
+    def makeStyledScene(self, styler):
+        delta = styler.getValue('LABEL_DELTA', DEF_LABEL_DELTA)
+        finalBrash = styler.getValue('LABEL_BRASH', DEF_LABEL_BRASH)
+        finalPosition = Translate(delta, delta, delta)
+        finalDraw = FinalLabelDraw(self.pnt, self.text)
+        self.add('finalDraw', finalDraw, finalPosition, finalBrash)
 
 
 class ShapeDraw(Draw):
     def __init__(self, shape):
         super().__init__()
         self.shape = shape
-        self.style = DEF_LABEL_STYLE
 
-    def getStyledScene(self, styler, position):
-        finalStyle = styler.getValue('LABEL_STYLE', self.style)
-        delta = styler.getValue('LABEL_DELTA', self.delta)
-        finalShape = BRepBuilderAPI_Transform(self.shape, position.trsf).Shape()
-        return {'finalDraw': ShapeFinalDraw(finalShape, finalStyle)}
-
-
-class ShapeDraw(Draw):
-    def __init__(self, shape):
-        super().__init__(DEF_SHAPE_STYLE)
-        self.shape = shape
-        self.style = DEF_SHAPE_STYLE
-
-
-class SolidDraw(ShapeDraw):
-    def __init__(self, shape):
-        super().__init__(shape)
-        self.style = DEF_SOLID_STYLE
+    def makeStyledScene(self, styler):
+        brash = styler.getValue('SHAPE_BRASH', DEF_SHAPE_BRASH)
+        position = Position()
+        draw = FinalShapeDraw(self.shape)
+        self.add('draw', draw, position, brash)
 
 
 class SphereDraw(SolidDraw):
-    def __init__(self, centerPnt, radius):
-        shape = BRepPrimAPI_MakeSphere(centerPnt, radius).Shape()
+    def __init__(self, pnt, r):
         super().__init__(shape)
+        self.pnt = pnt
+        self.r = r
 
+    def makeStyledScene(self, styler):
+        brash = styler.getValue('SOLID_BRASH', DEF_SOLID_BRASH)
+        shape = BRepPrimAPI_MakeSphere(self.pnt, self.r).Shape()
+        draw = FinalShapeDraw(shape)
+        self.add('draw', draw, Position(), brash)
 
+'''
 class BoxDraw(SolidDraw):
-    def __init__(self, centerPnt, xSize, ySize, zSize):
+    def __init__(self, pnt, xSize, ySize, zSize):
         shape = BRepPrimAPI_MakeBox(centerPnt, xSize, ySize, zSize).Shape()
         super().__init__(shape)
 
@@ -163,3 +172,4 @@ class VectorDraw(Draw):
         pntM = pnt1.Translated(v)
         self.items['Line'] = LineDraw(pnt1, pntM)
         self.items['Arrow'] = ArrowDraw(pntM, pnt2)
+'''

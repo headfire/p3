@@ -1,11 +1,10 @@
 from core_consts import *
 
 
-class Style:
-    def __init__(self, material=None, color=None, transparency=None, sizeFactor=None, sizeSubFactor=None):
+class Brash:
+    def __init__(self, material=None, color=None, transparency=None):
         self.material, self.color, self.transparency = material, color, transparency
-        self.sizeFactor, self.sizeSubFactor = sizeFactor, sizeSubFactor
-
+'''
     def apply(self, style):
         if self.material is None:
             self.material = style.material
@@ -30,7 +29,7 @@ class Style:
         if self.sizeFactor is not None:
             factor = self.sizeFactor
         return self.getSize(normalSize) * factor
-
+'''
 
 DEFAULT_STYLE_RULES = [
 
