@@ -5,7 +5,6 @@ from core_position import Position, Direct, Translate
 from OCC.Core.gp import gp_Pnt, gp_Vec
 from OCC.Core.BRepPrimAPI import BRepPrimAPI_MakeSphere, BRepPrimAPI_MakeBox, BRepPrimAPI_MakeCone, \
     BRepPrimAPI_MakeCylinder, BRepPrimAPI_MakeTorus
-from OCC.Core.BRepBuilderAPI import BRepBuilderAPI_Transform
 
 
 class Pnt(gp_Pnt):
@@ -247,27 +246,32 @@ class LineDraw(Draw):
         self.addItem('draw', draw, position, brash)
 
 
-'''
-
 class ArrowDraw(Draw):
     def __init__(self, pnt1, pnt2):
-        super().__init__(DEF_LINE_STYLE)
-        arrowRadius = self.style.getSize(NORMAL_ARROW_RADIUS)
-        arrowLength = self.style.getSubSize(NORMAL_ARROW_LENGTH)
-        cone = ConeDraw(arrowRadius, 0, arrowLength)
-        cone.position = Direct(pnt1, pnt2)
-        self.items['Cone'] = cone
+        super().__init__()
+        self.pnt1 = pnt1
+        self.pnt2 = pnt2
+
+    def addStyledItems(self, styler):
+        brash = styler.getValue(LINE_BRASH)
+        r = styler.getValue(LINE_ARROW_RADIUS)
+        length = styler.getValue(LINE_ARROW_LENGTH)
+        draw = ConeDraw(r, 0, length)
+        position = Direct(self.pnt1, self.pnt2)
+        self.addItem('draw', draw, position, brash)
 
 
 class VectorDraw(Draw):
     def __init__(self, pnt1, pnt2):
-        super().__init__(DEF_LINE_STYLE)
-        arrowLength = self.style.getSubSize(NORMAL_ARROW_LENGTH)
-        v = gp_Vec(pnt1, pnt2)
+        super().__init__()
+        self.pnt1 = pnt1
+        self.pnt2 = pnt2
+
+    def addStyledItems(self, styler):
+        arrowLength = styler.getValue(LINE_ARROW_LENGTH)
+        v = gp_Vec(self.pnt1, self.pnt2)
         vLen = v.Magnitude()
         v *= (vLen - arrowLength) / vLen
-        pntM = pnt1.Translated(v)
-        self.items['Line'] = LineDraw(pnt1, pntM)
-        self.items['Arrow'] = ArrowDraw(pntM, pnt2)
-        
-'''
+        pntM = self.pnt1.Translated(v)
+        self.addItem('line', LineDraw(self.pnt1, pntM))
+        self.addItem('arrow', ArrowDraw(pntM, self.pnt2))
