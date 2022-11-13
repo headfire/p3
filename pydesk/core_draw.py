@@ -47,14 +47,14 @@ class Draw:
         self.items = {}
         self.code = []
 
-    def makeStyledItems(self, styler): pass
-    def makeCode(self, styler): pass
-
-    def add(self, nm, draw, position, brash):
+    def addItem(self, nm, draw, position, brash):
         self.items[nm] = draw, position, brash
 
-    def makeCode(self, line):
+    def addCodeLine(self, line):
         self.code.append(line)
+
+    def addStyledItems(self, styler): pass
+    def addStyledCodeLines(self, styler): pass
 
 
 class FinalLabelDraw(Draw):
@@ -77,7 +77,7 @@ class LabelDraw(Draw):
         self.pnt = pnt
         self.text = text
 
-    def makeStyledScene(self, styler):
+    def addStyledItems(self, styler):
         delta = styler.getValue('LABEL_DELTA', DEF_LABEL_DELTA)
         finalBrash = styler.getValue('LABEL_BRASH', DEF_LABEL_BRASH)
         finalPosition = Translate(delta, delta, delta)
@@ -90,24 +90,25 @@ class ShapeDraw(Draw):
         super().__init__()
         self.shape = shape
 
-    def makeStyledScene(self, styler):
+    def addStyledItems(self, styler):
         brash = styler.getValue('SHAPE_BRASH', DEF_SHAPE_BRASH)
         position = Position()
         draw = FinalShapeDraw(self.shape)
-        self.add('draw', draw, position, brash)
+        self.addItem('draw', draw, position, brash)
 
 
-class SphereDraw(SolidDraw):
+class SphereDraw(Draw):
     def __init__(self, pnt, r):
-        super().__init__(shape)
+        super().__init__()
         self.pnt = pnt
         self.r = r
 
-    def makeStyledScene(self, styler):
+    def addStyledItems(self, styler):
         brash = styler.getValue('SOLID_BRASH', DEF_SOLID_BRASH)
         shape = BRepPrimAPI_MakeSphere(self.pnt, self.r).Shape()
         draw = FinalShapeDraw(shape)
-        self.add('draw', draw, Position(), brash)
+        self.addItem('draw', draw, Position(), brash)
+
 
 '''
 class BoxDraw(SolidDraw):
@@ -172,4 +173,5 @@ class VectorDraw(Draw):
         pntM = pnt1.Translated(v)
         self.items['Line'] = LineDraw(pnt1, pntM)
         self.items['Arrow'] = ArrowDraw(pntM, pnt2)
+        
 '''

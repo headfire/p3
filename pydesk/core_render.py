@@ -5,38 +5,43 @@ from OCC.Core.Graphic3d import Graphic3d_MaterialAspect
 
 from OCC.Display.SimpleGui import init_display
 
-from core_consts import *
-from core_draw import Draw, ShapeDraw, LabelDraw
+# from core_consts import *
+from core_draw import Draw, Styler, FinalShapeDraw, FinalLabelDraw
 from core_position import Position
-from core_style import Style
+from core_style import Brash
 
 
 class RenderLib:
     def __init__(self):
         self.rootDrawCounter = 0
         self.renderPosition = Position()
-        self.renderStyle = Style
+        self.renderBrash = Brash
         self.renderNativeSuccess = False
+        self.styler = Styler()
 
-    def _renderNative(self, draw, renderPosition, renderStyle, renderName, level): pass
+    def _renderNative(self, draw, renderPosition, renderBrash, renderName, level): pass
 
-    def _renderItems(self, draw, renderPosition, renderStyle, renderName, level):
-        for itemName, itemDraw in draw.items.items():
-            print('*** render sizeFactor ***', renderStyle.sizeFactor)
-            mergedRenderName = renderName + '.' + itemName
-            mergedStyle = Style().apply(renderStyle).apply(itemDraw.style)  # parent first logic
-            mergedPosition = Position().next(itemDraw.position).next(renderPosition)  # child first logic
-            self._render(itemDraw, mergedPosition, mergedStyle, mergedRenderName, level+1)
+    def _renderItems(self, draw, renderPosition, renderBrash, renderName, level):
+        for itemName, itemContainer in draw.items.items():
+            itemDraw, itemPosition, itemBrash = itemContainer
+            mergedRenderName = renderName + '->' + itemName + ':' + itemDraw.__class__.__name__
+            mergedBrash = Brash().apply(renderBrash).apply(itemBrash)  # parent first logic
+            mergedPosition = Position().next(itemPosition).next(renderPosition)  # child first logic
+            self._render(itemDraw, mergedPosition, mergedBrash, mergedRenderName, level+1)
 
-    def _render(self, draw, renderPosition, renderStyle, renderName, level):
+    def _render(self, draw, renderPosition, renderBrash, renderName, level):
         print(renderName)
-        self._renderNative(draw, renderPosition, renderStyle, renderName, level)
+        self._renderNative(draw, renderPosition, renderBrash, renderName, level)
         if not self.renderNativeSuccess:
-            self._renderItems(draw, renderPosition, renderStyle, renderName, level)
+            print('***** Render items ***')
+            draw.addStyledItems(self.styler)
+            self._renderItems(draw, renderPosition, renderBrash, renderName, level)
 
-    def render(self, draw: Draw):
-        self.rootDrawCounter += 1
-        self._render(draw, draw.position, draw.style, 'Object'+str(self.rootDrawCounter), 0)
+    def render(self, draw: Draw, position=Position(), brash=Brash(), nm=''):
+        if nm == '':
+            self.rootDrawCounter += 1
+            nm = 'renderObj' + str(self.rootDrawCounter) + ':' + draw.__class__.__name__
+        self._render(draw, position, brash, nm, 0)
 
     def renderStart(self):
         pass
@@ -63,37 +68,36 @@ class ScreenRenderLib(RenderLib):
         self.display.FitAll()
         self.display_start()
 
-    def _nativeShape(self, shape, position: Position, style: Style):
+    def _nativeShape(self, shape, position: Position, brash: Brash):
         shapeTr = BRepBuilderAPI_Transform(shape, position.trsf).Shape()
         ais = AIS_Shape(shapeTr)
 
-        if style.material is not None:
-            aspect = Graphic3d_MaterialAspect(style.material)
+        if brash.material is not None:
+            aspect = Graphic3d_MaterialAspect(brash.material)
             ais.SetMaterial(aspect)
 
-        if style.transparency is not None:
-            ais.SetTransparency(style.transparency)
+        if brash.transparency is not None:
+            ais.SetTransparency(brash.transparency)
 
-        if style.color is not None:
-            r, g, b = style.color
+        if brash.color is not None:
+            r, g, b = brash.color
             qColor = Quantity_Color(r, g, b,
                                     Quantity_TypeOfColor(Quantity_TypeOfColor.Quantity_TOC_RGB))
             ais.SetColor(qColor)
 
         self.display.Context.Display(ais, False)
 
-    def _nativeLabel(self, pnt, text, position: Position, style: Style):
+    def _nativeLabel(self, pnt, text, heightPx, position: Position, brash: Brash):
         labelPnt = pnt.Transformed(position.trsf)
-        heightPx = NORMAL_LABEL_HEIGHT_PX * style.sizeFactor
-        self.display.DisplayMessage(labelPnt, text, heightPx, style.color, False)
+        self.display.DisplayMessage(labelPnt, text, heightPx, brash.color, False)
 
-    def _renderNative(self, draw, renderPosition, renderStyle, renderName, level):
+    def _renderNative(self, draw, renderPosition, renderBrash, renderName, level):
         self.renderNativeSuccess = True
-        if isinstance(draw, ShapeDraw):
+        if isinstance(draw, FinalShapeDraw):
             print('-> nativeShape()')
-            self._nativeShape(draw.shape, renderPosition, renderStyle)
-        elif isinstance(draw, LabelDraw):
+            self._nativeShape(draw.shape, renderPosition, renderBrash)
+        elif isinstance(draw, FinalLabelDraw):
             print('-> nativeLabel()')
-            self._nativeLabel(draw.pnt, draw.text, renderPosition, renderStyle)
+            self._nativeLabel(draw.pnt, draw.text, draw.textHeightPx, renderPosition, renderBrash)
         else:
             self.renderNativeSuccess = False
