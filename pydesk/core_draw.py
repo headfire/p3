@@ -15,7 +15,7 @@ NORMAL_POINT_RADIUS = 5
 NORMAL_LINE_RADIUS = NORMAL_POINT_RADIUS * 0.5
 NORMAL_SURFACE_HALF_WIDTH = NORMAL_POINT_RADIUS * 0.2
 NORMAL_ARROW_RADIUS = NORMAL_POINT_RADIUS
-NORMAL_ARROW_LENGTH = NORMAL_ARROW_RADIUS * 3
+NORMAL_ARROW_LENGTH = NORMAL_ARROW_RADIUS * 4
 NORMAL_LABEL_HEIGHT_PX = 20
 
 DEF_POINT_STYLE = Style(CHROME_MATERIAL, NICE_YELLOW_COLOR)
@@ -88,8 +88,8 @@ class PointDraw(Draw):
     def __init__(self, pnt):
         super().__init__(DEF_POINT_STYLE)
         radius = NORMAL_POINT_RADIUS * self.style.sizeFactor
-        sphereDraw = SphereDraw(pnt, radius)
-        self.items = {'Sphere': sphereDraw}
+        sphere = SphereDraw(pnt, radius)
+        self.items['Sphere'] = sphere
 
 
 class LineDraw(Draw):
@@ -97,34 +97,28 @@ class LineDraw(Draw):
         super().__init__(DEF_LINE_STYLE)
         radius = NORMAL_LINE_RADIUS * self.style.sizeFactor
         length = gp_Vec(pnt1, pnt2).Magnitude()
-        cylDraw = CylinderDraw(radius, length)
-        cylDraw.position = Direct(pnt1, pnt2)
-        self.items = {'Cylinder': cylDraw}
+        cyl = CylinderDraw(radius, length)
+        cyl.position = Direct(pnt1, pnt2)
+        self.items['Cylinder'] = cyl
 
 
-'''
 class ArrowDraw(Draw):
     def __init__(self, pnt1, pnt2):
-        self.pnt1, self.pnt2 = pnt1, pnt2
-
-    def getStyledScene(self, styles: Styles):
-        arrowRadius = styles.getScaledSize(NORMAL_ARROW_RADIUS, ARROW_RADIUS_FACTOR_STYLE)
-        arrowLength = styles.getScaledSize(NORMAL_ARROW_LENGTH, ARROW_LENGTH_FACTOR_STYLE)
-        brash = styles.getBrash(LINE_BRASH_STYLE)
-        return {'cone': (ConeDraw(arrowRadius, 0, arrowLength), Direct(self.pnt1, self.pnt2), brash)}
+        super().__init__(DEF_LINE_STYLE)
+        arrowRadius = NORMAL_ARROW_RADIUS * self.style.sizeFactor
+        arrowLength = NORMAL_ARROW_LENGTH * self.style.sizeFactor * self.style.sizeSubFactor
+        cone = ConeDraw(arrowRadius, 0, arrowLength)
+        cone.position = Direct(pnt1, pnt2)
+        self.items['Cone'] = cone
 
 
 class VectorDraw(Draw):
     def __init__(self, pnt1, pnt2):
-        self.pnt1, self.pnt2 = pnt1, pnt2
-
-    def getStyledScene(self, styles: Styles):
-        arrowLength = styles.getScaledSize(NORMAL_ARROW_LENGTH, ARROW_LENGTH_FACTOR_STYLE)
-        v = gp_Vec(self.pnt1, self.pnt2)
+        super().__init__(DEF_LINE_STYLE)
+        arrowLength = NORMAL_ARROW_LENGTH * self.style.sizeFactor * self.style.sizeSubFactor
+        v = gp_Vec(pnt1, pnt2)
         vLen = v.Magnitude()
         v *= (vLen - arrowLength) / vLen
-        pntM = self.pnt1.Translated(v)
-        return { 'line': (LineDraw(self.pnt1, pntM), Position()),
-                 'arrow': (ArrowDraw(pntM, self.pnt2), Position())
-                }
-'''
+        pntM = pnt1.Translated(v)
+        self.items['Line'] = LineDraw(pnt1, pntM)
+        self.items['Arrow'] = ArrowDraw(pntM, pnt2)

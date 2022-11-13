@@ -1,9 +1,11 @@
 from core_render import ScreenRenderLib
-from core_draw import Pnt, PointDraw, LineDraw #, VectorDraw
+from core_draw import Pnt, PointDraw, LineDraw, VectorDraw
 # from core_position import Translate
 
 screen = ScreenRenderLib()
 screen.renderStart()
+
+pntC = Pnt(50, 50, 50)
 
 pnt000 = Pnt(0, 0, 0)
 pnt001 = Pnt(0, 0, 100)
@@ -38,6 +40,14 @@ screen.render(LineDraw(pnt001,pnt101))
 screen.render(LineDraw(pnt010,pnt110))
 screen.render(LineDraw(pnt011,pnt111))
 
-# screen.render(VectorDraw(Pnt(0, 0, 0), Pnt(200, 0, 0)))
+v1 = VectorDraw(pnt000, pntC)
+v1.style.color = (0.1, 0.7, 0.1)
+screen.render(v1)
+
+v2 = VectorDraw(pnt001, pntC)
+v2.style.color = (0.1, 0.7, 0.1)
+v2.style.sizeFactor = 0.7
+screen.render(v2)
+
 
 screen.renderFinish()
