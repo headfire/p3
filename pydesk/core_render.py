@@ -8,7 +8,7 @@ from OCC.Display.SimpleGui import init_display
 # from core_consts import *
 from core_draw import Draw, Styler, FinalShapeDraw, FinalTextDraw
 from core_position import Position
-from core_style import Brash
+from core_brash import Brash
 
 
 class RenderLib:

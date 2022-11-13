@@ -1,5 +1,5 @@
 from core_consts import *
-from core_style import Brash
+from core_brash import Brash
 from core_position import Position, Direct, Translate
 
 from OCC.Core.gp import gp_Pnt, gp_Vec

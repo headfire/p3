@@ -2,7 +2,7 @@ from core_render import ScreenRenderLib
 from core_draw import Pnt, PointDraw, LineDraw, VectorDraw
 # from core_position import Translate
 
-from core_style import Brash
+from core_brash import Brash
 screen = ScreenRenderLib()
 screen.renderStart()
 
