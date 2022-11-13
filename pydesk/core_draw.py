@@ -48,8 +48,8 @@ LABEL_BRASH = 'LABEL_BRASH'
 LABEL_DELTA = 'LABEL_DELTA_A_SCALED'
 LABEL_HEIGHT_PX = 'LABEL_HEIGHT_PX'
 
-POINT_BRASH = 'POINT_BRASH_B_SCALED'
-POINT_RADIUS = 'POINT_RADIUS'
+POINT_BRASH = 'POINT_BRASH'
+POINT_RADIUS = 'POINT_RADIUS_B_SCALED'
 
 LINE_BRASH = 'LINE_BRASH'
 LINE_RADIUS = 'LINE_RADIUS_B_SCALED'
@@ -96,14 +96,14 @@ class Draw:
         self.items = {}
         self.code = []
 
-    def addItem(self, nm, draw, position, brash):
+    def addItem(self, nm, draw, position=Position(), brash=Brash()):
         self.items[nm] = draw, position, brash
 
     def addCodeLine(self, line):
         self.code.append(line)
 
     def addStyledItems(self, styler): pass
-    def addStyledCodeLines(self, styler): pass
+    def addStyledCode(self, styler): pass
 
 
 class FinalTextDraw(Draw):
@@ -146,7 +146,7 @@ class SurfaceDraw(Draw):
     def addStyledItems(self, styler):
         brash = styler.getValue(SURFACE_BRASH)
         draw = FinalShapeDraw(self.shape)
-        self.addItem('draw', draw, Position(), brash)
+        self.addItem('draw', draw, brash=brash)
 
 
 # *************************************
@@ -162,7 +162,7 @@ class SphereDraw(Draw):
         brash = styler.getValue(SOLID_BRASH)
         shape = BRepPrimAPI_MakeSphere(self.pnt, self.r).Shape()
         draw = FinalShapeDraw(shape)
-        self.addItem('draw', draw, Position(), brash)
+        self.addItem('draw', draw, brash=brash)
 
 
 class BoxDraw(Draw):
@@ -177,7 +177,7 @@ class BoxDraw(Draw):
         brash = styler.getValue(SOLID_BRASH)
         shape = BRepPrimAPI_MakeBox(self.pnt, self.x, self.y, self.z).Shape()
         draw = FinalShapeDraw(shape)
-        self.addItem('draw', draw, Position(), brash)
+        self.addItem('draw', draw, brash=brash)
 
 
 class ConeDraw(Draw):
@@ -191,7 +191,7 @@ class ConeDraw(Draw):
         brash = styler.getValue(SOLID_BRASH)
         shape = BRepPrimAPI_MakeCone(self.r1, self.r2, self.h).Shape()
         draw = FinalShapeDraw(shape)
-        self.addItem('draw', draw, Position(), brash)
+        self.addItem('draw', draw, brash=brash)
 
 
 class CylinderDraw(Draw):
@@ -204,7 +204,7 @@ class CylinderDraw(Draw):
         brash = styler.getValue(SOLID_BRASH)
         shape = BRepPrimAPI_MakeCylinder(self.r, self.h).Shape()
         draw = FinalShapeDraw(shape)
-        self.addItem('draw', draw, Position(), brash)
+        self.addItem('draw', draw, brash=brash)
 
 
 class TorusDraw(Draw):
@@ -217,27 +217,37 @@ class TorusDraw(Draw):
         brash = styler.getValue(SOLID_BRASH)
         shape = BRepPrimAPI_MakeTorus(self.r1, self.r2).Shape()
         draw = FinalShapeDraw(shape)
-        self.addItem('draw', draw, Position(), brash)
+        self.addItem('draw', draw, brash=brash)
 
 
-'''
 class PointDraw(Draw):
     def __init__(self, pnt):
-        super().__init__(DEF_POINT_STYLE)
-        radius = self.style.getSize(NORMAL_POINT_RADIUS)
-        sphere = SphereDraw(pnt, radius)
-        self.items['Sphere'] = sphere
+        super().__init__()
+        self.pnt = pnt
+
+    def addStyledItems(self, styler):
+        brash = styler.getValue(POINT_BRASH)
+        r = styler.getValue(POINT_RADIUS)
+        draw = SphereDraw(self.pnt, r)
+        self.addItem('draw', draw, brash=brash)
 
 
 class LineDraw(Draw):
     def __init__(self, pnt1, pnt2):
-        super().__init__(DEF_LINE_STYLE)
-        radius = self.style.getSize(NORMAL_LINE_RADIUS)
-        length = gp_Vec(pnt1, pnt2).Magnitude()
-        cyl = CylinderDraw(radius, length)
-        cyl.position = Direct(pnt1, pnt2)
-        self.items['Cylinder'] = cyl
+        super().__init__()
+        self.pnt1 = pnt1
+        self.pnt2 = pnt2
 
+    def addStyledItems(self, styler):
+        brash = styler.getValue(LINE_BRASH)
+        r = styler.getValue(LINE_RADIUS)
+        length = gp_Vec(self.pnt1, self.pnt2).Magnitude()
+        draw = CylinderDraw(r, length)
+        position = Direct(self.pnt1, self.pnt2)
+        self.addItem('draw', draw, position, brash)
+
+
+'''
 
 class ArrowDraw(Draw):
     def __init__(self, pnt1, pnt2):
