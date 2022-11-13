@@ -93,8 +93,6 @@ DEF_STYLES = {
 
 class Draw:
     def __init__(self):
-        self.position = Position()
-        self.brash = Brash()
         self.items = {}
         self.code = []
 
@@ -182,25 +180,47 @@ class BoxDraw(Draw):
         self.addItem('draw', draw, Position(), brash)
 
 
-'''
-class ConeDraw(SolidDraw):
+class ConeDraw(Draw):
     def __init__(self, r1, r2, h):
-        shape = BRepPrimAPI_MakeCone(r1, r2, h).Shape()
-        super().__init__(shape)
+        super().__init__()
+        self.r1 = r1
+        self.r2 = r2
+        self.h = h
+
+    def addStyledItems(self, styler):
+        brash = styler.getValue(SOLID_BRASH)
+        shape = BRepPrimAPI_MakeCone(self.r1, self.r2, self.h).Shape()
+        draw = FinalShapeDraw(shape)
+        self.addItem('draw', draw, Position(), brash)
 
 
-class CylinderDraw(SolidDraw):
+class CylinderDraw(Draw):
     def __init__(self, r, h):
-        shape = BRepPrimAPI_MakeCylinder(r, h).Shape()
-        super().__init__(shape)
+        super().__init__()
+        self.r = r
+        self.h = h
+
+    def addStyledItems(self, styler):
+        brash = styler.getValue(SOLID_BRASH)
+        shape = BRepPrimAPI_MakeCylinder(self.r, self.h).Shape()
+        draw = FinalShapeDraw(shape)
+        self.addItem('draw', draw, Position(), brash)
 
 
-class TorusDraw(SolidDraw):
+class TorusDraw(Draw):
     def __init__(self, r1, r2):
-        shape = BRepPrimAPI_MakeTorus(r1, r2).Shape()
-        super().__init__(shape)
+        super().__init__()
+        self.r1 = r1
+        self.r2 = r2
+
+    def addStyledItems(self, styler):
+        brash = styler.getValue(SOLID_BRASH)
+        shape = BRepPrimAPI_MakeTorus(self.r1, self.r2).Shape()
+        draw = FinalShapeDraw(shape)
+        self.addItem('draw', draw, Position(), brash)
 
 
+'''
 class PointDraw(Draw):
     def __init__(self, pnt):
         super().__init__(DEF_POINT_STYLE)
