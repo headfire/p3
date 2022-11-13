@@ -87,7 +87,7 @@ class TorusDraw(SolidDraw):
 class PointDraw(Draw):
     def __init__(self, pnt):
         super().__init__(DEF_POINT_STYLE)
-        radius = NORMAL_POINT_RADIUS * self.style.sizeFactor
+        radius = self.style.getSize(NORMAL_POINT_RADIUS)
         sphere = SphereDraw(pnt, radius)
         self.items['Sphere'] = sphere
 
@@ -95,7 +95,7 @@ class PointDraw(Draw):
 class LineDraw(Draw):
     def __init__(self, pnt1, pnt2):
         super().__init__(DEF_LINE_STYLE)
-        radius = NORMAL_LINE_RADIUS * self.style.sizeFactor
+        radius = self.style.getSize(NORMAL_LINE_RADIUS)
         length = gp_Vec(pnt1, pnt2).Magnitude()
         cyl = CylinderDraw(radius, length)
         cyl.position = Direct(pnt1, pnt2)
@@ -105,8 +105,8 @@ class LineDraw(Draw):
 class ArrowDraw(Draw):
     def __init__(self, pnt1, pnt2):
         super().__init__(DEF_LINE_STYLE)
-        arrowRadius = NORMAL_ARROW_RADIUS * self.style.sizeFactor
-        arrowLength = NORMAL_ARROW_LENGTH * self.style.sizeFactor * self.style.sizeSubFactor
+        arrowRadius = self.style.getSize(NORMAL_ARROW_RADIUS)
+        arrowLength = self.style.getSubSize(NORMAL_ARROW_LENGTH)
         cone = ConeDraw(arrowRadius, 0, arrowLength)
         cone.position = Direct(pnt1, pnt2)
         self.items['Cone'] = cone
@@ -115,7 +115,7 @@ class ArrowDraw(Draw):
 class VectorDraw(Draw):
     def __init__(self, pnt1, pnt2):
         super().__init__(DEF_LINE_STYLE)
-        arrowLength = NORMAL_ARROW_LENGTH * self.style.sizeFactor * self.style.sizeSubFactor
+        arrowLength = self.style.getSubSize(NORMAL_ARROW_LENGTH)
         v = gp_Vec(pnt1, pnt2)
         vLen = v.Magnitude()
         v *= (vLen - arrowLength) / vLen

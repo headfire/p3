@@ -2,7 +2,7 @@ from core_consts import *
 
 
 class Style:
-    def __init__(self, material=None, color=None, transparency=None, sizeFactor=1, sizeSubFactor=1):
+    def __init__(self, material=None, color=None, transparency=None, sizeFactor=None, sizeSubFactor=None):
         self.material, self.color, self.transparency = material, color, transparency
         self.sizeFactor, self.sizeSubFactor = sizeFactor, sizeSubFactor
 
@@ -13,8 +13,24 @@ class Style:
             self.color = style.color
         if self.transparency is None:
             self.transparency = style.transparency
-        # todo factors
+        if self.sizeFactor is None:
+            self.sizeFactor = style.sizeFactor
+        if self.sizeFactor is None:
+            self.sizeSubFactor = style.sizeSubFactor
         return self
+
+    def getSize(self, normalSize):
+        factor = 1
+        if self.sizeFactor is not None:
+            factor = self.sizeFactor
+        return normalSize * factor
+
+    def getSubSize(self, normalSize):
+        factor = 1
+        if self.sizeFactor is not None:
+            factor = self.sizeFactor
+        return self.getSize(normalSize) * factor
+
 
 DEFAULT_STYLE_RULES = [
 
