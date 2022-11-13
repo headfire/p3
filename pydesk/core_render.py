@@ -22,6 +22,7 @@ class RenderLib:
 
     def _renderItems(self, draw, renderPosition, renderStyle, renderName, level):
         for itemName, itemDraw in draw.items.items():
+            print('*** render sizeFactor ***', renderStyle.sizeFactor)
             mergedRenderName = renderName + '.' + itemName
             mergedStyle = Style().apply(renderStyle).apply(itemDraw.style)  # parent first logic
             mergedPosition = Position().next(itemDraw.position).next(renderPosition)  # child first logic

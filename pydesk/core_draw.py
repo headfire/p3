@@ -1,10 +1,11 @@
 from core_consts import *
 from core_style import Style
-from core_position import Position, Direct  # , Translate
+from core_position import Position, Direct, Translate
 
 from OCC.Core.gp import gp_Pnt, gp_Vec
 from OCC.Core.BRepPrimAPI import BRepPrimAPI_MakeSphere, BRepPrimAPI_MakeBox, BRepPrimAPI_MakeCone, \
     BRepPrimAPI_MakeCylinder, BRepPrimAPI_MakeTorus
+from OCC.Core.BRepBuilderAPI import BRepBuilderAPI_Transform
 
 
 class Pnt(gp_Pnt):
@@ -23,22 +24,62 @@ DEF_LINE_STYLE = Style(CHROME_MATERIAL, NICE_BLUE_COLOR)
 DEF_SOLID_STYLE = Style(GOLD_MATERIAL)
 DEF_SHAPE_STYLE = Style(PLASTIC_MATERIAL)
 DEF_LABEL_STYLE = Style(SILVER_MATERIAL)
-LABEL_DELTA = 20
+DEF_LABEL_DELTA = 20
 
 
 class Draw:
-    def __init__(self, style):
-        self.style = style
+    def __init__(self):
         self.position = Position()
-        self.items = {}
         self.exportCommand = 'Draw()'
+
+    def getStyledScene(self, styler, position): pass
+
+
+class LabelFinalDraw(Draw):
+    def __init__(self, pnt, text, style, delta, textHeightPx):
+        super().__init__()
+        self.pnt = pnt
+        self.text = text
+        self.style = style
+        self.delta = delta
+        self.delta = delta
+        self.textHeightPx = textHeightPx
+
+
+class ShapeFinalDraw(Draw):
+    def __init__(self, shape, style):
+        super().__init__()
+        self.shape = shape
+        self.style = style
 
 
 class LabelDraw(Draw):
     def __init__(self, pnt, text):
-        super().__init__(DEF_LABEL_STYLE)
-        self.pnt, self.text = pnt, text
-        self.delta = LABEL_DELTA
+        super().__init__()
+        self.pnt = pnt
+        self.text = text
+        self.style = DEF_LABEL_STYLE
+        self.delta = DEF_LABEL_DELTA
+
+    def getStyledScene(self, styler, position):
+        labelStyle = styler.getValue('LABEL_STYLE', self.style)
+        delta = styler.getValue('LABEL_DELTA', self.delta)
+        labelPosition = Position().next(Translate(delta, delta, delta)).next(position)
+        labelPoint = labelPosition.movePnt(self.pnt)
+        return {'finalDraw': LabelFinalDraw(labelPoint, self.text, labelStyle)}
+
+
+class ShapeDraw(Draw):
+    def __init__(self, shape):
+        super().__init__()
+        self.shape = shape
+        self.style = DEF_LABEL_STYLE
+
+    def getStyledScene(self, styler, position):
+        finalStyle = styler.getValue('LABEL_STYLE', self.style)
+        delta = styler.getValue('LABEL_DELTA', self.delta)
+        finalShape = BRepBuilderAPI_Transform(self.shape, position.trsf).Shape()
+        return {'finalDraw': ShapeFinalDraw(finalShape, finalStyle)}
 
 
 class ShapeDraw(Draw):

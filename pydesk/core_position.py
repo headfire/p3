@@ -24,6 +24,8 @@ class Position:
         self.describe += ' -> ' + nextChange.describe
         return self
 
+    def movePnt(self, pnt) -> gp_Pnt:
+        return pnt.Transformed(self.trsf)
 
     def _dump(self):
         for iRow in range(1, 4):
