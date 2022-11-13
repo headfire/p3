@@ -11,6 +11,14 @@ class Pnt(gp_Pnt):
     pass
 
 
+NORMAL_POINT_RADIUS = 5
+NORMAL_LINE_RADIUS = NORMAL_POINT_RADIUS * 0.5
+NORMAL_SURFACE_HALF_WIDTH = NORMAL_POINT_RADIUS * 0.2
+NORMAL_ARROW_RADIUS = NORMAL_POINT_RADIUS
+NORMAL_ARROW_LENGTH = NORMAL_ARROW_RADIUS * 3
+NORMAL_LABEL_HEIGHT_PX = 20
+
+DEF_POINT_STYLE = Style(CHROME_MATERIAL, NICE_YELLOW_COLOR)
 DEF_LINE_STYLE = Style(CHROME_MATERIAL, NICE_BLUE_COLOR)
 DEF_SOLID_STYLE = Style(GOLD_MATERIAL)
 DEF_SHAPE_STYLE = Style(PLASTIC_MATERIAL)
@@ -76,6 +84,14 @@ class TorusDraw(SolidDraw):
         super().__init__(shape)
 
 
+class PointDraw(Draw):
+    def __init__(self, pnt):
+        super().__init__(DEF_POINT_STYLE)
+        radius = NORMAL_POINT_RADIUS * self.style.sizeFactor
+        sphereDraw = SphereDraw(pnt, radius)
+        self.items = {'Sphere': sphereDraw}
+
+
 class LineDraw(Draw):
     def __init__(self, pnt1, pnt2):
         super().__init__(DEF_LINE_STYLE)
@@ -83,7 +99,7 @@ class LineDraw(Draw):
         length = gp_Vec(pnt1, pnt2).Magnitude()
         cylDraw = CylinderDraw(radius, length)
         cylDraw.position = Direct(pnt1, pnt2)
-        self.items = {'cylinder': cylDraw}
+        self.items = {'Cylinder': cylDraw}
 
 
 '''
