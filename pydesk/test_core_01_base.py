@@ -1,7 +1,6 @@
 from core_render import ScreenRenderLib
 from core_draw import Pnt, SphereDraw
-from core_consts import *
-from core_brash import Brash
+from core_brash import *
 
 screen = ScreenRenderLib()
 screen.renderStart()

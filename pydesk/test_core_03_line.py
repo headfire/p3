@@ -48,6 +48,4 @@ screen.render(VectorDraw(pnt111, pntC), brash=brash)
 brash = Brash(color=(0.1, 0.7, 0.7))
 screen.render(Circle3Draw(pnt000, pnt111, pnt100), brash=brash)
 
-
-
 screen.renderFinish()

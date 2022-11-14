@@ -1,4 +1,4 @@
-from desk import DeskDrawLib
+from core_draw import *
 from render import ScreenRenderLib, WebRenderLib, WebFastRenderLib, StlRenderLib, RenderHints
 
 from OCC.Core.gp import gp_Pnt, gp_Trsf, gp_Dir, gp_Vec, gp_Ax1, gp_OZ, gp_GTrsf, gp_Ax2
@@ -26,10 +26,10 @@ mainStyle.scale(scale * 1)
 infoStyle = Style()
 infoStyle.scale = scale
 infoStyle.factor = 0.7
-infoStyle.pointMaterial = Material(NICE_GRAY_COLOR, MATE, 0.5)
-infoStyle.lineMaterial = Material(NICE_GRAY_COLOR, MATE, 0.5)
-infoStyle.faceMaterial = Material(NICE_GRAY_COLOR, MATE, 0.5)
-infoStyle.labelMaterial = Material(NICE_GRAY_COLOR, MATE, 0.0)
+infoPointBrash = Material(NICE_GRAY_COLOR, MATE, 0.5)
+infoLineBrash = Material(NICE_GRAY_COLOR, MATE, 0.5)
+infoFaceBrash = Material(NICE_GRAY_COLOR, MATE, 0.5)
+infoLabelBrash = Material(NICE_GRAY_COLOR, MATE, 0.0)
 
 focusStyle = Style()
 focusStyle.scale = scale

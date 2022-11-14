@@ -1,5 +1,4 @@
-from core_consts import *
-from core_brash import Brash
+from core_brash import *
 from core_position import Position, Direct, Translate
 
 from OCC.Core.gp import gp_Pnt, gp_Vec, gp_Dir
@@ -12,36 +11,21 @@ from OCC.Core.BRep import BRep_Tool
 from OCC.Core.GC import GC_MakeCircle
 
 
-class Pnt(gp_Pnt):
-    pass
+# *****************************************************************************
 
 
-class Styler:
-    def __init__(self):
-        self.renderName = 'root'
+AO_SIZE_XYZ = 1189, 841, 1
 
-    def setRenderName(self, renderName):
-        self.renderName = renderName
+M_1_1_SCALE = (1, 1)
+M_5_1_SCALE = (5, 1)
 
-    # def getOverride(self, styleName): pass  # todo
-
-    def getValue(self, styleName: str):
-        finalStyleValue = None  # self.findOverride(styleName)  # todo
-        if finalStyleValue is None:
-            finalStyleValue = DEF_STYLES[styleName]
-        if styleName.endswith('_A_SCALED'):
-            a = self.getValue('SCALE_A')
-            finalStyleValue *= a
-        elif styleName.endswith('_B_SCALED'):
-            a = self.getValue('SCALE_A')
-            b = self.getValue('SCALE_B')
-            finalStyleValue *= a * b
-        elif styleName.endswith('_C_SCALED'):
-            a = self.getValue('SCALE_A')
-            b = self.getValue('SCALE_B')
-            c = self.getValue('SCALE_C')
-            finalStyleValue *= a * b * c
-        return finalStyleValue
+DESK_HEIGHT = 20
+DESK_BORDER_SIZE = 60
+DESK_PAPER_SIZE = 1189, 841, 1
+DESK_PIN_OFFSET = 30
+DESK_PIN_RADIUS = 10
+DESK_PIN_HEIGHT = 2
+DESK_DEFAULT_DRAW_AREA_SIZE = 400
 
 
 SCALE_A = 'SCALE_A'
@@ -93,6 +77,41 @@ DEF_STYLES = {
 
     SURFACE_BRASH: Brash(PLASTIC_MATERIAL, NICE_GRAY_COLOR)
 }
+
+
+class Pnt(gp_Pnt):
+    pass
+
+
+class Styler:
+    def __init__(self):
+        self.renderName = 'root'
+
+    def setRenderName(self, renderName):
+        self.renderName = renderName
+
+    # def getOverride(self, styleName): pass  # todo
+
+    def getValue(self, styleName: str):
+        finalStyleValue = None  # self.findOverride(styleName)  # todo
+        if finalStyleValue is None:
+            finalStyleValue = DEF_STYLES[styleName]
+        if styleName.endswith('_A_SCALED'):
+            a = self.getValue('SCALE_A')
+            finalStyleValue *= a
+        elif styleName.endswith('_B_SCALED'):
+            a = self.getValue('SCALE_A')
+            b = self.getValue('SCALE_B')
+            finalStyleValue *= a * b
+        elif styleName.endswith('_C_SCALED'):
+            a = self.getValue('SCALE_A')
+            b = self.getValue('SCALE_B')
+            c = self.getValue('SCALE_C')
+            finalStyleValue *= a * b * c
+        return finalStyleValue
+
+
+# ********************************************************************************
 
 
 class Draw:
@@ -344,3 +363,37 @@ class Circle3Draw(Draw):
         wire = BRepBuilderAPI_MakeWire(edge).Wire()
         draw = WireDraw(wire, aWireRadius)
         self.addItem('draw', draw, brash=brash)
+
+
+# ****************************************************************************
+
+
+class DrawLib:
+
+    def __init__(self):
+        self.cache = {}
+
+    def getCached(self, methodName, param1=None, param2=None):
+
+        params = ''
+        if param1 is not None:
+            params += str(param1)
+        if param2 is not None:
+            params += ',' + str(param2)
+
+        cacheKey = methodName + '(' + params + ')'
+
+        method = self.__getattribute__(methodName)
+        if cacheKey in self.cache:
+            print('==> Get from cache', cacheKey)
+            obj = self.cache[cacheKey]
+        else:
+            print('==> Compute', cacheKey)
+            if param1 is None:
+                obj = method()
+            elif param2 is None:
+                obj = method(param1)
+            else:
+                obj = method(param1, param2)
+            self.cache[cacheKey] = obj
+        return obj
