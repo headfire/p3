@@ -2,9 +2,14 @@ from core_consts import *
 from core_brash import Brash
 from core_position import Position, Direct, Translate
 
-from OCC.Core.gp import gp_Pnt, gp_Vec
+from OCC.Core.gp import gp_Pnt, gp_Vec, gp_Dir
 from OCC.Core.BRepPrimAPI import BRepPrimAPI_MakeSphere, BRepPrimAPI_MakeBox, BRepPrimAPI_MakeCone, \
     BRepPrimAPI_MakeCylinder, BRepPrimAPI_MakeTorus
+from OCC.Core.BRepBuilderAPI import BRepBuilderAPI_MakeEdge, BRepBuilderAPI_MakeWire
+from OCC.Core.BRepOffsetAPI import BRepOffsetAPI_MakePipe
+from OCC.Core.BRepTools import BRepTools_WireExplorer
+from OCC.Core.BRep import BRep_Tool
+from OCC.Core.GC import GC_MakeCircle
 
 
 class Pnt(gp_Pnt):
@@ -219,6 +224,9 @@ class TorusDraw(Draw):
         self.addItem('draw', draw, brash=brash)
 
 
+# ********************************************************************
+
+
 class PointDraw(Draw):
     def __init__(self, pnt):
         super().__init__()
@@ -275,3 +283,64 @@ class VectorDraw(Draw):
         pntM = self.pnt1.Translated(v)
         self.addItem('line', LineDraw(self.pnt1, pntM))
         self.addItem('arrow', ArrowDraw(pntM, self.pnt2))
+
+
+# ********************************************************************
+
+
+def _getVectorTangentToCurveAtPoint(edge, uRatio):
+    aCurve, aFP, aLP = BRep_Tool.Curve(edge)
+    aP = aFP + (aLP - aFP) * uRatio
+    v1 = gp_Vec()
+    p1 = gp_Pnt()
+    aCurve.D1(aP, p1, v1)
+
+    return v1
+
+
+def _getWireStartPointAndTangentDir(wire):
+    print(wire)
+    ex = BRepTools_WireExplorer(wire)
+    edge = ex.Current()
+    vertex = ex.CurrentVertex()
+    v = _getVectorTangentToCurveAtPoint(edge, 0)
+
+    return BRep_Tool.Pnt(vertex), gp_Dir(v)
+
+
+class WireDraw(Draw):
+    def __init__(self, wire, r=None):
+        super().__init__()
+        self.wire = wire
+        self.r = r
+
+    def addStyledItems(self, styler):
+        if self.r is not None:
+            aWireRadius = self.r
+        else:
+            aWireRadius = styler.getValue(LINE_RADIUS)
+        brash = styler.getValue(LINE_BRASH)
+        startPoint, tangentDir = _getWireStartPointAndTangentDir(self.wire)
+        profileCircle = GC_MakeCircle(startPoint, tangentDir, aWireRadius).Value()
+        profileEdge = BRepBuilderAPI_MakeEdge(profileCircle).Edge()
+        profileWire = BRepBuilderAPI_MakeWire(profileEdge).Wire()
+        shape = BRepOffsetAPI_MakePipe(self.wire, profileWire).Shape()
+        draw = FinalShapeDraw(shape)
+        self.addItem('draw', draw, brash=brash)
+
+
+class Circle3Draw(Draw):
+    def __init__(self, pnt1, pnt2, pnt3):
+        super().__init__()
+        self.pnt1 = pnt1
+        self.pnt2 = pnt2
+        self.pnt3 = pnt3
+
+    def addStyledItems(self, styler):
+        aWireRadius = styler.getValue(LINE_RADIUS)
+        brash = styler.getValue(LINE_BRASH)
+        geomCircle = GC_MakeCircle(self.pnt1, self.pnt2, self.pnt3).Value()
+        edge = BRepBuilderAPI_MakeEdge(geomCircle).Edge()
+        wire = BRepBuilderAPI_MakeWire(edge).Wire()
+        draw = WireDraw(wire, aWireRadius)
+        self.addItem('draw', draw, brash=brash)

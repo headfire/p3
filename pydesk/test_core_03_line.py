@@ -1,5 +1,5 @@
 from core_render import ScreenRenderLib
-from core_draw import Pnt, PointDraw, LineDraw, VectorDraw
+from core_draw import Pnt, PointDraw, LineDraw, VectorDraw, Circle3Draw
 # from core_position import Translate
 
 from core_brash import Brash
@@ -44,5 +44,10 @@ screen.render(LineDraw(pnt011, pnt111))
 brash = Brash(color=(0.1, 0.7, 0.1))
 screen.render(VectorDraw(pnt000, pntC), brash=brash)
 screen.render(VectorDraw(pnt111, pntC), brash=brash)
+
+brash = Brash(color=(0.1, 0.7, 0.7))
+screen.render(Circle3Draw(pnt000, pnt111, pnt100), brash=brash)
+
+
 
 screen.renderFinish()

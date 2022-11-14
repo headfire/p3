@@ -147,23 +147,6 @@ def _getValue(aValue, aDefaultValue):
     return aDefaultValue
 
 
-def _getVectorTangentToCurveAtPoint(edge, uRatio):
-    aCurve, aFP, aLP = BRep_Tool.Curve(edge)
-    aP = aFP + (aLP - aFP) * uRatio
-    v1 = gp_Vec()
-    p1 = gp_Pnt()
-    aCurve.D1(aP, p1, v1)
-
-    return v1
-
-
-def _getWireStartPointAndTangentDir(wire):
-    ex = BRepTools_WireExplorer(wire)
-    edge = ex.Current()
-    vertex = ex.CurrentVertex()
-    v = _getVectorTangentToCurveAtPoint(edge, 0)
-
-    return BRep_Tool.Pnt(vertex), gp_Dir(v)
 
 
 class Position:
