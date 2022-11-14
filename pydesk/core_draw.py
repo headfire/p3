@@ -13,6 +13,7 @@ from OCC.Core.GC import GC_MakeCircle
 
 # *****************************************************************************
 
+Style
 
 AO_SIZE_XYZ = 1189, 841, 1
 
@@ -28,9 +29,13 @@ DESK_PIN_HEIGHT = 2
 DESK_DEFAULT_DRAW_AREA_SIZE = 400
 
 
-SCALE_A = 'SCALE_A'
-SCALE_B = 'SCALE_B'
-SCALE_C = 'SCALE_C'
+MATERIAL_STYLE = 'MATERIAL_STYLE'
+COLOR_STYLE = 'COLOR_STYLE'
+TRANSPARENCY_STYLE = 'TRANSPARENCY_STYLE'
+SCALE_A_STYLE = 'SCALE_A_STYLE'
+SCALE_B_STYLE = 'SCALE_B_STYLE'
+SCALE_C_STYLE = 'SCALE_C_STYLE'
+
 
 LABEL_BRASH = 'LABEL_BRASH'
 LABEL_DELTA = 'LABEL_DELTA_A_SCALED'
@@ -50,6 +55,56 @@ FACE_WIDTH = 'FACE_WIDTH_B_SCALED'
 SOLID_BRASH = 'SOLID_BRASH'
 
 SURFACE_BRASH = 'SURFACE_BRASH'
+
+
+class Style:
+    def __init__(self, material=None, color=None, transparency=None):
+        self.values = {}
+        self.set(MATERIAL_STYLE, material)
+        self.set(COLOR_STYLE, color)
+        self.set(TRANSPARENCY_STYLE, transparency)
+
+    def get(self, styleName, defValue=None):
+        value = self.values.get(styleName)
+        if value is not None:
+            return value
+        return defValue
+
+    def set(self, styleName, styleValue):
+        if styleValue is not None:
+            self.values[styleName] = styleValue
+
+    def merge(self, styleName, mergedStyleValue):
+        if self.get(styleName) is None:
+            self.set(styleName, mergedStyleValue)
+
+    def mergeAll(self, mergedStyles):
+        for styleName, styleValue in mergedStyles.items():
+            self.merge(styleName, styleValue)
+
+    def getMaterial(self):
+        return self.getMaterial(MATERIAL_STYLE)
+
+    def getTransparency(self):
+        return self.getMaterial(TRANSPARENCY_STYLE)
+
+    def getColor(self):
+        return self.get(COLOR_STYLE)
+
+    def getScaledA(self, value):
+        a = self.get(SCALE_A_STYLE, 1)
+        return value * a
+
+    def getScaledB(self, value):
+        a = self.get(SCALE_A_STYLE, 1)
+        b = self.get(SCALE_B_STYLE, 1)
+        return value * a * b
+
+    def getScaledC(self, value):
+        a = self.get(SCALE_A_STYLE, 1)
+        b = self.get(SCALE_B_STYLE, 1)
+        c = self.get(SCALE_B_STYLE, 1)
+        return value * a * b * c
 
 
 DEF_STYLES = {
@@ -82,33 +137,6 @@ DEF_STYLES = {
 class Pnt(gp_Pnt):
     pass
 
-
-class Styler:
-    def __init__(self):
-        self.renderName = 'root'
-
-    def setRenderName(self, renderName):
-        self.renderName = renderName
-
-    # def getOverride(self, styleName): pass  # todo
-
-    def getValue(self, styleName: str):
-        finalStyleValue = None  # self.findOverride(styleName)  # todo
-        if finalStyleValue is None:
-            finalStyleValue = DEF_STYLES[styleName]
-        if styleName.endswith('_A_SCALED'):
-            a = self.getValue('SCALE_A')
-            finalStyleValue *= a
-        elif styleName.endswith('_B_SCALED'):
-            a = self.getValue('SCALE_A')
-            b = self.getValue('SCALE_B')
-            finalStyleValue *= a * b
-        elif styleName.endswith('_C_SCALED'):
-            a = self.getValue('SCALE_A')
-            b = self.getValue('SCALE_B')
-            c = self.getValue('SCALE_C')
-            finalStyleValue *= a * b * c
-        return finalStyleValue
 
 
 # ********************************************************************************
