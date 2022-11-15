@@ -1,3 +1,4 @@
+from core_brash import *
 from OCC.Core.AIS import AIS_Shape
 from OCC.Core.Quantity import Quantity_Color, Quantity_TypeOfColor
 from OCC.Core.BRepBuilderAPI import BRepBuilderAPI_Transform
@@ -6,9 +7,96 @@ from OCC.Core.Graphic3d import Graphic3d_MaterialAspect
 from OCC.Display.SimpleGui import init_display
 
 # from core_consts import *
-from core_draw import Draw, Styler, FinalShapeDraw, FinalTextDraw
+# from core_draw import Draw, Styler, FinalShapeDraw, FinalTextDraw
 from core_position import Position
-from core_brash import Brash
+from core_draw import *
+
+POINT_CLASSES = [PointDraw]
+SOLID_CLASSES = [BoxDraw, SphereDraw, ConeDraw, TorusDraw, CylinderDraw]
+LINE_CLASSES = [VectorDraw, ArrowDraw, LineDraw, Circle3Draw, WireDraw]
+FACE_CLASSES = [SurfaceDraw]
+LABEL_CLASSES = [LabelDraw]
+
+LABEL_STYLE: Style(SILVER_MATERIAL)
+POINT_STYLE: Style(CHROME_MATERIAL, NICE_YELLOW_COLOR)
+LINE_STYLE: Style(CHROME_MATERIAL, NICE_BLUE_COLOR)
+FACE_STYLE: Style(CHROME_MATERIAL, NICE_BLUE_COLOR)
+SOLID_STYLE: Style(GOLD_MATERIAL)
+SURFACE_STYLE: Style(PLASTIC_MATERIAL, NICE_GRAY_COLOR)
+
+
+class MaskStep:
+    def __init__(self, names=None, nums=None, classes=None):
+        self.names = names
+        self.nums = nums
+        self.classes = classes
+
+    def checkName(self, objName):
+        if self.names is None:
+            return True
+        for nm in self.names:
+            if nm == objName:
+                return True
+        return False
+
+    def checkNum(self, objNum):
+        if self.nums is None:
+            return True
+        for num in self.nums:
+            if num == objNum:
+                return True
+        return False
+
+    def checkClass(self, objClass):
+        if self.classes is None:
+            return True
+        for cls in self.classes:
+            if cls == objClass:
+                return True
+        return False
+
+    def check(self, objName, objNumber, objClass):
+       return  self.checkName() and self.checkNum() and self.checkClass()
+
+
+
+
+class Styler:
+    def __init__(self):
+        self.rules = []
+        self.addRule(Mask(classes=POINT_CLASSES), POINT_STYLE)
+        self.addRule(Mask(classes=LINE_CLASSES), LINE_STYLE)
+        self.addRule(Mask(classes=SOLID_CLASSES), SOLID_STYLE)
+        self.addRule(Mask(classes=SURFACE_CLASSES), SURFACE_STYLE)
+        self.addRule(Mask(classes=FACE_CLASSES), FACE_STYLE)
+
+        self.addRule(':VectorDraw, ArrowDraw, LineDraw, Circle3Draw, WireDraw]', MATERIAL_STYLE, CHROME_MATERIAL)
+        self.addRule(':VectorDraw, ArrowDraw, LineDraw, Circle3Draw, WireDraw]', COLOR_STYLE, NICE_BLUE_COLOR)
+
+
+    def addRule(self, mask, styleName, styleValue):
+        self.rules.append((mask, styleName, styleValue))
+
+    def isRuleMath(self, ruleMaskPath, renderPath):
+        i = 0
+        while i < len(renderPath) and i < (ruleMaskPath):
+
+            i++
+
+    def get(self, renderPath):
+        style = Style()
+        for rule in reversed(self.rules):
+            ruleMaskPath, ruleStyle = rule
+            if self.isRuleMatch(ruleMaskPath, renderPath):
+                style.mergeAll(ruleStyle)
+
+
+        style = Style()
+        for rule in self.rules:
+            mask, styleName, styleValue = rule
+            if _isMask(mask, renderName):
+                style.set(styleName, styleValue)
+        return style
 
 
 class RenderLib:
