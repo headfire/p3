@@ -21,8 +21,8 @@ drawList = [
 
 x = 0
 for draw in drawList:
-    print(draw.getClsSuffix())
-    screen.render(draw, Translate(x, 0, 0))
+    draw.position = Translate(x, 0, 0)
+    screen.render(draw)
     x += 12
 
 screen.renderFinish()

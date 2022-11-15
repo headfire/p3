@@ -91,29 +91,23 @@ class RenderLib:
         self.styler = Styler()
         self.styler.addStyles(STANDARD_STYLES)
 
-    def _renderNative(self, draw, renderPosition, renderStyle, renderName, level): pass
+    def _renderNative(self, draw, renderPosition, renderStyle, renderName): pass
 
-    def _renderItems(self, draw, renderPosition, renderStyle, renderName, level):
-        for itemName, itemContainer in draw.items.items():
-            itemDraw, itemPosition = itemContainer
-            mergedRenderName = renderName + '>' + itemName + itemDraw.getClsSuffix()
-            # itemStyle = self.styler.getStyle(mergedRenderName)
-            # mergedStyle = Style().mergeAll(renderStyle).mergeAll(itemStyle)  # parent first logic
-            mergedPosition = Position().next(itemPosition).next(renderPosition)  # child first logic
-            self._render(itemDraw, mergedPosition, renderStyle, mergedRenderName, level+1)
-
-    def _render(self, draw, renderPosition, renderStyle, renderName, level):
-        print(renderName)
-        itemStyle = self.styler.getStyle(renderName)
-        mergedStyle = Style().mergeAll(renderStyle).mergeAll(itemStyle)  # parent first logic
-        self._renderNative(draw, renderPosition, mergedStyle, renderName, level)
+    def _render(self, draw, renderPosition, renderStyle, renderName):
+        mergedRenderName = renderName + '>' + draw.getNameWithCls()
+        print(mergedRenderName)
+        stylerStyle = self.styler.getStyle(renderName)
+        mergedStyle = Style().mergeAll(renderStyle).mergeAll(draw.style).mergeAll(stylerStyle)  # parent first logic
+        mergedPosition = Position().next(draw.position).next(renderPosition)  # child first logic
+        draw.addStyledItems(mergedStyle)
+        self._renderNative(draw, mergedPosition, mergedStyle, mergedRenderName)
         if not self.renderNativeSuccess:
-            draw.addStyledItems(mergedStyle)
-            self._renderItems(draw, renderPosition, mergedStyle, renderName, level)
+            # item render mode if native mode not success
+            for itemDraw in draw.items:
+                self._render(itemDraw, mergedPosition, mergedStyle, mergedRenderName)
 
-    def render(self, draw: Draw, position=Position(), style=Style(), nm='noname'):
-        renderName = nm + draw.getClsSuffix()
-        self._render(draw, position, style, renderName, 0)
+    def render(self, draw: Draw):
+        self._render(draw, Position(), Style(), 'root')
 
     def renderStart(self):
         pass
@@ -166,7 +160,7 @@ class ScreenRenderLib(RenderLib):
         labelPnt = pnt.Transformed(position.trsf)
         self.display.DisplayMessage(labelPnt, text, heightPx, style.getColor(), False)
 
-    def _renderNative(self, draw, renderPosition, renderBrash, renderName, level):
+    def _renderNative(self, draw, renderPosition, renderBrash, renderName):
         self.renderNativeSuccess = True
         if isinstance(draw, FinalShapeDraw):
             print('-> nativeShape()')

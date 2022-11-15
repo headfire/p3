@@ -114,10 +114,11 @@ class Pnt(gp_Pnt):
 # ********************************************************************************
 
 class Draw:
-    def __init__(self, cls: str):
+    def __init__(self, nameWithCls: str = 'drawObj'):
 
-        self.nm = 'drawObj'
-        self.cls = cls.split('-')
+        self.nm = None
+        self.cls = []
+        self.setNameWithCls(nameWithCls)
 
         self.position = Position()
         self.style = Style()
@@ -125,18 +126,23 @@ class Draw:
         self.items = []
         self.code = []
 
-    def getClsSuffix(self):
-        if len(self.cls) == 0:
-            return ''
-        return ':' + '-'.join(self.cls)
+    def setName(self, nm):
+        self.nm = nm
 
-    def addItem(self, draw, position=Position(), nm='obj'):
-        splitList = nm.split(':')
-        itemName = splitList[0]
+    def setNameWithCls(self, nameWithCls):
+        splitList = nameWithCls.split(':')
+        self.nm = splitList[0]
         if len(splitList) > 1:
             clsToAdd = splitList[1].split('-')
             self.cls.extend(clsToAdd)
-        self.items[itemName] = draw, position
+
+    def getNameWithCls(self):
+        if len(self.cls) == 0:
+            return self.nm
+        return self.nm+':' + '-'.join(self.cls)
+
+    def addItem(self, draw):
+        self.items.append(draw)
 
     def addCodeLine(self, line):
         self.code.append(line)
@@ -147,7 +153,7 @@ class Draw:
 
 class FinalTextDraw(Draw):
     def __init__(self, pnt, text, textHeightPx):
-        super().__init__('final')
+        super().__init__('finalText:text')
         self.pnt = pnt
         self.text = text
         self.textHeightPx = textHeightPx
@@ -155,7 +161,7 @@ class FinalTextDraw(Draw):
 
 class FinalShapeDraw(Draw):
     def __init__(self, shape):
-        super().__init__('final')
+        super().__init__('finalShape:shape')
         self.shape = shape
 
 
@@ -171,14 +177,14 @@ class LabelDraw(Draw):
     def addStyledItems(self, style: Style):
         delta = style.getScaled(LABEL_DELTA)
         heightPx = style.getScaledPx(LABEL_HEIGHT_PX)
-        finalPosition = Translate(delta, delta, delta)
-        finalDraw = FinalTextDraw(self.pnt, self.text, heightPx)
-        self.addItem(finalDraw, finalPosition)
+        draw = FinalTextDraw(self.pnt, self.text, heightPx)
+        draw.position = Translate(delta, delta, delta)
+        self.addItem(draw)
 
 
 class SurfaceDraw(Draw):
     def __init__(self, shape):
-        super().__init__('surface')
+        super().__init__('surfaceObj:surface')
         self.shape = shape
 
     def addStyledItems(self, style: Style):
@@ -191,7 +197,7 @@ class SurfaceDraw(Draw):
 
 class SphereDraw(Draw):
     def __init__(self, pnt, r):
-        super().__init__('sphere-solid')
+        super().__init__('sphereObj:sphere-solid')
         self.pnt = pnt
         self.r = r
 
@@ -203,7 +209,7 @@ class SphereDraw(Draw):
 
 class BoxDraw(Draw):
     def __init__(self, pnt, x, y, z):
-        super().__init__('box-solid')
+        super().__init__('boxObj:box-solid')
         self.pnt = pnt
         self.x = x
         self.y = y
@@ -217,7 +223,7 @@ class BoxDraw(Draw):
 
 class ConeDraw(Draw):
     def __init__(self, r1, r2, h):
-        super().__init__('cone-solid')
+        super().__init__('coneObj:cone-solid')
         self.r1 = r1
         self.r2 = r2
         self.h = h
@@ -230,7 +236,7 @@ class ConeDraw(Draw):
 
 class CylinderDraw(Draw):
     def __init__(self, r, h):
-        super().__init__('cylinder-solid')
+        super().__init__('cylinderObj:cylinder-solid')
         self.r = r
         self.h = h
 
@@ -242,7 +248,7 @@ class CylinderDraw(Draw):
 
 class TorusDraw(Draw):
     def __init__(self, r1, r2):
-        super().__init__('torus-solid')
+        super().__init__('torusObj:torus-solid')
         self.r1 = r1
         self.r2 = r2
 
@@ -257,7 +263,7 @@ class TorusDraw(Draw):
 
 class PointDraw(Draw):
     def __init__(self, pnt):
-        super().__init__('point')
+        super().__init__('pointObj:point')
         self.pnt = pnt
 
     def addStyledItems(self, style: Style):
@@ -268,7 +274,7 @@ class PointDraw(Draw):
 
 class LineDraw(Draw):
     def __init__(self, pnt1, pnt2):
-        super().__init__('direct-line')
+        super().__init__('directObj:direct-line')
         self.pnt1 = pnt1
         self.pnt2 = pnt2
 
@@ -276,13 +282,13 @@ class LineDraw(Draw):
         r = style.getScaled(LINE_RADIUS)
         length = gp_Vec(self.pnt1, self.pnt2).Magnitude()
         draw = CylinderDraw(r, length)
-        position = Direct(self.pnt1, self.pnt2)
-        self.addItem(draw, position)
+        draw.position = Direct(self.pnt1, self.pnt2)
+        self.addItem(draw)
 
 
 class ArrowDraw(Draw):
     def __init__(self, pnt1, pnt2):
-        super().__init__('arrow-line')
+        super().__init__('arrowObj:arrow-line')
         self.pnt1 = pnt1
         self.pnt2 = pnt2
 
@@ -290,13 +296,13 @@ class ArrowDraw(Draw):
         r = style.getScaledA(LINE_ARROW_RADIUS)
         length = style.getScaledAB(LINE_ARROW_LENGTH)
         draw = ConeDraw(r, 0, length)
-        position = Direct(self.pnt1, self.pnt2)
-        self.addItem(draw, position)
+        draw.position = Direct(self.pnt1, self.pnt2)
+        self.addItem(draw)
 
 
 class VectorDraw(Draw):
     def __init__(self, pnt1, pnt2):
-        super().__init__('vector-line')
+        super().__init__('vectorObj:vector-line')
         self.pnt1 = pnt1
         self.pnt2 = pnt2
 
@@ -306,8 +312,8 @@ class VectorDraw(Draw):
         vLen = v.Magnitude()
         v *= (vLen - arrowLength) / vLen
         pntM = self.pnt1.Translated(v)
-        self.addItem(LineDraw(self.pnt1, pntM), nm='line')
-        self.addItem(ArrowDraw(pntM, self.pnt2), nm='arrow')
+        self.addItem(LineDraw(self.pnt1, pntM))
+        self.addItem(ArrowDraw(pntM, self.pnt2))
 
 
 # ********************************************************************
@@ -335,15 +341,15 @@ def _getWireStartPointAndTangentDir(wire):
 
 class WireDraw(Draw):
     def __init__(self, wire, r=None):
-        super().__init__('wire-line')
+        super().__init__('wireObj:wire-line')
         self.wire = wire
         self.r = r
 
-    def addStyledItems(self, styler):
+    def addStyledItems(self, style: Style()):
         if self.r is not None:
             aWireRadius = self.r
         else:
-            aWireRadius = styler.getValue(LINE_RADIUS)
+            aWireRadius = style.getScaled(LINE_RADIUS)
         startPoint, tangentDir = _getWireStartPointAndTangentDir(self.wire)
         profileCircle = GC_MakeCircle(startPoint, tangentDir, aWireRadius).Value()
         profileEdge = BRepBuilderAPI_MakeEdge(profileCircle).Edge()
@@ -355,7 +361,7 @@ class WireDraw(Draw):
 
 class Circle3Draw(Draw):
     def __init__(self, pnt1, pnt2, pnt3):
-        super().__init__('circle-line')
+        super().__init__('circleObj:circle-line')
         self.pnt1 = pnt1
         self.pnt2 = pnt2
         self.pnt3 = pnt3
