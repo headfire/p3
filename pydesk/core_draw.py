@@ -141,6 +141,15 @@ class Draw:
             return self.nm
         return self.nm+':' + '-'.join(self.cls)
 
+    def setNm(self, nm):
+        return self # todo
+
+    def setPs(self, nm):
+        return self # todo
+
+    def setSt(self, nm):
+        return self  # todo
+
     def addItem(self, draw):
         self.items.append(draw)
 
