@@ -115,8 +115,14 @@ class Pnt(gp_Pnt):
 
 class Draw:
     def __init__(self, cls: str):
+
+        self.nm = 'drawObj'
         self.cls = cls.split('-')
-        self.items = {}
+
+        self.position = Position()
+        self.style = Style()
+
+        self.items = []
         self.code = []
 
     def getClsSuffix(self):
