@@ -6,7 +6,7 @@ from core_draw import *
 screen = ScreenRenderLib()
 screen.renderStart()
 
-screen.styler.add###Styles([('*:cone', Style(CHROME_MATERIAL))])  # todo
+screen.styler.addStyles([('*:cone', Style(CHROME_MATERIAL))])  # todo
 
 r = 5
 drawList = [
@@ -21,6 +21,7 @@ drawList = [
 
 x = 0
 for draw in drawList:
+    print(draw.getClsSuffix())
     screen.render(draw, Translate(x, 0, 0))
     x += 12
 

@@ -13,6 +13,14 @@ from OCC.Core.GC import GC_MakeCircle
 
 # *****************************************************************************
 
+LABEL_HEIGHT_PX = 20  # not scaled
+LABEL_DELTA = 15
+POINT_RADIUS = 4
+LINE_RADIUS = 2
+LINE_ARROW_RADIUS = 4
+LINE_ARROW_LENGTH = 10
+FACE_WIDTH = 1
+
 AO_SIZE_XYZ = 1189, 841, 1
 
 M_1_1_SCALE = (1, 1)
@@ -26,33 +34,16 @@ DESK_PIN_RADIUS = 10
 DESK_PIN_HEIGHT = 2
 DESK_DEFAULT_DRAW_AREA_SIZE = 400
 
+# *****************************************************
 
 MATERIAL_STYLE = 'MATERIAL_STYLE'
 COLOR_STYLE = 'COLOR_STYLE'
 TRANSPARENCY_STYLE = 'TRANSPARENCY_STYLE'
+SCALE_STYLE = 'SCALE_STYLE'
 SCALE_A_STYLE = 'SCALE_A_STYLE'
 SCALE_B_STYLE = 'SCALE_B_STYLE'
 SCALE_C_STYLE = 'SCALE_C_STYLE'
-
-
-LABEL_BRASH = 'LABEL_BRASH'
-LABEL_DELTA = 'LABEL_DELTA_A_SCALED'
-LABEL_HEIGHT_PX = 'LABEL_HEIGHT_PX'
-
-POINT_BRASH = 'POINT_BRASH'
-POINT_RADIUS = 'POINT_RADIUS_B_SCALED'
-
-LINE_BRASH = 'LINE_BRASH'
-LINE_RADIUS = 'LINE_RADIUS_B_SCALED'
-LINE_ARROW_RADIUS = 'ARROW_RADIUS_B_SCALED'
-LINE_ARROW_LENGTH = 'ARROW_LENGTH_C_SCALED'
-
-FACE_BRASH = 'FACE_BRASH'
-FACE_WIDTH = 'FACE_WIDTH_B_SCALED'
-
-SOLID_BRASH = 'SOLID_BRASH'
-
-SURFACE_BRASH = 'SURFACE_BRASH'
+SCALE_PX_STYLE = 'SCALE_PX_STYLE'
 
 
 class Style:
@@ -90,20 +81,30 @@ class Style:
     def getColor(self):
         return self.get(COLOR_STYLE)
 
+    def getScaled(self, value):
+        s = self.get(SCALE_STYLE, 1)
+        return value * s
+
     def getScaledA(self, value):
+        s = self.get(SCALE_STYLE, 1)
         a = self.get(SCALE_A_STYLE, 1)
-        return value * a
+        return value * s * a
 
-    def getScaledB(self, value):
+    def getScaledAB(self, value):
+        s = self.get(SCALE_STYLE, 1)
         a = self.get(SCALE_A_STYLE, 1)
         b = self.get(SCALE_B_STYLE, 1)
-        return value * a * b
+        return value * s * a * b
 
-    def getScaledC(self, value):
+    def getScaledAC(self, value):
+        s = self.get(SCALE_STYLE, 1)
         a = self.get(SCALE_A_STYLE, 1)
-        b = self.get(SCALE_B_STYLE, 1)
         c = self.get(SCALE_B_STYLE, 1)
-        return value * a * b * c
+        return value * s * a * c
+
+    def getScaledPx(self, value):
+        spx = self.get(SCALE_PX_STYLE, 1)
+        return value * spx
 
 
 class Pnt(gp_Pnt):
@@ -123,7 +124,7 @@ class Draw:
             return ''
         return ':' + '-'.join(self.cls)
 
-    def addItem(self, draw, position=Position(), nm='noname'):
+    def addItem(self, draw, position=Position(), nm='obj'):
         splitList = nm.split(':')
         itemName = splitList[0]
         if len(splitList) > 1:
@@ -134,8 +135,8 @@ class Draw:
     def addCodeLine(self, line):
         self.code.append(line)
 
-    def addStyledItems(self, styler): pass
-    def addStyledCode(self, styler): pass
+    def addStyledItems(self, style: Style): pass
+    def addStyledCode(self, style: Style): pass
 
 
 class FinalTextDraw(Draw):
@@ -161,9 +162,9 @@ class LabelDraw(Draw):
         self.pnt = pnt
         self.text = text
 
-    def addStyledItems(self, styler):
-        delta = styler.getValue(LABEL_DELTA)
-        heightPx = styler.getValue(LABEL_HEIGHT_PX)
+    def addStyledItems(self, style: Style):
+        delta = style.getScaled(LABEL_DELTA)
+        heightPx = style.getScaledPx(LABEL_HEIGHT_PX)
         finalPosition = Translate(delta, delta, delta)
         finalDraw = FinalTextDraw(self.pnt, self.text, heightPx)
         self.addItem(finalDraw, finalPosition)
@@ -174,7 +175,7 @@ class SurfaceDraw(Draw):
         super().__init__('surface')
         self.shape = shape
 
-    def addStyledItems(self, styler):
+    def addStyledItems(self, style: Style):
         draw = FinalShapeDraw(self.shape)
         self.addItem(draw)
 
@@ -188,7 +189,7 @@ class SphereDraw(Draw):
         self.pnt = pnt
         self.r = r
 
-    def addStyledItems(self, styler):
+    def addStyledItems(self, style: Style):
         shape = BRepPrimAPI_MakeSphere(self.pnt, self.r).Shape()
         draw = FinalShapeDraw(shape)
         self.addItem(draw)
@@ -202,7 +203,7 @@ class BoxDraw(Draw):
         self.y = y
         self.z = z
 
-    def addStyledItems(self, styler):
+    def addStyledItems(self, style: Style):
         shape = BRepPrimAPI_MakeBox(self.pnt, self.x, self.y, self.z).Shape()
         draw = FinalShapeDraw(shape)
         self.addItem(draw)
@@ -215,7 +216,7 @@ class ConeDraw(Draw):
         self.r2 = r2
         self.h = h
 
-    def addStyledItems(self, styler):
+    def addStyledItems(self, style: Style):
         shape = BRepPrimAPI_MakeCone(self.r1, self.r2, self.h).Shape()
         draw = FinalShapeDraw(shape)
         self.addItem(draw)
@@ -227,7 +228,7 @@ class CylinderDraw(Draw):
         self.r = r
         self.h = h
 
-    def addStyledItems(self, styler):
+    def addStyledItems(self, style: Style):
         shape = BRepPrimAPI_MakeCylinder(self.r, self.h).Shape()
         draw = FinalShapeDraw(shape)
         self.addItem(draw)
@@ -239,7 +240,7 @@ class TorusDraw(Draw):
         self.r1 = r1
         self.r2 = r2
 
-    def addStyledItems(self, styler):
+    def addStyledItems(self, style: Style):
         shape = BRepPrimAPI_MakeTorus(self.r1, self.r2).Shape()
         draw = FinalShapeDraw(shape)
         self.addItem(draw)
@@ -253,8 +254,8 @@ class PointDraw(Draw):
         super().__init__('point')
         self.pnt = pnt
 
-    def addStyledItems(self, styler):
-        r = styler.getValue(POINT_RADIUS)
+    def addStyledItems(self, style: Style):
+        r = style.getScaled(POINT_RADIUS)
         draw = SphereDraw(self.pnt, r)
         self.addItem(draw)
 
@@ -265,13 +266,12 @@ class LineDraw(Draw):
         self.pnt1 = pnt1
         self.pnt2 = pnt2
 
-    def addStyledItems(self, styler):
-        brash = styler.getValue(LINE_BRASH)
-        r = styler.getValue(LINE_RADIUS)
+    def addStyledItems(self, style: Style):
+        r = style.getScaled(LINE_RADIUS)
         length = gp_Vec(self.pnt1, self.pnt2).Magnitude()
         draw = CylinderDraw(r, length)
         position = Direct(self.pnt1, self.pnt2)
-        self.addItem(draw, position, brash)
+        self.addItem(draw, position)
 
 
 class ArrowDraw(Draw):
@@ -280,9 +280,9 @@ class ArrowDraw(Draw):
         self.pnt1 = pnt1
         self.pnt2 = pnt2
 
-    def addStyledItems(self, styler):
-        r = styler.getValue(LINE_ARROW_RADIUS)
-        length = styler.getValue(LINE_ARROW_LENGTH)
+    def addStyledItems(self, style: Style):
+        r = style.getScaledA(LINE_ARROW_RADIUS)
+        length = style.getScaledAB(LINE_ARROW_LENGTH)
         draw = ConeDraw(r, 0, length)
         position = Direct(self.pnt1, self.pnt2)
         self.addItem(draw, position)
@@ -294,8 +294,8 @@ class VectorDraw(Draw):
         self.pnt1 = pnt1
         self.pnt2 = pnt2
 
-    def addStyledItems(self, styler):
-        arrowLength = styler.getValue(LINE_ARROW_LENGTH)
+    def addStyledItems(self, style: Style):
+        arrowLength = style.getScaledAB(LINE_ARROW_LENGTH)
         v = gp_Vec(self.pnt1, self.pnt2)
         vLen = v.Magnitude()
         v *= (vLen - arrowLength) / vLen
@@ -354,8 +354,8 @@ class Circle3Draw(Draw):
         self.pnt2 = pnt2
         self.pnt3 = pnt3
 
-    def addStyledItems(self, styler):
-        aWireRadius = styler.getValue(LINE_RADIUS)
+    def addStyledItems(self, style:  Style):
+        aWireRadius = style.getScaled(LINE_RADIUS)
         geomCircle = GC_MakeCircle(self.pnt1, self.pnt2, self.pnt3).Value()
         edge = BRepBuilderAPI_MakeEdge(geomCircle).Edge()
         wire = BRepBuilderAPI_MakeWire(edge).Wire()

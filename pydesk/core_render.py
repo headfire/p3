@@ -97,20 +97,23 @@ class RenderLib:
         for itemName, itemContainer in draw.items.items():
             itemDraw, itemPosition = itemContainer
             mergedRenderName = renderName + '>' + itemName + itemDraw.getClsSuffix()
-            itemStyle = self.styler.getStyle(mergedRenderName)
-            mergedStyle = Style().mergeAll(renderStyle).mergeAll(itemStyle)  # parent first logic
+            # itemStyle = self.styler.getStyle(mergedRenderName)
+            # mergedStyle = Style().mergeAll(renderStyle).mergeAll(itemStyle)  # parent first logic
             mergedPosition = Position().next(itemPosition).next(renderPosition)  # child first logic
-            self._render(itemDraw, mergedPosition, mergedStyle, mergedRenderName, level+1)
+            self._render(itemDraw, mergedPosition, renderStyle, mergedRenderName, level+1)
 
     def _render(self, draw, renderPosition, renderStyle, renderName, level):
         print(renderName)
-        self._renderNative(draw, renderPosition, renderStyle, renderName, level)
+        itemStyle = self.styler.getStyle(renderName)
+        mergedStyle = Style().mergeAll(renderStyle).mergeAll(itemStyle)  # parent first logic
+        self._renderNative(draw, renderPosition, mergedStyle, renderName, level)
         if not self.renderNativeSuccess:
-            draw.addStyledItems(self.styler)
-            self._renderItems(draw, renderPosition, renderStyle, renderName, level)
+            draw.addStyledItems(mergedStyle)
+            self._renderItems(draw, renderPosition, mergedStyle, renderName, level)
 
     def render(self, draw: Draw, position=Position(), style=Style(), nm='noname'):
-        self._render(draw, position, style, nm, 0)
+        renderName = nm + draw.getClsSuffix()
+        self._render(draw, position, style, renderName, 0)
 
     def renderStart(self):
         pass

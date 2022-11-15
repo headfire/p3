@@ -1,8 +1,8 @@
-from core_render import ScreenRenderLib
-from core_draw import Pnt, PointDraw, LineDraw, VectorDraw, Circle3Draw
+from core_render import *
+from core_draw import *
 # from core_position import Translate
 
-from core_brash import Brash
+# from core_brash import Brash
 screen = ScreenRenderLib()
 screen.renderStart()
 
@@ -41,11 +41,11 @@ screen.render(LineDraw(pnt001, pnt101))
 screen.render(LineDraw(pnt010, pnt110))
 screen.render(LineDraw(pnt011, pnt111))
 
-brash = Brash(color=(0.1, 0.7, 0.1))
-screen.render(VectorDraw(pnt000, pntC), brash=brash)
-screen.render(VectorDraw(pnt111, pntC), brash=brash)
+style = Style(color=(0.1, 0.7, 0.1))
+screen.render(VectorDraw(pnt000, pntC), style=style)
+screen.render(VectorDraw(pnt111, pntC), style=style)
 
-brash = Brash(color=(0.1, 0.7, 0.7))
-screen.render(Circle3Draw(pnt000, pnt111, pnt100), brash=brash)
+style = Style(color=(0.1, 0.7, 0.7))
+screen.render(Circle3Draw(pnt000, pnt111, pnt100), style=style)
 
 screen.renderFinish()
