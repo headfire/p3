@@ -1,9 +1,12 @@
-from core_render import ScreenRenderLib
-from core_draw import Pnt, SphereDraw, BoxDraw, ConeDraw, CylinderDraw, TorusDraw
 from core_position import Translate
+from core_render import *
+from core_draw import *
+
 
 screen = ScreenRenderLib()
 screen.renderStart()
+
+screen.styler.add###Styles([('*:cone', Style(CHROME_MATERIAL))])  # todo
 
 r = 5
 drawList = [

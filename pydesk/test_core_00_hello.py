@@ -1,5 +1,5 @@
-from core_render import ScreenRenderLib
-from core_draw import Pnt, SphereDraw
+from core_render import *
+from core_draw import *
 
 
 screen = ScreenRenderLib()

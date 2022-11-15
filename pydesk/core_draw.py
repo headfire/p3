@@ -1,4 +1,4 @@
-from core_brash import *
+# from core_brash import *
 from core_position import Position, Direct, Translate
 
 from OCC.Core.gp import gp_Pnt, gp_Vec, gp_Dir
@@ -12,8 +12,6 @@ from OCC.Core.GC import GC_MakeCircle
 
 
 # *****************************************************************************
-
-Style
 
 AO_SIZE_XYZ = 1189, 841, 1
 
@@ -78,15 +76,16 @@ class Style:
         if self.get(styleName) is None:
             self.set(styleName, mergedStyleValue)
 
-    def mergeAll(self, mergedStyles):
-        for styleName, styleValue in mergedStyles.items():
+    def mergeAll(self, mergedStyle):
+        for styleName, styleValue in mergedStyle.values.items():
             self.merge(styleName, styleValue)
+        return self
 
     def getMaterial(self):
-        return self.getMaterial(MATERIAL_STYLE)
+        return self.get(MATERIAL_STYLE)
 
     def getTransparency(self):
-        return self.getMaterial(TRANSPARENCY_STYLE)
+        return self.get(TRANSPARENCY_STYLE)
 
     def getColor(self):
         return self.get(COLOR_STYLE)
@@ -107,48 +106,30 @@ class Style:
         return value * a * b * c
 
 
-DEF_STYLES = {
-
-    SCALE_A: 1,
-    SCALE_B: 1,
-    SCALE_C: 1,
-
-    LABEL_BRASH: Brash(SILVER_MATERIAL),
-    LABEL_DELTA: 20,
-    LABEL_HEIGHT_PX: 20,
-
-    POINT_BRASH: Brash(CHROME_MATERIAL, NICE_YELLOW_COLOR),
-    POINT_RADIUS: 5,
-
-    LINE_BRASH: Brash(CHROME_MATERIAL, NICE_BLUE_COLOR),
-    LINE_RADIUS: 2.5,
-    LINE_ARROW_RADIUS: 5,
-    LINE_ARROW_LENGTH: 20,
-
-    FACE_BRASH: Brash(CHROME_MATERIAL, NICE_BLUE_COLOR),
-    FACE_WIDTH: 1,
-
-    SOLID_BRASH: Brash(GOLD_MATERIAL),
-
-    SURFACE_BRASH: Brash(PLASTIC_MATERIAL, NICE_GRAY_COLOR)
-}
-
-
 class Pnt(gp_Pnt):
     pass
 
 
-
 # ********************************************************************************
 
-
 class Draw:
-    def __init__(self):
+    def __init__(self, cls: str):
+        self.cls = cls.split('-')
         self.items = {}
         self.code = []
 
-    def addItem(self, nm, draw, position=Position(), brash=Brash()):
-        self.items[nm] = draw, position, brash
+    def getClsSuffix(self):
+        if len(self.cls) == 0:
+            return ''
+        return ':' + '-'.join(self.cls)
+
+    def addItem(self, draw, position=Position(), nm='noname'):
+        splitList = nm.split(':')
+        itemName = splitList[0]
+        if len(splitList) > 1:
+            clsToAdd = splitList[1].split('-')
+            self.cls.extend(clsToAdd)
+        self.items[itemName] = draw, position
 
     def addCodeLine(self, line):
         self.code.append(line)
@@ -159,7 +140,7 @@ class Draw:
 
 class FinalTextDraw(Draw):
     def __init__(self, pnt, text, textHeightPx):
-        super().__init__()
+        super().__init__('final')
         self.pnt = pnt
         self.text = text
         self.textHeightPx = textHeightPx
@@ -167,7 +148,7 @@ class FinalTextDraw(Draw):
 
 class FinalShapeDraw(Draw):
     def __init__(self, shape):
-        super().__init__()
+        super().__init__('final')
         self.shape = shape
 
 
@@ -176,28 +157,26 @@ class FinalShapeDraw(Draw):
 
 class LabelDraw(Draw):
     def __init__(self, pnt, text):
-        super().__init__()
+        super().__init__('label')
         self.pnt = pnt
         self.text = text
 
     def addStyledItems(self, styler):
         delta = styler.getValue(LABEL_DELTA)
         heightPx = styler.getValue(LABEL_HEIGHT_PX)
-        finalBrash = styler.getValue(LABEL_BRASH)
         finalPosition = Translate(delta, delta, delta)
         finalDraw = FinalTextDraw(self.pnt, self.text, heightPx)
-        self.addItem('draw', finalDraw, finalPosition, finalBrash)
+        self.addItem(finalDraw, finalPosition)
 
 
 class SurfaceDraw(Draw):
     def __init__(self, shape):
-        super().__init__()
+        super().__init__('surface')
         self.shape = shape
 
     def addStyledItems(self, styler):
-        brash = styler.getValue(SURFACE_BRASH)
         draw = FinalShapeDraw(self.shape)
-        self.addItem('draw', draw, brash=brash)
+        self.addItem(draw)
 
 
 # *************************************
@@ -205,70 +184,65 @@ class SurfaceDraw(Draw):
 
 class SphereDraw(Draw):
     def __init__(self, pnt, r):
-        super().__init__()
+        super().__init__('sphere-solid')
         self.pnt = pnt
         self.r = r
 
     def addStyledItems(self, styler):
-        brash = styler.getValue(SOLID_BRASH)
         shape = BRepPrimAPI_MakeSphere(self.pnt, self.r).Shape()
         draw = FinalShapeDraw(shape)
-        self.addItem('draw', draw, brash=brash)
+        self.addItem(draw)
 
 
 class BoxDraw(Draw):
     def __init__(self, pnt, x, y, z):
-        super().__init__()
+        super().__init__('box-solid')
         self.pnt = pnt
         self.x = x
         self.y = y
         self.z = z
 
     def addStyledItems(self, styler):
-        brash = styler.getValue(SOLID_BRASH)
         shape = BRepPrimAPI_MakeBox(self.pnt, self.x, self.y, self.z).Shape()
         draw = FinalShapeDraw(shape)
-        self.addItem('draw', draw, brash=brash)
+        self.addItem(draw)
 
 
 class ConeDraw(Draw):
     def __init__(self, r1, r2, h):
-        super().__init__()
+        super().__init__('cone-solid')
         self.r1 = r1
         self.r2 = r2
         self.h = h
 
     def addStyledItems(self, styler):
-        brash = styler.getValue(SOLID_BRASH)
         shape = BRepPrimAPI_MakeCone(self.r1, self.r2, self.h).Shape()
         draw = FinalShapeDraw(shape)
-        self.addItem('draw', draw, brash=brash)
+        self.addItem(draw)
 
 
 class CylinderDraw(Draw):
     def __init__(self, r, h):
-        super().__init__()
+        super().__init__('cylinder-solid')
         self.r = r
         self.h = h
 
     def addStyledItems(self, styler):
-        brash = styler.getValue(SOLID_BRASH)
         shape = BRepPrimAPI_MakeCylinder(self.r, self.h).Shape()
         draw = FinalShapeDraw(shape)
-        self.addItem('draw', draw, brash=brash)
+        self.addItem(draw)
 
 
 class TorusDraw(Draw):
     def __init__(self, r1, r2):
-        super().__init__()
+        super().__init__('torus-solid')
         self.r1 = r1
         self.r2 = r2
 
     def addStyledItems(self, styler):
-        brash = styler.getValue(SOLID_BRASH)
         shape = BRepPrimAPI_MakeTorus(self.r1, self.r2).Shape()
         draw = FinalShapeDraw(shape)
-        self.addItem('draw', draw, brash=brash)
+        self.addItem(draw)
 
 
 # ********************************************************************
@@ -276,19 +250,18 @@ class TorusDraw(Draw):
 
 class PointDraw(Draw):
     def __init__(self, pnt):
-        super().__init__()
+        super().__init__('point')
         self.pnt = pnt
 
     def addStyledItems(self, styler):
-        brash = styler.getValue(POINT_BRASH)
         r = styler.getValue(POINT_RADIUS)
         draw = SphereDraw(self.pnt, r)
-        self.addItem('draw', draw, brash=brash)
+        self.addItem(draw)
 
 
 class LineDraw(Draw):
     def __init__(self, pnt1, pnt2):
-        super().__init__()
+        super().__init__('direct-line')
         self.pnt1 = pnt1
         self.pnt2 = pnt2
 
@@ -298,27 +271,26 @@ class LineDraw(Draw):
         length = gp_Vec(self.pnt1, self.pnt2).Magnitude()
         draw = CylinderDraw(r, length)
         position = Direct(self.pnt1, self.pnt2)
-        self.addItem('draw', draw, position, brash)
+        self.addItem(draw, position, brash)
 
 
 class ArrowDraw(Draw):
     def __init__(self, pnt1, pnt2):
-        super().__init__()
+        super().__init__('arrow-line')
         self.pnt1 = pnt1
         self.pnt2 = pnt2
 
     def addStyledItems(self, styler):
-        brash = styler.getValue(LINE_BRASH)
         r = styler.getValue(LINE_ARROW_RADIUS)
         length = styler.getValue(LINE_ARROW_LENGTH)
         draw = ConeDraw(r, 0, length)
         position = Direct(self.pnt1, self.pnt2)
-        self.addItem('draw', draw, position, brash)
+        self.addItem(draw, position)
 
 
 class VectorDraw(Draw):
     def __init__(self, pnt1, pnt2):
-        super().__init__()
+        super().__init__('vector-line')
         self.pnt1 = pnt1
         self.pnt2 = pnt2
 
@@ -328,8 +300,8 @@ class VectorDraw(Draw):
         vLen = v.Magnitude()
         v *= (vLen - arrowLength) / vLen
         pntM = self.pnt1.Translated(v)
-        self.addItem('line', LineDraw(self.pnt1, pntM))
-        self.addItem('arrow', ArrowDraw(pntM, self.pnt2))
+        self.addItem(LineDraw(self.pnt1, pntM), nm='line')
+        self.addItem(ArrowDraw(pntM, self.pnt2), nm='arrow')
 
 
 # ********************************************************************
@@ -357,7 +329,7 @@ def _getWireStartPointAndTangentDir(wire):
 
 class WireDraw(Draw):
     def __init__(self, wire, r=None):
-        super().__init__()
+        super().__init__('wire-line')
         self.wire = wire
         self.r = r
 
@@ -366,31 +338,29 @@ class WireDraw(Draw):
             aWireRadius = self.r
         else:
             aWireRadius = styler.getValue(LINE_RADIUS)
-        brash = styler.getValue(LINE_BRASH)
         startPoint, tangentDir = _getWireStartPointAndTangentDir(self.wire)
         profileCircle = GC_MakeCircle(startPoint, tangentDir, aWireRadius).Value()
         profileEdge = BRepBuilderAPI_MakeEdge(profileCircle).Edge()
         profileWire = BRepBuilderAPI_MakeWire(profileEdge).Wire()
         shape = BRepOffsetAPI_MakePipe(self.wire, profileWire).Shape()
         draw = FinalShapeDraw(shape)
-        self.addItem('draw', draw, brash=brash)
+        self.addItem(draw)
 
 
 class Circle3Draw(Draw):
     def __init__(self, pnt1, pnt2, pnt3):
-        super().__init__()
+        super().__init__('circle-line')
         self.pnt1 = pnt1
         self.pnt2 = pnt2
         self.pnt3 = pnt3
 
     def addStyledItems(self, styler):
         aWireRadius = styler.getValue(LINE_RADIUS)
-        brash = styler.getValue(LINE_BRASH)
         geomCircle = GC_MakeCircle(self.pnt1, self.pnt2, self.pnt3).Value()
         edge = BRepBuilderAPI_MakeEdge(geomCircle).Edge()
         wire = BRepBuilderAPI_MakeWire(edge).Wire()
         draw = WireDraw(wire, aWireRadius)
-        self.addItem('draw', draw, brash=brash)
+        self.addItem(draw)
 
 
 # ****************************************************************************

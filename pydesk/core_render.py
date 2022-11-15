@@ -1,4 +1,4 @@
-from core_brash import *
+# from core_brash import *
 from OCC.Core.AIS import AIS_Shape
 from OCC.Core.Quantity import Quantity_Color, Quantity_TypeOfColor
 from OCC.Core.BRepBuilderAPI import BRepBuilderAPI_Transform
@@ -8,127 +8,109 @@ from OCC.Display.SimpleGui import init_display
 
 # from core_consts import *
 # from core_draw import Draw, Styler, FinalShapeDraw, FinalTextDraw
-from core_position import Position
+# from core_position import Position
 from core_draw import *
+from core_mask import isMask
 
-POINT_CLASSES = [PointDraw]
-SOLID_CLASSES = [BoxDraw, SphereDraw, ConeDraw, TorusDraw, CylinderDraw]
-LINE_CLASSES = [VectorDraw, ArrowDraw, LineDraw, Circle3Draw, WireDraw]
-FACE_CLASSES = [SurfaceDraw]
-LABEL_CLASSES = [LabelDraw]
-
-LABEL_STYLE: Style(SILVER_MATERIAL)
-POINT_STYLE: Style(CHROME_MATERIAL, NICE_YELLOW_COLOR)
-LINE_STYLE: Style(CHROME_MATERIAL, NICE_BLUE_COLOR)
-FACE_STYLE: Style(CHROME_MATERIAL, NICE_BLUE_COLOR)
-SOLID_STYLE: Style(GOLD_MATERIAL)
-SURFACE_STYLE: Style(PLASTIC_MATERIAL, NICE_GRAY_COLOR)
+from OCC.Core.Graphic3d import Graphic3d_NameOfMaterial
 
 
-class MaskStep:
-    def __init__(self, names=None, nums=None, classes=None):
-        self.names = names
-        self.nums = nums
-        self.classes = classes
+BRASS_MATERIAL = Graphic3d_NameOfMaterial.Graphic3d_NOM_BRASS
+BRONZE_MATERIAL = Graphic3d_NameOfMaterial.Graphic3d_NOM_BRONZE
+COPPER_MATERIAL = Graphic3d_NameOfMaterial.Graphic3d_NOM_COPPER
+GOLD_MATERIAL = Graphic3d_NameOfMaterial.Graphic3d_NOM_GOLD
+PEWTER_MATERIAL = Graphic3d_NameOfMaterial.Graphic3d_NOM_PEWTER
+PLASTER_MATERIAL = Graphic3d_NameOfMaterial.Graphic3d_NOM_PLASTER
+PLASTIC_MATERIAL = Graphic3d_NameOfMaterial.Graphic3d_NOM_PLASTIC
+SILVER_MATERIAL = Graphic3d_NameOfMaterial.Graphic3d_NOM_SILVER
+STEEL_MATERIAL = Graphic3d_NameOfMaterial.Graphic3d_NOM_STEEL
+STONE_MATERIAL = Graphic3d_NameOfMaterial.Graphic3d_NOM_STONE
+SHINY_PLASTIC_MATERIAL = Graphic3d_NameOfMaterial.Graphic3d_NOM_SHINY_PLASTIC
+SATIN_MATERIAL = Graphic3d_NameOfMaterial.Graphic3d_NOM_SATIN
+METALIZED_MATERIAL = Graphic3d_NameOfMaterial.Graphic3d_NOM_METALIZED
+NEON_GNC_MATERIAL = Graphic3d_NameOfMaterial.Graphic3d_NOM_NEON_GNC
+CHROME_MATERIAL = Graphic3d_NameOfMaterial.Graphic3d_NOM_CHROME
+ALUMINIUM_MATERIAL = Graphic3d_NameOfMaterial.Graphic3d_NOM_ALUMINIUM
+OBSIDIAN_MATERIAL = Graphic3d_NameOfMaterial.Graphic3d_NOM_OBSIDIAN
+NEON_PHC_MATERIAL = Graphic3d_NameOfMaterial.Graphic3d_NOM_NEON_PHC
+JADE_MATERIAL = Graphic3d_NameOfMaterial.Graphic3d_NOM_JADE
+CHARCOAL_MATERIAL = Graphic3d_NameOfMaterial.Graphic3d_NOM_CHARCOAL
+WATER_MATERIAL = Graphic3d_NameOfMaterial.Graphic3d_NOM_WATER
+GLASS_MATERIAL = Graphic3d_NameOfMaterial.Graphic3d_NOM_GLASS
+DIAMOND_MATERIAL = Graphic3d_NameOfMaterial.Graphic3d_NOM_DIAMOND
+TRANSPARENT_MATERIAL = Graphic3d_NameOfMaterial.Graphic3d_NOM_TRANSPARENT
+DEFAULT_MATERIAL = Graphic3d_NameOfMaterial.Graphic3d_NOM_DEFAULT
 
-    def checkName(self, objName):
-        if self.names is None:
-            return True
-        for nm in self.names:
-            if nm == objName:
-                return True
-        return False
+WOOD_COLOR = 208/255, 117/255, 28/255
+PAPER_COLOR = 230/255, 230/255, 230/255
+STEEL_COLOR = 100/255, 100/255, 100/255
 
-    def checkNum(self, objNum):
-        if self.nums is None:
-            return True
-        for num in self.nums:
-            if num == objNum:
-                return True
-        return False
+NICE_WHITE_COLOR = 240/255, 240/255, 240/255
+NICE_GRAY_COLOR = 100/255, 100/255, 100/255
+NICE_RED_COLOR = 200/255, 30/255, 30/255
+NICE_BLUE_COLOR = 100/255, 100/255, 255/255
+NICE_YELLOW_COLOR = 255/255, 255/255, 100/255
+NICE_ORIGINAL_COLOR = 241/255, 79/255, 160/255
 
-    def checkClass(self, objClass):
-        if self.classes is None:
-            return True
-        for cls in self.classes:
-            if cls == objClass:
-                return True
-        return False
+LABEL_STYLE = Style(SILVER_MATERIAL)
+POINT_STYLE = Style(CHROME_MATERIAL, NICE_YELLOW_COLOR)
+LINE_STYLE = Style(CHROME_MATERIAL, NICE_BLUE_COLOR)
+# FACE_STYLE = Style(CHROME_MATERIAL, NICE_BLUE_COLOR) todo
+SOLID_STYLE = Style(GOLD_MATERIAL)
+SURFACE_STYLE = Style(PLASTIC_MATERIAL, NICE_GRAY_COLOR)
 
-    def check(self, objName, objNumber, objClass):
-       return  self.checkName() and self.checkNum() and self.checkClass()
-
-
+STANDARD_STYLES = [
+    ('*:label', LABEL_STYLE),
+    ('*:point', POINT_STYLE),
+    ('*:line', LINE_STYLE),
+    ('*:solid', SOLID_STYLE),
+    ('*:surface', SURFACE_STYLE)
+    #  ('*:face', FACE_STYLE) todo
+]
 
 
 class Styler:
     def __init__(self):
-        self.rules = []
-        self.addRule(Mask(classes=POINT_CLASSES), POINT_STYLE)
-        self.addRule(Mask(classes=LINE_CLASSES), LINE_STYLE)
-        self.addRule(Mask(classes=SOLID_CLASSES), SOLID_STYLE)
-        self.addRule(Mask(classes=SURFACE_CLASSES), SURFACE_STYLE)
-        self.addRule(Mask(classes=FACE_CLASSES), FACE_STYLE)
+        self.styles = []
 
-        self.addRule(':VectorDraw, ArrowDraw, LineDraw, Circle3Draw, WireDraw]', MATERIAL_STYLE, CHROME_MATERIAL)
-        self.addRule(':VectorDraw, ArrowDraw, LineDraw, Circle3Draw, WireDraw]', COLOR_STYLE, NICE_BLUE_COLOR)
+    def addStyles(self, rulesList):
+        self.styles.extend(rulesList)
 
-
-    def addRule(self, mask, styleName, styleValue):
-        self.rules.append((mask, styleName, styleValue))
-
-    def isRuleMath(self, ruleMaskPath, renderPath):
-        i = 0
-        while i < len(renderPath) and i < (ruleMaskPath):
-
-            i++
-
-    def get(self, renderPath):
+    def getStyle(self, renderPath):
         style = Style()
-        for rule in reversed(self.rules):
-            ruleMaskPath, ruleStyle = rule
-            if self.isRuleMatch(ruleMaskPath, renderPath):
+        for rule in reversed(self.styles):
+            ruleMask, ruleStyle = rule
+            if isMask(ruleMask, renderPath):
                 style.mergeAll(ruleStyle)
-
-
-        style = Style()
-        for rule in self.rules:
-            mask, styleName, styleValue = rule
-            if _isMask(mask, renderName):
-                style.set(styleName, styleValue)
         return style
 
 
 class RenderLib:
     def __init__(self):
-        self.rootDrawCounter = 0
-        self.renderPosition = Position()
-        self.renderBrash = Brash
         self.renderNativeSuccess = False
         self.styler = Styler()
+        self.styler.addStyles(STANDARD_STYLES)
 
-    def _renderNative(self, draw, renderPosition, renderBrash, renderName, level): pass
+    def _renderNative(self, draw, renderPosition, renderStyle, renderName, level): pass
 
-    def _renderItems(self, draw, renderPosition, renderBrash, renderName, level):
+    def _renderItems(self, draw, renderPosition, renderStyle, renderName, level):
         for itemName, itemContainer in draw.items.items():
-            itemDraw, itemPosition, itemBrash = itemContainer
-            mergedRenderName = renderName + '->' + itemName + ':' + itemDraw.__class__.__name__
-            mergedBrash = Brash().apply(renderBrash).apply(itemBrash)  # parent first logic
+            itemDraw, itemPosition = itemContainer
+            mergedRenderName = renderName + '>' + itemName + itemDraw.getClsSuffix()
+            itemStyle = self.styler.getStyle(mergedRenderName)
+            mergedStyle = Style().mergeAll(renderStyle).mergeAll(itemStyle)  # parent first logic
             mergedPosition = Position().next(itemPosition).next(renderPosition)  # child first logic
-            self._render(itemDraw, mergedPosition, mergedBrash, mergedRenderName, level+1)
+            self._render(itemDraw, mergedPosition, mergedStyle, mergedRenderName, level+1)
 
-    def _render(self, draw, renderPosition, renderBrash, renderName, level):
+    def _render(self, draw, renderPosition, renderStyle, renderName, level):
         print(renderName)
-        self._renderNative(draw, renderPosition, renderBrash, renderName, level)
+        self._renderNative(draw, renderPosition, renderStyle, renderName, level)
         if not self.renderNativeSuccess:
             draw.addStyledItems(self.styler)
-            self._renderItems(draw, renderPosition, renderBrash, renderName, level)
+            self._renderItems(draw, renderPosition, renderStyle, renderName, level)
 
-    def render(self, draw: Draw, position=Position(), brash=Brash(), nm=''):
-        if nm == '':
-            self.rootDrawCounter += 1
-            nm = 'renderObj' + str(self.rootDrawCounter) + ':' + draw.__class__.__name__
-        self._render(draw, position, brash, nm, 0)
+    def render(self, draw: Draw, position=Position(), style=Style(), nm='noname'):
+        self._render(draw, position, style, nm, 0)
 
     def renderStart(self):
         pass
@@ -155,28 +137,31 @@ class ScreenRenderLib(RenderLib):
         self.display.FitAll()
         self.display_start()
 
-    def _nativeShape(self, shape, position: Position, brash: Brash):
+    def _nativeShape(self, shape, position: Position, style: Style):
         shapeTr = BRepBuilderAPI_Transform(shape, position.trsf).Shape()
         ais = AIS_Shape(shapeTr)
 
-        if brash.material is not None:
-            aspect = Graphic3d_MaterialAspect(brash.material)
+        material = style.getMaterial()
+        if material is not None:
+            aspect = Graphic3d_MaterialAspect(material)
             ais.SetMaterial(aspect)
 
-        if brash.transparency is not None:
-            ais.SetTransparency(brash.transparency)
+        transparency = style.getTransparency()
+        if transparency is not None:
+            ais.SetTransparency(transparency)
 
-        if brash.color is not None:
-            r, g, b = brash.color
+        color = style.getColor()
+        if color is not None:
+            r, g, b = color
             qColor = Quantity_Color(r, g, b,
                                     Quantity_TypeOfColor(Quantity_TypeOfColor.Quantity_TOC_RGB))
             ais.SetColor(qColor)
 
         self.display.Context.Display(ais, False)
 
-    def _nativeLabel(self, pnt, text, heightPx, position: Position, brash: Brash):
+    def _nativeLabel(self, pnt, text, heightPx, position: Position, style: Style):
         labelPnt = pnt.Transformed(position.trsf)
-        self.display.DisplayMessage(labelPnt, text, heightPx, brash.color, False)
+        self.display.DisplayMessage(labelPnt, text, heightPx, style.getColor(), False)
 
     def _renderNative(self, draw, renderPosition, renderBrash, renderName, level):
         self.renderNativeSuccess = True
