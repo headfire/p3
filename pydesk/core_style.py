@@ -67,6 +67,7 @@ DESK_PIN_RADIUS = 10
 DESK_PIN_HEIGHT = 2
 DESK_DEFAULT_DRAW_AREA_SIZE = 400
 
+
 class Style:
     def __init__(self, material=None, color=None, transparency=None):
         self.values = {}
