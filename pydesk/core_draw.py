@@ -36,22 +36,21 @@ DESK_DEFAULT_DRAW_AREA_SIZE = 400
 
 # *****************************************************
 
-MATERIAL_STYLE = 'MATERIAL_STYLE'
-COLOR_STYLE = 'COLOR_STYLE'
-TRANSPARENCY_STYLE = 'TRANSPARENCY_STYLE'
+MATERIAL = 'MATERIAL_STYLE'
+COLOR = 'COLOR_STYLE'
+TRANSPARENCY = 'TRANSPARENCY_STYLE'
 SCALE_STYLE = 'SCALE_STYLE'
-SCALE_A_STYLE = 'SCALE_A_STYLE'
-SCALE_B_STYLE = 'SCALE_B_STYLE'
-SCALE_C_STYLE = 'SCALE_C_STYLE'
+SCALE_GEOM_STYLE = 'SCALE_GEOM_STYLE'
+SCALE_ARROW_STYLE = 'SCALE_ARROW_STYLE'
 SCALE_PX_STYLE = 'SCALE_PX_STYLE'
 
 
 class Style:
     def __init__(self, material=None, color=None, transparency=None):
         self.values = {}
-        self.set(MATERIAL_STYLE, material)
-        self.set(COLOR_STYLE, color)
-        self.set(TRANSPARENCY_STYLE, transparency)
+        self.set(MATERIAL, material)
+        self.set(COLOR, color)
+        self.set(TRANSPARENCY, transparency)
 
     def get(self, styleName, defValue=None):
         value = self.values.get(styleName)
@@ -72,40 +71,6 @@ class Style:
             self.merge(styleName, styleValue)
         return self
 
-    def getMaterial(self):
-        return self.get(MATERIAL_STYLE)
-
-    def getTransparency(self):
-        return self.get(TRANSPARENCY_STYLE)
-
-    def getColor(self):
-        return self.get(COLOR_STYLE)
-
-    def getScaled(self, value):
-        s = self.get(SCALE_STYLE, 1)
-        return value * s
-
-    def getScaledA(self, value):
-        s = self.get(SCALE_STYLE, 1)
-        a = self.get(SCALE_A_STYLE, 1)
-        return value * s * a
-
-    def getScaledAB(self, value):
-        s = self.get(SCALE_STYLE, 1)
-        a = self.get(SCALE_A_STYLE, 1)
-        b = self.get(SCALE_B_STYLE, 1)
-        return value * s * a * b
-
-    def getScaledAC(self, value):
-        s = self.get(SCALE_STYLE, 1)
-        a = self.get(SCALE_A_STYLE, 1)
-        c = self.get(SCALE_B_STYLE, 1)
-        return value * s * a * c
-
-    def getScaledPx(self, value):
-        spx = self.get(SCALE_PX_STYLE, 1)
-        return value * spx
-
 
 class Pnt(gp_Pnt):
     pass
@@ -118,7 +83,7 @@ class Draw:
 
         self.nm = None
         self.cls = []
-        self.setNameWithCls(nameWithCls)
+        self.setNameAndAddCls(nameWithCls)
 
         self.position = Position()
         self.style = Style()
@@ -129,7 +94,7 @@ class Draw:
     def setName(self, nm):
         self.nm = nm
 
-    def setNameWithCls(self, nameWithCls):
+    def setNameAndAddCls(self, nameWithCls):
         splitList = nameWithCls.split(':')
         self.nm = splitList[0]
         if len(splitList) > 1:
@@ -141,13 +106,16 @@ class Draw:
             return self.nm
         return self.nm+':' + '-'.join(self.cls)
 
-    def setNm(self, nm):
-        return self # todo
+    def doNm(self, nm):
+        self.setNameAndAddCls(nm)
+        return self
 
-    def setPs(self, nm):
-        return self # todo
+    def doPs(self, position: Position):
+        self.position.next(position)
+        return self
 
-    def setSt(self, nm):
+    def doSt(self, styleName, styleValue):
+        self.style.set(styleName, styleValue)
         return self  # todo
 
     def addItem(self, draw):
@@ -184,8 +152,8 @@ class LabelDraw(Draw):
         self.text = text
 
     def addStyledItems(self, style: Style):
-        delta = style.getScaled(LABEL_DELTA)
-        heightPx = style.getScaledPx(LABEL_HEIGHT_PX)
+        delta = LABEL_DELTA * style.get(SCALE_STYLE, 1)
+        heightPx = LABEL_HEIGHT_PX * style.get(SCALE_PX_STYLE, 1)
         draw = FinalTextDraw(self.pnt, self.text, heightPx)
         draw.position = Translate(delta, delta, delta)
         self.addItem(draw)
@@ -276,7 +244,7 @@ class PointDraw(Draw):
         self.pnt = pnt
 
     def addStyledItems(self, style: Style):
-        r = style.getScaled(POINT_RADIUS)
+        r = POINT_RADIUS * style.get(SCALE_STYLE, 1) * style.get(SCALE_GEOM_STYLE, 1)
         draw = SphereDraw(self.pnt, r)
         self.addItem(draw)
 
@@ -288,23 +256,9 @@ class LineDraw(Draw):
         self.pnt2 = pnt2
 
     def addStyledItems(self, style: Style):
-        r = style.getScaled(LINE_RADIUS)
+        r = LINE_RADIUS * style.get(SCALE_STYLE, 1) * style.get(SCALE_GEOM_STYLE, 1)
         length = gp_Vec(self.pnt1, self.pnt2).Magnitude()
         draw = CylinderDraw(r, length)
-        draw.position = Direct(self.pnt1, self.pnt2)
-        self.addItem(draw)
-
-
-class ArrowDraw(Draw):
-    def __init__(self, pnt1, pnt2):
-        super().__init__('arrowObj:arrow-line')
-        self.pnt1 = pnt1
-        self.pnt2 = pnt2
-
-    def addStyledItems(self, style: Style):
-        r = style.getScaledA(LINE_ARROW_RADIUS)
-        length = style.getScaledAB(LINE_ARROW_LENGTH)
-        draw = ConeDraw(r, 0, length)
         draw.position = Direct(self.pnt1, self.pnt2)
         self.addItem(draw)
 
@@ -316,13 +270,18 @@ class VectorDraw(Draw):
         self.pnt2 = pnt2
 
     def addStyledItems(self, style: Style):
-        arrowLength = style.getScaledAB(LINE_ARROW_LENGTH)
+
+        arrowR = LINE_ARROW_RADIUS * style.get(SCALE_STYLE, 1) * style.get(SCALE_GEOM_STYLE, 1)
+        arrowL = LINE_ARROW_LENGTH * style.get(SCALE_STYLE, 1) * style.get(SCALE_GEOM_STYLE, 1) \
+            * style.get(SCALE_ARROW_STYLE, 1)
+
         v = gp_Vec(self.pnt1, self.pnt2)
         vLen = v.Magnitude()
-        v *= (vLen - arrowLength) / vLen
+        v *= (vLen - arrowL) / vLen
         pntM = self.pnt1.Translated(v)
+
         self.addItem(LineDraw(self.pnt1, pntM))
-        self.addItem(ArrowDraw(pntM, self.pnt2))
+        self.addItem(ConeDraw(arrowR, 0, arrowL).doPs(Direct(self.pnt1, self.pnt2)))
 
 
 # ********************************************************************
@@ -358,7 +317,7 @@ class WireDraw(Draw):
         if self.r is not None:
             aWireRadius = self.r
         else:
-            aWireRadius = style.getScaled(LINE_RADIUS)
+            aWireRadius = LINE_RADIUS * style.get(SCALE_STYLE, 1) * style.get(SCALE_GEOM_STYLE, 1)
         startPoint, tangentDir = _getWireStartPointAndTangentDir(self.wire)
         profileCircle = GC_MakeCircle(startPoint, tangentDir, aWireRadius).Value()
         profileEdge = BRepBuilderAPI_MakeEdge(profileCircle).Edge()
@@ -376,7 +335,7 @@ class Circle3Draw(Draw):
         self.pnt3 = pnt3
 
     def addStyledItems(self, style:  Style):
-        aWireRadius = style.getScaled(LINE_RADIUS)
+        aWireRadius = LINE_RADIUS * style.get(SCALE_STYLE, 1) * style.get(SCALE_GEOM_STYLE, 1)
         geomCircle = GC_MakeCircle(self.pnt1, self.pnt2, self.pnt3).Value()
         edge = BRepBuilderAPI_MakeEdge(geomCircle).Edge()
         wire = BRepBuilderAPI_MakeWire(edge).Wire()

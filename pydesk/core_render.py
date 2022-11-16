@@ -138,16 +138,16 @@ class ScreenRenderLib(RenderLib):
         shapeTr = BRepBuilderAPI_Transform(shape, position.trsf).Shape()
         ais = AIS_Shape(shapeTr)
 
-        material = style.getMaterial()
+        material = style.get(MATERIAL)
         if material is not None:
             aspect = Graphic3d_MaterialAspect(material)
             ais.SetMaterial(aspect)
 
-        transparency = style.getTransparency()
+        transparency = style.get(TRANSPARENCY)
         if transparency is not None:
             ais.SetTransparency(transparency)
 
-        color = style.getColor()
+        color = style.get(COLOR)
         if color is not None:
             r, g, b = color
             qColor = Quantity_Color(r, g, b,
@@ -158,7 +158,7 @@ class ScreenRenderLib(RenderLib):
 
     def _nativeLabel(self, pnt, text, heightPx, position: Position, style: Style):
         labelPnt = pnt.Transformed(position.trsf)
-        self.display.DisplayMessage(labelPnt, text, heightPx, style.getColor(), False)
+        self.display.DisplayMessage(labelPnt, text, heightPx, style.get(COLOR, (0.7, 0.7, 0.7)), False)
 
     def _renderNative(self, draw, renderPosition, renderBrash, renderName):
         self.renderNativeSuccess = True
