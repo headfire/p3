@@ -287,6 +287,26 @@ class CircleDraw(Draw):
         self.addItem(draw)
 
 
+class FaceDraw(Draw):
+    def __init__(self, pnts: [Pnt]):
+        super().__init__('circleObj:circle-line')
+        self.pnts = pnts
+
+    def addStyledItems(self, style:  Style):
+        edges = []
+        startPnt = self.pnts.
+        for pnt in self.pnts
+            edges
+        edge1 = BRepBuilderAPI_MakeEdge(pe0, pe1).Edge()
+        edge2 = BRepBuilderAPI_MakeEdge(pe1, pe2).Edge()
+        edge3 = BRepBuilderAPI_MakeEdge(pe2, pe3).Edge()
+        edge4 = BRepBuilderAPI_MakeEdge(pe3, pe0).Edge()
+
+        wire = BRepBuilderAPI_MakeWire(edge1, edge2, edge3, edge4).Wire()
+        face = BRepBuilderAPI_MakeFace(wire).Face()
+        self.addItem(FinalShapeDraw(face))
+
+
 # ****************************************************************************
 
 

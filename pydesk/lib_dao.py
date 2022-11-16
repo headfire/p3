@@ -245,7 +245,7 @@ class DaoDrawLib(DrawLib):
 
         return offsetWire
 
-    def getDaoOffsetPoints(self, offset):
+    def getDaoOffsetPnts(self, offset):
 
         aWire = self.getCached('getDaoOffsetWire', offset)
 
@@ -277,13 +277,13 @@ class DaoDrawLib(DrawLib):
 
     def getDaoSliceLinePnt2(self, offset, sliceK):
 
-        limitPoints = self.getCached('getDaoOffsetPoints', offset)
+        limitPoints = self.getCached('getDaoOffsetPnts', offset)
 
         beginPoint = limitPoints['Begin']
         rightPoint = limitPoints['Right']
         endPoint = limitPoints['End']
 
-        focusPoint = self.getCached('getDaoFocusPoint')
+        focusPoint = self.getCached('getDaoFocusPnt')
 
         limitAngle = 0
         limitPoint = getPntScale(focusPoint, rightPoint, 1.2)
@@ -308,7 +308,7 @@ class DaoDrawLib(DrawLib):
     def getDaoSliceFace(self, offset, sliceK):
 
         h = self.aSliceFaceHeight
-        beginPoint, endPoint = self.getCached('getDaoSliceLine', offset, sliceK)
+        beginPoint, endPoint = self.getCached('getDaoSliceLinePnt2', offset, sliceK)
 
         x1, y1, z1 = getXYZ(beginPoint)
         x2, y2, z2 = getXYZ(endPoint)
@@ -330,7 +330,7 @@ class DaoDrawLib(DrawLib):
     def getDaoSlicePnts(self, offset, sliceK):
 
         aWire = self.getCached('getDaoOffsetWire', offset)
-        aFace = self.getCached('getDaoSliceSurface', offset, sliceK)
+        aFace = self.getCached('getDaoSliceFace', offset, sliceK)
 
         farPoint, nearPoint = makeEdgesFacesIntersectPoints(aWire, aFace)
 
@@ -338,7 +338,7 @@ class DaoDrawLib(DrawLib):
 
     def getDaoSliceCirclePnt3(self, offset, sliceK):
 
-        slicePoints = self.getCached('getDaoSlicePoints', offset, sliceK)
+        slicePoints = self.getCached('getDaoSlicePnts', offset, sliceK)
         nearPoint = slicePoints['Near']
         farPoint = slicePoints['Far']
 
@@ -474,7 +474,7 @@ class DaoDrawLib(DrawLib):
         slicePoints = self.getCached('getDaoSlicePnts', offset, k)
         dr.addItem(LineDraw(sliceLineP1, sliceLineP2).doCls('focus'))
         dr.addItem(SurfaceDraw(sliceFace).doCls('focus'))
-        dr.addItem(getPointsDraw(slicePoints, 's', 'focus'))
+        dr.addItem(getPointsDraw(slicePoints, 's', 'main'))
         dr.addItem(CircleDraw(sliceCirclePnt1, sliceCirclePnt2, sliceCirclePnt3).doCls('focus'))
 
         # bound
@@ -601,6 +601,6 @@ class DaoDrawLib(DrawLib):
     def getStyles():
         return [
             ('*:info', Style().do(COLOR, NICE_GRAY_COLOR).do(TRANSPARENCY, 0.5).do(SCALE_GEOM, 0.5)),
-            ('*:focus', Style().do(COLOR, NICE_GRAY_COLOR).do(SCALE_GEOM, 0.7)),
-            ('*:focus-face', Style().do(COLOR, NICE_GRAY_COLOR).do(TRANSPARENCY, 0.5))
+            ('*:focus', Style().do(COLOR, NICE_RED_COLOR).do(SCALE_GEOM, 0.7)),
+            ('*:focus-surface', Style().do(COLOR, NICE_RED_COLOR).do(TRANSPARENCY, 0.5))
         ]
