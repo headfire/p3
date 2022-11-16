@@ -6,7 +6,7 @@ from core_draw import *
 screen = ScreenRenderLib()
 screen.renderStart()
 
-screen.styler.addStyles([('*:cone', Style(CHROME_MATERIAL))])  # todo
+screen.styler.addStyles([('*:cone', Style(CHROME_MATERIAL))])
 
 r = 5
 drawList = [

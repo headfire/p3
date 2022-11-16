@@ -41,11 +41,11 @@ screen.render(LineDraw(pnt001, pnt101))
 screen.render(LineDraw(pnt010, pnt110))
 screen.render(LineDraw(pnt011, pnt111))
 
-style = Style(color=(0.1, 0.7, 0.1))
-screen.render(VectorDraw(pnt000, pntC), style=style)
-screen.render(VectorDraw(pnt111, pntC), style=style)
+style = Style().do(COLOR, (0.1, 0.7, 0.1))
+screen.render(VectorDraw(pnt000, pntC).doStl(style))
+screen.render(VectorDraw(pnt111, pntC).doStl(style))
 
 style = Style(color=(0.1, 0.7, 0.7))
-screen.render(Circle3Draw(pnt000, pnt111, pnt100), style=style)
+screen.render(Circle3Draw(pnt000, pnt111, pnt100).doStl(style))
 
 screen.renderFinish()

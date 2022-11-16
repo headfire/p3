@@ -71,6 +71,10 @@ class Style:
             self.merge(styleName, styleValue)
         return self
 
+    def do(self, styleName, styleValue):
+        self.set(styleName, styleValue)
+        return self
+
 
 class Pnt(gp_Pnt):
     pass
@@ -116,7 +120,11 @@ class Draw:
 
     def doSt(self, styleName, styleValue):
         self.style.set(styleName, styleValue)
-        return self  # todo
+        return self
+
+    def doStl(self, style):
+        self.style = style
+        return self
 
     def addItem(self, draw):
         self.items.append(draw)
@@ -281,7 +289,7 @@ class VectorDraw(Draw):
         pntM = self.pnt1.Translated(v)
 
         self.addItem(LineDraw(self.pnt1, pntM))
-        self.addItem(ConeDraw(arrowR, 0, arrowL).doPs(Direct(self.pnt1, self.pnt2)))
+        self.addItem(ConeDraw(arrowR, 0, arrowL).doPs(Direct(pntM, self.pnt2)))
 
 
 # ********************************************************************
