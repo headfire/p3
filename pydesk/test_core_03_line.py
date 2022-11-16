@@ -1,8 +1,6 @@
 from core_render import *
 from core_draw import *
-# from core_position import Translate
 
-# from core_brash import Brash
 screen = ScreenRenderLib()
 screen.renderStart()
 

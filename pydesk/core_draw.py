@@ -1,5 +1,5 @@
-# from core_brash import *
-from core_position import Position, Direct, Translate
+from core_position import *
+from core_style import *
 
 from OCC.Core.gp import gp_Pnt, gp_Vec, gp_Dir
 from OCC.Core.BRepPrimAPI import BRepPrimAPI_MakeSphere, BRepPrimAPI_MakeBox, BRepPrimAPI_MakeCone, \
@@ -11,76 +11,9 @@ from OCC.Core.BRep import BRep_Tool
 from OCC.Core.GC import GC_MakeCircle
 
 
-# *****************************************************************************
-
-LABEL_HEIGHT_PX = 20  # not scaled
-LABEL_DELTA = 15
-POINT_RADIUS = 4
-LINE_RADIUS = 2
-LINE_ARROW_RADIUS = 4
-LINE_ARROW_LENGTH = 10
-FACE_WIDTH = 1
-
-AO_SIZE_XYZ = 1189, 841, 1
-
-M_1_1_SCALE = (1, 1)
-M_5_1_SCALE = (5, 1)
-
-DESK_HEIGHT = 20
-DESK_BORDER_SIZE = 60
-DESK_PAPER_SIZE = 1189, 841, 1
-DESK_PIN_OFFSET = 30
-DESK_PIN_RADIUS = 10
-DESK_PIN_HEIGHT = 2
-DESK_DEFAULT_DRAW_AREA_SIZE = 400
-
-# *****************************************************
-
-MATERIAL = 'MATERIAL_STYLE'
-COLOR = 'COLOR_STYLE'
-TRANSPARENCY = 'TRANSPARENCY_STYLE'
-SCALE_STYLE = 'SCALE_STYLE'
-SCALE_GEOM_STYLE = 'SCALE_GEOM_STYLE'
-SCALE_ARROW_STYLE = 'SCALE_ARROW_STYLE'
-SCALE_PX_STYLE = 'SCALE_PX_STYLE'
-
-
-class Style:
-    def __init__(self, material=None, color=None, transparency=None):
-        self.values = {}
-        self.set(MATERIAL, material)
-        self.set(COLOR, color)
-        self.set(TRANSPARENCY, transparency)
-
-    def get(self, styleName, defValue=None):
-        value = self.values.get(styleName)
-        if value is not None:
-            return value
-        return defValue
-
-    def set(self, styleName, styleValue):
-        if styleValue is not None:
-            self.values[styleName] = styleValue
-
-    def merge(self, styleName, mergedStyleValue):
-        if self.get(styleName) is None:
-            self.set(styleName, mergedStyleValue)
-
-    def mergeAll(self, mergedStyle):
-        for styleName, styleValue in mergedStyle.values.items():
-            self.merge(styleName, styleValue)
-        return self
-
-    def do(self, styleName, styleValue):
-        self.set(styleName, styleValue)
-        return self
-
-
 class Pnt(gp_Pnt):
     pass
 
-
-# ********************************************************************************
 
 class Draw:
     def __init__(self, nameWithCls: str = 'drawObj'):
