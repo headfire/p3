@@ -10,6 +10,9 @@ from OCC.Core.BRepTools import BRepTools_WireExplorer
 from OCC.Core.BRep import BRep_Tool
 from OCC.Core.GC import GC_MakeCircle
 
+from OCC.Core.BRepBuilderAPI import (BRepBuilderAPI_MakeEdge, BRepBuilderAPI_MakeWire,
+                                     BRepBuilderAPI_Transform, BRepBuilderAPI_MakeFace,
+                                     BRepBuilderAPI_MakeVertex, BRepBuilderAPI_GTransform)
 
 class Pnt(gp_Pnt):
     pass
@@ -293,16 +296,12 @@ class FaceDraw(Draw):
         self.pnts = pnts
 
     def addStyledItems(self, style:  Style):
-        edges = []
-        startPnt = self.pnts.
-        for pnt in self.pnts
-            edges
-        edge1 = BRepBuilderAPI_MakeEdge(pe0, pe1).Edge()
-        edge2 = BRepBuilderAPI_MakeEdge(pe1, pe2).Edge()
-        edge3 = BRepBuilderAPI_MakeEdge(pe2, pe3).Edge()
-        edge4 = BRepBuilderAPI_MakeEdge(pe3, pe0).Edge()
+        bWire = BRepBuilderAPI_MakeWire()
+        for i in range(0, len(self.pnts)):
+            bEdge = BRepBuilderAPI_MakeEdge(self.pnts[i-1], self.pnts[i])
+            bWire.Add(bEdge.Edge())
 
-        wire = BRepBuilderAPI_MakeWire(edge1, edge2, edge3, edge4).Wire()
+        wire = bWire.Wire()
         face = BRepBuilderAPI_MakeFace(wire).Face()
         self.addItem(FinalShapeDraw(face))
 
