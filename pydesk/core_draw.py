@@ -52,7 +52,7 @@ class Draw:
         return self
 
     def doPs(self, position: Position):
-        self.position.next(position)
+        self.position.do(position)
         return self
 
     def doSt(self, styleName, styleValue):

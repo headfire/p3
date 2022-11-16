@@ -84,13 +84,13 @@ class Style:
         if styleValue is not None:
             self.values[styleName] = styleValue
 
-    def merge(self, styleName, mergedStyleValue):
+    def mergeOne(self, styleName, mergedStyleValue):
         if self.get(styleName) is None:
             self.set(styleName, mergedStyleValue)
 
-    def mergeAll(self, mergedStyle):
+    def merge(self, mergedStyle):
         for styleName, styleValue in mergedStyle.values.items():
-            self.merge(styleName, styleValue)
+            self.mergeOne(styleName, styleValue)
         return self
 
     def do(self, styleName, styleValue):

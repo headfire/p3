@@ -24,7 +24,7 @@ class Styler:
         for rule in reversed(self.styles):
             ruleMask, ruleStyle = rule
             if isMask(ruleMask, renderPath):
-                style.mergeAll(ruleStyle)
+                style.merge(ruleStyle)
         return style
 
 
@@ -40,8 +40,8 @@ class RenderLib:
         mergedRenderName = renderName + '>' + draw.getNameWithCls()
         print(mergedRenderName)
         stylerStyle = self.styler.getStyle(renderName)
-        mergedStyle = Style().mergeAll(renderStyle).mergeAll(draw.style).mergeAll(stylerStyle)  # parent first logic
-        mergedPosition = Position().next(draw.position).next(renderPosition)  # child first logic
+        mergedStyle = Style().merge(renderStyle).merge(draw.style).merge(stylerStyle)  # parent first logic
+        mergedPosition = Position().do(draw.position).do(renderPosition)  # child first logic
         draw.addStyledItems(mergedStyle)
         self._renderNative(draw, mergedPosition, mergedStyle, mergedRenderName)
         if not self.renderNativeSuccess:

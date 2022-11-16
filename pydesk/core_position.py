@@ -19,13 +19,10 @@ class Position:
         self.trsf = gp_Trsf()
         self.describe = 'Position()'
 
-    def next(self, nextChange):
-        self.trsf *= nextChange.trsf
-        self.describe += ' -> ' + nextChange.describe
+    def do(self, nextPosition: Position):
+        self.trsf *= nextPosition.trsf
+        self.describe += ' -> ' + nextPosition.describe
         return self
-
-    def movePnt(self, pnt) -> gp_Pnt:
-        return pnt.Transformed(self.trsf)
 
     def _dump(self):
         for iRow in range(1, 4):
