@@ -271,7 +271,7 @@ class WireDraw(Draw):
         self.addItem(draw)
 
 
-class Circle3Draw(Draw):
+class CircleDraw(Draw):
     def __init__(self, pnt1, pnt2, pnt3):
         super().__init__('circleObj:circle-line')
         self.pnt1 = pnt1

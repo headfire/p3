@@ -3,18 +3,16 @@ from core_render import *
 
 import sys
 
-sceneName = 'dao_02'
+sceneName = 'dao_01'
 sceneTarget = 'screen'
 scenePath = '.'
 
-'''
 if len(sys.argv) > 1:
     sceneName = sys.argv[1]
 if len(sys.argv) > 2:
     sceneTarget = sys.argv[2]
 if len(sys.argv) > 3:
     scenePath = sys.argv[3]
-'''
 
 daoLib = DaoDrawLib()
 scene = None

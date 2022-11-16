@@ -6,7 +6,7 @@ from OCC.Core.GeomAPI import GeomAPI_IntCS
 from OCC.Core.TopExp import TopExp_Explorer
 from OCC.Core.TopAbs import TopAbs_VERTEX, TopAbs_FACE, TopAbs_EDGE
 
-from OCC.Core.GC import GC_MakeArcOfCircle, GC_MakeCircle
+from OCC.Core.GC import GC_MakeArcOfCircle
 
 from OCC.Core.BRep import BRep_Tool
 from OCC.Core.BRepBuilderAPI import (BRepBuilderAPI_MakeEdge, BRepBuilderAPI_MakeWire,
@@ -19,41 +19,7 @@ from OCC.Core.BRepAlgoAPI import BRepAlgoAPI_Common, BRepAlgoAPI_Cut
 from math import pi
 
 
-'''
-# styles
-mainStyle = Style()
-mainStyle.scale(scale * 1)
-
-infoStyle = Style()
-infoStyle.scale = scale
-infoStyle.factor = 0.7
-infoPointBrash = Material(NICE_GRAY_COLOR, MATE, 0.5)
-infoLineBrash = Material(NICE_GRAY_COLOR, MATE, 0.5)
-infoFaceBrash = Material(NICE_GRAY_COLOR, MATE, 0.5)
-infoLabelBrash = Material(NICE_GRAY_COLOR, MATE, 0.0)
-
-focusStyle = Style()
-focusStyle.scale = scale
-focusStyle.factor = 0.7
-focusStyle.lineMaterial = Material(NICE_RED_COLOR, MATE, 0.0)
-focusStyle.faceMaterial = Material(NICE_RED_COLOR, MATE, 0.5)
-focusStyle.labelMaterial = Material(NICE_RED_COLOR, MATE, 0.0)
-
-self.styles = {
-    'MainStyle': mainStyle,
-    'InfoStyle': infoStyle,
-    'FocusStyle': focusStyle,
-}
-'''
-
 EQUAL_POINTS_PRECISION = 0.001
-
-
-def makeCircleWire(aPoint1, aPoint2, aPoint3):
-    aCircle = GC_MakeCircle(aPoint1, aPoint2, aPoint3).Value()
-    aEdge = BRepBuilderAPI_MakeEdge(aCircle).Edge()
-    aWire = BRepBuilderAPI_MakeWire(aEdge).Wire()
-    return aWire
 
 
 def getXYZ(gpPnt):
@@ -250,11 +216,6 @@ class DaoDrawLib(DrawLib):
         }
         return ps
 
-    def getDaoBoundCircleWire(self, offset):
-
-        r = self.aBaseRadius + offset
-        return makeCircleWire(gp_Pnt(r, 0, 0), gp_Pnt(0, r, 0), gp_Pnt(-r, 0, 0))
-
     def getDaoClassicWire(self):
 
         p = self.getCached('getDaoBasePoints')
@@ -306,7 +267,7 @@ class DaoDrawLib(DrawLib):
 
         return secondWire
 
-    def getDaoFocusPoint(self):
+    def getDaoFocusPnt(self):
 
         r = self.aBaseRadius
 
@@ -314,7 +275,7 @@ class DaoDrawLib(DrawLib):
 
         return focusPoint
 
-    def getDaoSliceLine(self, offset, sliceK):
+    def getDaoSliceLinePnt2(self, offset, sliceK):
 
         limitPoints = self.getCached('getDaoOffsetPoints', offset)
 
@@ -344,7 +305,7 @@ class DaoDrawLib(DrawLib):
 
         return lineBeginPoint, lineEndPoint
 
-    def getDaoSliceSurface(self, offset, sliceK):
+    def getDaoSliceFace(self, offset, sliceK):
 
         h = self.aSliceFaceHeight
         beginPoint, endPoint = self.getCached('getDaoSliceLine', offset, sliceK)
@@ -366,7 +327,7 @@ class DaoDrawLib(DrawLib):
 
         return face
 
-    def getDaoSlicePoints(self, offset, sliceK):
+    def getDaoSlicePnts(self, offset, sliceK):
 
         aWire = self.getCached('getDaoOffsetWire', offset)
         aFace = self.getCached('getDaoSliceSurface', offset, sliceK)
@@ -375,7 +336,7 @@ class DaoDrawLib(DrawLib):
 
         return {'Near': nearPoint, 'Far': farPoint}
 
-    def getDaoSliceWire(self, offset, sliceK):
+    def getDaoSliceCirclePnt3(self, offset, sliceK):
 
         slicePoints = self.getCached('getDaoSlicePoints', offset, sliceK)
         nearPoint = slicePoints['Near']
@@ -388,7 +349,7 @@ class DaoDrawLib(DrawLib):
         upPoint.Translate(directionVector)
         upPoint.Translate(upVector)
 
-        return makeCircleWire(nearPoint, upPoint, farPoint)
+        return nearPoint, upPoint, farPoint
 
     def getDaoSkinningSurface(self, offset):
 
@@ -453,6 +414,11 @@ class DaoDrawLib(DrawLib):
 
         return step05Surface
 
+    # todo PointsDraw
+    def getDaoBoundPnt3(self, offset):
+        r = self.aBaseRadius + offset
+        return gp_Pnt(r, 0, 0), gp_Pnt(0, r, 0), gp_Pnt(-r, 0, 0)
+
     # **********************************************************************************
     # **********************************************************************************
     # **********************************************************************************
@@ -461,70 +427,63 @@ class DaoDrawLib(DrawLib):
 
         basePoints = self.getCached('getDaoBasePoints')
         classicWire = self.getCached('getDaoClassicWire')
-        boundCircleWire = self.getCached('getDaoBoundCircleWire', 0)
+        bPnt1, bPnt2, bPnt3 = self.getCached('getDaoBoundPnt3', 0)
 
         dr = Draw()
         dr.addItem(getPointsDraw(basePoints, 'p', 'main'))
         dr.addItem(WireDraw(classicWire).doCls('main'))
-        dr.addItem(WireDraw(boundCircleWire).doCls('info'))
+        dr.addItem(CircleDraw(bPnt1, bPnt2, bPnt3).doCls('info'))
 
         return dr
 
     def getDaoOffsetSlide(self):
 
-        offset = self.aOffset
-        boundCircleWire = self.getCached('getDaoBoundCircleWire', offset)
-        firstWire = self.getCached('getDaoOffsetWire', offset)
-        firstWirePoints = self.getCached('getDaoOffsetPoints', offset)
-        secondWire = self.getCached('getDaoSecondOffsetWire', offset)
+        bPnt1, bPnt2, bPnt3 = self.getCached('getDaoBoundPnt3', self.aOffset)
+        firstWire = self.getCached('getDaoOffsetWire', self.aOffset)
+        firstWirePoints = self.getCached('getDaoOffsetPnts', self.aOffset)
+        secondWire = self.getCached('getDaoSecondOffsetWire', self.aOffset)
 
         dr = Draw()
         dr.addItem(WireDraw(firstWire).doCls('main'))
         dr.addItem(getPointsDraw(firstWirePoints, 'p', 'main'))
         dr.addItem(WireDraw(secondWire).doCls('info'))
-        dr.addItem(WireDraw(boundCircleWire).doCls('info'))
+        dr.addItem(CircleDraw(bPnt1, bPnt2, bPnt3).doCls('info'))
+
+        return dr
+
+    def getDaoExampleSliceSlide(self):
+
+        offset = self.aOffset
+
+        dr = Draw()
+
+        # main dao curve
+        wire = self.getCached('getDaoOffsetWire', offset)
+        dr.addItem(WireDraw(wire).doCls('main'))
+
+        # focus point
+        focus = self.getCached('getDaoFocusPnt')
+        dr.addItem(PointDraw(focus).doCls('main'))
+        dr.addItem(LabelDraw(focus, 'F').doCls('main'))
+
+        # slice
+        k = self.aSliceExampleK
+        sliceLineP1, sliceLineP2 = self.getCached('getDaoSliceLinePnt2', offset, k)
+        sliceCirclePnt1, sliceCirclePnt2, sliceCirclePnt3 = self.getCached('getDaoSliceCirclePnt3', offset, k)
+        sliceFace = self.getCached('getDaoSliceFace', offset, k)
+        slicePoints = self.getCached('getDaoSlicePnts', offset, k)
+        dr.addItem(LineDraw(sliceLineP1, sliceLineP2).doCls('focus'))
+        dr.addItem(SurfaceDraw(sliceFace).doCls('focus'))
+        dr.addItem(getPointsDraw(slicePoints, 's', 'focus'))
+        dr.addItem(CircleDraw(sliceCirclePnt1, sliceCirclePnt2, sliceCirclePnt3).doCls('focus'))
+
+        # bound
+        bPnt1, bPnt2, bPnt3 = self.getCached('getDaoBoundPnt3', self.aOffset)
+        dr.addItem(CircleDraw(bPnt1, bPnt2, bPnt3).doCls('info'))
 
         return dr
 
     '''
-    def getDaoExampleSliceSlide(self):
-
-        offset = self.aOffset
-        wire = self.getCached('getDaoOffsetWire', offset)
-        focus = self.getCached('getDaoFocusPoint')
-        boundCircleWire = self.getCached('getDaoBoundCircleWire', offset)
-
-        dr = self.makeDraw()
-
-        dr.nm('wire')
-        dr.add(self.getDeskWire(wire, 'MainStyle'))
-
-        dr.nm('focus')
-        dr.add(self.getDeskPoint(focus, 'MainStyle'))
-
-        dr.nm('focusLabel')
-        dr.add(self.getDeskLabel(focus, 'F', 'MainStyle'))
-
-        k = self.aSliceExampleK
-        sliceLineP1, sliceLineP2 = self.getCached('getDaoSliceLine', offset, k)
-        sliceSurface = self.getCached('getDaoSliceSurface', offset, k)
-        slicePoints = self.getCached('getDaoSlicePoints', offset, k)
-        sliceWire = self.getCached('getDaoSliceWire', offset, k)
-
-        dr.nm('sliceLine')
-        dr.add(self.getDeskLine(sliceLineP1, sliceLineP2, 'FocusStyle'))
-        dr.nm('sliceSurface')
-        dr.add(self.getDeskSurface(sliceSurface, 'FocusStyle'))
-        dr.nm('slicePoints')
-        dr.add(self.getDaoPointsDraw(slicePoints, 's', 'FocusStyle'))
-        dr.nm('sliceWire')
-        dr.add(self.getDeskWire(sliceWire, 'FocusStyle'))
-
-        dr.nm('BoundCircleWire')
-        dr.add(self.getDeskWire(boundCircleWire, 'InfoStyle'))
-
-        return dr
-
     def getManySliceSlide(self):
 
         offset = self.aOffset
