@@ -1,5 +1,6 @@
-from lib_dao import DaoDrawLib
-from core_render import ScreenRenderLib #, WebRenderLib, WebFastRenderLib, StlRenderLib, RenderHints
+from lib_dao import *
+from core_render import *
+
 import sys
 
 sceneName = 'dao_01'
@@ -52,7 +53,7 @@ elif sceneTarget == 'stl':
     pass
     # target = StlRenderLib
 
-target.startRender()
-target.render(scene)
+target.renderStart()
+target.render(scene.doSt(SCALE_STYLE, 0.5))
 # target.render(desk, daoLib.makeMove().setMove(0, 0, -60))
-target.finishRender()
+target.renderFinish()

@@ -12,9 +12,6 @@ from core_draw import *
 from core_mask import isMask
 
 
-
-
-
 class Styler:
     def __init__(self):
         self.styles = []

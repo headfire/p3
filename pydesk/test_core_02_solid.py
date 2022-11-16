@@ -1,4 +1,3 @@
-from core_position import Translate
 from core_render import *
 from core_draw import *
 

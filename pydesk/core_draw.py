@@ -20,7 +20,11 @@ class Draw:
 
         self.nm = None
         self.cls = []
-        self.setNameAndAddCls(nameWithCls)
+
+        splitList = nameWithCls.split(':')
+        self.nm = splitList[0]
+        if len(splitList) > 1:
+            self.addCls(splitList[1])
 
         self.position = Position()
         self.style = Style()
@@ -31,12 +35,8 @@ class Draw:
     def setName(self, nm):
         self.nm = nm
 
-    def setNameAndAddCls(self, nameWithCls):
-        splitList = nameWithCls.split(':')
-        self.nm = splitList[0]
-        if len(splitList) > 1:
-            clsToAdd = splitList[1].split('-')
-            self.cls.extend(clsToAdd)
+    def addCls(self, clsToAdd):
+        self.cls.extend(clsToAdd.split('-'))
 
     def getNameWithCls(self):
         if len(self.cls) == 0:
@@ -44,7 +44,11 @@ class Draw:
         return self.nm+':' + '-'.join(self.cls)
 
     def doNm(self, nm):
-        self.setNameAndAddCls(nm)
+        self.nm = nm
+        return self
+
+    def doCls(self, nm):
+        self.addCls(nm)
         return self
 
     def doPs(self, position: Position):

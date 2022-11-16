@@ -45,21 +45,6 @@ SCALE_GEOM_STYLE = 'SCALE_GEOM_STYLE'
 SCALE_ARROW_STYLE = 'SCALE_ARROW_STYLE'
 SCALE_PX_STYLE = 'SCALE_PX_STYLE'
 
-LABEL_STYLE = Style(SILVER_MATERIAL)
-POINT_STYLE = Style(CHROME_MATERIAL, NICE_YELLOW_COLOR)
-LINE_STYLE = Style(CHROME_MATERIAL, NICE_BLUE_COLOR)
-# FACE_STYLE = Style(CHROME_MATERIAL, NICE_BLUE_COLOR) todo
-SOLID_STYLE = Style(GOLD_MATERIAL)
-SURFACE_STYLE = Style(PLASTIC_MATERIAL, NICE_GRAY_COLOR)
-
-STANDARD_STYLES = [
-    ('*:label', LABEL_STYLE),
-    ('*:point', POINT_STYLE),
-    ('*:line', LINE_STYLE),
-    ('*:solid', SOLID_STYLE),
-    ('*:surface', SURFACE_STYLE)
-    #  ('*:face', FACE_STYLE) todo
-]
 
 LABEL_HEIGHT_PX = 20  # not scaled
 LABEL_DELTA = 15
@@ -111,3 +96,20 @@ class Style:
     def do(self, styleName, styleValue):
         self.set(styleName, styleValue)
         return self
+
+
+LABEL_STYLE = Style(SILVER_MATERIAL)
+POINT_STYLE = Style(CHROME_MATERIAL, NICE_YELLOW_COLOR)
+LINE_STYLE = Style(CHROME_MATERIAL, NICE_BLUE_COLOR)
+# FACE_STYLE = Style(CHROME_MATERIAL, NICE_BLUE_COLOR) todo
+SOLID_STYLE = Style(GOLD_MATERIAL)
+SURFACE_STYLE = Style(PLASTIC_MATERIAL, NICE_GRAY_COLOR)
+
+STANDARD_STYLES = [
+    ('*:label', LABEL_STYLE),
+    ('*:point', POINT_STYLE),
+    ('*:line', LINE_STYLE),
+    ('*:solid', SOLID_STYLE),
+    ('*:surface', SURFACE_STYLE)
+    #  ('*:face', FACE_STYLE) todo
+]

@@ -1,5 +1,4 @@
 from core_draw import *
-from render import ScreenRenderLib, WebRenderLib, WebFastRenderLib, StlRenderLib, RenderHints
 
 from OCC.Core.gp import gp_Pnt, gp_Trsf, gp_Dir, gp_Vec, gp_Ax1, gp_OZ, gp_GTrsf, gp_Ax2
 from OCC.Core.Geom import Geom_TrimmedCurve
@@ -19,6 +18,7 @@ from OCC.Core.BRepAlgoAPI import BRepAlgoAPI_Common, BRepAlgoAPI_Cut
 
 from math import pi
 
+'''
 # styles
 mainStyle = Style()
 mainStyle.scale(scale * 1)
@@ -43,6 +43,7 @@ self.styles = {
     'InfoStyle': infoStyle,
     'FocusStyle': focusStyle,
 }
+'''
 
 EQUAL_POINTS_PRECISION = 0.001
 
@@ -191,17 +192,30 @@ def utilShapeZScale(shape, scaleK):
     return shape
 
 
+def getPointsDraw(pointsDict, prefix, pointsCls):
+
+    dr = Draw('daoPointsDraw:dao-slide')
+    for key in pointsDict:
+        dr.addItem(PointDraw(pointsDict[key]).doCls(pointsCls))
+
+    for key in pointsDict:
+        dr.addItem(LabelDraw(pointsDict[key], prefix + str(key)).doCls('info'))
+
+    return dr
+
+
 # *********************************************************************************
 # *********************************************************************************
 # *********************************************************************************
 
 
-class DaoDrawLib(DeskDrawLib):
+class DaoDrawLib(DrawLib):
 
     def __init__(self):
         self.scaleA = 5
         self.scaleB = 1
-        super().__init__(self.scaleA / self.scaleB, 'A0 M5:1')
+        # super().__init__(self.scaleA / self.scaleB, 'A0 M5:1')
+        super().__init__()
 
         self.aBaseRadius = 40
         self.aOffset = 3
@@ -212,6 +226,9 @@ class DaoDrawLib(DeskDrawLib):
         self.aSurfaceZScale = 0.7
         self.aCaseHeight = 30
         self.aCaseGap = 1
+
+    def getStyles(self):
+        return {}    # todo
 
     def getDaoBasePoints(self):
 
@@ -442,35 +459,16 @@ class DaoDrawLib(DeskDrawLib):
     # **********************************************************************************
     # **********************************************************************************
 
-    def getDaoPointsDraw(self, pointsDict, prefix, styleName):
-
-        dr = self.makeDraw()
-        dr.nm('Point')
-        for key in pointsDict:
-            dr.add(self.getDeskPoint(pointsDict[key], styleName))
-
-        dr.nm('Label')
-        for key in pointsDict:
-            dr.add(self.getDeskLabel(pointsDict[key], prefix + str(key), 'InfoStyle'))
-
-        return dr
-
     def getDaoClassicSlide(self):
 
         basePoints = self.getCached('getDaoBasePoints')
         classicWire = self.getCached('getDaoClassicWire')
         boundCircleWire = self.getCached('getDaoBoundCircleWire', 0)
 
-        dr = self.makeDraw()
-
-        dr.nm('BasePoints')
-        dr.add(self.getDaoPointsDraw(basePoints, 'p', 'MainStyle'))
-
-        dr.nm('ClassicWire')
-        dr.add(self.getDeskWire(classicWire, 'MainStyle'))
-
-        dr.nm('BoundCircleWire')
-        dr.add(self.getDeskWire(boundCircleWire, 'InfoStyle'))
+        dr = Draw()
+        dr.addItem(getPointsDraw(basePoints, 'p', 'main'))
+        dr.addItem(WireDraw(classicWire).doCls('main'))
+        dr.addItem(WireDraw(boundCircleWire).doCls('info'))
 
         return dr
 
