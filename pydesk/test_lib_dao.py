@@ -3,7 +3,7 @@ from core_render import *
 
 import sys
 
-sceneName = 'dao_01'
+sceneName = 'dao_02'
 sceneTarget = 'screen'
 scenePath = '.'
 
@@ -43,6 +43,7 @@ target = None
 
 if sceneTarget == 'screen':
     target = ScreenRenderLib(1000, 800)
+    target.styler.addStyles(daoLib.getStyles())
 elif sceneTarget == 'web':
     pass
     # target = WebRenderLib(hints)
@@ -54,6 +55,6 @@ elif sceneTarget == 'stl':
     # target = StlRenderLib
 
 target.renderStart()
-target.render(scene.doSt(SCALE_STYLE, 0.5))
+target.render(scene.doSt(SCALE, 0.5))
 # target.render(desk, daoLib.makeMove().setMove(0, 0, -60))
 target.renderFinish()

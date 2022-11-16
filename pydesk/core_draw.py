@@ -97,8 +97,8 @@ class LabelDraw(Draw):
         self.text = text
 
     def addStyledItems(self, style: Style):
-        delta = LABEL_DELTA * style.get(SCALE_STYLE, 1)
-        heightPx = LABEL_HEIGHT_PX * style.get(SCALE_PX_STYLE, 1)
+        delta = LABEL_DELTA * style.get(SCALE, 1)
+        heightPx = LABEL_HEIGHT_PX * style.get(SCALE_PX, 1)
         draw = FinalTextDraw(self.pnt, self.text, heightPx)
         draw.position = Translate(delta, delta, delta)
         self.addItem(draw)
@@ -189,7 +189,7 @@ class PointDraw(Draw):
         self.pnt = pnt
 
     def addStyledItems(self, style: Style):
-        r = POINT_RADIUS * style.get(SCALE_STYLE, 1) * style.get(SCALE_GEOM_STYLE, 1)
+        r = POINT_RADIUS * style.get(SCALE, 1) * style.get(SCALE_GEOM, 1)
         draw = SphereDraw(self.pnt, r)
         self.addItem(draw)
 
@@ -201,7 +201,7 @@ class LineDraw(Draw):
         self.pnt2 = pnt2
 
     def addStyledItems(self, style: Style):
-        r = LINE_RADIUS * style.get(SCALE_STYLE, 1) * style.get(SCALE_GEOM_STYLE, 1)
+        r = LINE_RADIUS * style.get(SCALE, 1) * style.get(SCALE_GEOM, 1)
         length = gp_Vec(self.pnt1, self.pnt2).Magnitude()
         draw = CylinderDraw(r, length)
         draw.position = Direct(self.pnt1, self.pnt2)
@@ -216,9 +216,9 @@ class VectorDraw(Draw):
 
     def addStyledItems(self, style: Style):
 
-        arrowR = LINE_ARROW_RADIUS * style.get(SCALE_STYLE, 1) * style.get(SCALE_GEOM_STYLE, 1)
-        arrowL = LINE_ARROW_LENGTH * style.get(SCALE_STYLE, 1) * style.get(SCALE_GEOM_STYLE, 1) \
-            * style.get(SCALE_ARROW_STYLE, 1)
+        arrowR = LINE_ARROW_RADIUS * style.get(SCALE, 1) * style.get(SCALE_GEOM, 1)
+        arrowL = LINE_ARROW_LENGTH * style.get(SCALE, 1) * style.get(SCALE_GEOM, 1) \
+            * style.get(SCALE_ARROW, 1)
 
         v = gp_Vec(self.pnt1, self.pnt2)
         vLen = v.Magnitude()
@@ -243,7 +243,6 @@ def _getVectorTangentToCurveAtPoint(edge, uRatio):
 
 
 def _getWireStartPointAndTangentDir(wire):
-    print(wire)
     ex = BRepTools_WireExplorer(wire)
     edge = ex.Current()
     vertex = ex.CurrentVertex()
@@ -262,7 +261,7 @@ class WireDraw(Draw):
         if self.r is not None:
             aWireRadius = self.r
         else:
-            aWireRadius = LINE_RADIUS * style.get(SCALE_STYLE, 1) * style.get(SCALE_GEOM_STYLE, 1)
+            aWireRadius = LINE_RADIUS * style.get(SCALE, 1) * style.get(SCALE_GEOM, 1)
         startPoint, tangentDir = _getWireStartPointAndTangentDir(self.wire)
         profileCircle = GC_MakeCircle(startPoint, tangentDir, aWireRadius).Value()
         profileEdge = BRepBuilderAPI_MakeEdge(profileCircle).Edge()
@@ -280,7 +279,7 @@ class Circle3Draw(Draw):
         self.pnt3 = pnt3
 
     def addStyledItems(self, style:  Style):
-        aWireRadius = LINE_RADIUS * style.get(SCALE_STYLE, 1) * style.get(SCALE_GEOM_STYLE, 1)
+        aWireRadius = LINE_RADIUS * style.get(SCALE, 1) * style.get(SCALE_GEOM, 1)
         geomCircle = GC_MakeCircle(self.pnt1, self.pnt2, self.pnt3).Value()
         edge = BRepBuilderAPI_MakeEdge(geomCircle).Edge()
         wire = BRepBuilderAPI_MakeWire(edge).Wire()

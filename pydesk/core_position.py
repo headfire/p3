@@ -1,3 +1,4 @@
+from __future__ import annotations
 from OCC.Core.gp import gp_Pnt, gp_Dir, gp_Vec, gp_Ax1, gp_Trsf
 
 

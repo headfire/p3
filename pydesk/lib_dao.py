@@ -18,6 +18,7 @@ from OCC.Core.BRepAlgoAPI import BRepAlgoAPI_Common, BRepAlgoAPI_Cut
 
 from math import pi
 
+
 '''
 # styles
 mainStyle = Style()
@@ -226,9 +227,6 @@ class DaoDrawLib(DrawLib):
         self.aSurfaceZScale = 0.7
         self.aCaseHeight = 30
         self.aCaseGap = 1
-
-    def getStyles(self):
-        return {}    # todo
 
     def getDaoBasePoints(self):
 
@@ -480,22 +478,15 @@ class DaoDrawLib(DrawLib):
         firstWirePoints = self.getCached('getDaoOffsetPoints', offset)
         secondWire = self.getCached('getDaoSecondOffsetWire', offset)
 
-        dr = self.makeDraw()
-
-        dr.nm('firstWire')
-        dr.add(self.getDeskWire(firstWire, 'MainStyle'))
-
-        dr.nm('BasePoints')
-        dr.add(self.getDaoPointsDraw(firstWirePoints, 'p', 'MainStyle'))
-
-        dr.nm('SecondWire')
-        dr.add(self.getDeskWire(secondWire, 'InfoStyle'))
-
-        dr.nm('BoundCircleWire')
-        dr.add(self.getDeskWire(boundCircleWire, 'InfoStyle'))
+        dr = Draw()
+        dr.addItem(WireDraw(firstWire).doCls('main'))
+        dr.addItem(getPointsDraw(firstWirePoints, 'p', 'main'))
+        dr.addItem(WireDraw(secondWire).doCls('info'))
+        dr.addItem(WireDraw(boundCircleWire).doCls('info'))
 
         return dr
 
+    '''
     def getDaoExampleSliceSlide(self):
 
         offset = self.aOffset
@@ -645,61 +636,12 @@ class DaoDrawLib(DrawLib):
         dr.add(self.getSurface(caseSurface))
 
         return dr
+    '''
 
-
-if __name__ == '__main__':
-
-    import sys
-    import os
-
-    sceneName = 'dao_07'
-    sceneTarget = 'screen'
-    scenePath = '.'
-
-    if len(sys.argv) > 1:
-        sceneName = sys.argv[1]
-    if len(sys.argv) > 2:
-        sceneTarget = sys.argv[2]
-    if len(sys.argv) > 3:
-        scenePath = sys.argv[3]
-
-    daoLib = DaoDrawLib()
-    scene = None
-
-    if sceneName == 'dao_01':
-        scene = daoLib.getDaoClassicSlide()
-    elif sceneName == 'dao_02':
-        scene = daoLib.getDaoOffsetSlide()
-    elif sceneName == 'dao_03':
-        scene = daoLib.getDaoExampleSliceSlide()
-    elif sceneName == 'dao_04':
-        scene = daoLib.getManySliceSlide()
-    elif sceneName == 'dao_05':
-        scene = daoLib.getDaoSkinningSlide()
-    elif sceneName == 'dao_06':
-        scene = daoLib.getDaoIngYangSlide()
-    elif sceneName == 'dao_07':
-        scene = daoLib.getDaoCaseSlide()
-
-    hints = RenderHints()
-    hints.setDeviceSize(1000, 800)
-    hints.setScale(5, 1)
-    hints.setPathToSave(scenePath)
-
-    desk = daoLib.getDeskDrawBoard()
-
-    target = None
-
-    if sceneTarget == 'screen':
-        target = ScreenRenderLib(hints)
-    elif sceneTarget == 'web':
-        target = WebRenderLib(hints)
-    elif sceneTarget == 'webfast':
-        target = WebFastRenderLib(hints)
-    elif sceneTarget == 'stl':
-        target = StlRenderLib
-
-    target.startRender()
-    target.render(scene)
-    target.render(desk, daoLib.makeMove().setMove(0, 0, -60))
-    target.finishRender()
+    @staticmethod
+    def getStyles():
+        return [
+            ('*:info', Style().do(COLOR, NICE_GRAY_COLOR).do(TRANSPARENCY, 0.5).do(SCALE_GEOM, 0.5)),
+            ('*:focus', Style().do(COLOR, NICE_GRAY_COLOR).do(SCALE_GEOM, 0.7)),
+            ('*:focus-face', Style().do(COLOR, NICE_GRAY_COLOR).do(TRANSPARENCY, 0.5))
+        ]
