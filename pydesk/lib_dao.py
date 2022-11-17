@@ -476,45 +476,33 @@ class DaoDrawLib(DrawLib):
 
         return dr
 
-    '''
     def getManySliceSlide(self):
 
         offset = self.aOffset
         wire = self.getCached('getDaoOffsetWire', offset)
-        focus = self.getCached('getDaoFocusPoint')
-        boundCircleWire = self.getCached('getDaoBoundCircleWire', offset)
+        focus = self.getCached('getDaoFocusPnt')
 
-        dr = self.makeDraw()
-
-        dr.nm('wire')
-        dr.add(self.getDeskWire(wire, 'MainStyle'))
-
-        dr.nm('focus')
-        dr.add(self.getDeskPoint(focus, 'MainStyle'))
-
-        dr.nm('focusLabel')
-        dr.add(self.getDeskLabel(focus, 'F', 'MainStyle'))
+        dr = Draw()
+        dr.addItem(WireDraw(wire).doCls('main'))
+        dr.addItem(PointDraw(focus).doCls('focus'))
+        dr.addItem(LabelDraw(focus, 'F').doCls('main'))
 
         cnt = self.aSliceCount
         bK = 1 / (cnt + 1)
         eK = 1 - 1 / (cnt + 1)
         for i in range(cnt):
             k = bK + i * (eK - bK) / (cnt - 1)
+            sliceLineP1, sliceLineP2 = self.getCached('getDaoSliceLinePnt2', offset, k)
+            sPnt1, sPnt2, sPnt3 = self.getCached('getDaoSliceCirclePnt3', offset, k)
+            dr.addItem(LineDraw(sliceLineP1, sliceLineP2).doCls('focus'))
+            dr.addItem(CircleDraw(sPnt1, sPnt2, sPnt3).doCls('main'))
 
-            sliceLineP1, sliceLineP2 = self.getCached('getDaoSliceLine', offset, k)
-            sliceWire = self.getCached('getDaoSliceWire', offset, k)
-
-            dr.nm('sliceLine' + str(i))
-            dr.add(self.getDeskLine(sliceLineP1, sliceLineP2, 'FocusStyle'))
-
-            dr.nm('sliceWire' + str(i))
-            dr.add(self.getDeskWire(sliceWire, 'MainStyle'))
-
-        dr.nm('BoundCircleWire')
-        dr.add(self.getDeskWire(boundCircleWire, 'InfoStyle'))
+        bPnt1, bPnt2, bPnt3 = self.getCached('getDaoBoundPnt3', offset)
+        dr.addItem(CircleDraw(bPnt1, bPnt2, bPnt3).doCls('info'))
 
         return dr
 
+    '''
     def getDaoSkinningSlide(self):
 
         offset = self.aOffset
