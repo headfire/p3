@@ -422,28 +422,33 @@ class DaoDrawLib(DrawLib):
 
     def getDaoClassicSlide(self):
 
-        basePoints = self.getCached('getDaoBasePoints')
-        classicWire = self.getCached('getDaoClassicWire')
-        bPnt1, bPnt2, bPnt3 = self.getCached('getDaoBoundPnt3', 0)
-
         dr = Draw()
+
+        basePoints = self.getCached('getDaoBasePoints')
         dr.addItem(getPointsDraw(basePoints, 'p', 'main'))
+
+        classicWire = self.getCached('getDaoClassicWire')
         dr.addItem(WireDraw(classicWire).doCls('main'))
+
+        bPnt1, bPnt2, bPnt3 = self.getCached('getDaoBoundPnt3', 0)
         dr.addItem(CircleDraw(bPnt1, bPnt2, bPnt3).doCls('info'))
 
         return dr
 
     def getDaoOffsetSlide(self):
 
-        bPnt1, bPnt2, bPnt3 = self.getCached('getDaoBoundPnt3', self.aOffset)
-        firstWire = self.getCached('getDaoOffsetWire', self.aOffset)
-        firstWirePoints = self.getCached('getDaoOffsetPnts', self.aOffset)
-        secondWire = self.getCached('getDaoSecondOffsetWire', self.aOffset)
-
         dr = Draw()
+
+        firstWire = self.getCached('getDaoOffsetWire', self.aOffset)
         dr.addItem(WireDraw(firstWire).doCls('main'))
+
+        firstWirePoints = self.getCached('getDaoOffsetPnts', self.aOffset)
         dr.addItem(getPointsDraw(firstWirePoints, 'p', 'main'))
+
+        secondWire = self.getCached('getDaoSecondOffsetWire', self.aOffset)
         dr.addItem(WireDraw(secondWire).doCls('info'))
+
+        bPnt1, bPnt2, bPnt3 = self.getCached('getDaoBoundPnt3', self.aOffset)
         dr.addItem(CircleDraw(bPnt1, bPnt2, bPnt3).doCls('info'))
 
         return dr
@@ -463,13 +468,17 @@ class DaoDrawLib(DrawLib):
 
         # slice
         k = self.aSliceExampleK
+
         sliceLineP1, sliceLineP2 = self.getCached('getDaoSliceLinePnt2', self.aOffset, k)
-        sliceCirclePnt1, sliceCirclePnt2, sliceCirclePnt3 = self.getCached('getDaoSliceCirclePnt3', self.aOffset, k)
-        sliceFacePnts = self.getCached('getDaoSliceFacePnts', self.aOffset, k)
-        slicePoints = self.getCached('getDaoSlicePnts', self.aOffset, k)
         dr.addItem(LineDraw(sliceLineP1, sliceLineP2).doCls('focus'))
+
+        sliceFacePnts = self.getCached('getDaoSliceFacePnts', self.aOffset, k)
         dr.addItem(FaceDraw(sliceFacePnts).doCls('focus'))
+
+        slicePoints = self.getCached('getDaoSlicePnts', self.aOffset, k)
         dr.addItem(getPointsDraw(slicePoints, 's', 'main'))
+
+        sliceCirclePnt1, sliceCirclePnt2, sliceCirclePnt3 = self.getCached('getDaoSliceCirclePnt3', self.aOffset, k)
         dr.addItem(CircleDraw(sliceCirclePnt1, sliceCirclePnt2, sliceCirclePnt3).doCls('focus'))
 
         # bound
@@ -534,26 +543,21 @@ class DaoDrawLib(DrawLib):
 
         return dr
 
-    '''
     def getDaoIngYangSlide(self):
 
-        offset = self.aOffset
+        dr = Draw()
 
-        dr = self.makeDraw()
+        ingSurface = self.getCached('getDaoIngSurface', self.aOffset)
+        style = Style(CHROME_MATERIAL, (141/255, 241/255, 95/255))
+        dr.addItem(SurfaceDraw(ingSurface).doStl(style))
 
-        ingSurface = self.getCached('getDaoIngSurface', offset)
-        yangSurface = self.getCached('getDaoYangSurface', offset)
-
-        dr.nm('ingSurface')
-        dr.st(self.makeStyle((100, 100, 255), 'CHROME', 0))
-        dr.add(self.getSurface(ingSurface))
-
-        dr.nm('yangSurface')
-        dr.st(self.makeStyle((255, 100, 100), 'CHROME', 0))
-        dr.add(self.getSurface(yangSurface))
+        yangSurface = self.getCached('getDaoYangSurface', self.aOffset)
+        style = Style(CHROME_MATERIAL, (255/255, 100/255, 255/255))
+        dr.addItem(SurfaceDraw(yangSurface).doStl(style))
 
         return dr
 
+    '''
     def getDaoCaseSlide(self):
 
         offset = self.aOffset
