@@ -557,31 +557,23 @@ class DaoDrawLib(DrawLib):
 
         return dr
 
-    '''
     def getDaoCaseSlide(self):
 
-        offset = self.aOffset
+        dr = Draw()
 
-        dr = self.makeDraw()
+        ingSurface = self.getCached('getDaoIngSurface', self.aOffset)
+        style = Style(CHROME_MATERIAL, (141/255, 241/255, 95/255))
+        dr.addItem(SurfaceDraw(ingSurface).doStl(style))
 
-        ingSurface = self.getCached('getDaoIngSurface', offset)
-        yangSurface = self.getCached('getDaoYangSurface', offset)
+        yangSurface = self.getCached('getDaoYangSurface', self.aOffset)
+        style = Style(CHROME_MATERIAL, (255/255, 100/255, 255/255))
+        dr.addItem(SurfaceDraw(yangSurface).doStl(style))
+
         caseSurface = self.getCached('getDaoCaseSurface')
-
-        dr.nm('ingSurface')
-        dr.st(self.makeStyle((100, 100, 255), 'CHROME', 0))
-        dr.add(self.getSurface(ingSurface))
-
-        dr.nm('yangSurface')
-        dr.st(self.makeStyle((255, 100, 100), 'CHROME', 0))
-        dr.add(self.getSurface(yangSurface))
-
-        dr.nm('caseSurface')
-        dr.st(self.makeStyle((100, 100, 100), 'CHROME', 0))
-        dr.add(self.getSurface(caseSurface))
+        style = Style(CHROME_MATERIAL, (100/255, 100/255, 100/255))
+        dr.addItem(SurfaceDraw(caseSurface).doStl(style))
 
         return dr
-    '''
 
     @staticmethod
     def getStyles():

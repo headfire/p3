@@ -3,7 +3,7 @@ from core_render import *
 
 import sys
 
-sceneName = 'dao_06'
+sceneName = 'dao_07'
 sceneTarget = 'screen'
 scenePath = '.'
 
