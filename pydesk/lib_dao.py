@@ -10,7 +10,7 @@ from OCC.Core.GC import GC_MakeArcOfCircle
 
 from OCC.Core.BRep import BRep_Tool
 from OCC.Core.BRepBuilderAPI import (BRepBuilderAPI_MakeEdge, BRepBuilderAPI_MakeWire,
-                                     BRepBuilderAPI_Transform, BRepBuilderAPI_MakeFace,
+                                     BRepBuilderAPI_Transform,
                                      BRepBuilderAPI_MakeVertex, BRepBuilderAPI_GTransform)
 from OCC.Core.BRepOffsetAPI import BRepOffsetAPI_MakeOffset, BRepOffsetAPI_ThruSections
 from OCC.Core.BRepPrimAPI import BRepPrimAPI_MakeSphere, BRepPrimAPI_MakeBox
