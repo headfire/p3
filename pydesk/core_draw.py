@@ -290,19 +290,23 @@ class CircleDraw(Draw):
         self.addItem(draw)
 
 
+def helperFaceFromPnts(pnts):
+    bWire = BRepBuilderAPI_MakeWire()
+    for i in range(len(pnts)):
+        bEdge = BRepBuilderAPI_MakeEdge(pnts[i - 1], pnts[i])
+        bWire.Add(bEdge.Edge())
+
+    wire = bWire.Wire()
+    return BRepBuilderAPI_MakeFace(wire).Face()
+
+
 class FaceDraw(Draw):
     def __init__(self, pnts: [Pnt]):
         super().__init__('faceObj:face')
         self.pnts = pnts
 
     def addStyledItems(self, style:  Style):
-        bWire = BRepBuilderAPI_MakeWire()
-        for i in range(len(self.pnts)):
-            bEdge = BRepBuilderAPI_MakeEdge(self.pnts[i-1], self.pnts[i])
-            bWire.Add(bEdge.Edge())
-
-        wire = bWire.Wire()
-        face = BRepBuilderAPI_MakeFace(wire).Face()
+        face = helperFaceFromPnts(self.pnts)
         self.addItem(FinalShapeDraw(face))
 
 

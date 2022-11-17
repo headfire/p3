@@ -305,32 +305,26 @@ class DaoDrawLib(DrawLib):
 
         return lineBeginPoint, lineEndPoint
 
-    def getDaoSliceFace(self, offset, sliceK):
+    def getDaoSliceFacePnts(self, offset, sliceK):
 
         h = self.aSliceFaceHeight
         beginPoint, endPoint = self.getCached('getDaoSliceLinePnt2', offset, sliceK)
 
         x1, y1, z1 = getXYZ(beginPoint)
         x2, y2, z2 = getXYZ(endPoint)
-        pe0 = gp_Pnt(x1, y1, -h)
-        pe1 = gp_Pnt(x1, y1, +h)
-        pe2 = gp_Pnt(x2, y2, +h)
-        pe3 = gp_Pnt(x2, y2, -h)
 
-        edge1 = BRepBuilderAPI_MakeEdge(pe0, pe1).Edge()
-        edge2 = BRepBuilderAPI_MakeEdge(pe1, pe2).Edge()
-        edge3 = BRepBuilderAPI_MakeEdge(pe2, pe3).Edge()
-        edge4 = BRepBuilderAPI_MakeEdge(pe3, pe0).Edge()
+        pnt0 = gp_Pnt(x1, y1, -h)
+        pnt1 = gp_Pnt(x1, y1, +h)
+        pnt2 = gp_Pnt(x2, y2, +h)
+        pnt3 = gp_Pnt(x2, y2, -h)
 
-        wire = BRepBuilderAPI_MakeWire(edge1, edge2, edge3, edge4).Wire()
-        face = BRepBuilderAPI_MakeFace(wire).Face()
-
-        return face
+        return [pnt0, pnt1, pnt2, pnt3]
 
     def getDaoSlicePnts(self, offset, sliceK):
 
         aWire = self.getCached('getDaoOffsetWire', offset)
-        aFace = self.getCached('getDaoSliceFace', offset, sliceK)
+        aFacePnts = self.getCached('getDaoSliceFacePnts', offset, sliceK)
+        aFace = helperFaceFromPnts(aFacePnts)
 
         farPoint, nearPoint = makeEdgesFacesIntersectPoints(aWire, aFace)
 
@@ -414,7 +408,6 @@ class DaoDrawLib(DrawLib):
 
         return step05Surface
 
-    # todo PointsDraw
     def getDaoBoundPnt3(self, offset):
         r = self.aBaseRadius + offset
         return gp_Pnt(r, 0, 0), gp_Pnt(0, r, 0), gp_Pnt(-r, 0, 0)
@@ -470,10 +463,10 @@ class DaoDrawLib(DrawLib):
         k = self.aSliceExampleK
         sliceLineP1, sliceLineP2 = self.getCached('getDaoSliceLinePnt2', offset, k)
         sliceCirclePnt1, sliceCirclePnt2, sliceCirclePnt3 = self.getCached('getDaoSliceCirclePnt3', offset, k)
-        sliceFace = self.getCached('getDaoSliceFace', offset, k)
+        sliceFacePnts = self.getCached('getDaoSliceFacePnts', offset, k)
         slicePoints = self.getCached('getDaoSlicePnts', offset, k)
         dr.addItem(LineDraw(sliceLineP1, sliceLineP2).doCls('focus'))
-        dr.addItem(SurfaceDraw(sliceFace).doCls('focus'))
+        dr.addItem(FaceDraw(sliceFacePnts).doCls('focus'))
         dr.addItem(getPointsDraw(slicePoints, 's', 'main'))
         dr.addItem(CircleDraw(sliceCirclePnt1, sliceCirclePnt2, sliceCirclePnt3).doCls('focus'))
 
