@@ -345,9 +345,13 @@ class DaoDrawLib(DrawLib):
 
         return nearPoint, upPoint, farPoint
 
+    def getDaoSliceCircleWire(self, offset, sliceK):
+        pnt1, pnt2, pnt3 = self.getCached('getDaoSliceCirclePnt3', offset, sliceK)
+        return helperCircleWire(pnt1, pnt2, pnt3)
+
     def getDaoSkinningSurface(self, offset):
 
-        limitPoints = self.getCached('getDaoOffsetPoints', offset)
+        limitPoints = self.getCached('getDaoOffsetPnts', offset)
         beginPoint = limitPoints['Begin']
         endPoint = limitPoints['End']
 
@@ -359,7 +363,7 @@ class DaoDrawLib(DrawLib):
 
         ks = self.aSkinningSlicesKs
         for i in range(len(ks)):
-            sliceWire = self.getCached('getDaoSliceWire', offset, ks[i])
+            sliceWire = self.getCached('getDaoSliceCircleWire', offset, ks[i])
             skinner.AddWire(sliceWire)
 
         endVertex = BRepBuilderAPI_MakeVertex(endPoint).Vertex()
@@ -446,12 +450,10 @@ class DaoDrawLib(DrawLib):
 
     def getDaoExampleSliceSlide(self):
 
-        offset = self.aOffset
-
         dr = Draw()
 
         # main dao curve
-        wire = self.getCached('getDaoOffsetWire', offset)
+        wire = self.getCached('getDaoOffsetWire', self.aOffset)
         dr.addItem(WireDraw(wire).doCls('main'))
 
         # focus point
@@ -461,10 +463,10 @@ class DaoDrawLib(DrawLib):
 
         # slice
         k = self.aSliceExampleK
-        sliceLineP1, sliceLineP2 = self.getCached('getDaoSliceLinePnt2', offset, k)
-        sliceCirclePnt1, sliceCirclePnt2, sliceCirclePnt3 = self.getCached('getDaoSliceCirclePnt3', offset, k)
-        sliceFacePnts = self.getCached('getDaoSliceFacePnts', offset, k)
-        slicePoints = self.getCached('getDaoSlicePnts', offset, k)
+        sliceLineP1, sliceLineP2 = self.getCached('getDaoSliceLinePnt2', self.aOffset, k)
+        sliceCirclePnt1, sliceCirclePnt2, sliceCirclePnt3 = self.getCached('getDaoSliceCirclePnt3', self.aOffset, k)
+        sliceFacePnts = self.getCached('getDaoSliceFacePnts', self.aOffset, k)
+        slicePoints = self.getCached('getDaoSlicePnts', self.aOffset, k)
         dr.addItem(LineDraw(sliceLineP1, sliceLineP2).doCls('focus'))
         dr.addItem(FaceDraw(sliceFacePnts).doCls('focus'))
         dr.addItem(getPointsDraw(slicePoints, 's', 'main'))
@@ -478,11 +480,12 @@ class DaoDrawLib(DrawLib):
 
     def getManySliceSlide(self):
 
-        wire = self.getCached('getDaoOffsetWire', self.aOffset)
-        focus = self.getCached('getDaoFocusPnt')
-
         dr = Draw()
+
+        wire = self.getCached('getDaoOffsetWire', self.aOffset)
         dr.addItem(WireDraw(wire).doCls('main'))
+
+        focus = self.getCached('getDaoFocusPnt')
         dr.addItem(PointDraw(focus).doCls('focus'))
         dr.addItem(LabelDraw(focus, 'F').doCls('main'))
 
@@ -490,49 +493,48 @@ class DaoDrawLib(DrawLib):
         bK = 1 / (cnt + 1)
         eK = 1 - 1 / (cnt + 1)
         for i in range(cnt):
+
             k = bK + i * (eK - bK) / (cnt - 1)
-            sliceLineP1, sliceLineP2 = self.getCached('getDaoSliceLinePnt2', offset, k)
-            sPnt1, sPnt2, sPnt3 = self.getCached('getDaoSliceCirclePnt3', offset, k)
+
+            sliceLineP1, sliceLineP2 = self.getCached('getDaoSliceLinePnt2', self.aOffset, k)
             dr.addItem(LineDraw(sliceLineP1, sliceLineP2).doCls('focus'))
+
+            sPnt1, sPnt2, sPnt3 = self.getCached('getDaoSliceCirclePnt3', self.aOffset, k)
             dr.addItem(CircleDraw(sPnt1, sPnt2, sPnt3).doCls('main'))
 
-        bPnt1, bPnt2, bPnt3 = self.getCached('getDaoBoundPnt3', offset)
+        bPnt1, bPnt2, bPnt3 = self.getCached('getDaoBoundPnt3', self.aOffset)
+        dr.addItem(CircleDraw(bPnt1, bPnt2, bPnt3).doCls('info'))
+
+        return dr
+
+    def getDaoSkinningSlide(self):
+
+        dr = Draw()
+
+        focus = self.getCached('getDaoFocusPnt')
+        dr.addItem(PointDraw(focus).doCls('focus'))
+        dr.addItem(LabelDraw(focus, 'F').doCls('main'))
+
+        ks = self.aSkinningSlicesKs
+        for i in range(len(ks)):
+
+            k = ks[i]
+
+            sliceLineP1, sliceLineP2 = self.getCached('getDaoSliceLinePnt2', self.aOffset, k)
+            dr.addItem(LineDraw(sliceLineP1, sliceLineP2).doCls('focus'))
+
+            sPnt1, sPnt2, sPnt3 = self.getCached('getDaoSliceCirclePnt3', self.aOffset, k)
+            dr.addItem(CircleDraw(sPnt1, sPnt2, sPnt3).doCls('main'))
+
+        skinningSurface = self.getCached('getDaoSkinningSurface', self.aOffset)
+        dr.addItem(SurfaceDraw(skinningSurface).doCls('focus'))
+
+        bPnt1, bPnt2, bPnt3 = self.getCached('getDaoBoundPnt3', self.aOffset)
         dr.addItem(CircleDraw(bPnt1, bPnt2, bPnt3).doCls('info'))
 
         return dr
 
     '''
-    def getDaoSkinningSlide(self):
-
-        offset = self.aOffset
-        boundCircleWire = self.getCached('getDaoBoundCircleWire', offset)
-        focus = self.getCached('getDaoFocusPoint')
-
-        dr = self.makeDraw()
-
-        dr.add(self.getDeskPoint(focus, 'MainStyle'))
-
-        ks = self.aSkinningSlicesKs
-        for i in range(len(ks)):
-            sliceLineP1, sliceLineP2 = self.getCached('getDaoSliceLine', offset, ks[i])
-            sliceWire = self.getCached('getDaoSliceWire', offset, ks[i])
-
-            dr.nm('sliceLine' + str(i))
-            dr.add(self.getDeskLine(sliceLineP1, sliceLineP2, 'FocusStyle'))
-
-            dr.nm('sliceWire' + str(i))
-            dr.add(self.getDeskWire(sliceWire, 'MainStyle'))
-
-        skinningSurface = self.getCached('getDaoSkinningSurface', offset)
-
-        dr.nm('SkinningSurface')
-        dr.add(self.getDeskSurface(skinningSurface, 'FocusStyle'))
-
-        dr.nm('BoundCircleWire')
-        dr.add(self.getDeskWire(boundCircleWire, 'InfoStyle'))
-
-        return dr
-
     def getDaoIngYangSlide(self):
 
         offset = self.aOffset

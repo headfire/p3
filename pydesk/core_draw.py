@@ -274,6 +274,12 @@ class WireDraw(Draw):
         self.addItem(draw)
 
 
+def helperCircleWire(pnt1, pnt2, pnt3):
+    geomCircle = GC_MakeCircle(pnt1, pnt2,pnt3).Value()
+    edge = BRepBuilderAPI_MakeEdge(geomCircle).Edge()
+    return BRepBuilderAPI_MakeWire(edge).Wire()
+
+
 class CircleDraw(Draw):
     def __init__(self, pnt1, pnt2, pnt3):
         super().__init__('circleObj:circle-line')
@@ -283,9 +289,7 @@ class CircleDraw(Draw):
 
     def addStyledItems(self, style:  Style):
         aWireRadius = LINE_RADIUS * style.get(SCALE, 1) * style.get(SCALE_GEOM, 1)
-        geomCircle = GC_MakeCircle(self.pnt1, self.pnt2, self.pnt3).Value()
-        edge = BRepBuilderAPI_MakeEdge(geomCircle).Edge()
-        wire = BRepBuilderAPI_MakeWire(edge).Wire()
+        wire = helperCircleWire(self.pnt1, self.pnt2, self.pnt3)
         draw = WireDraw(wire, aWireRadius)
         self.addItem(draw)
 
