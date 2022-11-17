@@ -42,7 +42,9 @@ class RenderLib:
         print(mergedRenderName)
         stylerStyle = self.styler.getStyle(mergedRenderName)
         mergedStyle = Style().merge(renderStyle).merge(draw.style).merge(stylerStyle)  # parent first logic
-        mergedPosition = Position().do(draw.position).do(renderPosition)  # child first logic
+        # mergedPosition = Position().do(draw.position).do(renderPosition)  # child first logic - NOT work Wy?
+        mergedPosition = Position().do(renderPosition).do(draw.position)  # parent first logic
+        print(mergedPosition.describe)
         draw.addStyledItems(mergedStyle)
         self._renderNative(draw, mergedPosition, mergedStyle, mergedRenderName)
         if not self.renderNativeSuccess:
@@ -79,6 +81,8 @@ class ScreenRenderLib(RenderLib):
         self.display_start()
 
     def _nativeShape(self, shape, position: Position, style: Style):
+        print(position.describe)
+        position._dump()
         shapeTr = BRepBuilderAPI_Transform(shape, position.trsf).Shape()
         ais = AIS_Shape(shapeTr)
 

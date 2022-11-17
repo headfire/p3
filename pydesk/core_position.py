@@ -1,4 +1,7 @@
 from __future__ import annotations
+
+import math
+
 from OCC.Core.gp import gp_Pnt, gp_Dir, gp_Vec, gp_Ax1, gp_Trsf
 
 
@@ -52,7 +55,7 @@ class Rotate(Position):
     def __init__(self, pntAxFrom, pntAxTo, angle):
         super().__init__()
         ax1 = gp_Ax1(pntAxFrom, gp_Dir(gp_Vec(pntAxFrom, pntAxTo)))
-        self.trsf.SetRotation(ax1, angle)
+        self.trsf.SetRotation(ax1, angle/180*math.pi)
         self.describe = 'Rotate(' + _dp('axFrom', pntAxFrom) + _dp('axTo', pntAxTo) + _d1(angle) + ')'
 
 
@@ -73,4 +76,4 @@ class Direct(Position):
 
         self.trsf.SetRotation(gp_Ax1(gp_Pnt(0, 0, 0), rotateDir), rotateAngle)
         self.trsf.SetTranslationPart(gp_Vec(gp_Pnt(0, 0, 0), pntFrom))
-        self.debug = 'Direct(' + _dp('axFrom', pntFrom) + _dp('axTo', pntTo) + ')'
+        self.describe = 'Direct(' + _dp('axFrom', pntFrom) + _dp('axTo', pntTo) + ')'
