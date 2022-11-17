@@ -478,8 +478,7 @@ class DaoDrawLib(DrawLib):
 
     def getManySliceSlide(self):
 
-        offset = self.aOffset
-        wire = self.getCached('getDaoOffsetWire', offset)
+        wire = self.getCached('getDaoOffsetWire', self.aOffset)
         focus = self.getCached('getDaoFocusPnt')
 
         dr = Draw()
