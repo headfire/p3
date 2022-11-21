@@ -319,11 +319,10 @@ class DeskDraw(Draw):
         super().__init__('deskObj:decor')
         self.labelText = labelText
 
-    '''
-    def _renderDeskPin(self, x, y):
-        self.locatePosition(Translate(x / self.scale, y / self.scale, 0))
-        self.baseSolid(CylinderPrim(DESK_PIN_RADIUS / self.scale, DESK_PIN_HEIGHT / self.scale))
-    '''
+    def _addPin(self, x, y, scale):
+        self.addItem(CylinderDraw(DESK_PIN_RADIUS * scale, DESK_PIN_HEIGHT * scale)
+                     .doPs(Translate(x * scale, y * scale, 0))
+                     .doSt(MATERIAL, STEEL_MATERIAL))
 
     def addStyledItems(self, style:  Style):
 
@@ -336,33 +335,23 @@ class DeskDraw(Draw):
         bsy = (paperSizeY + DESK_BORDER_SIZE * 2) * scale
         bsz = DESK_HEIGHT * scale
 
-        self.addItem(BoxDraw(Pnt(0, 0, 0), psx, psy, psz)
-                     .doPs(Translate(-psx / 2, -psy / 2, -psz))
+        self.addItem(BoxDraw(Pnt(-psx / 2, -psy / 2, -psz), psx, psy, psz)
                      .doSt(COLOR, PAPER_COLOR).doSt(MATERIAL, PLASTIC_MATERIAL)
                      )
 
-        self.addItem(BoxDraw(Pnt(0, 0, 0), bsx, bsy, bsz)
-                     .doPs(Translate(-bsx / 2, -bsy / 2, -bsz-psz))
+        self.addItem(BoxDraw(Pnt(-bsx / 2, -bsy / 2, -bsz-psz), bsx, bsy, bsz)
                      .doSt(COLOR, WOOD_COLOR).doSt(MATERIAL, PLASTIC_MATERIAL)
                      )
-        '''
-        self.brashForDeskBoard()
-        self.locatePosition(Translate(-bsx / 2, -bsy / 2, -psz - bsz))
-        self.baseSolid(BoxSolid())
 
-        self.brashForDeskLabel()
-        self.locatePosition(Translate(-bsx / 2, -bsy / 2, -psz))
-        self.baseLabel(labelText)
+        self.addItem(LabelDraw(Pnt(-bsx / 2, -bsy / 2, 0), labelText))
 
-        dx = (paperSizeX / 2 - DESK_PIN_OFFSET) / scale
-        dy = (paperSizeY / 2 - DESK_PIN_OFFSET) / scale
+        dx = (paperSizeX / 2 - DESK_PIN_OFFSET)
+        dy = (paperSizeY / 2 - DESK_PIN_OFFSET)
 
-        self.brashForDeskPin()
-        self._renderDeskPin(-dx, -dy)
-        self._renderDeskPin(dx, -dy)
-        self._renderDeskPin(dx, dy)
-        self._renderDeskPin(-dx, dy)
-        '''
+        self._addPin(-dx, -dy, scale)
+        self._addPin(dx, -dy, scale)
+        self._addPin(dx, dy, scale)
+        self._addPin(-dx, dy, scale)
 
 # ****************************************************************************
 
