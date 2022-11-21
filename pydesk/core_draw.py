@@ -4,15 +4,14 @@ from core_style import *
 from OCC.Core.gp import gp_Pnt, gp_Vec, gp_Dir
 from OCC.Core.BRepPrimAPI import BRepPrimAPI_MakeSphere, BRepPrimAPI_MakeBox, BRepPrimAPI_MakeCone, \
     BRepPrimAPI_MakeCylinder, BRepPrimAPI_MakeTorus
-from OCC.Core.BRepBuilderAPI import BRepBuilderAPI_MakeEdge, BRepBuilderAPI_MakeWire
 from OCC.Core.BRepOffsetAPI import BRepOffsetAPI_MakePipe
 from OCC.Core.BRepTools import BRepTools_WireExplorer
 from OCC.Core.BRep import BRep_Tool
 from OCC.Core.GC import GC_MakeCircle
 
 from OCC.Core.BRepBuilderAPI import (BRepBuilderAPI_MakeEdge, BRepBuilderAPI_MakeWire,
-                                     BRepBuilderAPI_Transform, BRepBuilderAPI_MakeFace,
-                                     BRepBuilderAPI_MakeVertex, BRepBuilderAPI_GTransform)
+                                     BRepBuilderAPI_MakeFace)
+
 
 class Pnt(gp_Pnt):
     pass
@@ -275,7 +274,7 @@ class WireDraw(Draw):
 
 
 def helperCircleWire(pnt1, pnt2, pnt3):
-    geomCircle = GC_MakeCircle(pnt1, pnt2,pnt3).Value()
+    geomCircle = GC_MakeCircle(pnt1, pnt2, pnt3).Value()
     edge = BRepBuilderAPI_MakeEdge(geomCircle).Edge()
     return BRepBuilderAPI_MakeWire(edge).Wire()
 
@@ -315,7 +314,7 @@ class FaceDraw(Draw):
 
 
 class DeskDraw(Draw):
-    def __init__(self, labelText: str = 'A0 M1:1'):
+    def __init__(self, labelText: str = None):
         super().__init__('deskObj:decor')
         self.labelText = labelText
 
@@ -326,8 +325,12 @@ class DeskDraw(Draw):
 
     def addStyledItems(self, style:  Style):
 
+        if self.labelText is None:
+            labelText = style.get(SCALE_STR, 'A0 M1:1')
+        else:
+            labelText = self.labelText
+
         scale = style.get(SCALE, 1)
-        labelText = self.labelText
 
         paperSizeX, paperSizeY, paperSizeZ = DESK_PAPER_SIZE
         psx, psy, psz = paperSizeX * scale, paperSizeY * scale, paperSizeZ * scale
