@@ -43,19 +43,20 @@ def isObjMask(objMask, objValue):
 def isMask(objChainMask, objChainValue):
     objChainMaskList = objChainMask.split('>')
     objChainValueList = objChainValue.split('>')
-    iMask, iValue = 0, 0
-    while (iMask < len(objChainMaskList)) and (iValue < len(objChainValueList)):
-        if isObjMask(objChainMaskList[iMask], objChainValueList[iValue]):
-            iMask += 1
-            iValue += 1
+    iMask = len(objChainMaskList)
+    iValue = len(objChainValueList)
+    while (iMask > 0) and (iValue > 0):
+        if isObjMask(objChainMaskList[iMask-1], objChainValueList[iValue-1]):
+            iMask -= 1
+            iValue -= 1
         else:
-            iValue += 1
-    return (iMask == len(objChainMaskList)) and iValue == len(objChainValueList)
+            iValue -= 1
+    return iMask == 0
 
 
 def check(mask, value, expected):
     result = isMask(mask, value)
-    if  result == expected:
+    if result == expected:
         print('Test OK', mask, value, result)
     else:
         print('Test ERROR', mask, value, expected, 'RESULT', result)
@@ -81,3 +82,4 @@ if __name__ == "__main__":
     check('item2>item', 'item2>item0>item', True)
     check('item3>item2>item', 'item000>item3>item2>item0>item00>item', True)
     check('item3>item4>item', 'item000>item3>item2>item0>item00>item', False)
+    check('*', 'item000>item3', True)

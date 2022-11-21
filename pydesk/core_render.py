@@ -42,6 +42,8 @@ class RenderLib:
         print(mergedRenderName)
         stylerStyle = self.styler.getStyle(mergedRenderName)
         mergedStyle = Style().merge(renderStyle).merge(draw.style).merge(stylerStyle)  # parent first logic
+        # print(mergedStyle.get(SCALE))
+        print(stylerStyle.get(SCALE))
         # mergedPosition = Position().do(draw.position).do(renderPosition)  # child first logic - NOT work Wy?
         mergedPosition = Position().do(renderPosition).do(draw.position)  # parent first logic
         draw.addStyledItems(mergedStyle)

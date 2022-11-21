@@ -319,21 +319,22 @@ class DeskDraw(Draw):
         super().__init__('deskObj:decor')
         self.labelText = labelText
 
+    '''
     def _renderDeskPin(self, x, y):
         self.locatePosition(Translate(x / self.scale, y / self.scale, 0))
         self.baseSolid(CylinderPrim(DESK_PIN_RADIUS / self.scale, DESK_PIN_HEIGHT / self.scale))
+    '''
 
     def addStyledItems(self, style:  Style):
-        self.addItem(FinalShapeDraw(face))
 
         scale = style.get(SCALE, 1)
         labelText = self.labelText
 
         paperSizeX, paperSizeY, paperSizeZ = DESK_PAPER_SIZE
-        psx, psy, psz = paperSizeX / scale, paperSizeY / scale, paperSizeZ / scale
-        bsx = (paperSizeX + scale * 2) / scale
-        bsy = (paperSizeY + DESK_BORDER_SIZE * 2) / scale
-        bsz = DESK_HEIGHT / scale
+        psx, psy, psz = paperSizeX * scale, paperSizeY * scale, paperSizeZ * scale
+        bsx = (paperSizeX + DESK_BORDER_SIZE * 2) * scale
+        bsy = (paperSizeY + DESK_BORDER_SIZE * 2) * scale
+        bsz = DESK_HEIGHT * scale
 
         self.addItem(BoxDraw(Pnt(0, 0, 0), psx, psy, psz)
                      .doPs(Translate(-psx / 2, -psy / 2, -psz))
@@ -341,10 +342,10 @@ class DeskDraw(Draw):
                      )
 
         self.addItem(BoxDraw(Pnt(0, 0, 0), bsx, bsy, bsz)
-                     .doPs(Translate(-psx / 2, -psy / 2, -psz))
+                     .doPs(Translate(-bsx / 2, -bsy / 2, -bsz-psz))
                      .doSt(COLOR, WOOD_COLOR).doSt(MATERIAL, PLASTIC_MATERIAL)
                      )
-
+        '''
         self.brashForDeskBoard()
         self.locatePosition(Translate(-bsx / 2, -bsy / 2, -psz - bsz))
         self.baseSolid(BoxSolid())
@@ -361,7 +362,7 @@ class DeskDraw(Draw):
         self._renderDeskPin(dx, -dy)
         self._renderDeskPin(dx, dy)
         self._renderDeskPin(-dx, dy)
-
+        '''
 
 # ****************************************************************************
 
