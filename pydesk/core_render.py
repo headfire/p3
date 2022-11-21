@@ -36,11 +36,10 @@ class RenderLib:
         self.styler.addStyles(STANDARD_STYLES)
 
     def setScale(self, scaleSet):
-        scaleA, scaleB, scaleStr = scaleSet
-        styler.addStyles([
-            ('root', Style().do(SCALE, scaleB/scaleA).do(SCALE_STR, scaleStr))
+        scaleA, scaleB = scaleSet
+        self.styler.addStyles([
+            ('root', Style().do(SCALE, scaleB/ scaleA).do(SCALE_STR, 'A0 M'+str(scaleA)+':'+str(scaleB)))
         ])
-
 
     def _renderNative(self, draw, renderPosition, renderStyle, renderName): pass
 

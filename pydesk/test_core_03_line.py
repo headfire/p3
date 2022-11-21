@@ -2,7 +2,7 @@ from core_render import *
 from core_draw import *
 
 screen = ScreenRenderLib()
-screen.setScale(M_1_1_SCALE)
+screen.setScale(M_5_1_SCALE)
 screen.renderStart()
 
 pntC = Pnt(50, 50, 50)
