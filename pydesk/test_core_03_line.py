@@ -46,6 +46,6 @@ screen.render(VectorDraw(pnt111, pntC).doStl(style))
 
 style = Style(color=(0.1, 0.7, 0.7))
 screen.render(CircleDraw(pnt000, pnt111, pnt100).doStl(style))
-screen.render(DeskDraw())
+screen.render(DeskDraw().doPs(Translate(0, 0, -30)))
 
 screen.renderFinish()
