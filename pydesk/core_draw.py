@@ -318,8 +318,8 @@ class DeskDraw(Draw):
         super().__init__('deskObj:decor')
         self.labelText = labelText
 
-    def _addPin(self, x, y, scale):
-        self.addItem(CylinderDraw(DESK_PIN_RADIUS * scale, DESK_PIN_HEIGHT * scale)
+    def _addPin(self, x, y, scale, nm):
+        self.addItem(CylinderDraw(DESK_PIN_RADIUS * scale, DESK_PIN_HEIGHT * scale).doNm(nm)
                      .doPs(Translate(x * scale, y * scale, 0))
                      .doSt(MATERIAL, STEEL_MATERIAL))
 
@@ -338,23 +338,59 @@ class DeskDraw(Draw):
         bsy = (paperSizeY + DESK_BORDER_SIZE * 2) * scale
         bsz = DESK_HEIGHT * scale
 
-        self.addItem(BoxDraw(Pnt(-psx / 2, -psy / 2, -psz), psx, psy, psz)
-                     .doSt(COLOR, PAPER_COLOR).doSt(MATERIAL, PLASTIC_MATERIAL)
-                     )
-
-        self.addItem(BoxDraw(Pnt(-bsx / 2, -bsy / 2, -bsz-psz), bsx, bsy, bsz)
-                     .doSt(COLOR, WOOD_COLOR).doSt(MATERIAL, PLASTIC_MATERIAL)
-                     )
-
-        self.addItem(LabelDraw(Pnt(-bsx / 2, -bsy / 2, 0), labelText))
+        self.addItem(BoxDraw(Pnt(-psx / 2, -psy / 2, -psz), psx, psy, psz).doNm('paperObj'))
+        self.addItem(BoxDraw(Pnt(-bsx / 2, -bsy / 2, -bsz-psz), bsx, bsy, bsz).doNm('boardObj'))
+        self.addItem(LabelDraw(Pnt(-bsx / 2, -bsy / 2, 0), labelText).doNm('labelObj'))
 
         dx = (paperSizeX / 2 - DESK_PIN_OFFSET)
         dy = (paperSizeY / 2 - DESK_PIN_OFFSET)
 
-        self._addPin(-dx, -dy, scale)
-        self._addPin(dx, -dy, scale)
-        self._addPin(dx, dy, scale)
-        self._addPin(-dx, dy, scale)
+        self._addPin(-dx, -dy, scale, 'pinObj01')
+        self._addPin(dx, -dy, scale, 'pinObj02')
+        self._addPin(dx, dy, scale, 'pinObj03')
+        self._addPin(-dx, dy, scale, 'pinObj04')
+
+
+class AxisDraw(Draw):
+    def __init__(self, pnt1, pnt2, nMark):
+        super().__init__('axisObj:decor')
+        self.pnt1 = pnt1
+        self.pnt2 = pnt2
+        self.nMark = nMark
+
+    def addStyledItems(self, style:  Style):
+        self.addItem(VectorDraw(self.pnt1, self.pnt2))
+        scale = style.get(SCALE, 1)
+        markRadius = POINT_RADIUS * scale
+        for i in range(1, self.nMark):
+            k = i / self.nMark
+            v = gp_Vec(self.pnt1, self.pnt2)
+            v *= k
+            pntMark = self.pnt1.Translated(v)
+            self.addItem(CylinderDraw(markRadius, markRadius/2)
+                         .doPs(Direct(pntMark, self.pnt2)))
+
+
+class CoordDraw(Draw):
+    def __init__(self, size=None):
+        super().__init__('coordObj:decor')
+        self.size = size
+
+    def addStyledItems(self, style:  Style):
+        if self.size is None:
+            paperSizeX, paperSizeY, paperSizeZ = DESK_PAPER_SIZE
+            scale = style.get(SCALE, 1)
+            size = DESK_AXIS_SIZE * scale
+        else:
+            size = self.size
+
+        n = DESK_COORD_MARK_DIV
+        self.addItem(AxisDraw(Pnt(0, 0, 0), Pnt(size, 0, 0), n))
+        self.addItem(AxisDraw(Pnt(0, 0, 0), Pnt(0, size, 0), n))
+        self.addItem(AxisDraw(Pnt(0, 0, 0), Pnt(0, 0, size), n))
+        self.addItem(PointDraw(Pnt(0, 0, 0)))
+
+
 
 # ****************************************************************************
 

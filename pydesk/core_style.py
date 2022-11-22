@@ -62,6 +62,8 @@ M_5_1_SCALE = (5, 1)
 DESK_HEIGHT = 20
 DESK_BORDER_SIZE = 60
 DESK_PAPER_SIZE = 1189, 841, 1
+DESK_AXIS_SIZE = 300
+DESK_COORD_MARK_DIV = 6
 DESK_PIN_OFFSET = 30
 DESK_PIN_RADIUS = 10
 DESK_PIN_HEIGHT = 2
@@ -112,5 +114,10 @@ STANDARD_STYLES = [
     ('*:line', LINE_STYLE),
     ('*:solid', SOLID_STYLE),
     ('*:surface', SURFACE_STYLE),
-    ('*:face', FACE_STYLE)
+    ('*:face', FACE_STYLE),
+    ('coordObj', Style(PLASTIC_MATERIAL, NICE_GRAY_COLOR, 0.5)),
+    ('boardObj', Style(PLASTIC_MATERIAL, WOOD_COLOR)),
+    ('paperObj', Style(PLASTIC_MATERIAL, PAPER_COLOR)),
+    ('pinObj*', Style(STEEL_MATERIAL))
+
 ]

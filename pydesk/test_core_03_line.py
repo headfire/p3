@@ -2,7 +2,7 @@ from core_render import *
 from core_draw import *
 
 screen = ScreenRenderLib()
-screen.setScale(M_5_1_SCALE)
+screen.setScale(M_1_1_SCALE)
 screen.renderStart()
 
 pntC = Pnt(50, 50, 50)
@@ -47,5 +47,6 @@ screen.render(VectorDraw(pnt111, pntC).doStl(style))
 style = Style(color=(0.1, 0.7, 0.7))
 screen.render(CircleDraw(pnt000, pnt111, pnt100).doStl(style))
 screen.render(DeskDraw().doPs(Translate(0, 0, -30)))
+screen.render(CoordDraw())
 
 screen.renderFinish()
