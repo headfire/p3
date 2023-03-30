@@ -8,14 +8,129 @@ from OCC.Core.BRepOffsetAPI import BRepOffsetAPI_MakePipe
 from OCC.Core.BRepTools import BRepTools_WireExplorer
 from OCC.Core.BRep import BRep_Tool
 from OCC.Core.GC import GC_MakeCircle
+from OCC.Core.Geom import Geom_CartesianPoint
 
 from OCC.Core.BRepBuilderAPI import (BRepBuilderAPI_MakeEdge, BRepBuilderAPI_MakeWire,
                                      BRepBuilderAPI_MakeFace)
 
-class Gvm:
-    def drawShape(self, nm): {
-        self.getParam('shape')
-    }
+from OCC.Core.AIS import AIS_Shape, AIS_Point
+from OCC.Core.Quantity import Quantity_Color, Quantity_TypeOfColor
+from OCC.Core.BRepBuilderAPI import BRepBuilderAPI_Transform
+from OCC.Core.Graphic3d import Graphic3d_MaterialAspect
+
+from OCC.Display.SimpleGui import init_display
+
+
+curPath = ''
+aisStack = []
+params = {}
+
+
+
+def deskLogStart():
+    pass
+
+def deskLogFinish():
+    pass
+
+def deskInit():
+    pass
+
+def deskRender(screenX: int = 800, screenY: int = 600):
+    global aisStack
+    display, display_start, add_menu, add_function_to_menu = init_display(
+            None, (screenX, screenY), True, [128, 128, 128], [128, 128, 128])
+
+    for ais in aisStack:
+        display.Context.Display(ais, False)
+
+    display.FitAll()
+    display_start()
+
+
+def deskBegin(objName):
+    global curPath
+    curPath = curPath + ':' + objName
+
+
+def deskEnd():
+    global aisStack
+    parent = AIS_Point(Geom_CartesianPoint())
+    item = aisStack.pop()
+    while item != 'marker':
+        parent.AddChild(item)
+        item = aisStack.pop()
+    aisStack.append(parent)
+
+
+def deskSetParam(paramName, paramValue, paramPath=''):
+    global curPath, params
+    path = ''
+    for objName in curPath:
+        path += '.' + objName
+    params[path + paramPath + '-' + paramName] = paramValue
+
+
+def deskGetParam(paramName, defaultValue):
+    global curPath, params
+    value = None
+    path = ''
+    for objName in curPath:
+        path += '.' + objName
+        if path + '-' + paramName in params:
+            value = params[path + '-' + paramName]
+    if value is None:
+        value = defaultValue
+    return value
+
+
+def deskDraw(ais):
+    aisStack.append(ais)
+
+
+def deskCompute(funcName, arg1 = None, arg2 = None, arg3 = None):
+    return 0
+
+
+def deskComputeSphere(r):
+    return BRepPrimAPI_MakeSphere(r).Shape()
+
+def deskDrawShape(objName):
+    deskBegin(objName)
+
+    shape = deskGetParam('shape')
+    material = deskGetParam('material')
+    transparency = deskGetParam('transparency')
+    color = deskGetParam(COLOR)
+
+    ais = AIS_Shape(shape)
+
+    if material is not None:
+        aspect = Graphic3d_MaterialAspect(material)
+        ais.SetMaterial(aspect)
+
+    if transparency is not None:
+        ais.SetTransparency(transparency)
+
+    if color is not None:
+        r, g, b = color
+        qColor = Quantity_Color(r, g, b,
+                                Quantity_TypeOfColor(Quantity_TypeOfColor.Quantity_TOC_RGB))
+        ais.SetColor(qColor)
+
+    deskDrawAis(ais)
+    deskEnd()
+
+
+def deskDrawSphere(objName):
+    deskLogStart('deskDrawSphere')
+    deskBegin(objName)
+    r = deskGetParam('r', 100)
+    shape = deskCompute('deskComputeSphere', r)
+    deskSetParam('shape', shape, 'ShapeObj')
+    deskDrawShape('ShapeObj')
+    deskEnd()
+    deskLogFinish()
 
 
 class Pnt(gp_Pnt):
