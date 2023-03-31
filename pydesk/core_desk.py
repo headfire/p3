@@ -7,9 +7,8 @@ from OCC.Core.gp import gp_Trsf, gp_Vec
 
 
 # from OCC.Core.gp import gp_Pnt, gp_Vec, gp_Dir
-from OCC.Core.BRepPrimAPI import BRepPrimAPI_MakeSphere
+from OCC.Core.BRepPrimAPI import BRepPrimAPI_MakeSphere, BRepPrimAPI_MakeBox
 
-# , BRepPrimAPI_MakeBox
 # , BRepPrimAPI_MakeCone, \
 # BRepPrimAPI_MakeCylinder, BRepPrimAPI_MakeTorus
 #  from OCC.Core.BRepOffsetAPI import BRepOffsetAPI_MakePipe
@@ -70,6 +69,7 @@ NICE_ORIGINAL_COLOR = 241 / 255, 79 / 255, 160 / 255
 PARENT_DUMMY_SHAPE = BRepPrimAPI_MakeSphere(1).Shape()
 
 INVISIBLE_TRANSPARENCY = 1
+SEMI_TRANSPARENCY = 0.5
 
 P_RADIUS = 'P_RADIUS'
 DEF_RADIUS = 100
@@ -85,6 +85,13 @@ DEF_COLOR = NICE_GRAY_COLOR
 
 P_TRANSPARENCY = 'P_TRANSPARENCY'
 DEF_TRANSPARENCY = 0
+
+P_DX = 'P_DX'
+DEF_DX = 10
+P_DY = 'P_DY'
+DEF_DY = 10
+P_DZ = 'P_DZ'
+DEF_DZ = 10
 
 P_SCALE = 'P_SCALE'
 P_SCALE_GEOM = 'P_SCALE_GEOM'
@@ -121,13 +128,15 @@ class Computer:
     def __init__(self):
         self.cache = {}
 
-    def compute(self, methodName, arg1=None, arg2=None):
+    def compute(self, methodName, arg1=None, arg2=None, arg3=None):
 
         args = ''
         if arg1 is not None:
             args += str(arg1)
         if arg2 is not None:
             args += ',' + str(arg2)
+        if arg3 is not None:
+            args += ',' + str(arg3)
 
         cacheKey = methodName + '(' + args + ')'
 
@@ -141,8 +150,10 @@ class Computer:
                 obj = method()
             elif arg2 is None:
                 obj = method(arg1)
-            else:
+            elif arg3 is None:
                 obj = method(arg1, arg2)
+            else:
+                obj = method(arg1, arg2, arg3)
             self.cache[cacheKey] = obj
         return obj
 
@@ -150,8 +161,12 @@ class Computer:
 class DeskComputer(Computer):
 
     @staticmethod
-    def computeSphere(r):
-        return BRepPrimAPI_MakeSphere(r).Shape()
+    def computeSphere(argR):
+        return BRepPrimAPI_MakeSphere(argR).Shape()
+
+    @staticmethod
+    def computeBox(argDx, argDy, argDz):
+        return BRepPrimAPI_MakeBox(argDx, argDy, argDz).Shape()
 
 
 class Scripting:
@@ -302,7 +317,7 @@ def _DrawShape(argShape):
     scene.drawShape(shape, material, transparency, color)
 
 
-def _Sphere(argRadius):
+def _DrawSphere(argRadius):
     radius = _GetParam(P_RADIUS, argRadius, DEF_RADIUS)
     shape = comp.compute('computeSphere', radius)
     _NameBegin('Shape')
@@ -310,7 +325,17 @@ def _Sphere(argRadius):
     _NameEnd()
 
 
-def _Move(dx, dy, dz):
+def _DrawBox(argDx, argDy, argDz):
+    dx = _GetParam(P_DX, argDx, DEF_DX)
+    dy = _GetParam(P_DY, argDy, DEF_DY)
+    dz = _GetParam(P_DZ, argDz, DEF_DZ)
+    shape = comp.compute('computeBox', dx, dy, dz)
+    _NameBegin('Shape')
+    _DrawShape(shape)
+    _NameEnd()
+
+
+def _DoMove(dx, dy, dz):
     trsf = gp_Trsf()
     trsf.SetTranslation(gp_Vec(dx, dy, dz))
     scene.doTrsf(trsf)
@@ -332,12 +357,16 @@ def _SetMaterial(argMaterial):
 # ***************************************************
 
 
-def Move(dx, dy, dz):
-    _Move(dx, dy, dz)
+def DoMove(dx, dy, dz):
+    _DoMove(dx, dy, dz)
 
 
-def Sphere(argRadius):
-    _Sphere(argRadius)
+def DrawSphere(argRadius):
+    _DrawSphere(argRadius)
+
+
+def DrawBox(argDx, argDy, argDz):
+    _DrawBox(argDx, argDy, argDz)
 
 
 def SetColor(argColor):
@@ -354,90 +383,3 @@ def SetMaterial(argMaterial):
 
 def Render():
     _Render()
-
-
-if __name__ == "__main__":
-
-    test = 6
-
-    # test render start
-    if test == 1:
-        pass
-
-    # test simple primitive
-    elif test == 2:
-        Sphere(15)
-
-    # test simple move
-    elif test == 3:
-        for ix in [-1, 1]:
-            for iy in [-1, 1]:
-                for iz in [-1, 1]:
-                    Sphere(10)
-                    Move(ix*20, iy*20, iz*20)
-
-    # test simple color
-    elif test == 4:
-        n = 5
-        for ix in range(n):
-            for iy in range(n):
-                for iz in range(n):
-                    SetColor([ix/(n-1), iy/(n-1), iz/(n-1)])
-                    Sphere(10)
-                    Move(ix*30, iy*30, iz*30)
-
-    # test simple alpha
-    elif test == 5:
-        SetColor(NICE_BLUE_COLOR)
-        n = 5
-        for ix in range(n):
-            for iy in range(n):
-                for iz in range(n):
-                    SetTransparency((ix+iy+iz)/((n-1)*3))
-                    Sphere(10)
-                    Move(ix*30, iy*30, iz*30)
-
-    # test simple material
-    elif test == 6:
-        mats = [
-            BRASS_MATERIAL,
-            BRONZE_MATERIAL,
-            COPPER_MATERIAL,
-            GOLD_MATERIAL,
-            PEWTER_MATERIAL,
-
-            PLASTER_MATERIAL,
-            PLASTIC_MATERIAL,
-            SILVER_MATERIAL,
-            STEEL_MATERIAL,
-            STONE_MATERIAL,
-
-            SHINY_PLASTIC_MATERIAL,
-            SATIN_MATERIAL,
-            METALIZED_MATERIAL,
-            NEON_GNC_MATERIAL,
-            CHROME_MATERIAL,
-
-            ALUMINIUM_MATERIAL,
-            OBSIDIAN_MATERIAL,
-            NEON_PHC_MATERIAL,
-            JADE_MATERIAL,
-            CHARCOAL_MATERIAL,
-
-            WATER_MATERIAL,
-            GLASS_MATERIAL,
-            PLASTIC_MATERIAL,
-            PLASTIC_MATERIAL,
-            PLASTIC_MATERIAL,
-        ]
-        SetColor(NICE_YELLOW_COLOR)
-        n = 5
-        for ix in range(n):
-            for iy in range(n):
-                SetMaterial(mats[ix*5+iy])
-                Sphere(10)
-                Move(ix*30, iy*30, 0)
-
-
-
-    Render()
