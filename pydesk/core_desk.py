@@ -1,26 +1,30 @@
+from typing import Optional
 # from core_position import *
 from core_style import *
 
 # from OCC.Core.gp import gp_Pnt, gp_Vec, gp_Dir
-from OCC.Core.BRepPrimAPI import BRepPrimAPI_MakeSphere, BRepPrimAPI_MakeBox
+from OCC.Core.BRepPrimAPI import BRepPrimAPI_MakeSphere
+
+# , BRepPrimAPI_MakeBox
 # , BRepPrimAPI_MakeCone, \
 # BRepPrimAPI_MakeCylinder, BRepPrimAPI_MakeTorus
 #  from OCC.Core.BRepOffsetAPI import BRepOffsetAPI_MakePipe
 # from OCC.Core.BRepTools import BRepTools_WireExplorer
 # from OCC.Core.BRep import BRep_Tool
 # from OCC.Core.GC import GC_MakeCircle
-from OCC.Core.Geom import Geom_CartesianPoint
+# from OCC.Core.Geom import Geom_CartesianPoint
 
 # from OCC.Core.BRepBuilderAPI import (BRepBuilderAPI_MakeEdge, BRepBuilderAPI_MakeWire,
 #                                      BRepBuilderAPI_MakeFace)
 
-from OCC.Core.AIS import AIS_Shape, AIS_Point
+from OCC.Core.AIS import AIS_Shape
+
+#    , AIS_Point
 from OCC.Core.Quantity import Quantity_Color, Quantity_TypeOfColor
 # from OCC.Core.BRepBuilderAPI import BRepBuilderAPI_Transform
 from OCC.Core.Graphic3d import Graphic3d_MaterialAspect
 
 from OCC.Display.SimpleGui import init_display
-
 
 BRASS_MATERIAL = Graphic3d_NameOfMaterial.Graphic3d_NOM_BRASS
 BRONZE_MATERIAL = Graphic3d_NameOfMaterial.Graphic3d_NOM_BRONZE
@@ -48,16 +52,20 @@ DIAMOND_MATERIAL = Graphic3d_NameOfMaterial.Graphic3d_NOM_DIAMOND
 TRANSPARENT_MATERIAL = Graphic3d_NameOfMaterial.Graphic3d_NOM_TRANSPARENT
 DEFAULT_MATERIAL = Graphic3d_NameOfMaterial.Graphic3d_NOM_DEFAULT
 
-WOOD_COLOR = 208/255, 117/255, 28/255
-PAPER_COLOR = 230/255, 230/255, 230/255
-STEEL_COLOR = 100/255, 100/255, 100/255
+WOOD_COLOR = 208 / 255, 117 / 255, 28 / 255
+PAPER_COLOR = 230 / 255, 230 / 255, 230 / 255
+STEEL_COLOR = 100 / 255, 100 / 255, 100 / 255
 
-NICE_WHITE_COLOR = 240/255, 240/255, 240/255
-NICE_GRAY_COLOR = 100/255, 100/255, 100/255
-NICE_RED_COLOR = 200/255, 30/255, 30/255
-NICE_BLUE_COLOR = 100/255, 100/255, 255/255
-NICE_YELLOW_COLOR = 255/255, 255/255, 100/255
-NICE_ORIGINAL_COLOR = 241/255, 79/255, 160/255
+NICE_WHITE_COLOR = 240 / 255, 240 / 255, 240 / 255
+NICE_GRAY_COLOR = 100 / 255, 100 / 255, 100 / 255
+NICE_RED_COLOR = 200 / 255, 30 / 255, 30 / 255
+NICE_BLUE_COLOR = 100 / 255, 100 / 255, 255 / 255
+NICE_YELLOW_COLOR = 255 / 255, 255 / 255, 100 / 255
+NICE_ORIGINAL_COLOR = 241 / 255, 79 / 255, 160 / 255
+
+PARENT_DUMMY_SHAPE = BRepPrimAPI_MakeSphere(1).Shape()
+
+INVISIBLE_TRANSPARENCY = 1
 
 P_RADIUS = 'P_RADIUS'
 DEF_RADIUS = 100
@@ -142,67 +150,21 @@ class DeskComputer(Computer):
         return BRepPrimAPI_MakeSphere(r).Shape()
 
 
-AIS_GROUP_MARKER = 'AIS_GROUP_MARKER'
+class Scripting:
+    def __init__(self):
+        self.script = []
+
+    def addLine(self, line):
+        self.script.append(line)
+
+    def addShape(self, shape):
+        pass
 
 
-class Desk:
-
+class Naming:
     def __init__(self):
         self.params = {}
         self.curPath = ['root']
-        self.aisStack = []
-        self.log = []
-        self.computer = DeskComputer()
-
-    def log(self, line):
-        self.log.append(line)
-
-    def render(self, screenX: int = 800, screenY: int = 600):
-        display, display_start, add_menu, add_function_to_menu = init_display(
-            None, (screenX, screenY), True, [128, 128, 128], [128, 128, 128])
-
-        for ais in self.aisStack:
-            display.Context.Display(ais, False)
-
-        display.FitAll()
-        display_start()
-
-    def objBegin(self, objName):
-        self.curPath.append(objName)
-        self.aisStack.append(AIS_GROUP_MARKER)
-
-    def objEnd(self):
-        self.curPath.pop()
-        # parent = AIS_Point(Geom_CartesianPoint(0, 0, 0))
-        parent = AIS_Shape(BRepPrimAPI_MakeBox(20,20,20).Shape())
-        aspect = Graphic3d_MaterialAspect(DEF_MATERIAL)
-        parent.SetMaterial(aspect)
-
-        r, g, b = NICE_GRAY_COLOR
-        qColor = Quantity_Color(r, g, b, Quantity_TypeOfColor(Quantity_TypeOfColor.Quantity_TOC_RGB))
-        parent.SetColor(qColor)
-
-        item = self.aisStack.pop()
-        while item != AIS_GROUP_MARKER:
-            parent.AddChild(item)
-            item = self.aisStack.pop()
-        self.aisStack.append(parent)
-
-    def drawShape(self, shape, material, transparency, color):
-        print(self.curPath, shape, material, transparency, color)
-
-        ais = AIS_Shape(shape)
-
-        aspect = Graphic3d_MaterialAspect(material)
-        ais.SetMaterial(aspect)
-
-        ais.SetTransparency(transparency)
-
-        r, g, b = color
-        qColor = Quantity_Color(r, g, b, Quantity_TypeOfColor(Quantity_TypeOfColor.Quantity_TOC_RGB))
-        ais.SetColor(qColor)
-
-        self.aisStack.append(ais)
 
     def setParam(self, paramName, paramValue, paramPath=None):
         path = ''
@@ -229,54 +191,115 @@ class Desk:
 
         return value
 
+    def beginName(self, nm):
+        self.curPath.append(nm)
 
-desk = Desk()
+    def endName(self):
+        self.curPath.pop()
+
+
+AIS_CHILD_MARKER = 'AIS_CHILD_MARKER'
+
+
+class Screen:
+
+    def __init__(self):
+        self.rootsAis: [Optional[AIS_Shape]] = []
+        self.parentAis: Optional[AIS_Shape] = None
+        self.currentAis: Optional[AIS_Shape] = None
+
+    def render(self, screenX: int = 800, screenY: int = 600):
+        display, display_start, add_menu, add_function_to_menu = init_display(
+            None, (screenX, screenY), True, [128, 128, 128], [128, 128, 128])
+
+        for ais in self.rootsAis:
+            display.Context.Display(ais, False)
+
+        display.FitAll()
+        display_start()
+
+    def childBegin(self):
+        self.parentAis = self.currentAis = None
+
+    def childEnd(self):
+        self.currentAis = self.parentAis
+        self.parentAis = self.parentAis.Parent()
+
+    def draw(self, ais: AIS_Shape):
+        if self.parentAis is None:
+            self.rootsAis.append(ais)
+        else:
+            self.parentAis.AddChild(ais)
+
+    def drawShape(self, shape, material, transparency, color):
+        # print(self.curPath, shape, material, transparency, color)
+
+        ais = AIS_Shape(shape)
+
+        aspect = Graphic3d_MaterialAspect(material)
+        ais.SetMaterial(aspect)
+
+        ais.SetTransparency(transparency)
+
+        r, g, b = color
+        qColor = Quantity_Color(r, g, b, Quantity_TypeOfColor(Quantity_TypeOfColor.Quantity_TOC_RGB))
+        ais.SetColor(qColor)
+
+        self.draw(ais)
+
+    def drawDummy(self):
+
+        ais = AIS_Shape(PARENT_DUMMY_SHAPE)
+        ais.SetTransparency(INVISIBLE_TRANSPARENCY)
+        self.draw(ais)
+
+
+screen = Screen()
 comp = DeskComputer()
+naming = Naming()
 
 
-def Render():
-    desk.render()
+def _SetParam(paramName, paramValue, paramPath):
+    naming.setParam(paramName, paramValue, paramPath)
 
 
-def Set(paramName, paramValue, paramPath):
-    desk.setParam(paramName, paramValue, paramPath)
+def _GetParam(paramName, preValue, postValue):
+    return naming.getParam(paramName, preValue, postValue)
 
 
-def Get(paramName, preValue, postValue):
-    return desk.getParam(paramName, preValue, postValue)
+def _BeginName(nm):
+    naming.beginName(nm)
 
 
-def Begin(objName):
-    desk.objBegin(objName)
+def _EndName():
+    naming.endName()
 
 
-def End():
-    desk.objEnd()
+def _Render():
+    screen.render()
 
 
-def Shape(objName, argShape):
-
-    Begin(objName)
-
-    shape = Get(P_SHAPE, argShape, DEF_SHAPE)
-    material = Get(P_MATERIAL, None, DEF_MATERIAL)
-    transparency = Get(P_TRANSPARENCY, None, DEF_TRANSPARENCY)
-    color = Get(P_COLOR, None, DEF_COLOR)
-
-    desk.drawShape(shape, material, transparency, color)
-
-    End()
+def _DrawDummy():
+    screen.drawDummy()
 
 
-def Sphere(objName, argRadius):
-    Begin(objName)
-    radius = Get(P_RADIUS, argRadius, DEF_RADIUS)
+def _DrawShape(argShape):
+    shape = _GetParam(P_SHAPE, argShape, DEF_SHAPE)
+    material = _GetParam(P_MATERIAL, None, DEF_MATERIAL)
+    transparency = _GetParam(P_TRANSPARENCY, None, DEF_TRANSPARENCY)
+    color = _GetParam(P_COLOR, None, DEF_COLOR)
+    screen.drawShape(shape, material, transparency, color)
+
+
+def _Sphere(argRadius):
+    radius = _GetParam(P_RADIUS, argRadius, DEF_RADIUS)
     shape = comp.compute('computeSphere', radius)
-    Shape('Shape', shape)
-    End()
+    _BeginName('Shape')
+    _DrawShape(shape)
+    _EndName()
 
 
 if __name__ == "__main__":
-    Sphere('Sphere001', 5)
-    Sphere('Sphere002', 15)
-    Render()
+    _Sphere(5)
+    _Sphere(15)
+    _Render()
