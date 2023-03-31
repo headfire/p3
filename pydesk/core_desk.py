@@ -2,6 +2,10 @@ from typing import Optional
 # from core_position import *
 from core_style import *
 
+from OCC.Core.gp import gp_Trsf, gp_Vec
+# gp_Pnt, gp_Dir,, gp_Ax1,
+
+
 # from OCC.Core.gp import gp_Pnt, gp_Vec, gp_Dir
 from OCC.Core.BRepPrimAPI import BRepPrimAPI_MakeSphere
 
@@ -161,7 +165,7 @@ class Scripting:
         pass
 
 
-class Naming:
+class Registry:
     def __init__(self):
         self.params = {}
         self.curPath = ['root']
@@ -172,7 +176,7 @@ class Naming:
             path += '.' + objName
         if paramPath is not None:
             path += '.' + paramPath
-        self.params[path + paramPath + '-' + paramName] = paramValue
+        self.params[path + '-' + paramName] = paramValue
 
     def getParam(self, paramName, preValue, postValue):
 
@@ -191,17 +195,17 @@ class Naming:
 
         return value
 
-    def beginName(self, nm):
+    def nameBegin(self, nm):
         self.curPath.append(nm)
 
-    def endName(self):
+    def nameEnd(self):
         self.curPath.pop()
 
 
 AIS_CHILD_MARKER = 'AIS_CHILD_MARKER'
 
 
-class Screen:
+class Scene:
 
     def __init__(self):
         self.rootsAis: [Optional[AIS_Shape]] = []
@@ -230,6 +234,13 @@ class Screen:
             self.rootsAis.append(ais)
         else:
             self.parentAis.AddChild(ais)
+        self.currentAis = ais
+
+    def doTrsf(self, trsf):
+        newTrsf = gp_Trsf()
+        newTrsf *= self.currentAis.LocalTransformation()
+        newTrsf *= trsf
+        self.currentAis.SetLocalTransformation(newTrsf)
 
     def drawShape(self, shape, material, transparency, color):
         # print(self.curPath, shape, material, transparency, color)
@@ -254,33 +265,33 @@ class Screen:
         self.draw(ais)
 
 
-screen = Screen()
+scene = Scene()
 comp = DeskComputer()
-naming = Naming()
+reg = Registry()
 
 
 def _SetParam(paramName, paramValue, paramPath):
-    naming.setParam(paramName, paramValue, paramPath)
+    reg.setParam(paramName, paramValue, paramPath)
 
 
 def _GetParam(paramName, preValue, postValue):
-    return naming.getParam(paramName, preValue, postValue)
+    return reg.getParam(paramName, preValue, postValue)
 
 
-def _BeginName(nm):
-    naming.beginName(nm)
+def _NameBegin(nm):
+    reg.nameBegin(nm)
 
 
-def _EndName():
-    naming.endName()
+def _NameEnd():
+    reg.nameEnd()
 
 
 def _Render():
-    screen.render()
+    scene.render()
 
 
 def _DrawDummy():
-    screen.drawDummy()
+    scene.drawDummy()
 
 
 def _DrawShape(argShape):
@@ -288,17 +299,145 @@ def _DrawShape(argShape):
     material = _GetParam(P_MATERIAL, None, DEF_MATERIAL)
     transparency = _GetParam(P_TRANSPARENCY, None, DEF_TRANSPARENCY)
     color = _GetParam(P_COLOR, None, DEF_COLOR)
-    screen.drawShape(shape, material, transparency, color)
+    scene.drawShape(shape, material, transparency, color)
 
 
 def _Sphere(argRadius):
     radius = _GetParam(P_RADIUS, argRadius, DEF_RADIUS)
     shape = comp.compute('computeSphere', radius)
-    _BeginName('Shape')
+    _NameBegin('Shape')
     _DrawShape(shape)
-    _EndName()
+    _NameEnd()
+
+
+def _Move(dx, dy, dz):
+    trsf = gp_Trsf()
+    trsf.SetTranslation(gp_Vec(dx, dy, dz))
+    scene.doTrsf(trsf)
+
+
+def _SetColor(color):
+    reg.setParam(P_COLOR, color)
+
+
+def _SetTransparency(argTransparency):
+    reg.setParam(P_TRANSPARENCY, argTransparency)
+
+
+def _SetMaterial(argMaterial):
+    reg.setParam(P_MATERIAL, argMaterial)
+
+# ***************************************************
+# ***************************************************
+# ***************************************************
+
+
+def Move(dx, dy, dz):
+    _Move(dx, dy, dz)
+
+
+def Sphere(argRadius):
+    _Sphere(argRadius)
+
+
+def SetColor(argColor):
+    _SetColor(argColor)
+
+
+def SetTransparency(argTransparency):
+    _SetTransparency(argTransparency)
+
+
+def SetMaterial(argMaterial):
+    _SetMaterial(argMaterial)
+
+
+def Render():
+    _Render()
 
 
 if __name__ == "__main__":
-    _Sphere(15)
-    _Render()
+
+    test = 6
+
+    # test render start
+    if test == 1:
+        pass
+
+    # test simple primitive
+    elif test == 2:
+        Sphere(15)
+
+    # test simple move
+    elif test == 3:
+        for ix in [-1, 1]:
+            for iy in [-1, 1]:
+                for iz in [-1, 1]:
+                    Sphere(10)
+                    Move(ix*20, iy*20, iz*20)
+
+    # test simple color
+    elif test == 4:
+        n = 5
+        for ix in range(n):
+            for iy in range(n):
+                for iz in range(n):
+                    SetColor([ix/(n-1), iy/(n-1), iz/(n-1)])
+                    Sphere(10)
+                    Move(ix*30, iy*30, iz*30)
+
+    # test simple alpha
+    elif test == 5:
+        SetColor(NICE_BLUE_COLOR)
+        n = 5
+        for ix in range(n):
+            for iy in range(n):
+                for iz in range(n):
+                    SetTransparency((ix+iy+iz)/((n-1)*3))
+                    Sphere(10)
+                    Move(ix*30, iy*30, iz*30)
+
+    # test simple material
+    elif test == 6:
+        mats = [
+            BRASS_MATERIAL,
+            BRONZE_MATERIAL,
+            COPPER_MATERIAL,
+            GOLD_MATERIAL,
+            PEWTER_MATERIAL,
+
+            PLASTER_MATERIAL,
+            PLASTIC_MATERIAL,
+            SILVER_MATERIAL,
+            STEEL_MATERIAL,
+            STONE_MATERIAL,
+
+            SHINY_PLASTIC_MATERIAL,
+            SATIN_MATERIAL,
+            METALIZED_MATERIAL,
+            NEON_GNC_MATERIAL,
+            CHROME_MATERIAL,
+
+            ALUMINIUM_MATERIAL,
+            OBSIDIAN_MATERIAL,
+            NEON_PHC_MATERIAL,
+            JADE_MATERIAL,
+            CHARCOAL_MATERIAL,
+
+            WATER_MATERIAL,
+            GLASS_MATERIAL,
+            PLASTIC_MATERIAL,
+            PLASTIC_MATERIAL,
+            PLASTIC_MATERIAL,
+        ]
+        SetColor(NICE_YELLOW_COLOR)
+        n = 5
+        for ix in range(n):
+            for iy in range(n):
+                SetMaterial(mats[ix*5+iy])
+                Sphere(10)
+                Move(ix*30, iy*30, 0)
+
+
+
+    Render()
