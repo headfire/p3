@@ -300,6 +300,5 @@ def _Sphere(argRadius):
 
 
 if __name__ == "__main__":
-    _Sphere(5)
     _Sphere(15)
     _Render()
