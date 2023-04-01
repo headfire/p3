@@ -339,6 +339,25 @@ def _DoRotateZ(angle):
     _DoRotate(gp_Pnt(0, 0, 0), gp_Pnt(0, 0, 1), angle)
 
 
+def _DoDirect(pntFrom, pntTo):
+
+    trsf = gp_Trsf()
+
+    dirVec = gp_Vec(pntFrom, pntTo)
+    targetDir = gp_Dir(dirVec)
+
+    rotateAngle = gp_Dir(0, 0, 1).Angle(targetDir)
+    if not gp_Dir(0, 0, 1).IsParallel(targetDir, 0.001):
+        rotateDir = gp_Dir(0, 0, 1)
+        rotateDir.Cross(targetDir)
+    else:
+        rotateDir = gp_Dir(0, 1, 0)
+
+    trsf.SetRotation(gp_Ax1(gp_Pnt(0, 0, 0), rotateDir), rotateAngle)
+    trsf.SetTranslationPart(gp_Vec(gp_Pnt(0, 0, 0), pntFrom))
+    scene.doTrsf(trsf)
+
+
 def _DrawDummy():
     scene.drawDummy()
 
@@ -411,6 +430,10 @@ def DoRotateY(angle):
 
 def DoRotateZ(angle):
     _DoRotateZ(angle)
+
+
+def DoDirect(pntFrom, pntTo):
+    _DoDirect(pntFrom, pntTo)
 
 
 def DrawSphere(argRadius):
