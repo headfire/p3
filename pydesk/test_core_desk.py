@@ -89,7 +89,7 @@ def DrawTestBox():
     DrawBox(x, y, z)
 
     SetColor(NICE_BLUE_COLOR)
-    SetTransparency(SEMI_TRANSPARENCY)
+    SetTransparency(SEMI_VISIBLE_TRANSPARENCY)
 
     DrawBox(x, y, d)
     DoMove(0, 0, z + d)
@@ -135,8 +135,36 @@ def DrawTestRotate():
     for i in range(10):
         DrawSphere(10)
         DoMove(0, 0, 0)
-        DoRotate(Point(0, 0, 50), Point(0, 100, 100), i * 360 / 20)
+        DoRotate(Pnt(0, 0, 50), Pnt(0, 100, 100), i * 360 / 20)
 
+
+def DrawTestDirect():
+    DrawSphere(10)
+
+    DrawSphere(10)
+    DoMove(100,100,500)
+    DrawSphere(10)
+    DoMove(-100,100,500)
+    DrawSphere(10)
+    DoMove(-100,-100,500)
+    DrawSphere(10)
+    DoMove(100,-100,500)
+
+    DrawCone(50,0,200)
+    DoMove(0,0,200)
+    DoDirect(Pnt(0,0,0),Pnt(100,100,500))
+
+    DrawCone(50,0,200)
+    DoMove(0,0,200)
+    DoDirect(Pnt(0,0,0),Pnt(-100,100,500))
+
+    DrawCone(50,0,200)
+    DoMove(0,0,200)
+    DoDirect(Pnt(0,0,0),Pnt(-100,-100,500))
+
+    DrawCone(50,0,200)
+    DoMove(0,0,200)
+    DoDirect(Pnt(0,0,0),Pnt(100,-100,500))
 
 # DrawTestNull()
 # DrawTestSphere()
@@ -145,7 +173,8 @@ def DrawTestRotate():
 # DrawTestTransparency()
 # DrawTestMaterial()
 # DrawTestBox()
+# DrawTestRotate()
 
+DrawTestDirect()
 
-DrawTestRotate()
 Render()

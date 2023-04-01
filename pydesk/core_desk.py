@@ -281,6 +281,10 @@ comp = DeskComputer()
 reg = Registry()
 
 
+def Pnt(x, y, z):
+    return gp_Pnt(x, y, z)
+
+
 def Render():
     scene.render()
 
@@ -319,14 +323,14 @@ def DoHide():
 
 def DoMove(dx, dy, dz):
     trsf = gp_Trsf()
-    trsf.setTranslation(gp_Vec(dx, dy, dz))
+    trsf.SetTranslation(gp_Vec(dx, dy, dz))
     scene.doTrsf(trsf)
 
 
 def DoRotate(pntAxFrom, pntAxTo, angle):
     trsf = gp_Trsf()
     ax1 = gp_Ax1(pntAxFrom, gp_Dir(gp_Vec(pntAxFrom, pntAxTo)))
-    trsf.setRotation(ax1, angle / 180 * math.pi)
+    trsf.SetRotation(ax1, angle / 180 * math.pi)
     scene.doTrsf(trsf)
 
 
@@ -399,5 +403,4 @@ def DrawCone(argRadius1, argRadius2, argHeight):
     LevelBegin('Shape')
     DrawShape(shape)
     LevelEnd()
-
 
