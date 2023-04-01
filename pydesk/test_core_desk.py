@@ -107,11 +107,45 @@ def DrawTestBox():
     DoMove(-d - d, 0, 0)
 
 
+def DrawTestRotate():
+
+    SetMaterial(CHROME_MATERIAL)
+    SetColor(NICE_BLUE_COLOR)
+    for i in range(10):
+        DrawSphere(10)
+        DoMove(40, 0, 0)
+        DoRotateZ(i * 360 / 10)
+
+    SetMaterial(CHROME_MATERIAL)
+    SetColor(NICE_YELLOW_COLOR)
+    for i in range(10):
+        DrawSphere(10)
+        DoMove(80, 0, 0)
+        DoRotateY(i * 360 / 10)
+
+    SetMaterial(CHROME_MATERIAL)
+    SetColor(NICE_RED_COLOR)
+    for i in range(10):
+        DrawSphere(10)
+        DoMove(0, 120, 0)
+        DoRotateX(i * 360 / 10)
+
+    SetMaterial(CHROME_MATERIAL)
+    SetColor(NICE_WHITE_COLOR)
+    for i in range(10):
+        DrawSphere(10)
+        DoMove(0, 0, 0)
+        DoRotate(Point(0, 0, 50), Point(0, 100, 100), i * 360 / 20)
+
+
 # DrawTestNull()
 # DrawTestSphere()
 # DrawTestMove()
 # DrawTestColor()
 # DrawTestTransparency()
 # DrawTestMaterial()
-DrawTestBox()
+# DrawTestBox()
+
+
+DrawTestRotate()
 Render()

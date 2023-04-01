@@ -1,10 +1,9 @@
+import math
 from typing import Optional
 # from core_position import *
 from core_style import *
 
-from OCC.Core.gp import gp_Trsf, gp_Vec
-# gp_Pnt, gp_Dir,, gp_Ax1,
-
+from OCC.Core.gp import gp_Trsf, gp_Vec, gp_Dir, gp_Ax1, gp_Pnt
 
 # from OCC.Core.gp import gp_Pnt, gp_Vec, gp_Dir
 from OCC.Core.BRepPrimAPI import BRepPrimAPI_MakeSphere, BRepPrimAPI_MakeBox
@@ -252,10 +251,8 @@ class Scene:
         self.currentAis = ais
 
     def doTrsf(self, trsf):
-        newTrsf = gp_Trsf()
-        newTrsf *= self.currentAis.LocalTransformation()
-        newTrsf *= trsf
-        self.currentAis.SetLocalTransformation(newTrsf)
+        trsf *= self.currentAis.LocalTransformation()
+        self.currentAis.SetLocalTransformation(trsf)
 
     def drawShape(self, shape, material, transparency, color):
         # print(self.curPath, shape, material, transparency, color)
@@ -285,12 +282,8 @@ comp = DeskComputer()
 reg = Registry()
 
 
-def _SetParam(paramName, paramValue, paramPath):
-    reg.setParam(paramName, paramValue, paramPath)
-
-
-def _GetParam(paramName, preValue, postValue):
-    return reg.getParam(paramName, preValue, postValue)
+def _Render():
+    scene.render()
 
 
 def _NameBegin(nm):
@@ -301,8 +294,49 @@ def _NameEnd():
     reg.nameEnd()
 
 
-def _Render():
-    scene.render()
+def _SetParam(paramName, paramValue, paramPath):
+    reg.setParam(paramName, paramValue, paramPath)
+
+
+def _GetParam(paramName, preValue, postValue):
+    return reg.getParam(paramName, preValue, postValue)
+
+
+def _SetColor(color):
+    reg.setParam(P_COLOR, color)
+
+
+def _SetTransparency(argTransparency):
+    reg.setParam(P_TRANSPARENCY, argTransparency)
+
+
+def _SetMaterial(argMaterial):
+    reg.setParam(P_MATERIAL, argMaterial)
+
+
+def _DoMove(dx, dy, dz):
+    trsf = gp_Trsf()
+    trsf.SetTranslation(gp_Vec(dx, dy, dz))
+    scene.doTrsf(trsf)
+
+
+def _DoRotate(pntAxFrom, pntAxTo, angle):
+    trsf = gp_Trsf()
+    ax1 = gp_Ax1(pntAxFrom, gp_Dir(gp_Vec(pntAxFrom, pntAxTo)))
+    trsf.SetRotation(ax1, angle / 180 * math.pi)
+    scene.doTrsf(trsf)
+
+
+def _DoRotateX(angle):
+    _DoRotate(gp_Pnt(0, 0, 0), gp_Pnt(1, 0, 0), angle)
+
+
+def _DoRotateY(angle):
+    _DoRotate(gp_Pnt(0, 0, 0), gp_Pnt(0, 1, 0), angle)
+
+
+def _DoRotateZ(angle):
+    _DoRotate(gp_Pnt(0, 0, 0), gp_Pnt(0, 0, 1), angle)
 
 
 def _DrawDummy():
@@ -335,38 +369,16 @@ def _DrawBox(argDx, argDy, argDz):
     _NameEnd()
 
 
-def _DoMove(dx, dy, dz):
-    trsf = gp_Trsf()
-    trsf.SetTranslation(gp_Vec(dx, dy, dz))
-    scene.doTrsf(trsf)
-
-
-def _SetColor(color):
-    reg.setParam(P_COLOR, color)
-
-
-def _SetTransparency(argTransparency):
-    reg.setParam(P_TRANSPARENCY, argTransparency)
-
-
-def _SetMaterial(argMaterial):
-    reg.setParam(P_MATERIAL, argMaterial)
-
 # ***************************************************
 # ***************************************************
 # ***************************************************
 
-
-def DoMove(dx, dy, dz):
-    _DoMove(dx, dy, dz)
-
-
-def DrawSphere(argRadius):
-    _DrawSphere(argRadius)
+def Point(argX, argY, argZ):
+    return gp_Pnt(argX, argY, argZ)
 
 
-def DrawBox(argDx, argDy, argDz):
-    _DrawBox(argDx, argDy, argDz)
+def Render():
+    _Render()
 
 
 def SetColor(argColor):
@@ -381,5 +393,29 @@ def SetMaterial(argMaterial):
     _SetMaterial(argMaterial)
 
 
-def Render():
-    _Render()
+def DoMove(dx, dy, dz):
+    _DoMove(dx, dy, dz)
+
+
+def DoRotate(pntAxFrom, pntAxTo, angle):
+    _DoRotate(pntAxFrom, pntAxTo, angle)
+
+
+def DoRotateX(angle):
+    _DoRotateX(angle)
+
+
+def DoRotateY(angle):
+    _DoRotateY(angle)
+
+
+def DoRotateZ(angle):
+    _DoRotateZ(angle)
+
+
+def DrawSphere(argRadius):
+    _DrawSphere(argRadius)
+
+
+def DrawBox(argDx, argDy, argDz):
+    _DrawBox(argDx, argDy, argDz)
