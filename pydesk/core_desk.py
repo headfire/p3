@@ -6,7 +6,7 @@ from core_style import *
 from OCC.Core.gp import gp_Trsf, gp_Vec, gp_Dir, gp_Ax1, gp_Pnt
 
 # from OCC.Core.gp import gp_Pnt, gp_Vec, gp_Dir
-from OCC.Core.BRepPrimAPI import BRepPrimAPI_MakeSphere, BRepPrimAPI_MakeBox
+from OCC.Core.BRepPrimAPI import BRepPrimAPI_MakeSphere, BRepPrimAPI_MakeBox, BRepPrimAPI_MakeCone
 
 # , BRepPrimAPI_MakeCone, \
 # BRepPrimAPI_MakeCylinder, BRepPrimAPI_MakeTorus
@@ -27,6 +27,26 @@ from OCC.Core.Quantity import Quantity_Color, Quantity_TypeOfColor
 from OCC.Core.Graphic3d import Graphic3d_MaterialAspect
 
 from OCC.Display.SimpleGui import init_display
+
+
+ARG_MATERIAL = 'ARG_MATERIAL'
+ARG_COLOR = 'ARG_COLOR'
+ARG_TRANSPARENCY = 'ARG_TRANSPARENCY'
+ARG_RADIUS = 'ARG_RADIUS'
+ARG_RADIUS_1 = 'ARG_RADIUS_1'
+ARG_RADIUS_2 = 'ARG_RADIUS_2'
+ARG_HEIGHT = 'ARG_HEIGHT'
+ARG_DX = 'ARG_DX'
+ARG_DY = 'ARG_DY'
+ARG_DZ = 'ARG_DZ'
+
+
+ARG_SCALE = 'ARG_SCALE'
+ARG_SCALE_GEOM = 'ARG_SCALE_GEOM'
+ARG_SCALE_ARROW = 'ARG_SCALE_ARROW'
+ARG_SCALE_PX = 'ARG_SCALE_PX'
+ARG_SCALE_STR = 'ARG_SCALE_STR'
+
 
 BRASS_MATERIAL = Graphic3d_NameOfMaterial.Graphic3d_NOM_BRASS
 BRONZE_MATERIAL = Graphic3d_NameOfMaterial.Graphic3d_NOM_BRONZE
@@ -65,38 +85,9 @@ NICE_BLUE_COLOR = 100 / 255, 100 / 255, 255 / 255
 NICE_YELLOW_COLOR = 255 / 255, 255 / 255, 100 / 255
 NICE_ORIGINAL_COLOR = 241 / 255, 79 / 255, 160 / 255
 
-PARENT_DUMMY_SHAPE = BRepPrimAPI_MakeSphere(1).Shape()
-
-INVISIBLE_TRANSPARENCY = 1
-SEMI_TRANSPARENCY = 0.5
-
-P_RADIUS = 'P_RADIUS'
-DEF_RADIUS = 100
-
-P_SHAPE = 'P_SHAPE'
-DEF_SHAPE = BRepPrimAPI_MakeSphere(DEF_RADIUS).Shape()
-
-P_MATERIAL = 'P_MATERIAL'
-DEF_MATERIAL = PLASTIC_MATERIAL
-
-P_COLOR = 'P_COLOR'
-DEF_COLOR = NICE_GRAY_COLOR
-
-P_TRANSPARENCY = 'P_TRANSPARENCY'
-DEF_TRANSPARENCY = 0
-
-P_DX = 'P_DX'
-DEF_DX = 10
-P_DY = 'P_DY'
-DEF_DY = 10
-P_DZ = 'P_DZ'
-DEF_DZ = 10
-
-P_SCALE = 'P_SCALE'
-P_SCALE_GEOM = 'P_SCALE_GEOM'
-P_SCALE_ARROW = 'P_SCALE_ARROW'
-P_SCALE_PX = 'P_SCALE_PX'
-P_SCALE_STR = 'P_SCALE_STR'
+FULL_VISIBLE_TRANSPARENCY = 0
+SEMI_VISIBLE_TRANSPARENCY = 0.5
+NO_VISIBLE_TRANSPARENCY = 1
 
 LABEL_HEIGHT_PX = 20  # not scaled
 LABEL_DELTA = 5
@@ -160,12 +151,16 @@ class Computer:
 class DeskComputer(Computer):
 
     @staticmethod
-    def computeSphere(argR):
-        return BRepPrimAPI_MakeSphere(argR).Shape()
+    def computeSphere(argRadius):
+        return BRepPrimAPI_MakeSphere(argRadius).Shape()
 
     @staticmethod
     def computeBox(argDx, argDy, argDz):
         return BRepPrimAPI_MakeBox(argDx, argDy, argDz).Shape()
+    
+    @staticmethod
+    def computeCone(argRadius1, argRadius2, argHeight):
+        return BRepPrimAPI_MakeCone(argRadius1, argRadius2, argHeight).Shape()
 
 
 class Scripting:
@@ -181,42 +176,44 @@ class Scripting:
 
 class Registry:
     def __init__(self):
-        self.params = {}
-        self.curPath = ['root']
+        self.regs = {}
+        self.levels = ['root']
 
-    def setParam(self, paramName, paramValue, paramPath=None):
+    def setArg(self, argName, argValue, argSubPath=None):
         path = ''
-        for objName in self.curPath:
-            path += '.' + objName
-        if paramPath is not None:
-            path += '.' + paramPath
-        self.params[path + '-' + paramName] = paramValue
+        for levelName in self.levels:
+            path += '.' + levelName
+        if argSubPath is not None:
+            path += '.' + argSubPath
+        self.regs[path + '-' + argName] = argValue
 
-    def getParam(self, paramName, preValue, postValue):
+    def getArg(self, argName, defaultValue=None):
 
-        if preValue is not None:
-            return preValue
-
-        value = None
         path = ''
-        for objName in self.curPath:
-            path += '.' + objName
-            if path + '-' + paramName in self.params:
-                value = self.params[path + '-' + paramName]
+        paths = []
+        for levelName in self.levels:
+            path += '.' + levelName
+            paths.append(path + '-' + argName)
 
-        if value is None:
-            return postValue
+        fullPath = paths.pop()
+        if fullPath in self.regs:
+            return self.regs[fullPath]
 
-        return value
+        if defaultValue is not None:
+            return defaultValue
 
-    def nameBegin(self, nm):
-        self.curPath.append(nm)
+        while len(paths) > 0:
+            notFullPath = paths.pop()
+            if notFullPath in self.regs:
+                return self.regs[notFullPath]
 
-    def nameEnd(self):
-        self.curPath.pop()
+        return None
 
+    def levelBegin(self, levelName):
+        self.levels.append(levelName)
 
-AIS_CHILD_MARKER = 'AIS_CHILD_MARKER'
+    def levelEnd(self):
+        self.levels.pop()
 
 
 class Scene:
@@ -254,26 +251,28 @@ class Scene:
         trsf *= self.currentAis.LocalTransformation()
         self.currentAis.SetLocalTransformation(trsf)
 
+    def doHide(self):
+        self.currentAis.SetTransparency(NO_VISIBLE_TRANSPARENCY)
+
     def drawShape(self, shape, material, transparency, color):
         # print(self.curPath, shape, material, transparency, color)
 
         ais = AIS_Shape(shape)
 
+        # material set anyway
+        if material is None:
+            material = GOLD_MATERIAL
         aspect = Graphic3d_MaterialAspect(material)
         ais.SetMaterial(aspect)
 
-        ais.SetTransparency(transparency)
+        if transparency is not None:
+            ais.SetTransparency(transparency)
 
-        r, g, b = color
-        qColor = Quantity_Color(r, g, b, Quantity_TypeOfColor(Quantity_TypeOfColor.Quantity_TOC_RGB))
-        ais.SetColor(qColor)
+        if color is not None:
+            r, g, b = color
+            qColor = Quantity_Color(r, g, b, Quantity_TypeOfColor(Quantity_TypeOfColor.Quantity_TOC_RGB))
+            ais.SetColor(qColor)
 
-        self.draw(ais)
-
-    def drawDummy(self):
-
-        ais = AIS_Shape(PARENT_DUMMY_SHAPE)
-        ais.SetTransparency(INVISIBLE_TRANSPARENCY)
         self.draw(ais)
 
 
@@ -282,64 +281,68 @@ comp = DeskComputer()
 reg = Registry()
 
 
-def _Render():
+def Render():
     scene.render()
 
 
-def _NameBegin(nm):
-    reg.nameBegin(nm)
+def LevelBegin(nm):
+    reg.levelBegin(nm)
 
 
-def _NameEnd():
-    reg.nameEnd()
+def LevelEnd():
+    reg.levelEnd()
 
 
-def _SetParam(paramName, paramValue, paramPath):
-    reg.setParam(paramName, paramValue, paramPath)
+def SetArg(argName, argValue, argPath):
+    reg.setArg(argName, argValue, argPath)
 
 
-def _GetParam(paramName, preValue, postValue):
-    return reg.getParam(paramName, preValue, postValue)
+def GetArg(argName, defaultValue):
+    return reg.getArg(argName, defaultValue)
 
 
-def _SetColor(color):
-    reg.setParam(P_COLOR, color)
+def SetColor(color):
+    reg.setArg(ARG_COLOR, color)
 
 
-def _SetTransparency(argTransparency):
-    reg.setParam(P_TRANSPARENCY, argTransparency)
+def SetTransparency(argTransparency):
+    reg.setArg(ARG_TRANSPARENCY, argTransparency)
 
 
-def _SetMaterial(argMaterial):
-    reg.setParam(P_MATERIAL, argMaterial)
+def SetMaterial(argMaterial):
+    reg.setArg(ARG_MATERIAL, argMaterial)
 
 
-def _DoMove(dx, dy, dz):
+def DoHide():
+    scene.doHide()
+
+
+def DoMove(dx, dy, dz):
     trsf = gp_Trsf()
-    trsf.SetTranslation(gp_Vec(dx, dy, dz))
+    trsf.setTranslation(gp_Vec(dx, dy, dz))
     scene.doTrsf(trsf)
 
 
-def _DoRotate(pntAxFrom, pntAxTo, angle):
+def DoRotate(pntAxFrom, pntAxTo, angle):
     trsf = gp_Trsf()
     ax1 = gp_Ax1(pntAxFrom, gp_Dir(gp_Vec(pntAxFrom, pntAxTo)))
-    trsf.SetRotation(ax1, angle / 180 * math.pi)
+    trsf.setRotation(ax1, angle / 180 * math.pi)
     scene.doTrsf(trsf)
 
 
-def _DoRotateX(angle):
-    _DoRotate(gp_Pnt(0, 0, 0), gp_Pnt(1, 0, 0), angle)
+def DoRotateX(angle):
+    DoRotate(gp_Pnt(0, 0, 0), gp_Pnt(1, 0, 0), angle)
 
 
-def _DoRotateY(angle):
-    _DoRotate(gp_Pnt(0, 0, 0), gp_Pnt(0, 1, 0), angle)
+def DoRotateY(angle):
+    DoRotate(gp_Pnt(0, 0, 0), gp_Pnt(0, 1, 0), angle)
 
 
-def _DoRotateZ(angle):
-    _DoRotate(gp_Pnt(0, 0, 0), gp_Pnt(0, 0, 1), angle)
+def DoRotateZ(angle):
+    DoRotate(gp_Pnt(0, 0, 0), gp_Pnt(0, 0, 1), angle)
 
 
-def _DoDirect(pntFrom, pntTo):
+def DoDirect(pntFrom, pntTo):
 
     trsf = gp_Trsf()
 
@@ -358,87 +361,43 @@ def _DoDirect(pntFrom, pntTo):
     scene.doTrsf(trsf)
 
 
-def _DrawDummy():
-    scene.drawDummy()
+def DrawDummy():
+    DrawSphere(1)
+    DoHide()
 
 
-def _DrawShape(argShape):
-    shape = _GetParam(P_SHAPE, argShape, DEF_SHAPE)
-    material = _GetParam(P_MATERIAL, None, DEF_MATERIAL)
-    transparency = _GetParam(P_TRANSPARENCY, None, DEF_TRANSPARENCY)
-    color = _GetParam(P_COLOR, None, DEF_COLOR)
+def DrawShape(shape):
+    material = GetArg(ARG_MATERIAL, None)
+    transparency = GetArg(ARG_TRANSPARENCY, None)
+    color = GetArg(ARG_COLOR, None)
     scene.drawShape(shape, material, transparency, color)
 
 
-def _DrawSphere(argRadius):
-    radius = _GetParam(P_RADIUS, argRadius, DEF_RADIUS)
-    shape = comp.compute('computeSphere', radius)
-    _NameBegin('Shape')
-    _DrawShape(shape)
-    _NameEnd()
-
-
-def _DrawBox(argDx, argDy, argDz):
-    dx = _GetParam(P_DX, argDx, DEF_DX)
-    dy = _GetParam(P_DY, argDy, DEF_DY)
-    dz = _GetParam(P_DZ, argDz, DEF_DZ)
-    shape = comp.compute('computeBox', dx, dy, dz)
-    _NameBegin('Shape')
-    _DrawShape(shape)
-    _NameEnd()
-
-
-# ***************************************************
-# ***************************************************
-# ***************************************************
-
-def Point(argX, argY, argZ):
-    return gp_Pnt(argX, argY, argZ)
-
-
-def Render():
-    _Render()
-
-
-def SetColor(argColor):
-    _SetColor(argColor)
-
-
-def SetTransparency(argTransparency):
-    _SetTransparency(argTransparency)
-
-
-def SetMaterial(argMaterial):
-    _SetMaterial(argMaterial)
-
-
-def DoMove(dx, dy, dz):
-    _DoMove(dx, dy, dz)
-
-
-def DoRotate(pntAxFrom, pntAxTo, angle):
-    _DoRotate(pntAxFrom, pntAxTo, angle)
-
-
-def DoRotateX(angle):
-    _DoRotateX(angle)
-
-
-def DoRotateY(angle):
-    _DoRotateY(angle)
-
-
-def DoRotateZ(angle):
-    _DoRotateZ(angle)
-
-
-def DoDirect(pntFrom, pntTo):
-    _DoDirect(pntFrom, pntTo)
-
-
 def DrawSphere(argRadius):
-    _DrawSphere(argRadius)
+    radius = GetArg(ARG_RADIUS, argRadius)
+    shape = comp.compute('computeSphere', radius)
+    LevelBegin('Shape')
+    DrawShape(shape)
+    LevelEnd()
 
 
 def DrawBox(argDx, argDy, argDz):
-    _DrawBox(argDx, argDy, argDz)
+    dx = GetArg(ARG_DX, argDx)
+    dy = GetArg(ARG_DY, argDy)
+    dz = GetArg(ARG_DZ, argDz)
+    shape = comp.compute('computeBox', dx, dy, dz)
+    LevelBegin('Shape')
+    DrawShape(shape)
+    LevelEnd()
+
+
+def DrawCone(argRadius1, argRadius2, argHeight):
+    radius1 = GetArg(ARG_RADIUS_1, argRadius1)
+    radius2 = GetArg(ARG_RADIUS_2, argRadius2)
+    height = GetArg(ARG_HEIGHT, argHeight)
+    shape = comp.compute('computeCone', radius1, radius2, height)
+    LevelBegin('Shape')
+    DrawShape(shape)
+    LevelEnd()
+
+
