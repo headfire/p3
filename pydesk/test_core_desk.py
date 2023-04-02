@@ -236,7 +236,7 @@ tests = [
     TestPoint,
 ]
 
-TestRotate()
+TestLabel()
 Render()
 exit()
 

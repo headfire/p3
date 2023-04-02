@@ -87,9 +87,13 @@ FULL_VISIBLE_TRANSPARENCY = 0
 SEMI_VISIBLE_TRANSPARENCY = 0.5
 NO_VISIBLE_TRANSPARENCY = 1
 
-ARG_LABEL_HEIGHT_PX = 20  # not scaled
-ARG_LABEL_DELTA = 5
-ARG_LABEL_COLOR = NICE_WHITE_COLOR
+ARG_LABEL_HEIGHT_PX = 'ARG_LABEL_COLOR'
+ARG_LABEL_DELTA = 'ARG_LABEL_DELTA'
+ARG_LABEL_COLOR = 'ARG_LABEL_COLOR'
+
+LABEL_HEIGHT_PX = 20  # not scaled
+LABEL_DELTA = 5
+LABEL_COLOR = NICE_WHITE_COLOR
 
 POINT_RADIUS = 4
 LINE_RADIUS = 2
@@ -346,7 +350,7 @@ def GetArg(argName, defaultValue=None):
 
 
 def SetLabelColor(color):
-    reg.setArg(ARG_COLOR, color)
+    reg.setArg(ARG_LABEL_COLOR, color)
 
 
 def SetColor(color):
@@ -470,7 +474,7 @@ def DrawLabel(argPnt, argText):
     delta = LABEL_DELTA * GetArg(ARG_SCALE, 1)
     heightPx = LABEL_HEIGHT_PX * GetArg(ARG_SCALE_PX, 1)
     transparency = GetArg(ARG_TRANSPARENCY)
-    color = GetArg(ARG_COLOR)
+    color = GetArg(ARG_LABEL_COLOR, LABEL_COLOR)
     pnt = gp_Pnt(argPnt.XYZ())
     pnt.Translate(gp_Vec(delta, delta, delta))
     scene.drawLabel(pnt, argText, heightPx, color, transparency)
