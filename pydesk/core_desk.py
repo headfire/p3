@@ -561,8 +561,8 @@ def DrawVector(argPnt1, argPnt2):
 
     v = gp_Vec(pnt1, pnt2)
     vLen = v.Magnitude()
-    v *= (vLen - scaledArrowLength) / vLen
-    pntM = pnt1.Translated(v)
+    v *= -scaledArrowLength / vLen
+    pntM = pnt2.Translated(v)
     LevelBegin('Line')
     DrawLine(pnt1, pntM)
     LevelEnd()
@@ -585,15 +585,12 @@ def DrawArrow(argPnt1, argPnt2):
     scaledArrowRadius = arrowRadius * geomScale * mainScale
     scaledArrowLength = arrowLength * geomScale * mainScale
 
-    v1 = gp_Vec(pnt1, pnt2)
-    vLen1 = v1.Magnitude()
-    v1 *= scaledArrowLength / vLen1
-    pntM1 = pnt1.Translated(v1)
-
-    v2 = gp_Vec(pnt1, pnt2)
-    vLen2 = v1.Magnitude()
-    v2 *= -scaledArrowLength / vLen2
-    pntM2 = pnt2.Translated(v2)
+    v = gp_Vec(pnt1, pnt2)
+    vLen = v.Magnitude()
+    v *= scaledArrowLength / vLen
+    pntM1 = pnt1.Translated(v)
+    v *= -1
+    pntM2 = pnt2.Translated(v)
 
     LevelBegin('Line')
     DrawLine(pntM1, pntM2)
