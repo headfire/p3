@@ -11,18 +11,16 @@ from OCC.Core.gp import gp_Trsf, gp_Vec, gp_Dir, gp_Ax1, gp_Pnt
 from OCC.Core.BRepPrimAPI import BRepPrimAPI_MakeSphere, BRepPrimAPI_MakeBox, BRepPrimAPI_MakeCone, \
     BRepPrimAPI_MakeCylinder, BRepPrimAPI_MakeTorus
 
-#  from OCC.Core.BRepOffsetAPI import BRepOffsetAPI_MakePipe
-# from OCC.Core.BRepTools import BRepTools_WireExplorer
-# from OCC.Core.BRep import BRep_Tool
-# from OCC.Core.GC import GC_MakeCircle
-# from OCC.Core.Geom import Geom_CartesianPoint
+from OCC.Core.BRepOffsetAPI import BRepOffsetAPI_MakePipe
+from OCC.Core.BRepTools import BRepTools_WireExplorer
+from OCC.Core.BRep import BRep_Tool
+from OCC.Core.GC import GC_MakeCircle
 
-# from OCC.Core.BRepBuilderAPI import (BRepBuilderAPI_MakeEdge, BRepBuilderAPI_MakeWire,
-#                                      BRepBuilderAPI_MakeFace)
+from OCC.Core.BRepBuilderAPI import BRepBuilderAPI_MakeEdge, BRepBuilderAPI_MakeWire
+#                                      BRepBuilderAPI_MakeFace
 
 from OCC.Core.AIS import AIS_InteractiveObject, AIS_Shape, AIS_TextLabel
 
-#    , AIS_Point
 from OCC.Core.Quantity import Quantity_Color, Quantity_TypeOfColor
 # from OCC.Core.BRepBuilderAPI import BRepBuilderAPI_Transform
 from OCC.Core.Graphic3d import Graphic3d_MaterialAspect
@@ -41,6 +39,7 @@ ARG_PNT_1 = 'ARG_PNT_1'
 ARG_PNT_2 = 'ARG_PNT_2'
 ARG_TEXT = 'ARG_TEXT'
 ARG_SHAPE = 'ARG_SHAPE'
+ARG_WIRE = 'ARG_WIRE'
 
 VAR_MATERIAL = 'VAR_MATERIAL'
 VAR_COLOR = 'VAR_COLOR'
@@ -57,7 +56,7 @@ VAR_LABEL_COLOR = 'VAR_LABEL_COLOR'
 VAR_POINT_RADIUS = 'VAR_POINT_RADIUS'
 VAR_LINE_RADIUS = 'VAR_LINE_RADIUS'
 VAR_ARROW_RADIUS = 'VAR_ARROW_RADIUS'
-VAR_ARROW_LENGTH  = 'VAR_ARROW_LENGTH'
+VAR_ARROW_LENGTH = 'VAR_ARROW_LENGTH'
 VAR_FACE_WIDTH = 'VAR_FACE_WIDTH'
 
 VAR_DEFAULTS = {
@@ -68,7 +67,7 @@ VAR_DEFAULTS = {
     VAR_GEOM_SCALE: 1,
     VAR_LABEL_SCALE: 1,
 
-    VAR_LABEL_HEIGHT_PX: 20, # not scaled
+    VAR_LABEL_HEIGHT_PX: 20,  # not scaled
 
     VAR_LABEL_DELTA: 5,
     VAR_LABEL_COLOR: None,
@@ -79,7 +78,6 @@ VAR_DEFAULTS = {
     VAR_ARROW_LENGTH: 15,
     VAR_FACE_WIDTH: 1
 }
-
 
 BRASS_MATERIAL = Graphic3d_NameOfMaterial.Graphic3d_NOM_BRASS
 BRONZE_MATERIAL = Graphic3d_NameOfMaterial.Graphic3d_NOM_BRONZE
@@ -121,7 +119,6 @@ NICE_ORIGINAL_COLOR = 241 / 255, 79 / 255, 160 / 255
 FULL_VISIBLE_TRANSPARENCY = 0
 SEMI_VISIBLE_TRANSPARENCY = 0.5
 NO_VISIBLE_TRANSPARENCY = 1
-
 
 AO_SIZE_XYZ = 1189, 841, 1
 
@@ -209,8 +206,8 @@ class Scripting:
 
 
 class Registry:
-    def __init__(self, defs):
-        self.defs =  defs
+    def __init__(self, defaults):
+        self.defaults = defaults
         self.vars = {}
         self.levels = ['root']
 
@@ -242,8 +239,8 @@ class Registry:
             if notFullPath in self.vars:
                 return self.vars[notFullPath]
 
-        if varName in self.defs:
-            return self.defs[varName]
+        if varName in self.defaults:
+            return self.defaults[varName]
 
         return None
 
@@ -371,7 +368,7 @@ def SetVar(varName, varValue, varPath=None):
     reg.setVar(varName, varValue, varPath)
 
 
-def GetVar(varName, defaultValue = None):
+def GetVar(varName, defaultValue=None):
     return reg.getVar(varName, defaultValue)
 
 
@@ -438,30 +435,35 @@ def DoDirect(pntFrom, pntTo):
     scene.doTrsf(trsf)
 
 
-def DrawDummy():
-    DrawSphere(1)
-    DoHide()
+def DrawShape(argShape):
+    shape = GetVar(ARG_SHAPE, argShape)
 
-
-def DrawShape(shape):
     material = GetVar(VAR_MATERIAL)
     transparency = GetVar(VAR_TRANSPARENCY)
     color = GetVar(VAR_COLOR)
+
     scene.drawShape(shape, material, transparency, color)
 
 
 def DrawSphere(argRadius):
     radius = GetVar(ARG_RADIUS, argRadius)
+
     shape = comp.compute('computeSphere', radius)
     LevelBegin('Shape')
     DrawShape(shape)
     LevelEnd()
 
 
+def DrawDummy():
+    DrawSphere(1)
+    DoHide()
+
+
 def DrawBox(argX, argY, argZ):
     x = GetVar(ARG_X, argX)
     y = GetVar(ARG_Y, argY)
     z = GetVar(ARG_Z, argZ)
+
     shape = comp.compute('computeBox', x, y, z)
     LevelBegin('Shape')
     DrawShape(shape)
@@ -472,6 +474,7 @@ def DrawCone(argRadius1, argRadius2, argHeight):
     radius1 = GetVar(ARG_RADIUS_1, argRadius1)
     radius2 = GetVar(ARG_RADIUS_2, argRadius2)
     height = GetVar(ARG_HEIGHT, argHeight)
+
     shape = comp.compute('computeCone', radius1, radius2, height)
     LevelBegin('Shape')
     DrawShape(shape)
@@ -481,6 +484,7 @@ def DrawCone(argRadius1, argRadius2, argHeight):
 def DrawCylinder(argRadius, argHeight):
     radius = GetVar(ARG_RADIUS, argRadius)
     height = GetVar(ARG_HEIGHT, argHeight)
+
     shape = comp.compute('computeCylinder', radius, height)
     LevelBegin('Shape')
     DrawShape(shape)
@@ -490,6 +494,7 @@ def DrawCylinder(argRadius, argHeight):
 def DrawTorus(argRadius1, argRadius2):
     radius1 = GetVar(ARG_RADIUS_1, argRadius1)
     radius2 = GetVar(ARG_RADIUS_2, argRadius2)
+
     shape = comp.compute('computeTorus', radius1, radius2)
     LevelBegin('Shape')
     DrawShape(shape)
@@ -497,7 +502,6 @@ def DrawTorus(argRadius1, argRadius2):
 
 
 def DrawLabel(argPnt, argText):
-
     pnt = GetVar(ARG_PNT, argPnt)
     text = GetVar(ARG_TEXT, argText)
 
@@ -511,11 +515,10 @@ def DrawLabel(argPnt, argText):
     delta = labelDelta * mainScale
     heightPx = labelHeightPx * labelScale
     targetPnt = pnt.Translated(gp_Vec(delta, delta, delta))
-    scene.drawLabel(targetPnt, argText, heightPx, color, transparency)
+    scene.drawLabel(targetPnt, text, heightPx, color, transparency)
 
 
 def DrawPoint(argPnt):
-
     pnt = GetVar(ARG_PNT, argPnt)
 
     mainScale = GetVar(VAR_MAIN_SCALE)
@@ -530,7 +533,6 @@ def DrawPoint(argPnt):
 
 
 def DrawLine(argPnt1, argPnt2):
-
     pnt1 = GetVar(ARG_PNT_1, argPnt1)
     pnt2 = GetVar(ARG_PNT_2, argPnt2)
 
@@ -547,7 +549,6 @@ def DrawLine(argPnt1, argPnt2):
 
 
 def DrawVector(argPnt1, argPnt2):
-
     pnt1 = GetVar(ARG_PNT_1, argPnt1)
     pnt2 = GetVar(ARG_PNT_2, argPnt2)
 
@@ -573,7 +574,6 @@ def DrawVector(argPnt1, argPnt2):
 
 
 def DrawArrow(argPnt1, argPnt2):
-
     pnt1 = GetVar(ARG_PNT_1, argPnt1)
     pnt2 = GetVar(ARG_PNT_2, argPnt2)
 
@@ -604,25 +604,55 @@ def DrawArrow(argPnt1, argPnt2):
     LevelEnd()
     DoDirect(pntM2, pnt2)
 
-'''
 
-class VectorDraw(Draw):
-    def __init__(self, pnt1, pnt2):
-        super().__init__('vectorObj:vector-line')
+def helperCircleWire(pnt1, pnt2, pnt3):
+    geomCircle = GC_MakeCircle(pnt1, pnt2, pnt3).Value()
+    edge = BRepBuilderAPI_MakeEdge(geomCircle).Edge()
+    return BRepBuilderAPI_MakeWire(edge).Wire()
+
+
+def DrawWire(argWire):
+    wire = GetVar(ARG_WIRE, argWire)
+
+    wireRadius = GetVar(VAR_LINE_RADIUS)
+    mainScale = GetVar(VAR_MAIN_SCALE)
+    geomScale = GetVar(VAR_GEOM_SCALE)
+
+    scaledWireRadius = wireRadius * mainScale * geomScale
+
+    # getWireStartPointAndTangentDir:
+    ex = BRepTools_WireExplorer(wire)
+    edge = ex.Current()
+    vertex = ex.CurrentVertex()
+    aCurve, aFP, aLP = BRep_Tool.Curve(edge)
+    aP = aFP
+    tangentVec = gp_Vec()
+    tempPnt = gp_Pnt()
+    aCurve.D1(aP, tempPnt, tangentVec)
+    tangentDir = gp_Dir(tangentVec)
+    startPoint = BRep_Tool.Pnt(vertex)
+
+    profileCircle = GC_MakeCircle(startPoint, tangentDir, scaledWireRadius).Value()
+    profileEdge = BRepBuilderAPI_MakeEdge(profileCircle).Edge()
+    profileWire = BRepBuilderAPI_MakeWire(profileEdge).Wire()
+
+    shape = BRepOffsetAPI_MakePipe(wire, profileWire).Shape()
+    LevelBegin('Shape')
+    DrawShape(shape)
+    LevelEnd()
+
+
+'''
+class CircleDraw(Draw):
+    def __init__(self, pnt1, pnt2, pnt3):
+        super().__init__('circleObj:circle-line')
         self.pnt1 = pnt1
         self.pnt2 = pnt2
+        self.pnt3 = pnt3
 
-    def addStyledItems(self, style: Style):
-
-        arrowR = LINE_ARROW_RADIUS * style.GetVar(SCALE, 1) * style.GetVar(SCALE_GEOM, 1)
-        arrowL = LINE_ARROW_LENGTH * style.GetVar(SCALE, 1) * style.GetVar(SCALE_GEOM, 1) \
-            * style.GetVar(SCALE_ARROW, 1)
-
-        v = gp_Vec(self.pnt1, self.pnt2)
-        vLen = v.Magnitude()
-        v *= (vLen - arrowL) / vLen
-        pntM = self.pnt1.Translated(v)
-
-        self.addItem(LineDraw(self.pnt1, pntM))
-        self.addItem(ConeDraw(arrowR, 0, arrowL).doPs(Direct(pntM, self.pnt2)))
+    def addStyledItems(self, style:  Style):
+        aWireRadius = LINE_RADIUS * style.get(SCALE, 1) * style.get(SCALE_GEOM, 1)
+        wire = helperCircleWire(self.pnt1, self.pnt2, self.pnt3)
+        draw = WireDraw(wire, aWireRadius)
+        self.addItem(draw)
 '''

@@ -1,4 +1,6 @@
 from core_desk import *
+from OCC.Core.GC import GC_MakeArcOfCircle
+from math import pi
 
 
 def TestRender():
@@ -214,9 +216,8 @@ def TestPoint():
                 DrawPoint(Pnt(ix * 20, iy * 20, iz * 20))
                 DrawLabel(Pnt(ix * 20, iy * 20, iz * 20), 'P(' + str(ix) + ',' + str(iy) + ',' + str(iz) + ')')
 
-def TestLine():
 
-    pntC = Pnt(50, 50, 50)
+def TestLine():
 
     pnt000 = Pnt(0, 0, 0)
     pnt001 = Pnt(0, 0, 100)
@@ -312,6 +313,49 @@ def TestArrow():
     DrawArrow(pntC, pnt110)
     DrawArrow(pntC, pnt111)
 
+
+def getPntRotate(pCenter, p, angle):
+    ax = gp_Ax1(pCenter, gp_Dir(0, 0, 1))
+    pnt = gp_Pnt(p.XYZ())
+    pnt.Rotate(ax, angle)
+    return pnt
+
+
+def TestWire():
+
+    r = 50
+
+    r2 = r / 2
+
+    gpPntMinC = gp_Pnt(0, r2, 0)
+
+    origin = gp_Pnt(0, 0, 0)
+
+    p = {
+        0: origin,
+        1: getPntRotate(gpPntMinC, origin, -pi / 4),
+        2: gp_Pnt(-r2, r2, 0),
+        3: getPntRotate(gpPntMinC, origin, -pi / 4 * 3),
+        4: gp_Pnt(0, r, 0),
+        5: gp_Pnt(r, 0, 0),
+        6: gp_Pnt(0, -r, 0),
+        7: gp_Pnt(r2, -r2, 0)
+    }
+
+    arc0 = GC_MakeArcOfCircle(p[0], p[1], p[2]).Value()
+    arc1 = GC_MakeArcOfCircle(p[2], p[3], p[4]).Value()
+    arc2 = GC_MakeArcOfCircle(p[4], p[5], p[6]).Value()
+    arc3 = GC_MakeArcOfCircle(p[6], p[7], p[0]).Value()
+
+    edge0 = BRepBuilderAPI_MakeEdge(arc0).Edge()
+    edge1 = BRepBuilderAPI_MakeEdge(arc1).Edge()
+    edge2 = BRepBuilderAPI_MakeEdge(arc2).Edge()
+    edge3 = BRepBuilderAPI_MakeEdge(arc3).Edge()
+
+    wire = BRepBuilderAPI_MakeWire(edge0, edge1, edge2, edge3).Wire()
+    DrawWire(wire)
+
+
 tests = [
     TestRender,
     TestSimpleRender,
@@ -335,6 +379,7 @@ tests = [
     TestLine,
     TestVector,
     TestArrow,
+    TestWire,
 ]
 
 # TestLabel()
