@@ -282,6 +282,36 @@ def TestVector():
     DrawVector(pntC, pnt110)
     DrawVector(pntC, pnt111)
 
+
+def TestArrow():
+
+    pntC = Pnt(50, 50, 50)
+
+    pnt000 = Pnt(0, 0, 0)
+    pnt001 = Pnt(0, 0, 100)
+    pnt010 = Pnt(0, 100, 0)
+    pnt011 = Pnt(0, 100, 100)
+    pnt100 = Pnt(100, 0, 0)
+    pnt101 = Pnt(100, 0, 100)
+    pnt110 = Pnt(100, 100, 0)
+    pnt111 = Pnt(100, 100, 100)
+
+    DrawPoint(pnt000)
+    DrawPoint(pnt001)
+    DrawPoint(pnt010)
+    DrawPoint(pnt011)
+
+    SetColor(NICE_BLUE_COLOR)
+    DrawArrow(pntC, pnt000)
+    DrawArrow(pntC, pnt001)
+    DrawArrow(pntC, pnt010)
+    DrawArrow(pntC, pnt011)
+
+    DrawArrow(pntC, pnt100)
+    DrawArrow(pntC, pnt101)
+    DrawArrow(pntC, pnt110)
+    DrawArrow(pntC, pnt111)
+
 tests = [
     TestRender,
     TestSimpleRender,
@@ -304,6 +334,7 @@ tests = [
     TestPoint,
     TestLine,
     TestVector,
+    TestArrow,
 ]
 
 # TestLabel()

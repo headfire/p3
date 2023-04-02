@@ -572,6 +572,41 @@ def DrawVector(argPnt1, argPnt2):
     DoDirect(pntM, pnt2)
 
 
+def DrawArrow(argPnt1, argPnt2):
+
+    pnt1 = GetVar(ARG_PNT_1, argPnt1)
+    pnt2 = GetVar(ARG_PNT_2, argPnt2)
+
+    mainScale = GetVar(VAR_MAIN_SCALE)
+    geomScale = GetVar(VAR_GEOM_SCALE)
+    arrowRadius = GetVar(VAR_ARROW_RADIUS)
+    arrowLength = GetVar(VAR_ARROW_LENGTH)
+
+    scaledArrowRadius = arrowRadius * geomScale * mainScale
+    scaledArrowLength = arrowLength * geomScale * mainScale
+
+    v1 = gp_Vec(pnt1, pnt2)
+    vLen1 = v1.Magnitude()
+    v1 *= scaledArrowLength / vLen1
+    pntM1 = pnt1.Translated(v1)
+
+    v2 = gp_Vec(pnt1, pnt2)
+    vLen2 = v1.Magnitude()
+    v2 *= -scaledArrowLength / vLen2
+    pntM2 = pnt2.Translated(v2)
+
+    LevelBegin('Line')
+    DrawLine(pntM1, pntM2)
+    LevelEnd()
+    LevelBegin('Cone1')
+    DrawCone(scaledArrowRadius, 0, scaledArrowLength)
+    LevelEnd()
+    DoDirect(pntM1, pnt1)
+    LevelBegin('Cone2')
+    DrawCone(scaledArrowRadius, 0, scaledArrowLength)
+    LevelEnd()
+    DoDirect(pntM2, pnt2)
+
 '''
 
 class VectorDraw(Draw):
