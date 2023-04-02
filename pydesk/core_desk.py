@@ -3,13 +3,13 @@ from typing import Optional
 # from core_position import *
 from core_style import *
 
-from OCC.Core.TCollection import  TCollection_ExtendedString
+from OCC.Core.TCollection import TCollection_ExtendedString
 
 from OCC.Core.gp import gp_Trsf, gp_Vec, gp_Dir, gp_Ax1, gp_Pnt
 
 # from OCC.Core.gp import gp_Pnt, gp_Vec, gp_Dir
 from OCC.Core.BRepPrimAPI import BRepPrimAPI_MakeSphere, BRepPrimAPI_MakeBox, BRepPrimAPI_MakeCone, \
-       BRepPrimAPI_MakeCylinder, BRepPrimAPI_MakeTorus
+    BRepPrimAPI_MakeCylinder, BRepPrimAPI_MakeTorus
 
 #  from OCC.Core.BRepOffsetAPI import BRepOffsetAPI_MakePipe
 # from OCC.Core.BRepTools import BRepTools_WireExplorer
@@ -29,7 +29,6 @@ from OCC.Core.Graphic3d import Graphic3d_MaterialAspect
 
 from OCC.Display.SimpleGui import init_display
 
-
 ARG_MATERIAL = 'ARG_MATERIAL'
 ARG_COLOR = 'ARG_COLOR'
 ARG_TRANSPARENCY = 'ARG_TRANSPARENCY'
@@ -41,13 +40,11 @@ ARG_DX = 'ARG_DX'
 ARG_DY = 'ARG_DY'
 ARG_DZ = 'ARG_DZ'
 
-
 ARG_SCALE = 'ARG_SCALE'
 ARG_SCALE_GEOM = 'ARG_SCALE_GEOM'
 ARG_SCALE_ARROW = 'ARG_SCALE_ARROW'
 ARG_SCALE_PX = 'ARG_SCALE_PX'
 ARG_SCALE_STR = 'ARG_SCALE_STR'
-
 
 BRASS_MATERIAL = Graphic3d_NameOfMaterial.Graphic3d_NOM_BRASS
 BRONZE_MATERIAL = Graphic3d_NameOfMaterial.Graphic3d_NOM_BRONZE
@@ -90,8 +87,10 @@ FULL_VISIBLE_TRANSPARENCY = 0
 SEMI_VISIBLE_TRANSPARENCY = 0.5
 NO_VISIBLE_TRANSPARENCY = 1
 
-LABEL_HEIGHT_PX = 20  # not scaled
-LABEL_DELTA = 5
+ARG_LABEL_HEIGHT_PX = 20  # not scaled
+ARG_LABEL_DELTA = 5
+ARG_LABEL_COLOR = NICE_WHITE_COLOR
+
 POINT_RADIUS = 4
 LINE_RADIUS = 2
 LINE_ARROW_RADIUS = 4
@@ -158,7 +157,7 @@ class DeskComputer(Computer):
     @staticmethod
     def computeBox(argDx, argDy, argDz):
         return BRepPrimAPI_MakeBox(argDx, argDy, argDz).Shape()
-    
+
     @staticmethod
     def computeCone(argRadius1, argRadius2, argHeight):
         return BRepPrimAPI_MakeCone(argRadius1, argRadius2, argHeight).Shape()
@@ -322,6 +321,10 @@ def Pnt(x, y, z):
     return gp_Pnt(x, y, z)
 
 
+def Rgb(r, g, b):
+    return [r, g, b]
+
+
 def Render():
     scene.render()
 
@@ -342,6 +345,10 @@ def GetArg(argName, defaultValue=None):
     return reg.getArg(argName, defaultValue)
 
 
+def SetLabelColor(color):
+    reg.setArg(ARG_COLOR, color)
+
+
 def SetColor(color):
     reg.setArg(ARG_COLOR, color)
 
@@ -358,9 +365,9 @@ def DoHide():
     scene.doHide()
 
 
-def DoMove(dx, dy, dz):
+def DoMove(pnt):
     trsf = gp_Trsf()
-    trsf.SetTranslation(gp_Vec(dx, dy, dz))
+    trsf.SetTranslation(gp_Vec(pnt.X(), pnt.Y(), pnt.Z()))
     scene.doTrsf(trsf)
 
 
@@ -384,7 +391,6 @@ def DoRotateZ(angle):
 
 
 def DoDirect(pntFrom, pntTo):
-
     trsf = gp_Trsf()
 
     dirVec = gp_Vec(pntFrom, pntTo)
@@ -468,3 +474,48 @@ def DrawLabel(argPnt, argText):
     pnt = gp_Pnt(argPnt.XYZ())
     pnt.Translate(gp_Vec(delta, delta, delta))
     scene.drawLabel(pnt, argText, heightPx, color, transparency)
+
+
+def DrawPoint(pnt):
+    r = POINT_RADIUS * GetArg(ARG_SCALE, 1) * GetArg(ARG_SCALE_GEOM, 1)
+    LevelBegin('Sphere')
+    DrawSphere(r)
+    LevelEnd()
+    DoMove(pnt)
+
+
+'''
+class LineDraw(Draw):
+    def __init__(self, pnt1, pnt2):
+        super().__init__('directObj:direct-line')
+        self.pnt1 = pnt1
+        self.pnt2 = pnt2
+
+    def addStyledItems(self, style: Style):
+        r = LINE_RADIUS * style.get(SCALE, 1) * style.get(SCALE_GEOM, 1)
+        length = gp_Vec(self.pnt1, self.pnt2).Magnitude()
+        draw = CylinderDraw(r, length)
+        draw.position = Direct(self.pnt1, self.pnt2)
+        self.addItem(draw)
+
+
+class VectorDraw(Draw):
+    def __init__(self, pnt1, pnt2):
+        super().__init__('vectorObj:vector-line')
+        self.pnt1 = pnt1
+        self.pnt2 = pnt2
+
+    def addStyledItems(self, style: Style):
+
+        arrowR = LINE_ARROW_RADIUS * style.get(SCALE, 1) * style.get(SCALE_GEOM, 1)
+        arrowL = LINE_ARROW_LENGTH * style.get(SCALE, 1) * style.get(SCALE_GEOM, 1) \
+            * style.get(SCALE_ARROW, 1)
+
+        v = gp_Vec(self.pnt1, self.pnt2)
+        vLen = v.Magnitude()
+        v *= (vLen - arrowL) / vLen
+        pntM = self.pnt1.Translated(v)
+
+        self.addItem(LineDraw(self.pnt1, pntM))
+        self.addItem(ConeDraw(arrowR, 0, arrowL).doPs(Direct(pntM, self.pnt2)))
+'''

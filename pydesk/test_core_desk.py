@@ -14,7 +14,7 @@ def TestMove():
         for iy in [-1, 1]:
             for iz in [-1, 1]:
                 DrawSphere(10)
-                DoMove(ix * 20, iy * 20, iz * 20)
+                DoMove(Pnt(ix * 20, iy * 20, iz * 20))
 
 
 def TestColor():
@@ -24,7 +24,7 @@ def TestColor():
             for iz in range(n):
                 SetColor([ix / (n - 1), iy / (n - 1), iz / (n - 1)])
                 DrawSphere(10)
-                DoMove(ix * 30, iy * 30, iz * 30)
+                DoMove(Pnt(ix * 30, iy * 30, iz * 30))
 
 
 def TestTransparency():
@@ -35,7 +35,7 @@ def TestTransparency():
             for iz in range(n):
                 SetTransparency((ix + iy + iz) / ((n - 1) * 3))
                 DrawSphere(10)
-                DoMove(ix * 30, iy * 30, iz * 30)
+                DoMove(Pnt(ix * 30, iy * 30, iz * 30))
 
 
 def TestMaterial():
@@ -76,65 +76,65 @@ def TestMaterial():
         for iy in range(n):
             SetMaterial(mats[ix * 5 + iy])
             DrawSphere(10)
-            DoMove(ix * 30, iy * 30, 0)
+            DoMove(Pnt(ix * 30, iy * 30, 0))
 
 
 def TestRotate():
     SetMaterial(CHROME_MATERIAL)
     SetColor(NICE_BLUE_COLOR)
-    for i in range(10):
+    n = 24
+    for i in range(n):
         DrawSphere(10)
-        DoMove(40, 0, 0)
-        DoRotateZ(i * 360 / 10)
+        DoMove(Pnt(100, 0, 0))
+        DoRotateZ(i * 360 / n)
 
     SetMaterial(CHROME_MATERIAL)
     SetColor(NICE_YELLOW_COLOR)
-    for i in range(10):
+    for i in range(n):
         DrawSphere(10)
-        DoMove(80, 0, 0)
-        DoRotateY(i * 360 / 10)
+        DoMove(Pnt(100, 0, 0))
+        DoRotateY(i * 360 / n)
 
     SetMaterial(CHROME_MATERIAL)
     SetColor(NICE_RED_COLOR)
-    for i in range(10):
+    for i in range(n):
         DrawSphere(10)
-        DoMove(0, 120, 0)
-        DoRotateX(i * 360 / 10)
+        DoMove(Pnt(0, 100, 0))
+        DoRotateX(i * 360 / n)
 
     SetMaterial(CHROME_MATERIAL)
     SetColor(NICE_WHITE_COLOR)
-    for i in range(10):
+    for i in range(n):
         DrawSphere(10)
-        DoMove(0, 0, 0)
-        DoRotate(Pnt(0, 0, 50), Pnt(0, 100, 100), i * 360 / 20)
+        DoRotate(Pnt(0, 0, 50), Pnt(0, 100, 100), i * 360 / n)
 
 
 def TestDirect():
     DrawSphere(10)
 
     DrawSphere(10)
-    DoMove(100, 100, 500)
+    DoMove(Pnt(100, 100, 500))
     DrawSphere(10)
-    DoMove(-100, 100, 500)
+    DoMove(Pnt(-100, 100, 500))
     DrawSphere(10)
-    DoMove(-100, -100, 500)
+    DoMove(Pnt(-100, -100, 500))
     DrawSphere(10)
-    DoMove(100, -100, 500)
+    DoMove(Pnt(100, -100, 500))
 
     DrawCone(50, 0, 200)
-    DoMove(0, 0, 200)
+    DoMove(Pnt(0, 0, 200))
     DoDirect(Pnt(0, 0, 0), Pnt(100, 100, 500))
 
     DrawCone(50, 0, 200)
-    DoMove(0, 0, 200)
+    DoMove(Pnt(0, 0, 200))
     DoDirect(Pnt(0, 0, 0), Pnt(-100, 100, 500))
 
     DrawCone(50, 0, 200)
-    DoMove(0, 0, 200)
+    DoMove(Pnt(0, 0, 200))
     DoDirect(Pnt(0, 0, 0), Pnt(-100, -100, 500))
 
     DrawCone(50, 0, 200)
-    DoMove(0, 0, 200)
+    DoMove(Pnt(0, 0, 200))
     DoDirect(Pnt(0, 0, 0), Pnt(100, -100, 500))
 
 
@@ -151,19 +151,19 @@ def TestBox():
     SetTransparency(SEMI_VISIBLE_TRANSPARENCY)
 
     DrawBox(x, y, d)
-    DoMove(0, 0, z + d)
+    DoMove(Pnt(0, 0, z + d))
     DrawBox(x, y, d)
-    DoMove(0, 0, -d - d)
+    DoMove(Pnt(0, 0, -d - d))
 
     DrawBox(x, d, z)
-    DoMove(0, y + d, 0)
+    DoMove(Pnt(0, y + d, 0))
     DrawBox(x, d, z)
-    DoMove(0, -d - d, 0)
+    DoMove(Pnt(0, -d - d, 0))
 
     DrawBox(d, y, z)
-    DoMove(x + d, 0, 0)
+    DoMove(Pnt(x + d, 0, 0))
     DrawBox(d, y, z)
-    DoMove(-d - d, 0, 0)
+    DoMove(Pnt(-d - d, 0, 0))
 
 
 def TestSphere():
@@ -173,20 +173,20 @@ def TestSphere():
 def TestCone():
     for i in range(6):
         DrawCone(5 + i * 10, i * 10, 10)
-        DoMove(0, 0, -i * 10)
+        DoMove(Pnt(0, 0, -i * 10))
 
 
 def TestCylinder():
     for i in range(6):
         DrawCylinder(5 + i * 10, i + 2 + 5)
-        DoMove(0, 0, -i * 10)
+        DoMove(Pnt(0, 0, -i * 10))
 
 
 def TestTorus():
     DrawTorus(100, 20)
     DrawTorus(100, 20)
     DoRotateX(90)
-    DoMove(100, 0, 0)
+    DoMove(Pnt(100, 0, 0))
 
 
 def TestLabel():
@@ -197,10 +197,20 @@ def TestLabel():
                 SetColor(None)
                 SetTransparency(0)
                 DrawSphere(5)
-                DoMove(ix * 20, iy * 20, iz * 20)
+                DoMove(Pnt(ix * 20, iy * 20, iz * 20))
 
-                SetColor([0, 0, 0.5])
+                SetColor(Rgb(0, 0, 0.5))
                 SetTransparency(0.5)
+                DrawLabel(Pnt(ix * 20, iy * 20, iz * 20), 'P(' + str(ix) + ',' + str(iy) + ',' + str(iz) + ')')
+
+
+def TestPoint():
+    SetMaterial(CHROME_MATERIAL)
+    SetColor(NICE_BLUE_COLOR)
+    for ix in [-1, 1]:
+        for iy in [-1, 1]:
+            for iz in [-1, 1]:
+                DrawPoint(Pnt(ix * 20, iy * 20, iz * 20))
                 DrawLabel(Pnt(ix * 20, iy * 20, iz * 20), 'P(' + str(ix) + ',' + str(iy) + ',' + str(iz) + ')')
 
 
@@ -222,7 +232,13 @@ tests = [
     TestCylinder,
     TestTorus,
     TestLabel,
+
+    TestPoint,
 ]
+
+TestRotate()
+Render()
+exit()
 
 tests.pop()()
 Render()
