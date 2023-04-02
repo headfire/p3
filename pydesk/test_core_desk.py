@@ -334,7 +334,7 @@ tests = [
     TestPoint,
     TestLine,
     TestVector,
-   # TestArrow,
+    TestArrow,
 ]
 
 # TestLabel()
