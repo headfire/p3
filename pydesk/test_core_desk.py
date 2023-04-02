@@ -205,6 +205,7 @@ def TestLabel():
 
 
 def TestPoint():
+
     SetMaterial(CHROME_MATERIAL)
     SetColor(NICE_BLUE_COLOR)
     for ix in [-1, 1]:
@@ -212,6 +213,44 @@ def TestPoint():
             for iz in [-1, 1]:
                 DrawPoint(Pnt(ix * 20, iy * 20, iz * 20))
                 DrawLabel(Pnt(ix * 20, iy * 20, iz * 20), 'P(' + str(ix) + ',' + str(iy) + ',' + str(iz) + ')')
+
+def TestLine():
+
+    pntC = Pnt(50, 50, 50)
+
+    pnt000 = Pnt(0, 0, 0)
+    pnt001 = Pnt(0, 0, 100)
+    pnt010 = Pnt(0, 100, 0)
+    pnt011 = Pnt(0, 100, 100)
+    pnt100 = Pnt(100, 0, 0)
+    pnt101 = Pnt(100, 0, 100)
+    pnt110 = Pnt(100, 100, 0)
+    pnt111 = Pnt(100, 100, 100)
+
+    DrawPoint(pnt000)
+    DrawPoint(pnt001)
+    DrawPoint(pnt010)
+    DrawPoint(pnt011)
+    DrawPoint(pnt100)
+    DrawPoint(pnt101)
+    DrawPoint(pnt110)
+    DrawPoint(pnt111)
+
+    SetColor(NICE_BLUE_COLOR)
+    DrawLine(pnt000, pnt001)
+    DrawLine(pnt001, pnt011)
+    DrawLine(pnt011, pnt010)
+    DrawLine(pnt010, pnt000)
+
+    DrawLine(pnt100, pnt101)
+    DrawLine(pnt101, pnt111)
+    DrawLine(pnt111, pnt110)
+    DrawLine(pnt110, pnt100)
+
+    DrawLine(pnt000, pnt100)
+    DrawLine(pnt001, pnt101)
+    DrawLine(pnt010, pnt110)
+    DrawLine(pnt011, pnt111)
 
 
 tests = [
@@ -234,11 +273,12 @@ tests = [
     TestLabel,
 
     TestPoint,
+    TestLine,
 ]
 
-TestLabel()
-Render()
-exit()
+# TestLabel()
+# Render()
+# exit()
 
 tests.pop()()
 Render()

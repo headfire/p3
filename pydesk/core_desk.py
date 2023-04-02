@@ -29,22 +29,57 @@ from OCC.Core.Graphic3d import Graphic3d_MaterialAspect
 
 from OCC.Display.SimpleGui import init_display
 
-ARG_MATERIAL = 'ARG_MATERIAL'
-ARG_COLOR = 'ARG_COLOR'
-ARG_TRANSPARENCY = 'ARG_TRANSPARENCY'
 ARG_RADIUS = 'ARG_RADIUS'
 ARG_RADIUS_1 = 'ARG_RADIUS_1'
 ARG_RADIUS_2 = 'ARG_RADIUS_2'
 ARG_HEIGHT = 'ARG_HEIGHT'
-ARG_DX = 'ARG_DX'
-ARG_DY = 'ARG_DY'
-ARG_DZ = 'ARG_DZ'
+ARG_X = 'ARG_X'
+ARG_Y = 'ARG_Y'
+ARG_Z = 'ARG_Z'
+ARG_PNT = 'ARG_PNT'
+ARG_PNT_1 = 'ARG_PNT_1'
+ARG_PNT_2 = 'ARG_PNT_2'
+ARG_TEXT = 'ARG_TEXT'
+ARG_SHAPE = 'ARG_SHAPE'
 
-ARG_SCALE = 'ARG_SCALE'
-ARG_SCALE_GEOM = 'ARG_SCALE_GEOM'
-ARG_SCALE_ARROW = 'ARG_SCALE_ARROW'
-ARG_SCALE_PX = 'ARG_SCALE_PX'
-ARG_SCALE_STR = 'ARG_SCALE_STR'
+VAR_MATERIAL = 'VAR_MATERIAL'
+VAR_COLOR = 'VAR_COLOR'
+VAR_TRANSPARENCY = 'VAR_TRANSPARENCY'
+
+VAR_MAIN_SCALE = 'VAR_MAIN_SCALE'
+VAR_GEOM_SCALE = 'VAR_GEOM_SCALE'
+VAR_LABEL_SCALE = 'VAR_LABEL_SCALE'
+
+VAR_LABEL_HEIGHT_PX = 'VAR_LABEL_HEIGHT_PX'
+VAR_LABEL_DELTA = 'VAR_LABEL_DELTA'
+VAR_LABEL_COLOR = 'VAR_LABEL_COLOR'
+
+VAR_POINT_RADIUS = 'VAR_POINT_RADIUS'
+VAR_LINE_RADIUS = 'VAR_LINE_RADIUS'
+VAR_ARROW_RADIUS = 'VAR_ARROW_RADIUS'
+VAR_ARROW_LENGTH  = 'VAR_ARROW_LENGTH'
+VAR_FACE_WIDTH = 'VAR_FACE_WIDTH'
+
+VAR_DEFAULTS = {
+    VAR_MATERIAL: None,
+    VAR_COLOR: None,
+    VAR_TRANSPARENCY: None,
+    VAR_MAIN_SCALE: 1,
+    VAR_GEOM_SCALE: 1,
+    VAR_LABEL_SCALE: 1,
+
+    VAR_LABEL_HEIGHT_PX: 20, # not scaled
+
+    VAR_LABEL_DELTA: 5,
+    VAR_LABEL_COLOR: None,
+
+    VAR_POINT_RADIUS: 4,
+    VAR_LINE_RADIUS: 2,
+    VAR_ARROW_RADIUS: 4,
+    VAR_ARROW_LENGTH: 15,
+    VAR_FACE_WIDTH: 1
+}
+
 
 BRASS_MATERIAL = Graphic3d_NameOfMaterial.Graphic3d_NOM_BRASS
 BRONZE_MATERIAL = Graphic3d_NameOfMaterial.Graphic3d_NOM_BRONZE
@@ -87,19 +122,6 @@ FULL_VISIBLE_TRANSPARENCY = 0
 SEMI_VISIBLE_TRANSPARENCY = 0.5
 NO_VISIBLE_TRANSPARENCY = 1
 
-ARG_LABEL_HEIGHT_PX = 'ARG_LABEL_COLOR'
-ARG_LABEL_DELTA = 'ARG_LABEL_DELTA'
-ARG_LABEL_COLOR = 'ARG_LABEL_COLOR'
-
-LABEL_HEIGHT_PX = 20  # not scaled
-LABEL_DELTA = 5
-LABEL_COLOR = NICE_WHITE_COLOR
-
-POINT_RADIUS = 4
-LINE_RADIUS = 2
-LINE_ARROW_RADIUS = 4
-LINE_ARROW_LENGTH = 15
-FACE_WIDTH = 1
 
 AO_SIZE_XYZ = 1189, 841, 1
 
@@ -187,37 +209,41 @@ class Scripting:
 
 
 class Registry:
-    def __init__(self):
-        self.regs = {}
+    def __init__(self, defs):
+        self.defs =  defs
+        self.vars = {}
         self.levels = ['root']
 
-    def setArg(self, argName, argValue, argSubPath=None):
+    def setVar(self, varName, varValue, varSubPath):
         path = ''
         for levelName in self.levels:
             path += '.' + levelName
-        if argSubPath is not None:
-            path += '.' + argSubPath
-        self.regs[path + '-' + argName] = argValue
+        if varSubPath is not None:
+            path += '.' + varSubPath
+        self.vars[path + '-' + varName] = varValue
 
-    def getArg(self, argName, defaultValue=None):
+    def getVar(self, varName, defaultValue):
 
         path = ''
         paths = []
         for levelName in self.levels:
             path += '.' + levelName
-            paths.append(path + '-' + argName)
+            paths.append(path + '-' + varName)
 
         fullPath = paths.pop()
-        if fullPath in self.regs:
-            return self.regs[fullPath]
+        if fullPath in self.vars:
+            return self.vars[fullPath]
 
         if defaultValue is not None:
             return defaultValue
 
         while len(paths) > 0:
             notFullPath = paths.pop()
-            if notFullPath in self.regs:
-                return self.regs[notFullPath]
+            if notFullPath in self.vars:
+                return self.vars[notFullPath]
+
+        if varName in self.defs:
+            return self.defs[varName]
 
         return None
 
@@ -311,14 +337,14 @@ class Scene:
 
 scene = Scene()
 comp = DeskComputer()
-reg = Registry()
+reg = Registry(VAR_DEFAULTS)
 
 
 def Clear():
     global scene, comp, reg
     scene = Scene()
     comp = DeskComputer()
-    reg = Registry()
+    reg = Registry(VAR_DEFAULTS)
 
 
 def Pnt(x, y, z):
@@ -341,28 +367,28 @@ def LevelEnd():
     reg.levelEnd()
 
 
-def SetArg(argName, argValue, argPath):
-    reg.setArg(argName, argValue, argPath)
+def SetVar(varName, varValue, varPath=None):
+    reg.setVar(varName, varValue, varPath)
 
 
-def GetArg(argName, defaultValue=None):
-    return reg.getArg(argName, defaultValue)
+def GetVar(varName, defaultValue = None):
+    return reg.getVar(varName, defaultValue)
 
 
 def SetLabelColor(color):
-    reg.setArg(ARG_LABEL_COLOR, color)
+    SetVar(VAR_LABEL_COLOR, color)
 
 
 def SetColor(color):
-    reg.setArg(ARG_COLOR, color)
+    SetVar(VAR_COLOR, color)
 
 
-def SetTransparency(argTransparency):
-    reg.setArg(ARG_TRANSPARENCY, argTransparency)
+def SetTransparency(transparency):
+    SetVar(VAR_TRANSPARENCY, transparency)
 
 
-def SetMaterial(argMaterial):
-    reg.setArg(ARG_MATERIAL, argMaterial)
+def SetMaterial(material):
+    SetVar(VAR_MATERIAL, material)
 
 
 def DoHide():
@@ -418,34 +444,34 @@ def DrawDummy():
 
 
 def DrawShape(shape):
-    material = GetArg(ARG_MATERIAL, None)
-    transparency = GetArg(ARG_TRANSPARENCY, None)
-    color = GetArg(ARG_COLOR, None)
+    material = GetVar(VAR_MATERIAL)
+    transparency = GetVar(VAR_TRANSPARENCY)
+    color = GetVar(VAR_COLOR)
     scene.drawShape(shape, material, transparency, color)
 
 
 def DrawSphere(argRadius):
-    radius = GetArg(ARG_RADIUS, argRadius)
+    radius = GetVar(ARG_RADIUS, argRadius)
     shape = comp.compute('computeSphere', radius)
     LevelBegin('Shape')
     DrawShape(shape)
     LevelEnd()
 
 
-def DrawBox(argDx, argDy, argDz):
-    dx = GetArg(ARG_DX, argDx)
-    dy = GetArg(ARG_DY, argDy)
-    dz = GetArg(ARG_DZ, argDz)
-    shape = comp.compute('computeBox', dx, dy, dz)
+def DrawBox(argX, argY, argZ):
+    x = GetVar(ARG_X, argX)
+    y = GetVar(ARG_Y, argY)
+    z = GetVar(ARG_Z, argZ)
+    shape = comp.compute('computeBox', x, y, z)
     LevelBegin('Shape')
     DrawShape(shape)
     LevelEnd()
 
 
 def DrawCone(argRadius1, argRadius2, argHeight):
-    radius1 = GetArg(ARG_RADIUS_1, argRadius1)
-    radius2 = GetArg(ARG_RADIUS_2, argRadius2)
-    height = GetArg(ARG_HEIGHT, argHeight)
+    radius1 = GetVar(ARG_RADIUS_1, argRadius1)
+    radius2 = GetVar(ARG_RADIUS_2, argRadius2)
+    height = GetVar(ARG_HEIGHT, argHeight)
     shape = comp.compute('computeCone', radius1, radius2, height)
     LevelBegin('Shape')
     DrawShape(shape)
@@ -453,8 +479,8 @@ def DrawCone(argRadius1, argRadius2, argHeight):
 
 
 def DrawCylinder(argRadius, argHeight):
-    radius = GetArg(ARG_RADIUS, argRadius)
-    height = GetArg(ARG_HEIGHT, argHeight)
+    radius = GetVar(ARG_RADIUS, argRadius)
+    height = GetVar(ARG_HEIGHT, argHeight)
     shape = comp.compute('computeCylinder', radius, height)
     LevelBegin('Shape')
     DrawShape(shape)
@@ -462,8 +488,8 @@ def DrawCylinder(argRadius, argHeight):
 
 
 def DrawTorus(argRadius1, argRadius2):
-    radius1 = GetArg(ARG_RADIUS_1, argRadius1)
-    radius2 = GetArg(ARG_RADIUS_2, argRadius2)
+    radius1 = GetVar(ARG_RADIUS_1, argRadius1)
+    radius2 = GetVar(ARG_RADIUS_2, argRadius2)
     shape = comp.compute('computeTorus', radius1, radius2)
     LevelBegin('Shape')
     DrawShape(shape)
@@ -471,21 +497,54 @@ def DrawTorus(argRadius1, argRadius2):
 
 
 def DrawLabel(argPnt, argText):
-    delta = LABEL_DELTA * GetArg(ARG_SCALE, 1)
-    heightPx = LABEL_HEIGHT_PX * GetArg(ARG_SCALE_PX, 1)
-    transparency = GetArg(ARG_TRANSPARENCY)
-    color = GetArg(ARG_LABEL_COLOR, LABEL_COLOR)
-    pnt = gp_Pnt(argPnt.XYZ())
-    pnt.Translate(gp_Vec(delta, delta, delta))
-    scene.drawLabel(pnt, argText, heightPx, color, transparency)
+
+    pnt = GetVar(ARG_PNT, argPnt)
+    text = GetVar(ARG_TEXT, argText)
+
+    transparency = GetVar(VAR_TRANSPARENCY)
+    color = GetVar(VAR_LABEL_COLOR)
+    mainScale = GetVar(VAR_MAIN_SCALE)
+    labelScale = GetVar(VAR_LABEL_SCALE)
+    labelHeightPx = GetVar(LABEL_HEIGHT_PX)
+    labelDelta = GetVar(LABEL_DELTA)
+
+    delta = labelDelta * mainScale
+    heightPx = labelHeightPx * labelScale
+    targetPnt = gp_Pnt(pnt.XYZ())
+    targetPnt.Translate(gp_Vec(delta, delta, delta))
+    scene.drawLabel(targetPnt, argText, heightPx, color, transparency)
 
 
-def DrawPoint(pnt):
-    r = POINT_RADIUS * GetArg(ARG_SCALE, 1) * GetArg(ARG_SCALE_GEOM, 1)
+def DrawPoint(argPnt):
+
+    pnt = GetVar(ARG_PNT, argPnt)
+
+    mainScale = GetVar(VAR_MAIN_SCALE)
+    geomScale = GetVar(VAR_GEOM_SCALE)
+    pointRadius = GetVar(VAR_POINT_RADIUS)
+
+    r = pointRadius * geomScale * mainScale
     LevelBegin('Sphere')
     DrawSphere(r)
     LevelEnd()
     DoMove(pnt)
+
+
+def DrawLine(argPnt1, argPnt2):
+
+    pnt1 = GetVar(ARG_PNT_1, argPnt1)
+    pnt2 = GetVar(ARG_PNT_2, argPnt2)
+
+    mainScale = GetVar(VAR_MAIN_SCALE)
+    geomScale = GetVar(VAR_GEOM_SCALE)
+    lineRadius = GetVar(VAR_LINE_RADIUS)
+
+    r = lineRadius * mainScale * geomScale
+    length = gp_Vec(pnt1, pnt2).Magnitude()
+    LevelBegin('Cylinder')
+    DrawCylinder(r, length)
+    LevelEnd()
+    DoDirect(pnt1, pnt2)
 
 
 '''
@@ -496,11 +555,6 @@ class LineDraw(Draw):
         self.pnt2 = pnt2
 
     def addStyledItems(self, style: Style):
-        r = LINE_RADIUS * style.get(SCALE, 1) * style.get(SCALE_GEOM, 1)
-        length = gp_Vec(self.pnt1, self.pnt2).Magnitude()
-        draw = CylinderDraw(r, length)
-        draw.position = Direct(self.pnt1, self.pnt2)
-        self.addItem(draw)
 
 
 class VectorDraw(Draw):
@@ -511,9 +565,9 @@ class VectorDraw(Draw):
 
     def addStyledItems(self, style: Style):
 
-        arrowR = LINE_ARROW_RADIUS * style.get(SCALE, 1) * style.get(SCALE_GEOM, 1)
-        arrowL = LINE_ARROW_LENGTH * style.get(SCALE, 1) * style.get(SCALE_GEOM, 1) \
-            * style.get(SCALE_ARROW, 1)
+        arrowR = LINE_ARROW_RADIUS * style.GetVar(SCALE, 1) * style.GetVar(SCALE_GEOM, 1)
+        arrowL = LINE_ARROW_LENGTH * style.GetVar(SCALE, 1) * style.GetVar(SCALE_GEOM, 1) \
+            * style.GetVar(SCALE_ARROW, 1)
 
         v = gp_Vec(self.pnt1, self.pnt2)
         vLen = v.Magnitude()
