@@ -195,10 +195,12 @@ def TestLabel():
             for iz in [-1, 1]:
 
                 SetColor(None)
+                SetTransparency(0)
                 DrawSphere(5)
                 DoMove(ix * 20, iy * 20, iz * 20)
 
-                SetColor(NICE_BLUE_COLOR)
+                SetColor([0, 0, 0.5])
+                SetTransparency(0.5)
                 DrawLabel(Pnt(ix * 20, iy * 20, iz * 20), 'P(' + str(ix) + ',' + str(iy) + ',' + str(iz) + ')')
 
 
