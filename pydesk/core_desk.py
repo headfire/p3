@@ -655,4 +655,7 @@ def DrawCircle(argPnt1, argPnt2, argPnt3):
     geomCircle = GC_MakeCircle(pnt1, pnt2, pnt3).Value()
     edge = BRepBuilderAPI_MakeEdge(geomCircle).Edge()
     wire = BRepBuilderAPI_MakeWire(edge).Wire()
+
+    LevelBegin('Wire')
     DrawWire(wire)
+    LevelEnd
