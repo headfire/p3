@@ -1,15 +1,15 @@
 from core_desk import *
 
 
-def DrawTestNull():
+def TestRender():
     pass
 
 
-def DrawTestSphere():
+def TestSimpleRender():
     DrawSphere(15)
 
 
-def DrawTestMove():
+def TestMove():
     for ix in [-1, 1]:
         for iy in [-1, 1]:
             for iz in [-1, 1]:
@@ -17,7 +17,7 @@ def DrawTestMove():
                 DoMove(ix * 20, iy * 20, iz * 20)
 
 
-def DrawTestColor():
+def TestColor():
     n = 5
     for ix in range(n):
         for iy in range(n):
@@ -27,7 +27,7 @@ def DrawTestColor():
                 DoMove(ix * 30, iy * 30, iz * 30)
 
 
-def DrawTestTransparency():
+def TestTransparency():
     SetColor(NICE_BLUE_COLOR)
     n = 5
     for ix in range(n):
@@ -38,7 +38,7 @@ def DrawTestTransparency():
                 DoMove(ix * 30, iy * 30, iz * 30)
 
 
-def DrawTestMaterial():
+def TestMaterial():
     mats = [
         BRASS_MATERIAL,
         BRONZE_MATERIAL,
@@ -79,35 +79,7 @@ def DrawTestMaterial():
             DoMove(ix * 30, iy * 30, 0)
 
 
-def DrawTestBox():
-    x, y, z = 10, 15, 20
-    d = 3
-
-    SetMaterial(CHROME_MATERIAL)
-
-    SetColor(NICE_YELLOW_COLOR)
-    DrawBox(x, y, z)
-
-    SetColor(NICE_BLUE_COLOR)
-    SetTransparency(SEMI_VISIBLE_TRANSPARENCY)
-
-    DrawBox(x, y, d)
-    DoMove(0, 0, z + d)
-    DrawBox(x, y, d)
-    DoMove(0, 0, -d - d)
-
-    DrawBox(x, d, z)
-    DoMove(0, y + d, 0)
-    DrawBox(x, d, z)
-    DoMove(0, -d - d, 0)
-
-    DrawBox(d, y, z)
-    DoMove(x + d, 0, 0)
-    DrawBox(d, y, z)
-    DoMove(-d - d, 0, 0)
-
-
-def DrawTestRotate():
+def TestRotate():
 
     SetMaterial(CHROME_MATERIAL)
     SetColor(NICE_BLUE_COLOR)
@@ -138,7 +110,7 @@ def DrawTestRotate():
         DoRotate(Pnt(0, 0, 50), Pnt(0, 100, 100), i * 360 / 20)
 
 
-def DrawTestDirect():
+def TestDirect():
     DrawSphere(10)
 
     DrawSphere(10)
@@ -166,15 +138,83 @@ def DrawTestDirect():
     DoMove(0,0,200)
     DoDirect(Pnt(0,0,0),Pnt(100,-100,500))
 
-# DrawTestNull()
-# DrawTestSphere()
-# DrawTestMove()
-# DrawTestColor()
-# DrawTestTransparency()
-# DrawTestMaterial()
-# DrawTestBox()
-# DrawTestRotate()
 
-DrawTestDirect()
+def TestBox():
+    x, y, z = 10, 15, 20
+    d = 3
 
+    SetMaterial(CHROME_MATERIAL)
+
+    SetColor(NICE_YELLOW_COLOR)
+    DrawBox(x, y, z)
+
+    SetColor(NICE_BLUE_COLOR)
+    SetTransparency(SEMI_VISIBLE_TRANSPARENCY)
+
+    DrawBox(x, y, d)
+    DoMove(0, 0, z + d)
+    DrawBox(x, y, d)
+    DoMove(0, 0, -d - d)
+
+    DrawBox(x, d, z)
+    DoMove(0, y + d, 0)
+    DrawBox(x, d, z)
+    DoMove(0, -d - d, 0)
+
+    DrawBox(d, y, z)
+    DoMove(x + d, 0, 0)
+    DrawBox(d, y, z)
+    DoMove(-d - d, 0, 0)
+
+
+def TestSphere():
+    DrawSphere(15)
+
+
+def TestCone():
+    for i in range(6):
+        DrawCone(5+i*10, i*10, 10)
+        DoMove(0, 0, -i*10)
+
+
+def TestCylinder():
+    for i in range(6):
+        DrawCylinder(5+i*10, i+2+5)
+        DoMove(0, 0, -i*10)
+
+
+def TestTorus():
+    DrawTorus(100, 20)
+    DrawTorus(100, 20)
+    DoRotateX(90)
+    DoMove(100,0,0)
+
+
+tests = [
+  TestRender,
+  TestSimpleRender,
+
+  TestColor,
+  TestTransparency,
+  TestMaterial,
+
+  TestMove,
+  TestRotate,
+  TestDirect,
+
+  TestSphere,
+  TestBox,
+  TestCone,
+  TestCylinder,
+  TestTorus
+  ]
+
+tests.pop()()
 Render()
+
+'''
+for test in tests:
+    Clear()
+    test()
+    Render()
+'''

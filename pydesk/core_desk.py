@@ -6,10 +6,9 @@ from core_style import *
 from OCC.Core.gp import gp_Trsf, gp_Vec, gp_Dir, gp_Ax1, gp_Pnt
 
 # from OCC.Core.gp import gp_Pnt, gp_Vec, gp_Dir
-from OCC.Core.BRepPrimAPI import BRepPrimAPI_MakeSphere, BRepPrimAPI_MakeBox, BRepPrimAPI_MakeCone
+from OCC.Core.BRepPrimAPI import BRepPrimAPI_MakeSphere, BRepPrimAPI_MakeBox, BRepPrimAPI_MakeCone, \
+       BRepPrimAPI_MakeCylinder, BRepPrimAPI_MakeTorus
 
-# , BRepPrimAPI_MakeCone, \
-# BRepPrimAPI_MakeCylinder, BRepPrimAPI_MakeTorus
 #  from OCC.Core.BRepOffsetAPI import BRepOffsetAPI_MakePipe
 # from OCC.Core.BRepTools import BRepTools_WireExplorer
 # from OCC.Core.BRep import BRep_Tool
@@ -162,6 +161,14 @@ class DeskComputer(Computer):
     def computeCone(argRadius1, argRadius2, argHeight):
         return BRepPrimAPI_MakeCone(argRadius1, argRadius2, argHeight).Shape()
 
+    @staticmethod
+    def computeCylinder(argRadius, argHeight):
+        return BRepPrimAPI_MakeCylinder(argRadius, argHeight).Shape()
+
+    @staticmethod
+    def computeTorus(argRadius1, argRadius2):
+        return BRepPrimAPI_MakeTorus(argRadius1, argRadius2).Shape()
+
 
 class Scripting:
     def __init__(self):
@@ -279,6 +286,13 @@ class Scene:
 scene = Scene()
 comp = DeskComputer()
 reg = Registry()
+
+
+def Clear():
+    global scene, comp, reg
+    scene = Scene()
+    comp = DeskComputer()
+    reg = Registry()
 
 
 def Pnt(x, y, z):
@@ -404,3 +418,20 @@ def DrawCone(argRadius1, argRadius2, argHeight):
     DrawShape(shape)
     LevelEnd()
 
+
+def DrawCylinder(argRadius, argHeight):
+    radius = GetArg(ARG_RADIUS, argRadius)
+    height = GetArg(ARG_HEIGHT, argHeight)
+    shape = comp.compute('computeCylinder', radius, height)
+    LevelBegin('Shape')
+    DrawShape(shape)
+    LevelEnd()
+
+
+def DrawTorus(argRadius1, argRadius2):
+    radius1 = GetArg(ARG_RADIUS_1, argRadius1)
+    radius2 = GetArg(ARG_RADIUS_2, argRadius2)
+    shape = comp.compute('computeTorus', radius1, radius2)
+    LevelBegin('Shape')
+    DrawShape(shape)
+    LevelEnd()
