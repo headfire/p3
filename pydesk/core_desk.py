@@ -3,6 +3,8 @@ from typing import Optional
 # from core_position import *
 from core_style import *
 
+from OCC.Core.TCollection import  TCollection_ExtendedString
+
 from OCC.Core.gp import gp_Trsf, gp_Vec, gp_Dir, gp_Ax1, gp_Pnt
 
 # from OCC.Core.gp import gp_Pnt, gp_Vec, gp_Dir
@@ -18,7 +20,7 @@ from OCC.Core.BRepPrimAPI import BRepPrimAPI_MakeSphere, BRepPrimAPI_MakeBox, BR
 # from OCC.Core.BRepBuilderAPI import (BRepBuilderAPI_MakeEdge, BRepBuilderAPI_MakeWire,
 #                                      BRepBuilderAPI_MakeFace)
 
-from OCC.Core.AIS import AIS_Shape
+from OCC.Core.AIS import AIS_InteractiveObject, AIS_Shape, AIS_TextLabel
 
 #    , AIS_Point
 from OCC.Core.Quantity import Quantity_Color, Quantity_TypeOfColor
@@ -237,6 +239,8 @@ class Scene:
         for ais in self.rootsAis:
             display.Context.Display(ais, False)
 
+        # display.DisplayMessage(labelPnt, text, heightPx, color, False)
+
         display.FitAll()
         display_start()
 
@@ -247,7 +251,7 @@ class Scene:
         self.currentAis = self.parentAis
         self.parentAis = self.parentAis.Parent()
 
-    def draw(self, ais: AIS_Shape):
+    def drawAis(self, ais: AIS_InteractiveObject):
         if self.parentAis is None:
             self.rootsAis.append(ais)
         else:
@@ -280,7 +284,26 @@ class Scene:
             qColor = Quantity_Color(r, g, b, Quantity_TypeOfColor(Quantity_TypeOfColor.Quantity_TOC_RGB))
             ais.SetColor(qColor)
 
-        self.draw(ais)
+        self.drawAis(ais)
+
+    def drawLabel(self, pnt, text, height, color, transparency):
+        # labelPnt = pnt.Transformed(position.trsf)
+        # self.display.DisplayMessage(labelPnt, text, heightPx, color, False)
+        ais = AIS_TextLabel()
+
+        ais.SetText(TCollection_ExtendedString(text, True))
+        ais.SetPosition(pnt)
+        ais.SetHeight(height)
+
+        if transparency is not None:
+            ais.SetTransparency(transparency)
+
+        if color is not None:
+            r, g, b = color
+            qColor = Quantity_Color(r, g, b, Quantity_TypeOfColor(Quantity_TypeOfColor.Quantity_TOC_RGB))
+            ais.SetColor(qColor)
+
+        self.drawAis(ais)
 
 
 scene = Scene()
@@ -315,7 +338,7 @@ def SetArg(argName, argValue, argPath):
     reg.setArg(argName, argValue, argPath)
 
 
-def GetArg(argName, defaultValue):
+def GetArg(argName, defaultValue=None):
     return reg.getArg(argName, defaultValue)
 
 
@@ -435,3 +458,13 @@ def DrawTorus(argRadius1, argRadius2):
     LevelBegin('Shape')
     DrawShape(shape)
     LevelEnd()
+
+
+def DrawLabel(argPnt, argText):
+    delta = LABEL_DELTA * GetArg(ARG_SCALE, 1)
+    heightPx = LABEL_HEIGHT_PX * GetArg(ARG_SCALE_PX, 1)
+    transparency = GetArg(ARG_TRANSPARENCY)
+    color = GetArg(ARG_COLOR)
+    pnt = gp_Pnt(argPnt.XYZ())
+    pnt.Translate(gp_Vec(delta, delta, delta))
+    scene.drawLabel(pnt, argText, heightPx, color, transparency)

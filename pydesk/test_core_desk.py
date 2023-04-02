@@ -80,7 +80,6 @@ def TestMaterial():
 
 
 def TestRotate():
-
     SetMaterial(CHROME_MATERIAL)
     SetColor(NICE_BLUE_COLOR)
     for i in range(10):
@@ -114,29 +113,29 @@ def TestDirect():
     DrawSphere(10)
 
     DrawSphere(10)
-    DoMove(100,100,500)
+    DoMove(100, 100, 500)
     DrawSphere(10)
-    DoMove(-100,100,500)
+    DoMove(-100, 100, 500)
     DrawSphere(10)
-    DoMove(-100,-100,500)
+    DoMove(-100, -100, 500)
     DrawSphere(10)
-    DoMove(100,-100,500)
+    DoMove(100, -100, 500)
 
-    DrawCone(50,0,200)
-    DoMove(0,0,200)
-    DoDirect(Pnt(0,0,0),Pnt(100,100,500))
+    DrawCone(50, 0, 200)
+    DoMove(0, 0, 200)
+    DoDirect(Pnt(0, 0, 0), Pnt(100, 100, 500))
 
-    DrawCone(50,0,200)
-    DoMove(0,0,200)
-    DoDirect(Pnt(0,0,0),Pnt(-100,100,500))
+    DrawCone(50, 0, 200)
+    DoMove(0, 0, 200)
+    DoDirect(Pnt(0, 0, 0), Pnt(-100, 100, 500))
 
-    DrawCone(50,0,200)
-    DoMove(0,0,200)
-    DoDirect(Pnt(0,0,0),Pnt(-100,-100,500))
+    DrawCone(50, 0, 200)
+    DoMove(0, 0, 200)
+    DoDirect(Pnt(0, 0, 0), Pnt(-100, -100, 500))
 
-    DrawCone(50,0,200)
-    DoMove(0,0,200)
-    DoDirect(Pnt(0,0,0),Pnt(100,-100,500))
+    DrawCone(50, 0, 200)
+    DoMove(0, 0, 200)
+    DoDirect(Pnt(0, 0, 0), Pnt(100, -100, 500))
 
 
 def TestBox():
@@ -173,41 +172,55 @@ def TestSphere():
 
 def TestCone():
     for i in range(6):
-        DrawCone(5+i*10, i*10, 10)
-        DoMove(0, 0, -i*10)
+        DrawCone(5 + i * 10, i * 10, 10)
+        DoMove(0, 0, -i * 10)
 
 
 def TestCylinder():
     for i in range(6):
-        DrawCylinder(5+i*10, i+2+5)
-        DoMove(0, 0, -i*10)
+        DrawCylinder(5 + i * 10, i + 2 + 5)
+        DoMove(0, 0, -i * 10)
 
 
 def TestTorus():
     DrawTorus(100, 20)
     DrawTorus(100, 20)
     DoRotateX(90)
-    DoMove(100,0,0)
+    DoMove(100, 0, 0)
+
+
+def TestLabel():
+    for ix in [-1, 1]:
+        for iy in [-1, 1]:
+            for iz in [-1, 1]:
+
+                SetColor(None)
+                DrawSphere(5)
+                DoMove(ix * 20, iy * 20, iz * 20)
+
+                SetColor(NICE_BLUE_COLOR)
+                DrawLabel(Pnt(ix * 20, iy * 20, iz * 20), 'P(' + str(ix) + ',' + str(iy) + ',' + str(iz) + ')')
 
 
 tests = [
-  TestRender,
-  TestSimpleRender,
+    TestRender,
+    TestSimpleRender,
 
-  TestColor,
-  TestTransparency,
-  TestMaterial,
+    TestColor,
+    TestTransparency,
+    TestMaterial,
 
-  TestMove,
-  TestRotate,
-  TestDirect,
+    TestMove,
+    TestRotate,
+    TestDirect,
 
-  TestSphere,
-  TestBox,
-  TestCone,
-  TestCylinder,
-  TestTorus
-  ]
+    TestSphere,
+    TestBox,
+    TestCone,
+    TestCylinder,
+    TestTorus,
+    TestLabel,
+]
 
 tests.pop()()
 Render()
