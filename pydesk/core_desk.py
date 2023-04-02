@@ -37,6 +37,7 @@ ARG_Z = 'ARG_Z'
 ARG_PNT = 'ARG_PNT'
 ARG_PNT_1 = 'ARG_PNT_1'
 ARG_PNT_2 = 'ARG_PNT_2'
+ARG_PNT_3 = 'ARG_PNT_3'
 ARG_TEXT = 'ARG_TEXT'
 ARG_SHAPE = 'ARG_SHAPE'
 ARG_WIRE = 'ARG_WIRE'
@@ -549,6 +550,7 @@ def DrawLine(argPnt1, argPnt2):
 
 
 def DrawVector(argPnt1, argPnt2):
+
     pnt1 = GetVar(ARG_PNT_1, argPnt1)
     pnt2 = GetVar(ARG_PNT_2, argPnt2)
 
@@ -574,6 +576,7 @@ def DrawVector(argPnt1, argPnt2):
 
 
 def DrawArrow(argPnt1, argPnt2):
+
     pnt1 = GetVar(ARG_PNT_1, argPnt1)
     pnt2 = GetVar(ARG_PNT_2, argPnt2)
 
@@ -606,6 +609,7 @@ def DrawArrow(argPnt1, argPnt2):
 
 
 def helperCircleWire(pnt1, pnt2, pnt3):
+
     geomCircle = GC_MakeCircle(pnt1, pnt2, pnt3).Value()
     edge = BRepBuilderAPI_MakeEdge(geomCircle).Edge()
     return BRepBuilderAPI_MakeWire(edge).Wire()
@@ -642,17 +646,13 @@ def DrawWire(argWire):
     LevelEnd()
 
 
-'''
-class CircleDraw(Draw):
-    def __init__(self, pnt1, pnt2, pnt3):
-        super().__init__('circleObj:circle-line')
-        self.pnt1 = pnt1
-        self.pnt2 = pnt2
-        self.pnt3 = pnt3
+def DrawCircle(argPnt1, argPnt2, argPnt3):
 
-    def addStyledItems(self, style:  Style):
-        aWireRadius = LINE_RADIUS * style.get(SCALE, 1) * style.get(SCALE_GEOM, 1)
-        wire = helperCircleWire(self.pnt1, self.pnt2, self.pnt3)
-        draw = WireDraw(wire, aWireRadius)
-        self.addItem(draw)
-'''
+    pnt1 = GetVar(ARG_PNT_1, argPnt1)
+    pnt2 = GetVar(ARG_PNT_2, argPnt2)
+    pnt3 = GetVar(ARG_PNT_3, argPnt3)
+
+    geomCircle = GC_MakeCircle(pnt1, pnt2, pnt3).Value()
+    edge = BRepBuilderAPI_MakeEdge(geomCircle).Edge()
+    wire = BRepBuilderAPI_MakeWire(edge).Wire()
+    DrawWire(wire)

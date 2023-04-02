@@ -356,6 +356,24 @@ def TestWire():
     DrawWire(wire)
 
 
+def TestCircle():
+
+    pnt1 = Pnt(0, 0, 0)
+    pnt2 = Pnt(100, 0, 0)
+    pnt3 = Pnt(50, 70, 0)
+    pnt4 = Pnt(50, 50, 70)
+
+    DrawPoint(pnt1)
+    DrawPoint(pnt2)
+    DrawPoint(pnt3)
+    DrawPoint(pnt4)
+
+    DrawCircle(pnt1,pnt2, pnt3)
+    DrawCircle(pnt1,pnt2, pnt4)
+    DrawCircle(pnt1,pnt3, pnt4)
+    DrawCircle(pnt2,pnt3, pnt4)
+
+
 tests = [
     TestRender,
     TestSimpleRender,
@@ -380,6 +398,7 @@ tests = [
     TestVector,
     TestArrow,
     TestWire,
+    TestCircle,
 ]
 
 # TestLabel()
