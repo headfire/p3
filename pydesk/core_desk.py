@@ -510,8 +510,7 @@ def DrawLabel(argPnt, argText):
 
     delta = labelDelta * mainScale
     heightPx = labelHeightPx * labelScale
-    targetPnt = gp_Pnt(pnt.XYZ())
-    targetPnt.Translate(gp_Vec(delta, delta, delta))
+    targetPnt = pnt.Translated(gp_Vec(delta, delta, delta))
     scene.drawLabel(targetPnt, argText, heightPx, color, transparency)
 
 
@@ -547,15 +546,33 @@ def DrawLine(argPnt1, argPnt2):
     DoDirect(pnt1, pnt2)
 
 
+def DrawVector(argPnt1, argPnt2):
+
+    pnt1 = GetVar(ARG_PNT_1, argPnt1)
+    pnt2 = GetVar(ARG_PNT_2, argPnt2)
+
+    mainScale = GetVar(VAR_MAIN_SCALE)
+    geomScale = GetVar(VAR_GEOM_SCALE)
+    arrowRadius = GetVar(VAR_ARROW_RADIUS)
+    arrowLength = GetVar(VAR_ARROW_LENGTH)
+
+    scaledArrowRadius = arrowRadius * geomScale * mainScale
+    scaledArrowLength = arrowLength * geomScale * mainScale
+
+    v = gp_Vec(pnt1, pnt2)
+    vLen = v.Magnitude()
+    v *= (vLen - scaledArrowLength) / vLen
+    pntM = pnt1.Translated(v)
+    LevelBegin('Line')
+    DrawLine(pnt1, pntM)
+    LevelEnd()
+    LevelBegin('Cone')
+    DrawCone(scaledArrowRadius, 0, scaledArrowLength)
+    LevelEnd()
+    DoDirect(pntM, pnt2)
+
+
 '''
-class LineDraw(Draw):
-    def __init__(self, pnt1, pnt2):
-        super().__init__('directObj:direct-line')
-        self.pnt1 = pnt1
-        self.pnt2 = pnt2
-
-    def addStyledItems(self, style: Style):
-
 
 class VectorDraw(Draw):
     def __init__(self, pnt1, pnt2):

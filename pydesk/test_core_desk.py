@@ -253,6 +253,35 @@ def TestLine():
     DrawLine(pnt011, pnt111)
 
 
+def TestVector():
+
+    pntC = Pnt(50, 50, 50)
+
+    pnt000 = Pnt(0, 0, 0)
+    pnt001 = Pnt(0, 0, 100)
+    pnt010 = Pnt(0, 100, 0)
+    pnt011 = Pnt(0, 100, 100)
+    pnt100 = Pnt(100, 0, 0)
+    pnt101 = Pnt(100, 0, 100)
+    pnt110 = Pnt(100, 100, 0)
+    pnt111 = Pnt(100, 100, 100)
+
+    DrawPoint(pnt000)
+    DrawPoint(pnt001)
+    DrawPoint(pnt010)
+    DrawPoint(pnt011)
+
+    SetColor(NICE_BLUE_COLOR)
+    DrawVector(pntC, pnt000)
+    DrawVector(pntC, pnt001)
+    DrawVector(pntC, pnt010)
+    DrawVector(pntC, pnt011)
+
+    DrawVector(pntC, pnt100)
+    DrawVector(pntC, pnt101)
+    DrawVector(pntC, pnt110)
+    DrawVector(pntC, pnt111)
+
 tests = [
     TestRender,
     TestSimpleRender,
@@ -274,6 +303,7 @@ tests = [
 
     TestPoint,
     TestLine,
+    TestVector,
 ]
 
 # TestLabel()
