@@ -26,12 +26,22 @@ from OCC.Core.Graphic3d import Graphic3d_MaterialAspect
 from OCC.Display.SimpleGui import init_display
 
 
-def Pnt(x, y, z):
+def _coord(pnt):
+    return pnt.X(), pnt.Y(), pnt.Z()
+
+
+def _pnt(coord):
+    x, y, z = coord
     return gp_Pnt(x, y, z)
 
 
-def Vec(x, y, z):
+def _vec(coord1):
+    x, y, z = coord1
     return gp_Vec(x, y, z)
+
+
+def Decart(x, y, z):
+    return x, y, z
 
 
 def Rgb(r, g, b):
@@ -97,10 +107,10 @@ ARG_HEIGHT = 'ARG_HEIGHT'
 ARG_X = 'ARG_X'
 ARG_Y = 'ARG_Y'
 ARG_Z = 'ARG_Z'
-ARG_PNT = 'ARG_PNT'
-ARG_PNT_1 = 'ARG_PNT_1'
-ARG_PNT_2 = 'ARG_PNT_2'
-ARG_PNT_3 = 'ARG_PNT_3'
+ARG_COORD = 'ARG_PNT'
+ARG_COORD_1 = 'ARG_COORD_1'
+ARG_COORD_2 = 'ARG_COORD_2'
+ARG_COORD_3 = 'ARG_COORD_3'
 ARG_TEXT = 'ARG_TEXT'
 ARG_SHAPE = 'ARG_SHAPE'
 ARG_WIRE = 'ARG_WIRE'
@@ -432,35 +442,35 @@ def DoHide():
     scene.doHide()
 
 
-def DoMove(vec):
+def DoMove(moveCoord):
     trsf = gp_Trsf()
-    trsf.SetTranslation(vec)
+    trsf.SetTranslation(_vec(moveCoord))
     scene.doTrsf(trsf)
 
 
-def DoRotate(axFromPnt, axToPnt, angle):
+def DoRotate(axFromCoord, axToCoord, angle):
     trsf = gp_Trsf()
-    ax1 = gp_Ax1(axFromPnt, gp_Dir(gp_Vec(axFromPnt, axToPnt)))
+    ax1 = gp_Ax1(_pnt(axFromCoord), gp_Dir(gp_Vec(_pnt(axFromCoord), axToCoord)))
     trsf.SetRotation(ax1, angle / 180 * math.pi)
     scene.doTrsf(trsf)
 
 
 def DoRotateX(angle):
-    DoRotate(Pnt(0, 0, 0), Pnt(1, 0, 0), angle)
+    DoRotate(Decart(0, 0, 0), Decart(1, 0, 0), angle)
 
 
 def DoRotateY(angle):
-    DoRotate(Pnt(0, 0, 0), Pnt(0, 1, 0), angle)
+    DoRotate(Decart(0, 0, 0), Decart(0, 1, 0), angle)
 
 
 def DoRotateZ(angle):
-    DoRotate(Pnt(0, 0, 0), Pnt(0, 0, 1), angle)
+    DoRotate(Decart(0, 0, 0), Decart(0, 0, 1), angle)
 
 
-def DoDirect(fromPnt, toPnt):
+def DoDirect(fromCoord, toCoord):
     trsf = gp_Trsf()
 
-    dirVec = gp_Vec(fromPnt, toPnt)
+    dirVec = gp_Vec(_pnt(fromCoord), _pnt(toCoord))
     targetDir = gp_Dir(dirVec)
 
     rotateAngle = gp_Dir(0, 0, 1).Angle(targetDir)
@@ -471,7 +481,7 @@ def DoDirect(fromPnt, toPnt):
         rotateDir = gp_Dir(0, 1, 0)
 
     trsf.SetRotation(gp_Ax1(gp_Pnt(0, 0, 0), rotateDir), rotateAngle)
-    trsf.SetTranslationPart(gp_Vec(gp_Pnt(0, 0, 0), fromPnt))
+    trsf.SetTranslationPart(gp_Vec(gp_Pnt(0, 0, 0), fromCoord))
     scene.doTrsf(trsf)
 
 
@@ -485,8 +495,8 @@ def DrawShape(argShape):
     scene.drawShape(shape, material, transparency, color)
 
 
-def DrawLabel(argPnt, argText):
-    pnt = GetVar(ARG_PNT, argPnt)
+def DrawLabel(argCoord, argText):
+    pnt = GetVar(ARG_COORD, argCoord)
     text = GetVar(ARG_TEXT, argText)
 
     transparency = GetVar(VAR_TRANSPARENCY)
@@ -558,8 +568,9 @@ def DrawTorus(argRadius1, argRadius2):
     LevelEnd()
 
 
-def DrawPoint(argPnt):
-    pnt = GetVar(ARG_PNT, argPnt)
+def DrawPoint(argCoord):
+
+    coord = GetVar(ARG_COORD, argCoord)
 
     mainScale = GetVar(VAR_MAIN_SCALE)
     geomScale = GetVar(VAR_GEOM_SCALE)
@@ -569,13 +580,17 @@ def DrawPoint(argPnt):
 
     LevelBegin('Sphere')
     DrawSphere(r)
-    DoMove(pnt)
+    DoMove(coord)
     LevelEnd()
 
 
-def DrawLine(argPnt1, argPnt2):
-    pnt1 = GetVar(ARG_PNT_1, argPnt1)
-    pnt2 = GetVar(ARG_PNT_2, argPnt2)
+def DrawLine(argCoord1, argCoord2):
+
+    coord1 = GetVar(ARG_COORD_1, argCoord1)
+    coord2 = GetVar(ARG_COORD_2, argCoord2)
+
+    pnt1 = _pnt(coord1)
+    pnt2 = _pnt(coord2)
 
     mainScale = GetVar(VAR_MAIN_SCALE)
     geomScale = GetVar(VAR_GEOM_SCALE)
@@ -586,13 +601,17 @@ def DrawLine(argPnt1, argPnt2):
 
     LevelBegin('Cylinder')
     DrawCylinder(r, length)
-    DoDirect(pnt1, pnt2)
+    DoDirect(_coord(pnt1), _coord(pnt2))
     LevelEnd()
 
 
-def DrawVector(argPnt1, argPnt2):
-    pnt1 = GetVar(ARG_PNT_1, argPnt1)
-    pnt2 = GetVar(ARG_PNT_2, argPnt2)
+def DrawVector(argCoord1, argCoord2):
+
+    coord1 = GetVar(ARG_COORD_1, argCoord1)
+    coord2 = GetVar(ARG_COORD_2, argCoord2)
+
+    pnt1 = _pnt(coord1)
+    pnt2 = _pnt(coord2)
 
     mainScale = GetVar(VAR_MAIN_SCALE)
     geomScale = GetVar(VAR_GEOM_SCALE)
@@ -617,9 +636,13 @@ def DrawVector(argPnt1, argPnt2):
     LevelEnd()
 
 
-def DrawArrow(argPnt1, argPnt2):
-    pnt1 = GetVar(ARG_PNT_1, argPnt1)
-    pnt2 = GetVar(ARG_PNT_2, argPnt2)
+def DrawArrow(argCoord1, argCoord2):
+
+    coord1 = GetVar(ARG_COORD_1, argCoord1)
+    coord2 = GetVar(ARG_COORD_2, argCoord2)
+
+    pnt1 = _pnt(coord1)
+    pnt2 = _pnt(coord2)
 
     mainScale = GetVar(VAR_MAIN_SCALE)
     geomScale = GetVar(VAR_GEOM_SCALE)
@@ -686,10 +709,15 @@ def DrawWire(argWire):
     LevelEnd()
 
 
-def DrawCircle(argPnt1, argPnt2, argPnt3):
-    pnt1 = GetVar(ARG_PNT_1, argPnt1)
-    pnt2 = GetVar(ARG_PNT_2, argPnt2)
-    pnt3 = GetVar(ARG_PNT_3, argPnt3)
+def DrawCircle(argCoord1, argCoord2, argCoord3):
+
+    coord1 = GetVar(ARG_COORD_1, argCoord1)
+    coord2 = GetVar(ARG_COORD_2, argCoord2)
+    coord3 = GetVar(ARG_COORD_3, argCoord3)
+
+    pnt1 = _pnt(coord1)
+    pnt2 = _pnt(coord2)
+    pnt3 = _pnt(coord3)
 
     geomCircle = GC_MakeCircle(pnt1, pnt2, pnt3).Value()
     edge = BRepBuilderAPI_MakeEdge(geomCircle).Edge()
@@ -724,18 +752,18 @@ def DrawDesk():
     LevelBegin('BoardBox')
     SetStyle(boardStyle)
     DrawBox(bsx, bsy, bsz)
-    DoMove(Vec(-bsx / 2, -bsy / 2, -bsz-psz))
+    DoMove(Decart(-bsx / 2, -bsy / 2, -bsz-psz))
     LevelEnd()
 
     LevelBegin('PaperBox')
     SetStyle(paperStyle)
     DrawBox(psx, psy, psz)
-    DoMove(Vec(-psx / 2, -psy / 2, -psz))
+    DoMove(Decart(-psx / 2, -psy / 2, -psz))
     LevelEnd()
 
     LevelBegin('DeskLabel')
     SetStyle(textStyle)
-    DrawLabel(Pnt(-bsx / 2, -bsy / 2, bsz*3), textStr)
+    DrawLabel(Decart(-bsx / 2, -bsy / 2, bsz*3), textStr)
     LevelEnd()
 
     dx = (paperSizeX / 2 - pinOffset * mainScale)
@@ -752,5 +780,5 @@ def DrawDesk():
     for pinName, x, y in pins:
         LevelBegin(pinName)
         DrawCylinder(pinRadius * mainScale, pinHeight * mainScale)
-        DoMove(Vec(x, y, 0))
+        DoMove(Decart(x, y, 0))
         LevelEnd()
