@@ -496,8 +496,11 @@ def DrawShape(argShape):
 
 
 def DrawLabel(argCoord, argText):
-    pnt = GetVar(ARG_COORD, argCoord)
+
+    coord = GetVar(ARG_COORD, argCoord)
     text = GetVar(ARG_TEXT, argText)
+
+    pnt = _pnt(coord)
 
     transparency = GetVar(VAR_TRANSPARENCY)
     color = GetVar(VAR_COLOR)
