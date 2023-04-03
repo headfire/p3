@@ -251,35 +251,6 @@ def TestLine():
     DrawLine(pnt011, pnt111)
 
 
-def TestVector():
-    pntC = Decart(50, 50, 50)
-
-    pnt000 = Decart(0, 0, 0)
-    pnt001 = Decart(0, 0, 100)
-    pnt010 = Decart(0, 100, 0)
-    pnt011 = Decart(0, 100, 100)
-    pnt100 = Decart(100, 0, 0)
-    pnt101 = Decart(100, 0, 100)
-    pnt110 = Decart(100, 100, 0)
-    pnt111 = Decart(100, 100, 100)
-
-    DrawPoint(pnt000)
-    DrawPoint(pnt001)
-    DrawPoint(pnt010)
-    DrawPoint(pnt011)
-
-    SetColor(NICE_BLUE_COLOR)
-    DrawVector(pntC, pnt000)
-    DrawVector(pntC, pnt001)
-    DrawVector(pntC, pnt010)
-    DrawVector(pntC, pnt011)
-
-    DrawVector(pntC, pnt100)
-    DrawVector(pntC, pnt101)
-    DrawVector(pntC, pnt110)
-    DrawVector(pntC, pnt111)
-
-
 def TestArrow():
     pntC = Decart(50, 50, 50)
 
@@ -307,6 +278,35 @@ def TestArrow():
     DrawArrow(pntC, pnt101)
     DrawArrow(pntC, pnt110)
     DrawArrow(pntC, pnt111)
+
+
+def TestArrow2():
+    pntC = Decart(50, 50, 50)
+
+    pnt000 = Decart(0, 0, 0)
+    pnt001 = Decart(0, 0, 100)
+    pnt010 = Decart(0, 100, 0)
+    pnt011 = Decart(0, 100, 100)
+    pnt100 = Decart(100, 0, 0)
+    pnt101 = Decart(100, 0, 100)
+    pnt110 = Decart(100, 100, 0)
+    pnt111 = Decart(100, 100, 100)
+
+    DrawPoint(pnt000)
+    DrawPoint(pnt001)
+    DrawPoint(pnt010)
+    DrawPoint(pnt011)
+
+    SetColor(NICE_BLUE_COLOR)
+    DrawArrow2(pntC, pnt000)
+    DrawArrow2(pntC, pnt001)
+    DrawArrow2(pntC, pnt010)
+    DrawArrow2(pntC, pnt011)
+
+    DrawArrow2(pntC, pnt100)
+    DrawArrow2(pntC, pnt101)
+    DrawArrow2(pntC, pnt110)
+    DrawArrow2(pntC, pnt111)
 
 
 def getPntRotate(pCenter, p, angle):
@@ -371,6 +371,10 @@ def TestDesk():
     DrawDesk()
 
 
+def TestAxis():
+    DrawAxis(Decart(0, 0, 0), Decart(300, 300, 300), 10)
+
+
 tests = [
     TestRender,
     TestSimpleRender,
@@ -392,8 +396,8 @@ tests = [
 
     TestPoint,
     TestLine,
-    TestVector,
     TestArrow,
+    TestArrow2,
     TestWire,
     TestCircle,
     TestDesk,
