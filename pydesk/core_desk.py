@@ -1,13 +1,11 @@
 import math
 from typing import Optional
-# from core_position import *
-from core_style import *
 
+from OCC.Core.Graphic3d import Graphic3d_NameOfMaterial
 from OCC.Core.TCollection import TCollection_ExtendedString
 
 from OCC.Core.gp import gp_Trsf, gp_Vec, gp_Dir, gp_Ax1, gp_Pnt
 
-# from OCC.Core.gp import gp_Pnt, gp_Vec, gp_Dir
 from OCC.Core.BRepPrimAPI import BRepPrimAPI_MakeSphere, BRepPrimAPI_MakeBox, BRepPrimAPI_MakeCone, \
     BRepPrimAPI_MakeCylinder, BRepPrimAPI_MakeTorus
 
@@ -27,58 +25,22 @@ from OCC.Core.Graphic3d import Graphic3d_MaterialAspect
 
 from OCC.Display.SimpleGui import init_display
 
-ARG_RADIUS = 'ARG_RADIUS'
-ARG_RADIUS_1 = 'ARG_RADIUS_1'
-ARG_RADIUS_2 = 'ARG_RADIUS_2'
-ARG_HEIGHT = 'ARG_HEIGHT'
-ARG_X = 'ARG_X'
-ARG_Y = 'ARG_Y'
-ARG_Z = 'ARG_Z'
-ARG_PNT = 'ARG_PNT'
-ARG_PNT_1 = 'ARG_PNT_1'
-ARG_PNT_2 = 'ARG_PNT_2'
-ARG_PNT_3 = 'ARG_PNT_3'
-ARG_TEXT = 'ARG_TEXT'
-ARG_SHAPE = 'ARG_SHAPE'
-ARG_WIRE = 'ARG_WIRE'
 
-VAR_MATERIAL = 'VAR_MATERIAL'
-VAR_COLOR = 'VAR_COLOR'
-VAR_TRANSPARENCY = 'VAR_TRANSPARENCY'
+def Pnt(x, y, z):
+    return gp_Pnt(x, y, z)
 
-VAR_MAIN_SCALE = 'VAR_MAIN_SCALE'
-VAR_GEOM_SCALE = 'VAR_GEOM_SCALE'
-VAR_LABEL_SCALE = 'VAR_LABEL_SCALE'
 
-VAR_LABEL_HEIGHT_PX = 'VAR_LABEL_HEIGHT_PX'
-VAR_LABEL_DELTA = 'VAR_LABEL_DELTA'
-VAR_LABEL_COLOR = 'VAR_LABEL_COLOR'
+def Vec(x, y, z):
+    return gp_Vec(x, y, z)
 
-VAR_POINT_RADIUS = 'VAR_POINT_RADIUS'
-VAR_LINE_RADIUS = 'VAR_LINE_RADIUS'
-VAR_ARROW_RADIUS = 'VAR_ARROW_RADIUS'
-VAR_ARROW_LENGTH = 'VAR_ARROW_LENGTH'
-VAR_FACE_WIDTH = 'VAR_FACE_WIDTH'
 
-VAR_DEFAULTS = {
-    VAR_MATERIAL: None,
-    VAR_COLOR: None,
-    VAR_TRANSPARENCY: None,
-    VAR_MAIN_SCALE: 1,
-    VAR_GEOM_SCALE: 1,
-    VAR_LABEL_SCALE: 1,
+def Rgb(r, g, b):
+    return r, g, b
 
-    VAR_LABEL_HEIGHT_PX: 20,  # not scaled
 
-    VAR_LABEL_DELTA: 5,
-    VAR_LABEL_COLOR: None,
+def Style(material, color, transparency, texture):
+    return material, color, transparency, texture
 
-    VAR_POINT_RADIUS: 4,
-    VAR_LINE_RADIUS: 2,
-    VAR_ARROW_RADIUS: 4,
-    VAR_ARROW_LENGTH: 15,
-    VAR_FACE_WIDTH: 1
-}
 
 BRASS_MATERIAL = Graphic3d_NameOfMaterial.Graphic3d_NOM_BRASS
 BRONZE_MATERIAL = Graphic3d_NameOfMaterial.Graphic3d_NOM_BRONZE
@@ -121,20 +83,97 @@ FULL_VISIBLE_TRANSPARENCY = 0
 SEMI_VISIBLE_TRANSPARENCY = 0.5
 NO_VISIBLE_TRANSPARENCY = 1
 
-AO_SIZE_XYZ = 1189, 841, 1
+A0_M_1_1_DESK = ('A0 M1:1', 1, 1)
+A0_M_5_1_DESK = ('A0 M5:1', 5, 1)
 
-M_1_1_SCALE = (1, 1)
-M_5_1_SCALE = (5, 1)
+# *************************************************
+# *************************************************
+# *************************************************
 
-DESK_HEIGHT = 20
-DESK_BORDER_SIZE = 60
-DESK_PAPER_SIZE = 1189, 841, 1
-DESK_AXIS_SIZE = 300
-DESK_COORD_MARK_DIV = 6
-DESK_PIN_OFFSET = 30
-DESK_PIN_RADIUS = 10
-DESK_PIN_HEIGHT = 2
-DESK_DEFAULT_DRAW_AREA_SIZE = 400
+ARG_RADIUS = 'ARG_RADIUS'
+ARG_RADIUS_1 = 'ARG_RADIUS_1'
+ARG_RADIUS_2 = 'ARG_RADIUS_2'
+ARG_HEIGHT = 'ARG_HEIGHT'
+ARG_X = 'ARG_X'
+ARG_Y = 'ARG_Y'
+ARG_Z = 'ARG_Z'
+ARG_PNT = 'ARG_PNT'
+ARG_PNT_1 = 'ARG_PNT_1'
+ARG_PNT_2 = 'ARG_PNT_2'
+ARG_PNT_3 = 'ARG_PNT_3'
+ARG_TEXT = 'ARG_TEXT'
+ARG_SHAPE = 'ARG_SHAPE'
+ARG_WIRE = 'ARG_WIRE'
+
+VAR_MATERIAL = 'VAR_MATERIAL'
+VAR_COLOR = 'VAR_COLOR'
+VAR_TRANSPARENCY = 'VAR_TRANSPARENCY'
+VAR_TEXTURE = 'VAR_TEXTURE'
+
+VAR_MAIN_SCALE = 'VAR_MAIN_SCALE'
+VAR_GEOM_SCALE = 'VAR_GEOM_SCALE'
+VAR_LABEL_SCALE = 'VAR_LABEL_SCALE'
+
+VAR_LABEL_HEIGHT_PX = 'VAR_LABEL_HEIGHT_PX'
+VAR_LABEL_DELTA = 'VAR_LABEL_DELTA'
+
+VAR_POINT_RADIUS = 'VAR_POINT_RADIUS'
+VAR_LINE_RADIUS = 'VAR_LINE_RADIUS'
+VAR_ARROW_RADIUS = 'VAR_ARROW_RADIUS'
+VAR_ARROW_LENGTH = 'VAR_ARROW_LENGTH'
+VAR_FACE_WIDTH = 'VAR_FACE_WIDTH'
+
+VAR_DESK_TEXT_STR = 'VAR_DESK_TEXT_STR'
+VAR_DESK_TEXT_STYLE = 'VAR_DESK_TEXT_STYLE'
+VAR_DESK_PAPER_XYZ = 'VAR_DESK_PAPER_XYZ'
+VAR_DESK_HEIGHT = 'VAR_DESK_HEIGHT'
+VAR_DESK_BORDER_SIZE = 'VAR_DESK_BORDER_SIZE'
+VAR_DESK_AXIS_SIZE = 'VAR_DESK_AXIS_SIZE'
+VAR_DESK_COORD_MARK_DIV = 'VAR_DESK_COORD_MARK_DIV'
+VAR_DESK_PIN_OFFSET = 'VAR_DESK_PIN_OFFSET'
+VAR_DESK_PIN_RADIUS = 'VAR_DESK_PIN_RADIUS'
+VAR_DESK_PIN_HEIGHT = 'VAR_DESK_PIN_HEIGHT'
+VAR_DESK_DRAW_AREA_SIZE = 'VAR_DESK_DRAW_AREA_SIZE'
+VAR_DESK_BOARD_STYLE = 'VAR_DESK_BOARD_STYLE'
+VAR_DESK_PAPER_STYLE = 'VAR_DESK_PAPER_STYLE'
+VAR_DESK_PIN_STYLE = 'VAR_DESK_PIN_STYLE'
+
+VAR_DEFAULTS = {
+
+    VAR_MATERIAL: None,
+    VAR_COLOR: None,
+    VAR_TRANSPARENCY: None,
+    VAR_TEXTURE: None,
+
+    VAR_MAIN_SCALE: 1,
+    VAR_GEOM_SCALE: 1,
+    VAR_LABEL_SCALE: 1,
+
+    VAR_LABEL_HEIGHT_PX: 20,  # not scaled
+
+    VAR_LABEL_DELTA: 5,
+
+    VAR_POINT_RADIUS: 4,
+    VAR_LINE_RADIUS: 2,
+    VAR_ARROW_RADIUS: 4,
+    VAR_ARROW_LENGTH: 15,
+    VAR_FACE_WIDTH: 1,
+
+    VAR_DESK_TEXT_STR: 'A0 M1:1',
+    VAR_DESK_HEIGHT: 20,
+    VAR_DESK_BORDER_SIZE: 60,
+    VAR_DESK_PAPER_XYZ: (1189, 841, 1),  # A0
+    VAR_DESK_AXIS_SIZE: 300,
+    VAR_DESK_COORD_MARK_DIV: 6,
+    VAR_DESK_PIN_OFFSET: 30,
+    VAR_DESK_PIN_RADIUS: 10,
+    VAR_DESK_PIN_HEIGHT: 2,
+    VAR_DESK_DRAW_AREA_SIZE: 400,
+    VAR_DESK_BOARD_STYLE: (PLASTIC_MATERIAL, WOOD_COLOR, FULL_VISIBLE_TRANSPARENCY, None),
+    VAR_DESK_PAPER_STYLE: (PLASTIC_MATERIAL, PAPER_COLOR, FULL_VISIBLE_TRANSPARENCY, None),
+    VAR_DESK_PIN_STYLE: (STEEL_MATERIAL, None, FULL_VISIBLE_TRANSPARENCY, None),
+    VAR_DESK_TEXT_STYLE: (None, NICE_WHITE_COLOR, FULL_VISIBLE_TRANSPARENCY, None),
+}
 
 
 class Computer:
@@ -345,14 +384,6 @@ def Clear():
     reg = Registry(VAR_DEFAULTS)
 
 
-def Pnt(x, y, z):
-    return gp_Pnt(x, y, z)
-
-
-def Rgb(r, g, b):
-    return [r, g, b]
-
-
 def Render():
     scene.render()
 
@@ -373,10 +404,6 @@ def GetVar(varName, defaultValue=None):
     return reg.getVar(varName, defaultValue)
 
 
-def SetLabelColor(color):
-    SetVar(VAR_LABEL_COLOR, color)
-
-
 def SetColor(color):
     SetVar(VAR_COLOR, color)
 
@@ -389,39 +416,51 @@ def SetMaterial(material):
     SetVar(VAR_MATERIAL, material)
 
 
+def SetTexture(texture):
+    SetVar(VAR_TEXTURE, texture)
+
+
+def SetStyle(style):
+    material, color, transparency, texture = style
+    SetMaterial(material)
+    SetColor(color)
+    SetTransparency(transparency)
+    SetTexture(texture)
+
+
 def DoHide():
     scene.doHide()
 
 
-def DoMove(pnt):
+def DoMove(vec):
     trsf = gp_Trsf()
-    trsf.SetTranslation(gp_Vec(pnt.X(), pnt.Y(), pnt.Z()))
+    trsf.SetTranslation(vec)
     scene.doTrsf(trsf)
 
 
-def DoRotate(pntAxFrom, pntAxTo, angle):
+def DoRotate(axFromPnt, axToPnt, angle):
     trsf = gp_Trsf()
-    ax1 = gp_Ax1(pntAxFrom, gp_Dir(gp_Vec(pntAxFrom, pntAxTo)))
+    ax1 = gp_Ax1(axFromPnt, gp_Dir(gp_Vec(axFromPnt, axToPnt)))
     trsf.SetRotation(ax1, angle / 180 * math.pi)
     scene.doTrsf(trsf)
 
 
 def DoRotateX(angle):
-    DoRotate(gp_Pnt(0, 0, 0), gp_Pnt(1, 0, 0), angle)
+    DoRotate(Pnt(0, 0, 0), Pnt(1, 0, 0), angle)
 
 
 def DoRotateY(angle):
-    DoRotate(gp_Pnt(0, 0, 0), gp_Pnt(0, 1, 0), angle)
+    DoRotate(Pnt(0, 0, 0), Pnt(0, 1, 0), angle)
 
 
 def DoRotateZ(angle):
-    DoRotate(gp_Pnt(0, 0, 0), gp_Pnt(0, 0, 1), angle)
+    DoRotate(Pnt(0, 0, 0), Pnt(0, 0, 1), angle)
 
 
-def DoDirect(pntFrom, pntTo):
+def DoDirect(fromPnt, toPnt):
     trsf = gp_Trsf()
 
-    dirVec = gp_Vec(pntFrom, pntTo)
+    dirVec = gp_Vec(fromPnt, toPnt)
     targetDir = gp_Dir(dirVec)
 
     rotateAngle = gp_Dir(0, 0, 1).Angle(targetDir)
@@ -432,7 +471,7 @@ def DoDirect(pntFrom, pntTo):
         rotateDir = gp_Dir(0, 1, 0)
 
     trsf.SetRotation(gp_Ax1(gp_Pnt(0, 0, 0), rotateDir), rotateAngle)
-    trsf.SetTranslationPart(gp_Vec(gp_Pnt(0, 0, 0), pntFrom))
+    trsf.SetTranslationPart(gp_Vec(gp_Pnt(0, 0, 0), fromPnt))
     scene.doTrsf(trsf)
 
 
@@ -444,6 +483,23 @@ def DrawShape(argShape):
     color = GetVar(VAR_COLOR)
 
     scene.drawShape(shape, material, transparency, color)
+
+
+def DrawLabel(argPnt, argText):
+    pnt = GetVar(ARG_PNT, argPnt)
+    text = GetVar(ARG_TEXT, argText)
+
+    transparency = GetVar(VAR_TRANSPARENCY)
+    color = GetVar(VAR_COLOR)
+    mainScale = GetVar(VAR_MAIN_SCALE)
+    labelScale = GetVar(VAR_LABEL_SCALE)
+    labelHeightPx = GetVar(VAR_LABEL_HEIGHT_PX)
+    labelDelta = GetVar(VAR_LABEL_DELTA)
+
+    delta = labelDelta * mainScale
+    heightPx = labelHeightPx * labelScale
+    targetPnt = pnt.Translated(gp_Vec(delta, delta, delta))
+    scene.drawLabel(targetPnt, text, heightPx, color, transparency)
 
 
 def DrawSphere(argRadius):
@@ -502,23 +558,6 @@ def DrawTorus(argRadius1, argRadius2):
     LevelEnd()
 
 
-def DrawLabel(argPnt, argText):
-    pnt = GetVar(ARG_PNT, argPnt)
-    text = GetVar(ARG_TEXT, argText)
-
-    transparency = GetVar(VAR_TRANSPARENCY)
-    color = GetVar(VAR_LABEL_COLOR)
-    mainScale = GetVar(VAR_MAIN_SCALE)
-    labelScale = GetVar(VAR_LABEL_SCALE)
-    labelHeightPx = GetVar(LABEL_HEIGHT_PX)
-    labelDelta = GetVar(LABEL_DELTA)
-
-    delta = labelDelta * mainScale
-    heightPx = labelHeightPx * labelScale
-    targetPnt = pnt.Translated(gp_Vec(delta, delta, delta))
-    scene.drawLabel(targetPnt, text, heightPx, color, transparency)
-
-
 def DrawPoint(argPnt):
     pnt = GetVar(ARG_PNT, argPnt)
 
@@ -527,10 +566,11 @@ def DrawPoint(argPnt):
     pointRadius = GetVar(VAR_POINT_RADIUS)
 
     r = pointRadius * geomScale * mainScale
+
     LevelBegin('Sphere')
     DrawSphere(r)
-    LevelEnd()
     DoMove(pnt)
+    LevelEnd()
 
 
 def DrawLine(argPnt1, argPnt2):
@@ -543,14 +583,14 @@ def DrawLine(argPnt1, argPnt2):
 
     r = lineRadius * mainScale * geomScale
     length = gp_Vec(pnt1, pnt2).Magnitude()
+
     LevelBegin('Cylinder')
     DrawCylinder(r, length)
-    LevelEnd()
     DoDirect(pnt1, pnt2)
+    LevelEnd()
 
 
 def DrawVector(argPnt1, argPnt2):
-
     pnt1 = GetVar(ARG_PNT_1, argPnt1)
     pnt2 = GetVar(ARG_PNT_2, argPnt2)
 
@@ -566,17 +606,18 @@ def DrawVector(argPnt1, argPnt2):
     vLen = v.Magnitude()
     v *= -scaledArrowLength / vLen
     pntM = pnt2.Translated(v)
-    LevelBegin('Line')
+
+    LevelBegin('VectorLine')
     DrawLine(pnt1, pntM)
     LevelEnd()
-    LevelBegin('Cone')
+
+    LevelBegin('VectorFinishCone')
     DrawCone(scaledArrowRadius, 0, scaledArrowLength)
-    LevelEnd()
     DoDirect(pntM, pnt2)
+    LevelEnd()
 
 
 def DrawArrow(argPnt1, argPnt2):
-
     pnt1 = GetVar(ARG_PNT_1, argPnt1)
     pnt2 = GetVar(ARG_PNT_2, argPnt2)
 
@@ -595,21 +636,20 @@ def DrawArrow(argPnt1, argPnt2):
     v *= -1
     pntM2 = pnt2.Translated(v)
 
-    LevelBegin('Line')
+    LevelBegin('ArrowLine')
     DrawLine(pntM1, pntM2)
     LevelEnd()
-    LevelBegin('Cone1')
+    LevelBegin('ArrowStartCone')
     DrawCone(scaledArrowRadius, 0, scaledArrowLength)
     LevelEnd()
     DoDirect(pntM1, pnt1)
-    LevelBegin('Cone2')
+    LevelBegin('ArrowFinishCone')
     DrawCone(scaledArrowRadius, 0, scaledArrowLength)
     LevelEnd()
     DoDirect(pntM2, pnt2)
 
 
 def helperCircleWire(pnt1, pnt2, pnt3):
-
     geomCircle = GC_MakeCircle(pnt1, pnt2, pnt3).Value()
     edge = BRepBuilderAPI_MakeEdge(geomCircle).Edge()
     return BRepBuilderAPI_MakeWire(edge).Wire()
@@ -641,13 +681,12 @@ def DrawWire(argWire):
     profileWire = BRepBuilderAPI_MakeWire(profileEdge).Wire()
 
     shape = BRepOffsetAPI_MakePipe(wire, profileWire).Shape()
-    LevelBegin('Shape')
+    LevelBegin('WireShape')
     DrawShape(shape)
     LevelEnd()
 
 
 def DrawCircle(argPnt1, argPnt2, argPnt3):
-
     pnt1 = GetVar(ARG_PNT_1, argPnt1)
     pnt2 = GetVar(ARG_PNT_2, argPnt2)
     pnt3 = GetVar(ARG_PNT_3, argPnt3)
@@ -656,6 +695,62 @@ def DrawCircle(argPnt1, argPnt2, argPnt3):
     edge = BRepBuilderAPI_MakeEdge(geomCircle).Edge()
     wire = BRepBuilderAPI_MakeWire(edge).Wire()
 
-    LevelBegin('Wire')
+    LevelBegin('CircleWire')
     DrawWire(wire)
-    LevelEnd
+    LevelEnd()
+
+
+def DrawDesk():
+    mainScale = GetVar(VAR_MAIN_SCALE)
+    borderSize = GetVar(VAR_DESK_BORDER_SIZE)
+    height = GetVar(VAR_DESK_HEIGHT)
+    paperStyle = GetVar(VAR_DESK_PAPER_STYLE)
+    boardStyle = GetVar(VAR_DESK_BOARD_STYLE)
+
+    textStr = GetVar(VAR_DESK_TEXT_STR)
+    textStyle = GetVar(VAR_DESK_TEXT_STYLE)
+
+    pinOffset = GetVar(VAR_DESK_PIN_OFFSET)
+    pinRadius = GetVar(VAR_DESK_PIN_RADIUS)
+    pinHeight = GetVar(VAR_DESK_PIN_HEIGHT)
+    pinStyle = GetVar(VAR_DESK_PIN_STYLE)
+
+    paperSizeX, paperSizeY, paperSizeZ = GetVar(VAR_DESK_PAPER_XYZ)
+    psx, psy, psz = paperSizeX * mainScale, paperSizeY * mainScale, paperSizeZ * mainScale
+    bsx = (paperSizeX + borderSize * 2) * mainScale
+    bsy = (paperSizeY + borderSize * 2) * mainScale
+    bsz = height * mainScale
+
+    LevelBegin('BoardBox')
+    SetStyle(boardStyle)
+    DrawBox(bsx, bsy, bsz)
+    DoMove(Vec(-bsx / 2, -bsy / 2, -bsz-psz))
+    LevelEnd()
+
+    LevelBegin('PaperBox')
+    SetStyle(paperStyle)
+    DrawBox(psx, psy, psz)
+    DoMove(Vec(-psx / 2, -psy / 2, -psz))
+    LevelEnd()
+
+    LevelBegin('DeskLabel')
+    SetStyle(textStyle)
+    DrawLabel(Pnt(-bsx / 2, -bsy / 2, bsz*3), textStr)
+    LevelEnd()
+
+    dx = (paperSizeX / 2 - pinOffset * mainScale)
+    dy = (paperSizeY / 2 - pinOffset * mainScale)
+
+    pins = [
+        ('DeskPin01Cylinder', -dx, -dy),
+        ('DeskPin02Cylinder', dx, -dy),
+        ('DeskPin03Cylinder', dx, dy),
+        ('DeskPin04Cylinder', -dx, dy),
+    ]
+
+    SetStyle(pinStyle)
+    for pinName, x, y in pins:
+        LevelBegin(pinName)
+        DrawCylinder(pinRadius * mainScale, pinHeight * mainScale)
+        DoMove(Vec(x, y, 0))
+        LevelEnd()

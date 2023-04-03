@@ -195,7 +195,6 @@ def TestLabel():
     for ix in [-1, 1]:
         for iy in [-1, 1]:
             for iz in [-1, 1]:
-
                 SetColor(None)
                 SetTransparency(0)
                 DrawSphere(5)
@@ -207,7 +206,6 @@ def TestLabel():
 
 
 def TestPoint():
-
     SetMaterial(CHROME_MATERIAL)
     SetColor(NICE_BLUE_COLOR)
     for ix in [-1, 1]:
@@ -218,7 +216,6 @@ def TestPoint():
 
 
 def TestLine():
-
     pnt000 = Pnt(0, 0, 0)
     pnt001 = Pnt(0, 0, 100)
     pnt010 = Pnt(0, 100, 0)
@@ -255,7 +252,6 @@ def TestLine():
 
 
 def TestVector():
-
     pntC = Pnt(50, 50, 50)
 
     pnt000 = Pnt(0, 0, 0)
@@ -285,7 +281,6 @@ def TestVector():
 
 
 def TestArrow():
-
     pntC = Pnt(50, 50, 50)
 
     pnt000 = Pnt(0, 0, 0)
@@ -322,7 +317,6 @@ def getPntRotate(pCenter, p, angle):
 
 
 def TestWire():
-
     r = 50
 
     r2 = r / 2
@@ -357,7 +351,6 @@ def TestWire():
 
 
 def TestCircle():
-
     pnt1 = Pnt(0, 0, 0)
     pnt2 = Pnt(100, 0, 0)
     pnt3 = Pnt(50, 70, 0)
@@ -368,10 +361,14 @@ def TestCircle():
     DrawPoint(pnt3)
     DrawPoint(pnt4)
 
-    DrawCircle(pnt1,pnt2, pnt3)
-    DrawCircle(pnt1,pnt2, pnt4)
-    DrawCircle(pnt1,pnt3, pnt4)
-    DrawCircle(pnt2,pnt3, pnt4)
+    DrawCircle(pnt1, pnt2, pnt3)
+    DrawCircle(pnt1, pnt2, pnt4)
+    DrawCircle(pnt1, pnt3, pnt4)
+    DrawCircle(pnt2, pnt3, pnt4)
+
+
+def TestDesk():
+    DrawDesk()
 
 
 tests = [
@@ -399,6 +396,7 @@ tests = [
     TestArrow,
     TestWire,
     TestCircle,
+    TestDesk,
 ]
 
 # TestLabel()
