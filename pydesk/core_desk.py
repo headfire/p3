@@ -85,6 +85,7 @@ STEEL_COLOR = 100 / 255, 100 / 255, 100 / 255
 NICE_WHITE_COLOR = 240 / 255, 240 / 255, 240 / 255
 NICE_GRAY_COLOR = 100 / 255, 100 / 255, 100 / 255
 NICE_RED_COLOR = 200 / 255, 30 / 255, 30 / 255
+NICE_GREEN_COLOR = 100 / 255, 255 / 255, 100 / 255
 NICE_BLUE_COLOR = 100 / 255, 100 / 255, 255 / 255
 NICE_YELLOW_COLOR = 255 / 255, 255 / 255, 100 / 255
 NICE_ORIGINAL_COLOR = 241 / 255, 79 / 255, 160 / 255
@@ -469,6 +470,7 @@ def DoRotateZ(angle):
 
 
 def DoDirect(fromCoord, toCoord):
+
     trsf = gp_Trsf()
 
     dirVec = gp_Vec(_pnt(fromCoord), _pnt(toCoord))
@@ -482,7 +484,7 @@ def DoDirect(fromCoord, toCoord):
         rotateDir = gp_Dir(0, 1, 0)
 
     trsf.SetRotation(gp_Ax1(gp_Pnt(0, 0, 0), rotateDir), rotateAngle)
-    trsf.SetTranslationPart(gp_Vec(gp_Pnt(0, 0, 0), fromCoord))
+    trsf.SetTranslationPart(_vec(fromCoord))
     scene.doTrsf(trsf)
 
 
@@ -631,12 +633,12 @@ def DrawArrow(argCoord1, argCoord2):
     pntM = pnt2.Translated(v)
 
     LevelBegin('VectorLine')
-    DrawLine(pnt1, pntM)
+    DrawLine(_coord(pnt1), _coord(pntM))
     LevelEnd()
 
     LevelBegin('VectorFinishCone')
     DrawCone(scaledArrowRadius, 0, scaledArrowLength)
-    DoDirect(pntM, pnt2)
+    DoDirect(_coord(pntM), _coord(pnt2))
     LevelEnd()
 
 

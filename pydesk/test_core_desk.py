@@ -372,7 +372,13 @@ def TestDesk():
 
 
 def TestAxis():
-    DrawAxis(Decart(0, 0, 0), Decart(300, 300, 300), 10)
+    DrawAxis(Decart(0, 0, 0), Decart(200, 200, 200), 10)
+    SetColor(NICE_BLUE_COLOR)
+    DrawAxis(Decart(0, 0, 0), Decart(0, 0, 200), 10)
+    SetColor(NICE_GREEN_COLOR)
+    DrawAxis(Decart(0, 0, 0), Decart(0, 200, 0), 10)
+    SetColor(NICE_RED_COLOR)
+    DrawAxis(Decart(0, 0, 0), Decart(200, 0, 0), 10)
 
 
 tests = [
@@ -401,6 +407,7 @@ tests = [
     TestWire,
     TestCircle,
     TestDesk,
+    TestAxis,
 ]
 
 # TestLabel()
