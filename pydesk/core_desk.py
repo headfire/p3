@@ -44,6 +44,10 @@ def Decart(x, y, z):
     return x, y, z
 
 
+def UnDecart(coord):
+    return coord
+
+
 def Rgb(r, g, b):
     return r, g, b
 
@@ -117,6 +121,8 @@ ARG_COORD_3 = 'ARG_COORD_3'
 ARG_TEXT = 'ARG_TEXT'
 ARG_SHAPE = 'ARG_SHAPE'
 ARG_WIRE = 'ARG_WIRE'
+ARG_FRAME_VERTEXES = 'ARG_FRAME_VERTEXES'
+ARG_FRAME_EDGES = 'ARG_FRAME_EDGES'
 
 VAR_MATERIAL = 'VAR_MATERIAL'
 VAR_COLOR = 'VAR_COLOR'
@@ -150,6 +156,16 @@ VAR_DESK_DRAW_AREA_SIZE = 'VAR_DESK_DRAW_AREA_SIZE'
 VAR_DESK_BOARD_STYLE = 'VAR_DESK_BOARD_STYLE'
 VAR_DESK_PAPER_STYLE = 'VAR_DESK_PAPER_STYLE'
 VAR_DESK_PIN_STYLE = 'VAR_DESK_PIN_STYLE'
+
+VAR_COORD_X_COLOR = 'VAR_COORD_X_COLOR'
+VAR_COORD_Y_COLOR = 'VAR_COORD_Y_COLOR'
+VAR_COORD_Z_COLOR = 'VAR_COORD_Z_COLOR'
+VAR_COORD_C_COLOR = 'VAR_COORD_C_COLOR'
+VAR_COORD_LABEL_COLOR = 'VAR_COORD_LABEL_COLOR'
+VAR_COORD_DELTA = 'VAR_COORD_DELTA'
+
+VAR_FRAME_POINT_COLOR = 'VAR_FRAME_POINT_COLOR'
+VAR_FRAME_LINE_COLOR = 'VAR_FRAME_LINE_COLOR'
 
 VAR_DEFAULTS = {
 
@@ -186,6 +202,17 @@ VAR_DEFAULTS = {
     VAR_DESK_PAPER_STYLE: (PLASTIC_MATERIAL, PAPER_COLOR, FULL_VISIBLE_TRANSPARENCY, None),
     VAR_DESK_PIN_STYLE: (STEEL_MATERIAL, None, FULL_VISIBLE_TRANSPARENCY, None),
     VAR_DESK_TEXT_STYLE: (None, NICE_WHITE_COLOR, FULL_VISIBLE_TRANSPARENCY, None),
+
+    VAR_COORD_X_COLOR: NICE_RED_COLOR,
+    VAR_COORD_Y_COLOR: NICE_GREEN_COLOR,
+    VAR_COORD_Z_COLOR: NICE_BLUE_COLOR,
+    VAR_COORD_C_COLOR: NICE_WHITE_COLOR,
+    VAR_COORD_LABEL_COLOR: NICE_YELLOW_COLOR,
+    VAR_COORD_DELTA: 50,
+
+    VAR_FRAME_POINT_COLOR: NICE_YELLOW_COLOR,
+    VAR_FRAME_LINE_COLOR: NICE_BLUE_COLOR,
+
 }
 
 
@@ -471,7 +498,6 @@ def DoRotateZ(angle):
 
 
 def DoDirect(fromCoord, toCoord):
-
     trsf = gp_Trsf()
 
     dirVec = gp_Vec(_pnt(fromCoord), _pnt(toCoord))
@@ -500,7 +526,6 @@ def DrawShape(argShape):
 
 
 def DrawLabel(argCoord, argText):
-
     coord = GetVar(ARG_COORD, argCoord)
     text = GetVar(ARG_TEXT, argText)
 
@@ -576,7 +601,6 @@ def DrawTorus(argRadius1, argRadius2):
 
 
 def DrawPoint(argCoord):
-
     coord = GetVar(ARG_COORD, argCoord)
 
     mainScale = GetVar(VAR_MAIN_SCALE)
@@ -592,7 +616,6 @@ def DrawPoint(argCoord):
 
 
 def DrawLine(argCoord1, argCoord2):
-
     coord1 = GetVar(ARG_COORD_1, argCoord1)
     coord2 = GetVar(ARG_COORD_2, argCoord2)
 
@@ -613,7 +636,6 @@ def DrawLine(argCoord1, argCoord2):
 
 
 def DrawArrow(argCoord1, argCoord2):
-
     coord1 = GetVar(ARG_COORD_1, argCoord1)
     coord2 = GetVar(ARG_COORD_2, argCoord2)
 
@@ -644,7 +666,6 @@ def DrawArrow(argCoord1, argCoord2):
 
 
 def DrawArrow2(argCoord1, argCoord2):
-
     coord1 = GetVar(ARG_COORD_1, argCoord1)
     coord2 = GetVar(ARG_COORD_2, argCoord2)
 
@@ -717,7 +738,6 @@ def DrawWire(argWire):
 
 
 def DrawCircle(argCoord1, argCoord2, argCoord3):
-
     coord1 = GetVar(ARG_COORD_1, argCoord1)
     coord2 = GetVar(ARG_COORD_2, argCoord2)
     coord3 = GetVar(ARG_COORD_3, argCoord3)
@@ -759,7 +779,7 @@ def DrawDesk():
     LevelBegin('BoardBox')
     SetStyle(boardStyle)
     DrawBox(bsx, bsy, bsz)
-    DoMove(Decart(-bsx / 2, -bsy / 2, -bsz-psz))
+    DoMove(Decart(-bsx / 2, -bsy / 2, -bsz - psz))
     LevelEnd()
 
     LevelBegin('PaperBox')
@@ -770,7 +790,7 @@ def DrawDesk():
 
     LevelBegin('DeskLabel')
     SetStyle(textStyle)
-    DrawLabel(Decart(-bsx / 2, -bsy / 2, bsz*3), textStr)
+    DrawLabel(Decart(-bsx / 2, -bsy / 2, bsz * 3), textStr)
     LevelEnd()
 
     dx = (paperSizeX / 2 - pinOffset * mainScale)
@@ -792,7 +812,6 @@ def DrawDesk():
 
 
 def DrawAxis(argCoord1, argCoord2, argDelta):
-
     coord1 = GetVar(ARG_COORD_1, argCoord1)
     coord2 = GetVar(ARG_COORD_2, argCoord2)
     delta = GetVar(ARG_DELTA, argDelta)
@@ -812,7 +831,7 @@ def DrawAxis(argCoord1, argCoord2, argDelta):
 
     v = gp_Vec(pnt1, pnt2)
     totalLen = v.Magnitude()
-    cnt = int(totalLen/delta - 1)
+    cnt = int(totalLen / delta - 1)
 
     for i in range(cnt):
         targetLen = (1 + i) * delta
@@ -821,12 +840,98 @@ def DrawAxis(argCoord1, argCoord2, argDelta):
         pntMark = pnt1.Translated(v)
 
         LevelBegin('Mark' + str(i))
-        DrawCylinder(markRadius, markRadius/2)
+        DrawCylinder(markRadius, markRadius / 2)
         DoDirect(_coord(pntMark), _coord(pnt2))
         LevelEnd()
 
-'''
+
 def DrawCoord(argCoord1, argCoord2):
+    coord1 = GetVar(ARG_COORD_1, argCoord1)
+    coord2 = GetVar(ARG_COORD_2, argCoord2)
+
+    xColor = GetVar(VAR_COORD_X_COLOR)
+    yColor = GetVar(VAR_COORD_Y_COLOR)
+    zColor = GetVar(VAR_COORD_Z_COLOR)
+    cColor = GetVar(VAR_COORD_C_COLOR)
+    labelColor = GetVar(VAR_COORD_LABEL_COLOR)
+
+    normDelta = GetVar(VAR_COORD_DELTA)
+    mainScale = GetVar(VAR_MAIN_SCALE)
+    delta = normDelta * mainScale
+
+    x1, y1, z1 = UnDecart(coord1)
+    x2, y2, z2 = UnDecart(coord2)
+
+    cCoord = Decart(x1, y1, z1)
+    xCoord = Decart(x2, y1, z1)
+    yCoord = Decart(x1, y2, z1)
+    zCoord = Decart(x1, y1, z2)
+
+    SetColor(xColor)
+    DrawAxis(cCoord, xCoord, delta)
+
+    SetColor(yColor)
+    DrawAxis(cCoord, yCoord, delta)
+
+    SetColor(zColor)
+    DrawAxis(cCoord, zCoord, delta)
+
+    SetColor(cColor)
+    DrawPoint(cCoord)
+
+    SetColor(labelColor)
+    DrawLabel(xCoord, 'X')
+    DrawLabel(yCoord, 'Y')
+    DrawLabel(zCoord, 'Z')
+
+
+def DrawFrame(argVertexes, argEdges):
+    vertexes = GetVar(ARG_FRAME_VERTEXES, argVertexes)
+    edges = GetVar(ARG_FRAME_EDGES, argEdges)
+
+    pointColor = GetVar(VAR_FRAME_POINT_COLOR)
+    lineColor = GetVar(VAR_FRAME_LINE_COLOR)
+
+    SetColor(pointColor)
+    for coord in vertexes:
+        DrawPoint(coord)
+
+    SetColor(lineColor)
+    for i1, i2 in edges:
+        DrawLine(vertexes[i1], vertexes[i2])
+
+
+def DrawBoxFrame(argCoord1, argCoord2):
+    coord1 = GetVar(ARG_COORD_1, argCoord1)
+    coord2 = GetVar(ARG_COORD_2, argCoord2)
+
+    x1, y1, z1 = UnDecart(coord1)
+    x2, y2, z2 = UnDecart(coord2)
+
+    vertexes = [
+        Decart(x1, y1, z1),
+        Decart(x1, y2, z1),
+        Decart(x2, y2, z1),
+        Decart(x2, y1, z1),
+
+        Decart(x1, y1, z2),
+        Decart(x1, y2, z2),
+        Decart(x2, y2, z2),
+        Decart(x2, y1, z2),
+    ]
+
+    edges = [
+        (0, 1), (1, 2), (2, 3), (3, 1),
+        (4, 5), (5, 6), (6, 7), (7, 4),
+        (0, 4), (1, 5), (2, 6), (3, 7),
+    ]
+
+    LevelBegin('BoxFrame')
+    DrawFrame(vertexes, edges)
+    LevelEnd()
+
+
+'''
         n = DESK_COORD_MARK_DIV
         self.addItem(AxisDraw(argCoord1, Pnt(size, 0, 0), n))
         self.addItem(AxisDraw(Pnt(0, 0, 0), Pnt(0, size, 0), n))

@@ -372,7 +372,6 @@ def TestDesk():
 
 
 def TestAxis():
-    l = 200/sqrt(3)
 
     SetColor(NICE_RED_COLOR)
     DrawAxis(Decart(0, 0, 0), Decart(200, 0, 0), 50)
@@ -385,18 +384,28 @@ def TestAxis():
 
     SetColor(NICE_WHITE_COLOR)
     DrawPoint(Decart(0, 0, 0))
-    DrawAxis(Decart(0, 0, 0), Decart(l, l, l), 50)
+    dlen = 200/sqrt(3)
+    DrawAxis(Decart(0, 0, 0), Decart(dlen, dlen, dlen), 50)
 
     SetColor(NICE_YELLOW_COLOR)
     DrawLabel(Decart(200, 0, 0), 'X')
     DrawLabel(Decart(0, 200, 0), 'Y')
     DrawLabel(Decart(0, 0, 200), 'Z')
 
+
 def TestCoord():
-    DrawDesk()
-    # DrawCoord()
+    # DrawDesk()
+    DrawCoord(Decart(0, 0, 100), Decart(300, 300, 400))
     # DrawLimits()
 
+
+def TestBoxFrame():
+    DrawBoxFrame(Decart(0, 0, 100), Decart(300, 300, 400))
+
+'''
+def TestLimits():
+    DrawCoord(Decart(0, 0, 100), Decart(300, 300, 400))
+'''
 
 tests = [
     TestRender,
@@ -425,7 +434,7 @@ tests = [
     TestCircle,
     TestDesk,
     TestAxis,
-    # TestCoord
+    TestCoord
 ]
 
 # TestLabel()
