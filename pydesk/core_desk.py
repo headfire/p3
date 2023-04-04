@@ -429,17 +429,6 @@ comp = DeskComputer()
 reg = Registry(VAR_DEFAULTS)
 
 
-def Clear():
-    global scene, comp, reg
-    scene = Scene()
-    comp = DeskComputer()
-    reg = Registry(VAR_DEFAULTS)
-
-
-def Render():
-    scene.render()
-
-
 def LevelBegin(nm):
     reg.levelBegin(nm)
 
@@ -928,8 +917,7 @@ def DrawFrame(argVertexes, argEdges):
         DrawLabel(coord, '(' + str(x) + ',' + str(y) + ',' + str(z) + ')')
 
 
-
-def DrawBoxFrame(argCoord1, argCoord2):
+def DrawBoxFrame(argCoord1, argCoord2, isLabeled):
     coord1 = GetVar(ARG_COORD_1, argCoord1)
     coord2 = GetVar(ARG_COORD_2, argCoord2)
 
@@ -959,14 +947,12 @@ def DrawBoxFrame(argCoord1, argCoord2):
     LevelEnd()
 
 
-def DrawLimits(argCoord1, argCoord2):
-
-    SetVar(VAR_FRAME_POINT_COLOR, NICE_GRAY_COLOR, 'BoxFrame')
-    SetVar(VAR_FRAME_LINE_COLOR, NICE_GRAY_COLOR, 'BoxFrame')
-    DrawBoxFrame(argCoord1, argCoord2)
+def SetScale(scale):
+    SetVar()
 
 
-def DrawDecor(isDesk=True, isCoord=True, isLimits=True):
+def SceneShow(isDesk=True, isCoord=True, isLimits=True, screenX=1200, screenY=900):
+
 
     if isDesk:
         DrawDummy()
@@ -977,14 +963,13 @@ def DrawDecor(isDesk=True, isCoord=True, isLimits=True):
     if isCoord:
         DrawCoord(Decart(0, 0, 0), Decart(500, 400, 500))
     if isLimits:
-        DrawLimits(Decart(-400, -300, 0), Decart(400, 300, 400))
+        SetVar(VAR_FRAME_POINT_COLOR, NICE_GRAY_COLOR, 'BoxFrame')
+        SetVar(VAR_FRAME_LINE_COLOR, NICE_GRAY_COLOR, 'BoxFrame')
+        DrawBoxFrame(Decart(-400, -300, 0), Decart(400, 300, 400), True)
 
+    scene.render()
 
-'''
-        n = DESK_COORD_MARK_DIV
-        self.addItem(AxisDraw(argCoord1, Pnt(size, 0, 0), n))
-        self.addItem(AxisDraw(Pnt(0, 0, 0), Pnt(0, size, 0), n))
-        Set
-        DrawAxis(Pnt(0, 0, 0), Pnt(0, 0, size), n))
-        DrawPoint(argCoord1)
-'''
+    global scene, reg
+    scene = Scene(screenX, screenY)
+    reg = Registry(VAR_DEFAULTS)
+
