@@ -291,6 +291,18 @@ class Registry:
         self.vars = {}
         self.levels = ['root']
 
+    def _dump(self):
+        print('******* Registry dump **********')
+        for var in vars:
+            print(var,' = ',vars[var])
+
+        path = ''
+        for levelName in self.levels:
+            path += '.' + levelName
+        print('CURRENT: ',path)
+
+
+
     def setVar(self, varName, varValue, varSubPath):
         path = ''
         for levelName in self.levels:
@@ -929,6 +941,12 @@ def DrawBoxFrame(argCoord1, argCoord2):
     LevelBegin('BoxFrame')
     DrawFrame(vertexes, edges)
     LevelEnd()
+
+
+def DrawLimits(argCoord1, argCoord2):
+    SetVar(VAR_FRAME_POINT_COLOR, NICE_GRAY_COLOR, 'BoxFrame')
+    SetVar(VAR_FRAME_LINE_COLOR, NICE_GRAY_COLOR, 'BoxFrame')
+    DrawBoxFrame(argCoord1, argCoord2)
 
 
 '''
