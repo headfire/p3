@@ -434,7 +434,8 @@ tests = [
     TestCircle,
     TestDesk,
     TestAxis,
-    TestCoord
+    TestCoord,
+    TestBoxFrame,
 ]
 
 # TestLabel()
