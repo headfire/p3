@@ -406,6 +406,11 @@ def TestBoxFrame():
 def TestLimits():
     DrawLimits(Decart(0, 0, 0), Decart(200, 200, 100))
 
+
+def TestDecor():
+    DrawDecor()
+
+
 '''
 def TestLimits():
     DrawCoord(Decart(0, 0, 100), Decart(300, 300, 400))
@@ -441,6 +446,7 @@ tests = [
     TestCoord,
     TestBoxFrame,
     TestLimits,
+    TestDecor,
 ]
 
 # TestLabel()

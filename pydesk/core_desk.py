@@ -166,6 +166,7 @@ VAR_COORD_DELTA = 'VAR_COORD_DELTA'
 
 VAR_FRAME_POINT_COLOR = 'VAR_FRAME_POINT_COLOR'
 VAR_FRAME_LINE_COLOR = 'VAR_FRAME_LINE_COLOR'
+VAR_FRAME_MATERIAL = 'VAR_FRAME_MATERIAL'
 
 VAR_DEFAULTS = {
 
@@ -182,11 +183,11 @@ VAR_DEFAULTS = {
 
     VAR_LABEL_DELTA: 5,
 
-    VAR_POINT_RADIUS: 4,
-    VAR_LINE_RADIUS: 2,
-    VAR_ARROW_RADIUS: 4,
-    VAR_ARROW_LENGTH: 15,
-    VAR_FACE_WIDTH: 1,
+    VAR_POINT_RADIUS: 8,
+    VAR_LINE_RADIUS: 4,
+    VAR_ARROW_RADIUS: 8,
+    VAR_ARROW_LENGTH: 30,
+    VAR_FACE_WIDTH: 2,
 
     VAR_DESK_TEXT_STR: 'A0 M1:1',
     VAR_DESK_HEIGHT: 20,
@@ -212,7 +213,7 @@ VAR_DEFAULTS = {
 
     VAR_FRAME_POINT_COLOR: NICE_YELLOW_COLOR,
     VAR_FRAME_LINE_COLOR: NICE_BLUE_COLOR,
-
+    VAR_FRAME_MATERIAL: CHROME_MATERIAL,
 }
 
 
@@ -293,15 +294,13 @@ class Registry:
 
     def _dump(self):
         print('******* Registry dump **********')
-        for var in vars:
-            print(var,' = ',vars[var])
+        for var in self.vars:
+            print(var, ' = ', self.vars[var])
 
         path = ''
         for levelName in self.levels:
             path += '.' + levelName
-        print('CURRENT: ',path)
-
-
+        print('CURRENT: ', path)
 
     def setVar(self, varName, varValue, varSubPath):
         path = ''
@@ -350,7 +349,7 @@ class Scene:
         self.parentAis: Optional[AIS_Shape] = None
         self.currentAis: Optional[AIS_Shape] = None
 
-    def render(self, screenX: int = 800, screenY: int = 600):
+    def render(self, screenX: int = 1200, screenY: int = 980):
         display, display_start, add_menu, add_function_to_menu = init_display(
             None, (screenX, screenY), True, [128, 128, 128], [128, 128, 128])
 
@@ -362,10 +361,11 @@ class Scene:
         display.FitAll()
         display_start()
 
-    def childBegin(self):
-        self.parentAis = self.currentAis = None
+    def childrenBegin(self):
+        self.parentAis = self.currentAis
+        self.currentAis = None
 
-    def childEnd(self):
+    def childrenEnd(self):
         self.currentAis = self.parentAis
         self.parentAis = self.parentAis.Parent()
 
@@ -446,6 +446,14 @@ def LevelBegin(nm):
 
 def LevelEnd():
     reg.levelEnd()
+
+
+def ChildrenBegin():
+    scene.childrenBegin()
+
+
+def ChildrenEnd():
+    scene.childrenEnd()
 
 
 def SetVar(varName, varValue, varPath=None):
@@ -903,7 +911,9 @@ def DrawFrame(argVertexes, argEdges):
 
     pointColor = GetVar(VAR_FRAME_POINT_COLOR)
     lineColor = GetVar(VAR_FRAME_LINE_COLOR)
+    material = GetVar(VAR_FRAME_MATERIAL)
 
+    SetMaterial(material)
     SetColor(pointColor)
     for coord in vertexes:
         DrawPoint(coord)
@@ -911,6 +921,12 @@ def DrawFrame(argVertexes, argEdges):
     SetColor(lineColor)
     for i1, i2 in edges:
         DrawLine(vertexes[i1], vertexes[i2])
+
+    SetColor(NICE_YELLOW_COLOR)
+    for coord in vertexes:
+        x, y, z = UnDecart(coord)
+        DrawLabel(coord, '(' + str(x) + ',' + str(y) + ',' + str(z) + ')')
+
 
 
 def DrawBoxFrame(argCoord1, argCoord2):
@@ -944,9 +960,24 @@ def DrawBoxFrame(argCoord1, argCoord2):
 
 
 def DrawLimits(argCoord1, argCoord2):
+
     SetVar(VAR_FRAME_POINT_COLOR, NICE_GRAY_COLOR, 'BoxFrame')
     SetVar(VAR_FRAME_LINE_COLOR, NICE_GRAY_COLOR, 'BoxFrame')
     DrawBoxFrame(argCoord1, argCoord2)
+
+
+def DrawDecor(isDesk=True, isCoord=True, isLimits=True):
+
+    if isDesk:
+        DrawDummy()
+        ChildrenBegin()
+        DrawDesk()
+        ChildrenEnd()
+        DoMove(Decart(0, 0, -100))
+    if isCoord:
+        DrawCoord(Decart(0, 0, 0), Decart(500, 400, 500))
+    if isLimits:
+        DrawLimits(Decart(-400, -300, 0), Decart(400, 300, 400))
 
 
 '''
