@@ -102,6 +102,7 @@ A0_M_5_1_DESK = ('A0 M5:1', 5, 1)
 # *************************************************
 
 ARG_COUNT = 'ARG_COUNT'
+ARG_DELTA = 'ARG_DELTA'
 ARG_RADIUS = 'ARG_RADIUS'
 ARG_RADIUS_1 = 'ARG_RADIUS_1'
 ARG_RADIUS_2 = 'ARG_RADIUS_2'
@@ -790,11 +791,11 @@ def DrawDesk():
         LevelEnd()
 
 
-def DrawAxis(argCoord1, argCoord2, argCount):
+def DrawAxis(argCoord1, argCoord2, argDelta):
 
     coord1 = GetVar(ARG_COORD_1, argCoord1)
     coord2 = GetVar(ARG_COORD_2, argCoord2)
-    cnt = GetVar(ARG_COUNT, argCount)
+    delta = GetVar(ARG_DELTA, argDelta)
 
     mainScale = GetVar(VAR_MAIN_SCALE)
     geomScale = GetVar(VAR_GEOM_SCALE)
@@ -809,10 +810,14 @@ def DrawAxis(argCoord1, argCoord2, argCount):
     DrawArrow(coord1, coord2)
     LevelEnd()
 
-    for i in range(1, cnt):
-        k = i / cnt
+    v = gp_Vec(pnt1, pnt2)
+    totalLen = v.Magnitude()
+    cnt = int(totalLen/delta - 1)
+
+    for i in range(cnt):
+        targetLen = (1 + i) * delta
         v = gp_Vec(pnt1, pnt2)
-        v *= k
+        v *= targetLen / totalLen
         pntMark = pnt1.Translated(v)
 
         LevelBegin('Mark' + str(i))
@@ -820,24 +825,12 @@ def DrawAxis(argCoord1, argCoord2, argCount):
         DoDirect(_coord(pntMark), _coord(pnt2))
         LevelEnd()
 
-
 '''
-class CoordDraw(Draw):
-    def __init__(self, size=None):
-        super().__init__('coordObj:decor')
-        self.size = size
-
-    def addStyledItems(self, style:  Style):
-        if self.size is None:
-            paperSizeX, paperSizeY, paperSizeZ = DESK_PAPER_SIZE
-            scale = style.get(SCALE, 1)
-            size = DESK_AXIS_SIZE * scale
-        else:
-            size = self.size
-
+def DrawCoord(argCoord1, argCoord2):
         n = DESK_COORD_MARK_DIV
-        self.addItem(AxisDraw(Pnt(0, 0, 0), Pnt(size, 0, 0), n))
+        self.addItem(AxisDraw(argCoord1, Pnt(size, 0, 0), n))
         self.addItem(AxisDraw(Pnt(0, 0, 0), Pnt(0, size, 0), n))
-        self.addItem(AxisDraw(Pnt(0, 0, 0), Pnt(0, 0, size), n))
-        self.addItem(PointDraw(Pnt(0, 0, 0)))
+        Set
+        DrawAxis(Pnt(0, 0, 0), Pnt(0, 0, size), n))
+        DrawPoint(argCoord1)
 '''

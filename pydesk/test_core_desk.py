@@ -1,6 +1,6 @@
 from core_desk import *
 from OCC.Core.GC import GC_MakeArcOfCircle
-from math import pi
+from math import pi, sqrt
 
 
 def TestRender():
@@ -372,13 +372,30 @@ def TestDesk():
 
 
 def TestAxis():
-    DrawAxis(Decart(0, 0, 0), Decart(200, 200, 200), 10)
-    SetColor(NICE_BLUE_COLOR)
-    DrawAxis(Decart(0, 0, 0), Decart(0, 0, 200), 10)
-    SetColor(NICE_GREEN_COLOR)
-    DrawAxis(Decart(0, 0, 0), Decart(0, 200, 0), 10)
+    l = 200/sqrt(3)
+
     SetColor(NICE_RED_COLOR)
-    DrawAxis(Decart(0, 0, 0), Decart(200, 0, 0), 10)
+    DrawAxis(Decart(0, 0, 0), Decart(200, 0, 0), 50)
+
+    SetColor(NICE_GREEN_COLOR)
+    DrawAxis(Decart(0, 0, 0), Decart(0, 200, 0), 50)
+
+    SetColor(NICE_BLUE_COLOR)
+    DrawAxis(Decart(0, 0, 0), Decart(0, 0, 200), 50)
+
+    SetColor(NICE_WHITE_COLOR)
+    DrawPoint(Decart(0, 0, 0))
+    DrawAxis(Decart(0, 0, 0), Decart(l, l, l), 50)
+
+    SetColor(NICE_YELLOW_COLOR)
+    DrawLabel(Decart(200, 0, 0), 'X')
+    DrawLabel(Decart(0, 200, 0), 'Y')
+    DrawLabel(Decart(0, 0, 200), 'Z')
+
+def TestCoord():
+    DrawDesk()
+    # DrawCoord()
+    # DrawLimits()
 
 
 tests = [
@@ -408,6 +425,7 @@ tests = [
     TestCircle,
     TestDesk,
     TestAxis,
+    # TestCoord
 ]
 
 # TestLabel()
