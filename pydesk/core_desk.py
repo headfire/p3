@@ -86,13 +86,17 @@ WOOD_COLOR = 208 / 255, 117 / 255, 28 / 255
 PAPER_COLOR = 230 / 255, 230 / 255, 230 / 255
 STEEL_COLOR = 100 / 255, 100 / 255, 100 / 255
 
-NICE_WHITE_COLOR = 240 / 255, 240 / 255, 240 / 255
-NICE_GRAY_COLOR = 100 / 255, 100 / 255, 100 / 255
-NICE_RED_COLOR = 200 / 255, 30 / 255, 30 / 255
-NICE_GREEN_COLOR = 100 / 255, 255 / 255, 100 / 255
-NICE_BLUE_COLOR = 100 / 255, 100 / 255, 255 / 255
-NICE_YELLOW_COLOR = 255 / 255, 255 / 255, 100 / 255
-NICE_ORIGINAL_COLOR = 241 / 255, 79 / 255, 160 / 255
+WHITE_COLOR = 240 / 255, 240 / 255, 240 / 255
+GRAY_COLOR = 100 / 255, 100 / 255, 100 / 255
+
+RED_COLOR = 200 / 255, 30 / 255, 30 / 255
+GREEN_COLOR = 100 / 255, 255 / 255, 100 / 255
+BLUE_COLOR = 100 / 255, 100 / 255, 255 / 255
+
+YELLOW_COLOR = 255 / 255, 255 / 255, 100 / 255
+ORIGINAL_COLOR = 241 / 255, 79 / 255, 160 / 255
+GOLD_COLOR = 180 / 255, 180 / 255, 90 / 255
+
 
 FULL_VISIBLE_TRANSPARENCY = 0
 SEMI_VISIBLE_TRANSPARENCY = 0.5
@@ -101,33 +105,11 @@ NO_VISIBLE_TRANSPARENCY = 1
 A0_M_1_1_DESK = ('A0 M1:1', 1, 1)
 A0_M_5_1_DESK = ('A0 M5:1', 5, 1)
 
+
 # *************************************************
 # *************************************************
 # *************************************************
 
-ARG_COUNT = 'ARG_COUNT'
-ARG_DELTA = 'ARG_DELTA'
-ARG_RADIUS = 'ARG_RADIUS'
-ARG_RADIUS_1 = 'ARG_RADIUS_1'
-ARG_RADIUS_2 = 'ARG_RADIUS_2'
-ARG_HEIGHT = 'ARG_HEIGHT'
-ARG_X = 'ARG_X'
-ARG_Y = 'ARG_Y'
-ARG_Z = 'ARG_Z'
-ARG_COORD = 'ARG_PNT'
-ARG_COORD_1 = 'ARG_COORD_1'
-ARG_COORD_2 = 'ARG_COORD_2'
-ARG_COORD_3 = 'ARG_COORD_3'
-ARG_TEXT = 'ARG_TEXT'
-ARG_SHAPE = 'ARG_SHAPE'
-ARG_WIRE = 'ARG_WIRE'
-ARG_FRAME_VERTEXES = 'ARG_FRAME_VERTEXES'
-ARG_FRAME_EDGES = 'ARG_FRAME_EDGES'
-
-VAR_MATERIAL = 'VAR_MATERIAL'
-VAR_COLOR = 'VAR_COLOR'
-VAR_TRANSPARENCY = 'VAR_TRANSPARENCY'
-VAR_TEXTURE = 'VAR_TEXTURE'
 
 VAR_MAIN_SCALE = 'VAR_MAIN_SCALE'
 VAR_GEOM_SCALE = 'VAR_GEOM_SCALE'
@@ -142,38 +124,29 @@ VAR_ARROW_RADIUS = 'VAR_ARROW_RADIUS'
 VAR_ARROW_LENGTH = 'VAR_ARROW_LENGTH'
 VAR_FACE_WIDTH = 'VAR_FACE_WIDTH'
 
-VAR_DESK_TEXT_STR = 'VAR_DESK_TEXT_STR'
-VAR_DESK_TEXT_STYLE = 'VAR_DESK_TEXT_STYLE'
-VAR_DESK_PAPER_XYZ = 'VAR_DESK_PAPER_XYZ'
-VAR_DESK_HEIGHT = 'VAR_DESK_HEIGHT'
-VAR_DESK_BORDER_SIZE = 'VAR_DESK_BORDER_SIZE'
-VAR_DESK_AXIS_SIZE = 'VAR_DESK_AXIS_SIZE'
-VAR_DESK_COORD_MARK_DIV = 'VAR_DESK_COORD_MARK_DIV'
-VAR_DESK_PIN_OFFSET = 'VAR_DESK_PIN_OFFSET'
-VAR_DESK_PIN_RADIUS = 'VAR_DESK_PIN_RADIUS'
-VAR_DESK_PIN_HEIGHT = 'VAR_DESK_PIN_HEIGHT'
-VAR_DESK_DRAW_AREA_SIZE = 'VAR_DESK_DRAW_AREA_SIZE'
-VAR_DESK_BOARD_STYLE = 'VAR_DESK_BOARD_STYLE'
-VAR_DESK_PAPER_STYLE = 'VAR_DESK_PAPER_STYLE'
-VAR_DESK_PIN_STYLE = 'VAR_DESK_PIN_STYLE'
+VAR_POINT_MATERIAL = 'VAR_POINT_MATERIAL'
+VAR_POINT_COLOR = 'VAR_POINT_COLOR'
+VAR_POINT_TRANSPARENCY = 'VAR_POINT_TRANSPARENCY'
 
-VAR_COORD_X_COLOR = 'VAR_COORD_X_COLOR'
-VAR_COORD_Y_COLOR = 'VAR_COORD_Y_COLOR'
-VAR_COORD_Z_COLOR = 'VAR_COORD_Z_COLOR'
-VAR_COORD_C_COLOR = 'VAR_COORD_C_COLOR'
-VAR_COORD_LABEL_COLOR = 'VAR_COORD_LABEL_COLOR'
-VAR_COORD_DELTA = 'VAR_COORD_DELTA'
+VAR_LINE_MATERIAL = 'VAR_LINE_MATERIAL'
+VAR_LINE_COLOR = 'VAR_LINE_COLOR'
+VAR_LINE_TRANSPARENCY = 'VAR_LINE_TRANSPARENCY'
 
-VAR_FRAME_POINT_COLOR = 'VAR_FRAME_POINT_COLOR'
-VAR_FRAME_LINE_COLOR = 'VAR_FRAME_LINE_COLOR'
-VAR_FRAME_MATERIAL = 'VAR_FRAME_MATERIAL'
+VAR_SOLID_MATERIAL = 'VAR_SOLID_MATERIAL'
+VAR_SOLID_COLOR = 'VAR_SOLID_COLOR'
+VAR_SOLID_TRANSPARENCY = 'VAR_SOLID_TRANSPARENCY'
 
-VAR_DEFAULTS = {
+VAR_SHAPE_MATERIAL = 'VAR_SHAPE_MATERIAL'
+VAR_SHAPE_COLOR = 'VAR_SHAPE_COLOR'
+VAR_SHAPE_TRANSPARENCY = 'VAR_SHAPE_TRANSPARENCY'
 
-    VAR_MATERIAL: None,
-    VAR_COLOR: None,
-    VAR_TRANSPARENCY: None,
-    VAR_TEXTURE: None,
+VAR_LABEL_COLOR = 'VAR_LABEL_COLOR'
+VAR_LABEL_TRANSPARENCY = 'VAR_LABEL_TRANSPARENCY'
+
+VAR_GEOM_SCALE = 'VAR_GEOM_SCALE'
+
+
+DEFAULT_VARS = {
 
     VAR_MAIN_SCALE: 1,
     VAR_GEOM_SCALE: 1,
@@ -188,34 +161,102 @@ VAR_DEFAULTS = {
     VAR_ARROW_RADIUS: 8,
     VAR_ARROW_LENGTH: 30,
     VAR_FACE_WIDTH: 2,
-
-    VAR_DESK_TEXT_STR: 'A0 M1:1',
-    VAR_DESK_HEIGHT: 20,
-    VAR_DESK_BORDER_SIZE: 60,
-    VAR_DESK_PAPER_XYZ: (1189, 841, 1),  # A0
-    VAR_DESK_AXIS_SIZE: 300,
-    VAR_DESK_COORD_MARK_DIV: 6,
-    VAR_DESK_PIN_OFFSET: 30,
-    VAR_DESK_PIN_RADIUS: 10,
-    VAR_DESK_PIN_HEIGHT: 2,
-    VAR_DESK_DRAW_AREA_SIZE: 400,
-    VAR_DESK_BOARD_STYLE: (PLASTIC_MATERIAL, WOOD_COLOR, FULL_VISIBLE_TRANSPARENCY, None),
-    VAR_DESK_PAPER_STYLE: (PLASTIC_MATERIAL, PAPER_COLOR, FULL_VISIBLE_TRANSPARENCY, None),
-    VAR_DESK_PIN_STYLE: (STEEL_MATERIAL, None, FULL_VISIBLE_TRANSPARENCY, None),
-    VAR_DESK_TEXT_STYLE: (None, NICE_WHITE_COLOR, FULL_VISIBLE_TRANSPARENCY, None),
-
-    VAR_COORD_X_COLOR: NICE_RED_COLOR,
-    VAR_COORD_Y_COLOR: NICE_GREEN_COLOR,
-    VAR_COORD_Z_COLOR: NICE_BLUE_COLOR,
-    VAR_COORD_C_COLOR: NICE_WHITE_COLOR,
-    VAR_COORD_LABEL_COLOR: NICE_YELLOW_COLOR,
-    VAR_COORD_DELTA: 50,
-
-    VAR_FRAME_POINT_COLOR: NICE_YELLOW_COLOR,
-    VAR_FRAME_LINE_COLOR: NICE_BLUE_COLOR,
-    VAR_FRAME_MATERIAL: CHROME_MATERIAL,
 }
 
+
+MAIN_STYLE = {
+
+    VAR_POINT_MATERIAL: CHROME_MATERIAL,
+    VAR_POINT_COLOR: GOLD_COLOR,
+    VAR_POINT_TRANSPARENCY: 0,
+    VAR_LINE_MATERIAL: CHROME_MATERIAL,
+    VAR_LINE_COLOR: BLUE_COLOR,
+    VAR_LINE_TRANSPARENCY: 0,
+
+    VAR_SOLID_MATERIAL: CHROME_MATERIAL,
+    VAR_SOLID_COLOR: WHITE_COLOR,
+    VAR_SOLID_TRANSPARENCY: 0,
+
+    VAR_SHAPE_MATERIAL: CHROME_MATERIAL,
+    VAR_SHAPE_COLOR: GRAY_COLOR,
+    VAR_SHAPE_TRANSPARENCY: 0,
+
+    VAR_LABEL_COLOR: GRAY_COLOR,
+    VAR_LABEL_TRANSPARENCY: 0,
+
+    VAR_GEOM_SCALE: 1
+
+}
+
+FOCUS_STYLE = {
+
+    VAR_POINT_MATERIAL: CHROME_MATERIAL,
+    VAR_POINT_COLOR: GOLD_COLOR,
+    VAR_POINT_TRANSPARENCY: 0,
+
+    VAR_LINE_MATERIAL: CHROME_MATERIAL,
+    VAR_LINE_COLOR: BLUE_COLOR,
+    VAR_LINE_TRANSPARENCY: 0,
+
+    VAR_SOLID_MATERIAL: CHROME_MATERIAL,
+    VAR_SOLID_COLOR: WHITE_COLOR,
+    VAR_SOLID_TRANSPARENCY: 0,
+
+    VAR_SHAPE_MATERIAL: CHROME_MATERIAL,
+    VAR_SHAPE_COLOR: GRAY_COLOR,
+    VAR_SHAPE_TRANSPARENCY: 0,
+
+    VAR_LABEL_COLOR: GRAY_COLOR,
+    VAR_LABEL_TRANSPARENCY: 0,
+
+    VAR_GEOM_SCALE: 1
+
+}
+
+INFO_STYLE = {
+
+    VAR_POINT_MATERIAL: CHROME_MATERIAL,
+    VAR_POINT_COLOR: GOLD_COLOR,
+    VAR_POINT_TRANSPARENCY: 0,
+
+    VAR_LINE_MATERIAL: CHROME_MATERIAL,
+    VAR_LINE_COLOR: BLUE_COLOR,
+    VAR_LINE_TRANSPARENCY: 0,
+
+    VAR_SOLID_MATERIAL: CHROME_MATERIAL,
+    VAR_SOLID_COLOR: WHITE_COLOR,
+    VAR_SOLID_TRANSPARENCY: 0,
+
+    VAR_SHAPE_MATERIAL: CHROME_MATERIAL,
+    VAR_SHAPE_COLOR: GRAY_COLOR,
+    VAR_SHAPE_TRANSPARENCY: 0,
+
+    VAR_LABEL_COLOR: GRAY_COLOR,
+    VAR_LABEL_TRANSPARENCY: 0,
+
+    VAR_GEOM_SCALE: 1
+
+}
+
+DESK_TEXT_STR = 'A0 M1:1'
+DESK_HEIGHT = 20
+DESK_BORDER_SIZE = 60
+DESK_PAPER_XYZ = (1189, 841, 1)  # A0
+DESK_AXIS_SIZE = 300
+DESK_COORD_MARK_DIV = 6
+DESK_PIN_OFFSET = 30
+DESK_PIN_RADIUS = 10
+DESK_PIN_HEIGHT = 2
+DESK_DRAW_AREA_SIZE = 400
+DESK_BOARD_STYLE = { VAR_SOLID_MATERIAL: PLASTIC_MATERIAL, VAR_SOLID_COLOR: WOOD_COLOR }
+DESK_PAPER_STYLE = { VAR_SOLID_MATERIAL: PLASTIC_MATERIAL, VAR_SOLID_COLOR: PAPER_COLOR }
+DESK_PIN_STYLE = { VAR_SOLID_MATERIAL: STEEL_MATERIAL, VAR_SOLID_COLOR: None }
+
+COORD_X_COLOR = RED_COLOR
+COORD_Y_COLOR = GREEN_COLOR
+COORD_Z_COLOR = BLUE_COLOR
+COORD_C_COLOR = WHITE_COLOR
+COORD_DELTA = 50
 
 class Computer:
 
@@ -284,62 +325,6 @@ class Scripting:
 
     def addShape(self, shape):
         pass
-
-
-class Registry:
-    def __init__(self, defaults):
-        self.defaults = defaults
-        self.vars = {}
-        self.levels = ['root']
-
-    def _dump(self):
-        print('******* Registry dump **********')
-        for var in self.vars:
-            print(var, ' = ', self.vars[var])
-
-        path = ''
-        for levelName in self.levels:
-            path += '.' + levelName
-        print('CURRENT: ', path)
-
-    def setVar(self, varName, varValue, varSubPath):
-        path = ''
-        for levelName in self.levels:
-            path += '.' + levelName
-        if varSubPath is not None:
-            path += '.' + varSubPath
-        self.vars[path + '-' + varName] = varValue
-
-    def getVar(self, varName, defaultValue):
-
-        path = ''
-        paths = []
-        for levelName in self.levels:
-            path += '.' + levelName
-            paths.append(path + '-' + varName)
-
-        fullPath = paths.pop()
-        if fullPath in self.vars:
-            return self.vars[fullPath]
-
-        if defaultValue is not None:
-            return defaultValue
-
-        while len(paths) > 0:
-            notFullPath = paths.pop()
-            if notFullPath in self.vars:
-                return self.vars[notFullPath]
-
-        if varName in self.defaults:
-            return self.defaults[varName]
-
-        return None
-
-    def levelBegin(self, levelName):
-        self.levels.append(levelName)
-
-    def levelEnd(self):
-        self.levels.pop()
 
 
 class Scene:
@@ -426,7 +411,7 @@ class Scene:
 
 scene = Scene()
 comp = DeskComputer()
-reg = Registry(VAR_DEFAULTS)
+registry = {}
 
 
 def LevelBegin(nm):
@@ -445,36 +430,45 @@ def ChildrenEnd():
     scene.childrenEnd()
 
 
-def SetVar(varName, varValue, varPath=None):
-    reg.setVar(varName, varValue, varPath)
+def SetVar(varName, varValue):
+    registry[varName] = varValue
 
 
-def GetVar(varName, defaultValue=None):
-    return reg.getVar(varName, defaultValue)
+def GetVar(varName, style=None):
+    if style is not None:
+        if varName in style:
+            return style[varName]
+    if varName in registry:
+        return registry[varName]
+    return None
 
 
 def SetColor(color):
-    SetVar(VAR_COLOR, color)
+    SetVar(VAR_POINT_COLOR, color)
+    SetVar(VAR_LINE_COLOR, color)
+    SetVar(VAR_SOLID_COLOR, color)
+    SetVar(VAR_SHAPE_COLOR, color)
+    SetVar(VAR_LABEL_COLOR, color)
 
 
 def SetTransparency(transparency):
-    SetVar(VAR_TRANSPARENCY, transparency)
+    SetVar(VAR_POINT_TRANSPARENCY, transparency)
+    SetVar(VAR_LINE_TRANSPARENCY, transparency)
+    SetVar(VAR_SOLID_TRANSPARENCY, transparency)
+    SetVar(VAR_SHAPE_TRANSPARENCY, transparency)
+    SetVar(VAR_LABEL_TRANSPARENCY, transparency)
 
 
 def SetMaterial(material):
-    SetVar(VAR_MATERIAL, material)
-
-
-def SetTexture(texture):
-    SetVar(VAR_TEXTURE, texture)
+    SetVar(VAR_POINT_MATERIAL, material)
+    SetVar(VAR_LINE_MATERIAL, material)
+    SetVar(VAR_SOLID_MATERIAL, material)
+    SetVar(VAR_SHAPE_MATERIAL, material)
 
 
 def SetStyle(style):
-    material, color, transparency, texture = style
-    SetMaterial(material)
-    SetColor(color)
-    SetTransparency(transparency)
-    SetTexture(texture)
+    for var in style:
+        SetVar(var, style[var])
 
 
 def DoHide():
@@ -524,28 +518,25 @@ def DoDirect(fromCoord, toCoord):
     scene.doTrsf(trsf)
 
 
-def DrawShape(argShape):
-    shape = GetVar(ARG_SHAPE, argShape)
+def DrawShape(shape, style=None):
 
-    material = GetVar(VAR_MATERIAL)
-    transparency = GetVar(VAR_TRANSPARENCY)
-    color = GetVar(VAR_COLOR)
+    material = GetVar(VAR_SHAPE_MATERIAL, style)
+    transparency = GetVar(VAR_SHAPE_TRANSPARENCY, style)
+    color = GetVar(VAR_SHAPE_COLOR, style)
 
     scene.drawShape(shape, material, transparency, color)
 
 
-def DrawLabel(argCoord, argText):
-    coord = GetVar(ARG_COORD, argCoord)
-    text = GetVar(ARG_TEXT, argText)
+def DrawLabel(coord, text, style=None):
+
+    transparency = GetVar(VAR_LABEL_TRANSPARENCY, style)
+    color = GetVar(VAR_LABEL_COLOR, style)
+    mainScale = GetVar(VAR_MAIN_SCALE, style)
+    labelScale = GetVar(VAR_LABEL_SCALE, style)
+    labelHeightPx = GetVar(VAR_LABEL_HEIGHT_PX, style)
+    labelDelta = GetVar(VAR_LABEL_DELTA, style)
 
     pnt = _pnt(coord)
-
-    transparency = GetVar(VAR_TRANSPARENCY)
-    color = GetVar(VAR_COLOR)
-    mainScale = GetVar(VAR_MAIN_SCALE)
-    labelScale = GetVar(VAR_LABEL_SCALE)
-    labelHeightPx = GetVar(VAR_LABEL_HEIGHT_PX)
-    labelDelta = GetVar(VAR_LABEL_DELTA)
 
     delta = labelDelta * mainScale
     heightPx = labelHeightPx * labelScale
@@ -553,13 +544,9 @@ def DrawLabel(argCoord, argText):
     scene.drawLabel(targetPnt, text, heightPx, color, transparency)
 
 
-def DrawSphere(argRadius):
-    radius = GetVar(ARG_RADIUS, argRadius)
-
+def DrawSphere(radius, style=None):
     shape = comp.compute('computeSphere', radius)
-    LevelBegin('Shape')
-    DrawShape(shape)
-    LevelEnd()
+    DrawShape(shape, MakeStyle(style, 'VAR_SOLID_', 'VAR_SHAPE_'))
 
 
 def DrawDummy():
@@ -972,4 +959,7 @@ def SceneShow(isDesk=True, isCoord=True, isLimits=True, screenX=1200, screenY=90
     global scene, reg
     scene = Scene(screenX, screenY)
     reg = Registry(VAR_DEFAULTS)
+
+SetStyle(DEFAULT_VARS)
+SetStyle(MAIN_STYLE)
 
