@@ -26,36 +26,6 @@ from OCC.Core.Graphic3d import Graphic3d_MaterialAspect
 from OCC.Display.SimpleGui import init_display
 
 
-def _coord(pnt):
-    return pnt.X(), pnt.Y(), pnt.Z()
-
-
-def _pnt(coord):
-    x, y, z = coord
-    return gp_Pnt(x, y, z)
-
-
-def _vec(coord1):
-    x, y, z = coord1
-    return gp_Vec(x, y, z)
-
-
-def Decart(x, y, z):
-    return x, y, z
-
-
-def UnDecart(coord):
-    return coord
-
-
-def Rgb(r, g, b):
-    return r, g, b
-
-
-def Style(material, color, transparency, texture):
-    return material, color, transparency, texture
-
-
 BRASS_MATERIAL = Graphic3d_NameOfMaterial.Graphic3d_NOM_BRASS
 BRONZE_MATERIAL = Graphic3d_NameOfMaterial.Graphic3d_NOM_BRONZE
 COPPER_MATERIAL = Graphic3d_NameOfMaterial.Graphic3d_NOM_COPPER
@@ -107,82 +77,72 @@ A0_M_5_1_DESK = ('A0 M5:1', 5, 1)
 
 
 # *************************************************
-# *************************************************
+# Style vars
 # *************************************************
 
+VAR_LABEL_PREFIX = 'VAR_LABEL_'
+VAR_POINT_PREFIX = 'VAR_POINT_'
+VAR_LINE_PREFIX = 'VAR_LINE_'
+VAR_SOLID_PREFIX = 'VAR_SOLID_'
+VAR_SURFACE_PREFIX = 'VAR_SURFACE_'
+
+VAR_MATERIAL = 'MATERIAL'
+VAR_COLOR = 'COLOR'
+VAR_TRANSPARENCY = 'TRANSPARENCY'
+
+# **************************************************
 
 VAR_MAIN_SCALE = 'VAR_MAIN_SCALE'
 VAR_GEOM_SCALE = 'VAR_GEOM_SCALE'
 VAR_LABEL_SCALE = 'VAR_LABEL_SCALE'
 
-VAR_LABEL_HEIGHT_PX = 'VAR_LABEL_HEIGHT_PX'
-VAR_LABEL_DELTA = 'VAR_LABEL_DELTA'
-
 VAR_POINT_RADIUS = 'VAR_POINT_RADIUS'
 VAR_LINE_RADIUS = 'VAR_LINE_RADIUS'
-VAR_ARROW_RADIUS = 'VAR_ARROW_RADIUS'
-VAR_ARROW_LENGTH = 'VAR_ARROW_LENGTH'
-VAR_FACE_WIDTH = 'VAR_FACE_WIDTH'
+VAR_LINE_ARROW_RADIUS = 'VAR_LINE_ARROW_RADIUS'
+VAR_LINE_ARROW_LENGTH = 'VAR_LINE_ARROW_LENGTH'
+VAR_SURFACE_WIDTH = 'VAR_SURFACE_WIDTH'
 
-VAR_POINT_MATERIAL = 'VAR_POINT_MATERIAL'
-VAR_POINT_COLOR = 'VAR_POINT_COLOR'
-VAR_POINT_TRANSPARENCY = 'VAR_POINT_TRANSPARENCY'
+VAR_LABEL_DELTA = 'DELTA'
+VAR_LABEL_HEIGHT_PX = 'TEXT_HEIGHT_PX'
 
-VAR_LINE_MATERIAL = 'VAR_LINE_MATERIAL'
-VAR_LINE_COLOR = 'VAR_LINE_COLOR'
-VAR_LINE_TRANSPARENCY = 'VAR_LINE_TRANSPARENCY'
-
-VAR_SOLID_MATERIAL = 'VAR_SOLID_MATERIAL'
-VAR_SOLID_COLOR = 'VAR_SOLID_COLOR'
-VAR_SOLID_TRANSPARENCY = 'VAR_SOLID_TRANSPARENCY'
-
-VAR_SHAPE_MATERIAL = 'VAR_SHAPE_MATERIAL'
-VAR_SHAPE_COLOR = 'VAR_SHAPE_COLOR'
-VAR_SHAPE_TRANSPARENCY = 'VAR_SHAPE_TRANSPARENCY'
-
-VAR_LABEL_COLOR = 'VAR_LABEL_COLOR'
-VAR_LABEL_TRANSPARENCY = 'VAR_LABEL_TRANSPARENCY'
-
-VAR_GEOM_SCALE = 'VAR_GEOM_SCALE'
-
+# ***************************************************
 
 DEFAULT_VARS = {
 
     VAR_MAIN_SCALE: 1,
     VAR_GEOM_SCALE: 1,
-    VAR_LABEL_SCALE: 1,
 
     VAR_LABEL_HEIGHT_PX: 20,  # not scaled
-
     VAR_LABEL_DELTA: 5,
 
     VAR_POINT_RADIUS: 8,
     VAR_LINE_RADIUS: 4,
-    VAR_ARROW_RADIUS: 8,
-    VAR_ARROW_LENGTH: 30,
-    VAR_FACE_WIDTH: 2,
+    VAR_LINE_ARROW_RADIUS: 8,
+    VAR_LINE_ARROW_LENGTH: 30,
+    VAR_SURFACE_WIDTH: 2,
 }
 
 
 MAIN_STYLE = {
 
-    VAR_POINT_MATERIAL: CHROME_MATERIAL,
-    VAR_POINT_COLOR: GOLD_COLOR,
-    VAR_POINT_TRANSPARENCY: 0,
-    VAR_LINE_MATERIAL: CHROME_MATERIAL,
-    VAR_LINE_COLOR: BLUE_COLOR,
-    VAR_LINE_TRANSPARENCY: 0,
+    VAR_POINT_PREFIX + VAR_MATERIAL: CHROME_MATERIAL,
+    VAR_POINT_PREFIX + VAR_COLOR: GOLD_COLOR,
+    VAR_POINT_PREFIX + VAR_TRANSPARENCY: 0,
 
-    VAR_SOLID_MATERIAL: CHROME_MATERIAL,
-    VAR_SOLID_COLOR: WHITE_COLOR,
-    VAR_SOLID_TRANSPARENCY: 0,
+    VAR_LINE_PREFIX + VAR_MATERIAL: CHROME_MATERIAL,
+    VAR_LINE_PREFIX + VAR_COLOR: BLUE_COLOR,
+    VAR_LINE_PREFIX + VAR_TRANSPARENCY: 0,
 
-    VAR_SHAPE_MATERIAL: CHROME_MATERIAL,
-    VAR_SHAPE_COLOR: GRAY_COLOR,
-    VAR_SHAPE_TRANSPARENCY: 0,
+    VAR_SOLID_PREFIX + VAR_MATERIAL: CHROME_MATERIAL,
+    VAR_SOLID_PREFIX + VAR_COLOR: WHITE_COLOR,
+    VAR_SOLID_PREFIX + VAR_TRANSPARENCY: 0,
 
-    VAR_LABEL_COLOR: GRAY_COLOR,
-    VAR_LABEL_TRANSPARENCY: 0,
+    VAR_SURFACE_PREFIX + VAR_MATERIAL: CHROME_MATERIAL,
+    VAR_SURFACE_PREFIX + VAR_COLOR: GRAY_COLOR,
+    VAR_SURFACE_PREFIX + VAR_TRANSPARENCY: 0,
+
+    VAR_LABEL_PREFIX + VAR_COLOR: GRAY_COLOR,
+    VAR_LABEL_PREFIX + VAR_TRANSPARENCY: 0,
 
     VAR_GEOM_SCALE: 1
 
@@ -190,24 +150,24 @@ MAIN_STYLE = {
 
 FOCUS_STYLE = {
 
-    VAR_POINT_MATERIAL: CHROME_MATERIAL,
-    VAR_POINT_COLOR: GOLD_COLOR,
-    VAR_POINT_TRANSPARENCY: 0,
+    VAR_POINT_PREFIX + VAR_MATERIAL: CHROME_MATERIAL,
+    VAR_POINT_PREFIX + VAR_COLOR: GOLD_COLOR,
+    VAR_POINT_PREFIX + VAR_TRANSPARENCY: 0,
 
-    VAR_LINE_MATERIAL: CHROME_MATERIAL,
-    VAR_LINE_COLOR: BLUE_COLOR,
-    VAR_LINE_TRANSPARENCY: 0,
+    VAR_LINE_PREFIX + VAR_MATERIAL: CHROME_MATERIAL,
+    VAR_LINE_PREFIX + VAR_COLOR: BLUE_COLOR,
+    VAR_LINE_PREFIX + VAR_TRANSPARENCY: 0,
 
-    VAR_SOLID_MATERIAL: CHROME_MATERIAL,
-    VAR_SOLID_COLOR: WHITE_COLOR,
-    VAR_SOLID_TRANSPARENCY: 0,
+    VAR_SOLID_PREFIX + VAR_MATERIAL: CHROME_MATERIAL,
+    VAR_SOLID_PREFIX + VAR_COLOR: WHITE_COLOR,
+    VAR_SOLID_PREFIX + VAR_TRANSPARENCY: 0,
 
-    VAR_SHAPE_MATERIAL: CHROME_MATERIAL,
-    VAR_SHAPE_COLOR: GRAY_COLOR,
-    VAR_SHAPE_TRANSPARENCY: 0,
+    VAR_SURFACE_PREFIX + VAR_MATERIAL: CHROME_MATERIAL,
+    VAR_SURFACE_PREFIX + VAR_COLOR: GRAY_COLOR,
+    VAR_SURFACE_PREFIX + VAR_TRANSPARENCY: 0,
 
-    VAR_LABEL_COLOR: GRAY_COLOR,
-    VAR_LABEL_TRANSPARENCY: 0,
+    VAR_LABEL_PREFIX + VAR_COLOR: GRAY_COLOR,
+    VAR_LABEL_PREFIX + VAR_TRANSPARENCY: 0,
 
     VAR_GEOM_SCALE: 1
 
@@ -215,24 +175,24 @@ FOCUS_STYLE = {
 
 INFO_STYLE = {
 
-    VAR_POINT_MATERIAL: CHROME_MATERIAL,
-    VAR_POINT_COLOR: GOLD_COLOR,
-    VAR_POINT_TRANSPARENCY: 0,
+    VAR_POINT_PREFIX + VAR_MATERIAL: CHROME_MATERIAL,
+    VAR_POINT_PREFIX + VAR_COLOR: GOLD_COLOR,
+    VAR_POINT_PREFIX + VAR_TRANSPARENCY: 0,
 
-    VAR_LINE_MATERIAL: CHROME_MATERIAL,
-    VAR_LINE_COLOR: BLUE_COLOR,
-    VAR_LINE_TRANSPARENCY: 0,
+    VAR_LINE_PREFIX + VAR_MATERIAL: CHROME_MATERIAL,
+    VAR_LINE_PREFIX + VAR_COLOR: BLUE_COLOR,
+    VAR_LINE_PREFIX + VAR_TRANSPARENCY: 0,
 
-    VAR_SOLID_MATERIAL: CHROME_MATERIAL,
-    VAR_SOLID_COLOR: WHITE_COLOR,
-    VAR_SOLID_TRANSPARENCY: 0,
+    VAR_SOLID_PREFIX + VAR_MATERIAL: CHROME_MATERIAL,
+    VAR_SOLID_PREFIX + VAR_COLOR: WHITE_COLOR,
+    VAR_SOLID_PREFIX + VAR_TRANSPARENCY: 0,
 
-    VAR_SHAPE_MATERIAL: CHROME_MATERIAL,
-    VAR_SHAPE_COLOR: GRAY_COLOR,
-    VAR_SHAPE_TRANSPARENCY: 0,
+    VAR_SURFACE_PREFIX + VAR_MATERIAL: CHROME_MATERIAL,
+    VAR_SURFACE_PREFIX + VAR_COLOR: GRAY_COLOR,
+    VAR_SURFACE_PREFIX + VAR_TRANSPARENCY: 0,
 
-    VAR_LABEL_COLOR: GRAY_COLOR,
-    VAR_LABEL_TRANSPARENCY: 0,
+    VAR_LABEL_PREFIX + VAR_COLOR: GRAY_COLOR,
+    VAR_LABEL_PREFIX + VAR_TRANSPARENCY: 0,
 
     VAR_GEOM_SCALE: 1
 
@@ -248,9 +208,21 @@ DESK_PIN_OFFSET = 30
 DESK_PIN_RADIUS = 10
 DESK_PIN_HEIGHT = 2
 DESK_DRAW_AREA_SIZE = 400
-DESK_BOARD_STYLE = { VAR_SOLID_MATERIAL: PLASTIC_MATERIAL, VAR_SOLID_COLOR: WOOD_COLOR }
-DESK_PAPER_STYLE = { VAR_SOLID_MATERIAL: PLASTIC_MATERIAL, VAR_SOLID_COLOR: PAPER_COLOR }
-DESK_PIN_STYLE = { VAR_SOLID_MATERIAL: STEEL_MATERIAL, VAR_SOLID_COLOR: None }
+
+DESK_BOARD_STYLE = {
+    VAR_SOLID_PREFIX + VAR_MATERIAL: PLASTIC_MATERIAL,
+    VAR_SOLID_PREFIX + VAR_COLOR: WOOD_COLOR
+    }
+
+DESK_PAPER_STYLE = {
+    VAR_SOLID_PREFIX + VAR_MATERIAL: PLASTIC_MATERIAL,
+    VAR_SOLID_PREFIX + VAR_COLOR: PAPER_COLOR
+    }
+
+DESK_PIN_STYLE = {
+    VAR_SOLID_PREFIX + VAR_MATERIAL: STEEL_MATERIAL,
+    VAR_SOLID_PREFIX + VAR_COLOR: None
+    }
 
 COORD_X_COLOR = RED_COLOR
 COORD_Y_COLOR = GREEN_COLOR
@@ -333,6 +305,8 @@ class Scene:
         self.rootsAis: [Optional[AIS_Shape]] = []
         self.parentAis: Optional[AIS_Shape] = None
         self.currentAis: Optional[AIS_Shape] = None
+        self.dummyShape = BRepPrimAPI_MakeSphere(1)
+
 
     def render(self, screenX: int = 1200, screenY: int = 980):
         display, display_start, add_menu, add_function_to_menu = init_display(
@@ -346,11 +320,12 @@ class Scene:
         display.FitAll()
         display_start()
 
-    def childrenBegin(self):
+    def groupBegin(self):
+        self.drawShape(self.dummyShape, None, 1, None)
         self.parentAis = self.currentAis
         self.currentAis = None
 
-    def childrenEnd(self):
+    def groupEnd(self):
         self.currentAis = self.parentAis
         self.parentAis = self.parentAis.Parent()
 
@@ -368,7 +343,7 @@ class Scene:
     def doHide(self):
         self.currentAis.SetTransparency(NO_VISIBLE_TRANSPARENCY)
 
-    def drawShape(self, shape, material, transparency, color):
+    def drawShape(self, shape, color, transparency, material):
         # print(self.curPath, shape, material, transparency, color)
 
         ais = AIS_Shape(shape)
@@ -408,26 +383,29 @@ class Scene:
 
         self.drawAis(ais)
 
+    def drawAsPoint(self):
+        material = GetVar(VAR_POINT_MATERIAL)
+
+
+VAR_POINT_MATERIAL = 'VAR_POINT_MATERIAL'
+VAR_POINT_COLOR = 'VAR_POINT_COLOR'
+VAR_POINT_TRANSPARENCY = 'VAR_POINT_TRANSPARENCY'
+
+VAR_LINE_MATERIAL = 'VAR_LINE_MATERIAL'
+VAR_LINE_COLOR = 'VAR_LINE_COLOR'
+VAR_LINE_TRANSPARENCY = 'VAR_LINE_TRANSPARENCY'
+
+VAR_SOLID_MATERIAL = 'VAR_SOLID_MATERIAL'
+VAR_SOLID_COLOR = 'VAR_SOLID_COLOR'
+VAR_SOLID_TRANSPARENCY = 'VAR_SOLID_TRANSPARENCY'
+
+VAR_SURFACE_MATERIAL = 'VAR_SHAPE_MATERIAL'
+VAR_SURFACE_COLOR = 'VAR_SHAPE_COLOR'
+VAR_SURFACE_TRANSPARENCY = 'VAR_SHAPE_TRANSPARENCY'
 
 scene = Scene()
 comp = DeskComputer()
 registry = {}
-
-
-def LevelBegin(nm):
-    reg.levelBegin(nm)
-
-
-def LevelEnd():
-    reg.levelEnd()
-
-
-def ChildrenBegin():
-    scene.childrenBegin()
-
-
-def ChildrenEnd():
-    scene.childrenEnd()
 
 
 def SetVar(varName, varValue):
@@ -443,12 +421,268 @@ def GetVar(varName, style=None):
     return None
 
 
-def SetColor(color):
-    SetVar(VAR_POINT_COLOR, color)
-    SetVar(VAR_LINE_COLOR, color)
-    SetVar(VAR_SOLID_COLOR, color)
-    SetVar(VAR_SHAPE_COLOR, color)
-    SetVar(VAR_LABEL_COLOR, color)
+def SetVars(vars):
+    for var in vars:
+        registry[var] = vars[var]
+
+
+def GetVars():
+    return registry.copy()
+
+
+def GetScaledVar(varName, varValue):
+    varValue = GetVar(varName)
+    mainScale = GetVar(VAR_MAIN_SCALE)
+    return varValue * mainScale
+
+
+def GetGeomVar(varName, varValue):
+    scaledValue = GetScaledVar(varName)
+    geomScale = GetVar(VAR_GEOM_SCALE)
+    return scaledValue * geomScale
+
+
+# *************************************************************
+# VM level
+# *************************************************************
+
+
+def DecartPnt(x, y, z):
+    return gp_Pnt(x, y, z)
+
+
+def GroupBegin():
+    scene.groupBegin()
+
+
+def GroupEnd():
+    scene.groupEnd()
+
+
+def DoMove(pnt):
+    trsf = gp_Trsf()
+    trsf.SetTranslation(gp_Vec(DecartPnt(0,0,0), pnt))
+    scene.doTrsf(trsf)
+
+
+def DoRotate(axFromPnt, axToPnt, angle):
+    trsf = gp_Trsf()
+    ax1 = gp_Ax1(axFromPnt, gp_Dir(gp_Vec(axFromPnt, axToPnt)))
+    trsf.SetRotation(ax1, angle / 180 * math.pi)
+    scene.doTrsf(trsf)
+
+
+def DoRotateX(angle):
+    DoRotate(DecartPnt(0, 0, 0), DecartPnt(1, 0, 0), angle)
+
+
+def DoRotateY(angle):
+    DoRotate(DecartPnt(0, 0, 0), DecartPnt(0, 1, 0), angle)
+
+
+def DoRotateZ(angle):
+    DoRotate(DecartPnt(0, 0, 0), DecartPnt(0, 0, 1), angle)
+
+
+def DoDirect(fromPnt, toPnt):
+    trsf = gp_Trsf()
+
+    dirVec = gp_Vec(fromPnt, toPnt)
+    targetDir = gp_Dir(dirVec)
+
+    rotateAngle = gp_Dir(0, 0, 1).Angle(targetDir)
+    if not gp_Dir(0, 0, 1).IsParallel(targetDir, 0.001):
+        rotateDir = gp_Dir(0, 0, 1)
+        rotateDir.Cross(targetDir)
+    else:
+        rotateDir = gp_Dir(0, 1, 0)
+
+    trsf.SetRotation(gp_Ax1(gp_Pnt(0, 0, 0), rotateDir), rotateAngle)
+    trsf.SetTranslationPart(gp_Vec(DecartPnt(0, 0, 0), fromPnt))
+    scene.doTrsf(trsf)
+
+
+def DrawLabel(pnt, text):
+
+    transparency = GetVar(VAR_LABEL_TRANSPARENCY)
+    color = GetVar(VAR_LABEL_COLOR)
+    heightPx = GetVar(VAR_LABEL_HEIGHT_PX)
+    delta = GetScaledVar(VAR_LABEL_DELTA)
+
+    targetPnt = pnt.Translated(gp_Vec(delta, delta, delta))
+    scene.drawLabel(targetPnt, text, heightPx, color, transparency)
+
+
+def DrawShape(shape, varPrefix):
+    material = GetVar(varPrefix + '_MATERIAL')
+    color = GetVar(varPrefix + '_COLOR')
+    transparency = GetVar(varPrefix + '_TRANSPARENCY')
+    scene.drawShape(shape, color, transparency, material)
+
+
+def DrawSolid(shape):
+    DrawShape(shape, 'VAR_SOLID')
+
+
+def DrawSurface(shape):
+    DrawShape(shape, 'VAR_SURFACE')
+
+
+def DrawSphere(r):
+    shape = comp.compute('computeSphere', r)
+    DrawSolid(shape)
+
+
+def DrawBox(x, y, z):
+    shape = comp.compute('computeBox', x, y, z)
+    DrawSolid(shape)
+
+
+def DrawCone(r1, r2, h):
+    shape = comp.compute('computeCone', r1, r2, h)
+    DrawSolid(shape)
+
+
+def DrawCylinder(r, h):
+    shape = comp.compute('computeCylinder', r, h)
+    DrawSolid(shape)
+
+
+def DrawTorus(r1, r2):
+    shape = comp.compute('computeTorus', r1, r2)
+    DrawShape(shape)
+
+
+def DrawPoint(pnt):
+    r = GetGeomVar(VAR_POINT_RADIUS)
+    DrawShape(r, 'VAR_POINT')
+
+
+def DrawLine(pnt1, pnt2):
+    r = GetGeomVar(VAR_LINE_RADIUS)
+    length = gp_Vec(pnt1, pnt2).Magnitude()
+
+    shape = comp.compute('computeCylinder', r, length)
+    DrawShape(shape, 'VAR_LINE')
+    DoDirect(pnt1, pnt2)
+
+
+def DrawArrow(pnt1, pnt2):
+    r = GetGeomVar(VAR_ARROW_RADIUS)
+    h = GetGeomVar(VAR_ARROW_LENGTH)
+
+    shape = comp.compute('computeCone', r, 0, h)
+    DrawShape(shape, 'VAR_LINE')
+    DoDirect(pnt1, pnt2)
+
+
+def DrawLineArrow(pnt1, pnt2):
+
+    arrowLength = GetGeomVar(VAR_ARROW_LENGTH)
+
+    v = gp_Vec(pnt1, pnt2)
+    vLen = v.Magnitude()
+    v *= -arrowLength / vLen
+    pntM2 = pnt2.Translated(v)
+
+    GroupBegin()
+    DrawLine(pnt1, pntM2)
+    DrawArrow(pntM2, pnt2)
+    GroupEnd()
+
+
+def DrawLineArrow2(pnt1, pnt2):
+
+    arrowLength = GetGeomVar(VAR_ARROW_LENGTH)
+
+    v = gp_Vec(pnt1, pnt2)
+    vLen = v.Magnitude()
+    v *= arrowLength / vLen
+    pntM1 = pnt1.Translated(v)
+    v *= -1
+    pntM2 = pnt2.Translated(v)
+
+    GroupBegin()
+    DrawLine(pntM1, pntM2)
+    DrawArrow(pntM1, pnt1)
+    DrawArrow(pntM2, pnt2)
+    GroupEnd()
+
+
+def DrawWire(wire):
+
+    wireRadius = GetGeomVar(VAR_LINE_RADIUS)
+
+    # getWireStartPointAndTangentDir:
+    ex = BRepTools_WireExplorer(wire)
+    edge = ex.Current()
+    vertex = ex.CurrentVertex()
+    aCurve, aFP, aLP = BRep_Tool.Curve(edge)
+    aP = aFP
+    tangentVec = gp_Vec()
+    tempPnt = gp_Pnt()
+    aCurve.D1(aP, tempPnt, tangentVec)
+    tangentDir = gp_Dir(tangentVec)
+    startPoint = BRep_Tool.Pnt(vertex)
+
+    profileCircle = GC_MakeCircle(startPoint, tangentDir, wireRadius).Value()
+    profileEdge = BRepBuilderAPI_MakeEdge(profileCircle).Edge()
+    profileWire = BRepBuilderAPI_MakeWire(profileEdge).Wire()
+
+    shape = BRepOffsetAPI_MakePipe(wire, profileWire).Shape()
+    DrawShape(shape, 'VAR_LINE')
+
+
+def SetSolidColor(color):
+    SetVarPrefix(SOLID_VAR_PREFIX)
+    SetVarWithPrefix('_COLOR', color)
+
+
+def SetSurfaceColor(color):
+    SetVarPrefix(SURFACE_VAR_PREFIX)
+    SetVarWithPrefix('COLOR', color)
+
+
+def SetPointColor(color):
+    SetVarPrefix(POINT_VAR_PREFIX)
+    SetVarWithPrefix('COLOR', color)
+
+
+def SetLineColor(color):
+    SetVarPrefix(LINE_VAR_PREFIX)
+    SetVarWithPrefix('COLOR', color)
+
+
+def SetLabelColor(color):
+    SetVarPrefix(LABEL_VAR_PREFIX)
+    SetVarWithPrefix('COLOR', color)
+
+
+def SetTransparency(transparency):
+    SetVarWithPrefix('TRANSPARENCY', transparency)
+
+
+def SetMaterial(material):
+    SetVarWithPrefix('MATERIAL', material)
+
+
+def SetStyle(style)
+    SetVars(style)
+
+
+def SetScale(scaleStyle)
+    SetVars(scaleStyle)
+
+# *************************************************************
+# Use level
+# *************************************************************
+
+def helperCircleWire(pnt1, pnt2, pnt3):
+    geomCircle = GC_MakeCircle(pnt1, pnt2, pnt3).Value()
+    edge = BRepBuilderAPI_MakeEdge(geomCircle).Edge()
+    return BRepBuilderAPI_MakeWire(edge).Wire()
+
+
 
 
 def SetTransparency(transparency):
@@ -469,268 +703,6 @@ def SetMaterial(material):
 def SetStyle(style):
     for var in style:
         SetVar(var, style[var])
-
-
-def DoHide():
-    scene.doHide()
-
-
-def DoMove(moveCoord):
-    trsf = gp_Trsf()
-    trsf.SetTranslation(_vec(moveCoord))
-    scene.doTrsf(trsf)
-
-
-def DoRotate(axFromCoord, axToCoord, angle):
-    trsf = gp_Trsf()
-    ax1 = gp_Ax1(_pnt(axFromCoord), gp_Dir(gp_Vec(_pnt(axFromCoord), axToCoord)))
-    trsf.SetRotation(ax1, angle / 180 * math.pi)
-    scene.doTrsf(trsf)
-
-
-def DoRotateX(angle):
-    DoRotate(Decart(0, 0, 0), Decart(1, 0, 0), angle)
-
-
-def DoRotateY(angle):
-    DoRotate(Decart(0, 0, 0), Decart(0, 1, 0), angle)
-
-
-def DoRotateZ(angle):
-    DoRotate(Decart(0, 0, 0), Decart(0, 0, 1), angle)
-
-
-def DoDirect(fromCoord, toCoord):
-    trsf = gp_Trsf()
-
-    dirVec = gp_Vec(_pnt(fromCoord), _pnt(toCoord))
-    targetDir = gp_Dir(dirVec)
-
-    rotateAngle = gp_Dir(0, 0, 1).Angle(targetDir)
-    if not gp_Dir(0, 0, 1).IsParallel(targetDir, 0.001):
-        rotateDir = gp_Dir(0, 0, 1)
-        rotateDir.Cross(targetDir)
-    else:
-        rotateDir = gp_Dir(0, 1, 0)
-
-    trsf.SetRotation(gp_Ax1(gp_Pnt(0, 0, 0), rotateDir), rotateAngle)
-    trsf.SetTranslationPart(_vec(fromCoord))
-    scene.doTrsf(trsf)
-
-
-def DrawShape(shape, style=None):
-
-    material = GetVar(VAR_SHAPE_MATERIAL, style)
-    transparency = GetVar(VAR_SHAPE_TRANSPARENCY, style)
-    color = GetVar(VAR_SHAPE_COLOR, style)
-
-    scene.drawShape(shape, material, transparency, color)
-
-
-def DrawLabel(coord, text, style=None):
-
-    transparency = GetVar(VAR_LABEL_TRANSPARENCY, style)
-    color = GetVar(VAR_LABEL_COLOR, style)
-    mainScale = GetVar(VAR_MAIN_SCALE, style)
-    labelScale = GetVar(VAR_LABEL_SCALE, style)
-    labelHeightPx = GetVar(VAR_LABEL_HEIGHT_PX, style)
-    labelDelta = GetVar(VAR_LABEL_DELTA, style)
-
-    pnt = _pnt(coord)
-
-    delta = labelDelta * mainScale
-    heightPx = labelHeightPx * labelScale
-    targetPnt = pnt.Translated(gp_Vec(delta, delta, delta))
-    scene.drawLabel(targetPnt, text, heightPx, color, transparency)
-
-
-def DrawSphere(radius, style=None):
-    shape = comp.compute('computeSphere', radius)
-    DrawShape(shape, MakeStyle(style, 'VAR_SOLID_', 'VAR_SHAPE_'))
-
-
-def DrawDummy():
-    DrawSphere(1)
-    DoHide()
-
-
-def DrawBox(argX, argY, argZ):
-    x = GetVar(ARG_X, argX)
-    y = GetVar(ARG_Y, argY)
-    z = GetVar(ARG_Z, argZ)
-
-    shape = comp.compute('computeBox', x, y, z)
-    LevelBegin('Shape')
-    DrawShape(shape)
-    LevelEnd()
-
-
-def DrawCone(argRadius1, argRadius2, argHeight):
-    radius1 = GetVar(ARG_RADIUS_1, argRadius1)
-    radius2 = GetVar(ARG_RADIUS_2, argRadius2)
-    height = GetVar(ARG_HEIGHT, argHeight)
-
-    shape = comp.compute('computeCone', radius1, radius2, height)
-    LevelBegin('Shape')
-    DrawShape(shape)
-    LevelEnd()
-
-
-def DrawCylinder(argRadius, argHeight):
-    radius = GetVar(ARG_RADIUS, argRadius)
-    height = GetVar(ARG_HEIGHT, argHeight)
-
-    shape = comp.compute('computeCylinder', radius, height)
-    LevelBegin('Shape')
-    DrawShape(shape)
-    LevelEnd()
-
-
-def DrawTorus(argRadius1, argRadius2):
-    radius1 = GetVar(ARG_RADIUS_1, argRadius1)
-    radius2 = GetVar(ARG_RADIUS_2, argRadius2)
-
-    shape = comp.compute('computeTorus', radius1, radius2)
-    LevelBegin('Shape')
-    DrawShape(shape)
-    LevelEnd()
-
-
-def DrawPoint(argCoord):
-    coord = GetVar(ARG_COORD, argCoord)
-
-    mainScale = GetVar(VAR_MAIN_SCALE)
-    geomScale = GetVar(VAR_GEOM_SCALE)
-    pointRadius = GetVar(VAR_POINT_RADIUS)
-
-    r = pointRadius * geomScale * mainScale
-
-    LevelBegin('Sphere')
-    DrawSphere(r)
-    DoMove(coord)
-    LevelEnd()
-
-
-def DrawLine(argCoord1, argCoord2):
-    coord1 = GetVar(ARG_COORD_1, argCoord1)
-    coord2 = GetVar(ARG_COORD_2, argCoord2)
-
-    pnt1 = _pnt(coord1)
-    pnt2 = _pnt(coord2)
-
-    mainScale = GetVar(VAR_MAIN_SCALE)
-    geomScale = GetVar(VAR_GEOM_SCALE)
-    lineRadius = GetVar(VAR_LINE_RADIUS)
-
-    r = lineRadius * mainScale * geomScale
-    length = gp_Vec(pnt1, pnt2).Magnitude()
-
-    LevelBegin('Cylinder')
-    DrawCylinder(r, length)
-    DoDirect(_coord(pnt1), _coord(pnt2))
-    LevelEnd()
-
-
-def DrawArrow(argCoord1, argCoord2):
-    coord1 = GetVar(ARG_COORD_1, argCoord1)
-    coord2 = GetVar(ARG_COORD_2, argCoord2)
-
-    pnt1 = _pnt(coord1)
-    pnt2 = _pnt(coord2)
-
-    mainScale = GetVar(VAR_MAIN_SCALE)
-    geomScale = GetVar(VAR_GEOM_SCALE)
-    arrowRadius = GetVar(VAR_ARROW_RADIUS)
-    arrowLength = GetVar(VAR_ARROW_LENGTH)
-
-    scaledArrowRadius = arrowRadius * geomScale * mainScale
-    scaledArrowLength = arrowLength * geomScale * mainScale
-
-    v = gp_Vec(pnt1, pnt2)
-    vLen = v.Magnitude()
-    v *= -scaledArrowLength / vLen
-    pntM = pnt2.Translated(v)
-
-    LevelBegin('VectorLine')
-    DrawLine(_coord(pnt1), _coord(pntM))
-    LevelEnd()
-
-    LevelBegin('VectorFinishCone')
-    DrawCone(scaledArrowRadius, 0, scaledArrowLength)
-    DoDirect(_coord(pntM), _coord(pnt2))
-    LevelEnd()
-
-
-def DrawArrow2(argCoord1, argCoord2):
-    coord1 = GetVar(ARG_COORD_1, argCoord1)
-    coord2 = GetVar(ARG_COORD_2, argCoord2)
-
-    pnt1 = _pnt(coord1)
-    pnt2 = _pnt(coord2)
-
-    mainScale = GetVar(VAR_MAIN_SCALE)
-    geomScale = GetVar(VAR_GEOM_SCALE)
-    arrowRadius = GetVar(VAR_ARROW_RADIUS)
-    arrowLength = GetVar(VAR_ARROW_LENGTH)
-
-    scaledArrowRadius = arrowRadius * geomScale * mainScale
-    scaledArrowLength = arrowLength * geomScale * mainScale
-
-    v = gp_Vec(pnt1, pnt2)
-    vLen = v.Magnitude()
-    v *= scaledArrowLength / vLen
-    pntM1 = pnt1.Translated(v)
-    v *= -1
-    pntM2 = pnt2.Translated(v)
-
-    LevelBegin('ArrowLine')
-    DrawLine(pntM1, pntM2)
-    LevelEnd()
-    LevelBegin('ArrowStartCone')
-    DrawCone(scaledArrowRadius, 0, scaledArrowLength)
-    LevelEnd()
-    DoDirect(pntM1, pnt1)
-    LevelBegin('ArrowFinishCone')
-    DrawCone(scaledArrowRadius, 0, scaledArrowLength)
-    LevelEnd()
-    DoDirect(pntM2, pnt2)
-
-
-def helperCircleWire(pnt1, pnt2, pnt3):
-    geomCircle = GC_MakeCircle(pnt1, pnt2, pnt3).Value()
-    edge = BRepBuilderAPI_MakeEdge(geomCircle).Edge()
-    return BRepBuilderAPI_MakeWire(edge).Wire()
-
-
-def DrawWire(argWire):
-    wire = GetVar(ARG_WIRE, argWire)
-
-    wireRadius = GetVar(VAR_LINE_RADIUS)
-    mainScale = GetVar(VAR_MAIN_SCALE)
-    geomScale = GetVar(VAR_GEOM_SCALE)
-
-    scaledWireRadius = wireRadius * mainScale * geomScale
-
-    # getWireStartPointAndTangentDir:
-    ex = BRepTools_WireExplorer(wire)
-    edge = ex.Current()
-    vertex = ex.CurrentVertex()
-    aCurve, aFP, aLP = BRep_Tool.Curve(edge)
-    aP = aFP
-    tangentVec = gp_Vec()
-    tempPnt = gp_Pnt()
-    aCurve.D1(aP, tempPnt, tangentVec)
-    tangentDir = gp_Dir(tangentVec)
-    startPoint = BRep_Tool.Pnt(vertex)
-
-    profileCircle = GC_MakeCircle(startPoint, tangentDir, scaledWireRadius).Value()
-    profileEdge = BRepBuilderAPI_MakeEdge(profileCircle).Edge()
-    profileWire = BRepBuilderAPI_MakeWire(profileEdge).Wire()
-
-    shape = BRepOffsetAPI_MakePipe(wire, profileWire).Shape()
-    LevelBegin('WireShape')
-    DrawShape(shape)
-    LevelEnd()
 
 
 def DrawCircle(argCoord1, argCoord2, argCoord3):
