@@ -52,97 +52,155 @@ DIAMOND_MATERIAL = Graphic3d_NameOfMaterial.Graphic3d_NOM_DIAMOND
 TRANSPARENT_MATERIAL = Graphic3d_NameOfMaterial.Graphic3d_NOM_TRANSPARENT
 DEFAULT_MATERIAL = Graphic3d_NameOfMaterial.Graphic3d_NOM_DEFAULT
 
-WOOD_COLOR = 208 / 255, 117 / 255, 28 / 255
-PAPER_COLOR = 230 / 255, 230 / 255, 230 / 255
-STEEL_COLOR = 100 / 255, 100 / 255, 100 / 255
+WHITE_COLOR = 0xF0F0F0
+GRAY_COLOR = 0x646464
 
-WHITE_COLOR = 240 / 255, 240 / 255, 240 / 255
-GRAY_COLOR = 100 / 255, 100 / 255, 100 / 255
+RED_COLOR = 0xC81E1E
+GREEN_COLOR = 0x1EC81E
+BLUE_COLOR =  0x1E1EC8
 
-RED_COLOR = 200 / 255, 30 / 255, 30 / 255
-GREEN_COLOR = 100 / 255, 255 / 255, 100 / 255
-BLUE_COLOR = 100 / 255, 100 / 255, 255 / 255
+YELLOW_COLOR = 0xC8C81E
+CYAN_COLOR = 0x1EC8C8
+MAGENTA_COLOR = 0xC81EC8
 
-YELLOW_COLOR = 255 / 255, 255 / 255, 100 / 255
-ORIGINAL_COLOR = 241 / 255, 79 / 255, 160 / 255
-GOLD_COLOR = 180 / 255, 180 / 255, 90 / 255
+DARK_WHITE_COLOR = 0x787878
+DARK_GRAY_COLOR = 0x323232
+
+DARK_RED_COLOR = 0x640F0F
+DARK_GREEN_COLOR = 0x0F640F
+DARK_BLUE_COLOR =  0x0F0F64
+
+DARK_YELLOW_COLOR = 0x64640F
+DARK_CYAN_COLOR = 0x0F6464
+DARK_MAGENTA_COLOR = 0x640F64
+
+
+WOOD_COLOR = 0xD0751C
+PAPER_COLOR = 0xE6E6E6
+STEEL_COLOR = 0x646464
+GOLD_COLOR = 0xFFB92D
 
 
 FULL_VISIBLE_TRANSPARENCY = 0
 SEMI_VISIBLE_TRANSPARENCY = 0.5
 NO_VISIBLE_TRANSPARENCY = 1
 
-A0_M_1_1_DESK = ('A0 M1:1', 1, 1)
-A0_M_5_1_DESK = ('A0 M5:1', 5, 1)
-
 
 # *************************************************
 # Style vars
 # *************************************************
 
-VAR_LABEL_PREFIX = 'VAR_LABEL_'
-VAR_POINT_PREFIX = 'VAR_POINT_'
-VAR_LINE_PREFIX = 'VAR_LINE_'
-VAR_SOLID_PREFIX = 'VAR_SOLID_'
-VAR_SURFACE_PREFIX = 'VAR_SURFACE_'
+VAR_LABEL_MATERIAL = 'VAR_LABEL_MATERIAL'
+VAR_LABEL_COLOR = 'VAR_LABEL_COLOR'
+VAR_LABEL_TRANSPARENCY = 'VAR_LABEL_TRANSPARENCY'
 
-VAR_MATERIAL = 'MATERIAL'
-VAR_COLOR = 'COLOR'
-VAR_TRANSPARENCY = 'TRANSPARENCY'
+VAR_POINT_MATERIAL = 'VAR_POINT_MATERIAL'
+VAR_POINT_COLOR = 'VAR_POINT_COLOR'
+VAR_POINT_TRANSPARENCY = 'VAR_POINT_TRANSPARENCY'
 
-# **************************************************
+VAR_LINE_MATERIAL = 'VAR_LINE_MATERIAL'
+VAR_LINE_COLOR = 'VAR_LINE_COLOR'
+VAR_LINE_TRANSPARENCY = 'VAR_LINE_TRANSPARENCY'
 
+VAR_SOLID_MATERIAL = 'VAR_SOLID_MATERIAL'
+VAR_SOLID_COLOR = 'VAR_SOLID_COLOR'
+VAR_SOLID_TRANSPARENCY = 'VAR_SOLID_TRANSPARENCY'
+
+VAR_SURFACE_MATERIAL = 'VAR_SURFACE_MATERIAL'
+VAR_SURFACE_COLOR = 'VAR_SURFACE_COLOR'
+VAR_SURFACE_TRANSPARENCY = 'VAR_SURFACE_TRANSPARENCY'
+
+LABEL_DRAW_TYPE = 'LABEL'
+SOLID_DRAW_TYPE = 'SOLID'
+SURFACE_DRAW_TYPE = 'SURFACE'
+POINT_DRAW_TYPE = 'POINT'
+LINE_DRAW_TYPE = 'LINE'
+
+COLOR_DRAW_VAR = 'COLOR'
+MATERIAL_DRAW_VAR = 'MATERIAL'
+TRANSPARENCY_DRAW_VAR = 'TRANSPARENCY'
+
+def MakeDrawVarName(drawType, drawVar):
+    return 'VAR_' + drawType + '_' + drawVar
+
+# *************************************************
+# Geom vars
+# *************************************************
+
+VAR_MAIN_SCALE_TEXT = 'VAR_MAIN_SCALE_TEXT'
 VAR_MAIN_SCALE = 'VAR_MAIN_SCALE'
 VAR_GEOM_SCALE = 'VAR_GEOM_SCALE'
 VAR_LABEL_SCALE = 'VAR_LABEL_SCALE'
 
 VAR_POINT_RADIUS = 'VAR_POINT_RADIUS'
 VAR_LINE_RADIUS = 'VAR_LINE_RADIUS'
-VAR_LINE_ARROW_RADIUS = 'VAR_LINE_ARROW_RADIUS'
-VAR_LINE_ARROW_LENGTH = 'VAR_LINE_ARROW_LENGTH'
+VAR_ARROW_RADIUS = 'VAR_ARROW_RADIUS'
+VAR_ARROW_LENGTH = 'VAR_ARROW_LENGTH'
 VAR_SURFACE_WIDTH = 'VAR_SURFACE_WIDTH'
 
 VAR_LABEL_DELTA = 'DELTA'
 VAR_LABEL_HEIGHT_PX = 'TEXT_HEIGHT_PX'
 
+VAR_DESK_HEIGHT = 'VAR_DESK_HEIGHT'
+VAR_DESK_BORDER_SIZE = 'VAR_DESK_BORDER_SIZE'
+VAR_DESK_PAPER_XYZ: 'VAR_DESK_PAPER_XYZ'
+VAR_DESK_AXIS_SIZE: 'VAR_DESK_AXIS_SIZE'
+VAR_DESK_COORD_MARK_DIV: 'VAR_DESK_COORD_MARK_DIV'
+VAR_DESK_PIN_OFFSET: 'VAR_DESK_PIN_OFFSET'
+VAR_DESK_PIN_RADIUS: 'VAR_DESK_PIN_RADIUS'
+VAR_DESK_PIN_HEIGHT: 'VAR_DESK_PIN_HEIGHT'
+VAR_DESK_DRAW_AREA_SIZE: 'VAR_DESK_DRAW_AREA_SIZE'
+
+# ***************************************************
+# ***************************************************
 # ***************************************************
 
 DEFAULT_VARS = {
 
     VAR_MAIN_SCALE: 1,
-    VAR_GEOM_SCALE: 1,
 
     VAR_LABEL_HEIGHT_PX: 20,  # not scaled
     VAR_LABEL_DELTA: 5,
 
     VAR_POINT_RADIUS: 8,
     VAR_LINE_RADIUS: 4,
-    VAR_LINE_ARROW_RADIUS: 8,
-    VAR_LINE_ARROW_LENGTH: 30,
+    VAR_ARROW_RADIUS: 8,
+    VAR_ARROW_LENGTH: 30,
     VAR_SURFACE_WIDTH: 2,
+
+    VAR_DESK_HEIGHT: 20,
+    VAR_DESK_BORDER_SIZE: 60,
+    VAR_DESK_PAPER_XYZ: (1189, 841, 1),  # A0
+    VAR_DESK_AXIS_SIZE: 300,
+    VAR_DESK_COORD_MARK_DIV: 6,
+    VAR_DESK_PIN_OFFSET: 30,
+    VAR_DESK_PIN_RADIUS: 10,
+    VAR_DESK_PIN_HEIGHT: 2,
+    VAR_DESK_DRAW_AREA_SIZE: 400
+
 }
 
 
 MAIN_STYLE = {
 
-    VAR_POINT_PREFIX + VAR_MATERIAL: CHROME_MATERIAL,
-    VAR_POINT_PREFIX + VAR_COLOR: GOLD_COLOR,
-    VAR_POINT_PREFIX + VAR_TRANSPARENCY: 0,
+    VAR_POINT_MATERIAL: CHROME_MATERIAL,
+    VAR_POINT_COLOR: GOLD_COLOR,
+    VAR_POINT_TRANSPARENCY: 0,
 
-    VAR_LINE_PREFIX + VAR_MATERIAL: CHROME_MATERIAL,
-    VAR_LINE_PREFIX + VAR_COLOR: BLUE_COLOR,
-    VAR_LINE_PREFIX + VAR_TRANSPARENCY: 0,
+    VAR_LINE_MATERIAL: CHROME_MATERIAL,
+    VAR_LINE_COLOR: BLUE_COLOR,
+    VAR_LINE_TRANSPARENCY: 0,
 
-    VAR_SOLID_PREFIX + VAR_MATERIAL: CHROME_MATERIAL,
-    VAR_SOLID_PREFIX + VAR_COLOR: WHITE_COLOR,
-    VAR_SOLID_PREFIX + VAR_TRANSPARENCY: 0,
+    VAR_SOLID_MATERIAL: CHROME_MATERIAL,
+    VAR_SOLID_COLOR: WHITE_COLOR,
+    VAR_SOLID_TRANSPARENCY: 0,
 
-    VAR_SURFACE_PREFIX + VAR_MATERIAL: CHROME_MATERIAL,
-    VAR_SURFACE_PREFIX + VAR_COLOR: GRAY_COLOR,
-    VAR_SURFACE_PREFIX + VAR_TRANSPARENCY: 0,
+    VAR_SURFACE_MATERIAL: CHROME_MATERIAL,
+    VAR_SURFACE_COLOR: GRAY_COLOR,
+    VAR_SURFACE_TRANSPARENCY: 0.6,
 
-    VAR_LABEL_PREFIX + VAR_COLOR: GRAY_COLOR,
-    VAR_LABEL_PREFIX + VAR_TRANSPARENCY: 0,
+    VAR_LABEL_COLOR: YELLOW_COLOR,
+    VAR_LABEL_TRANSPARENCY: 0,
 
     VAR_GEOM_SCALE: 1
 
@@ -150,78 +208,81 @@ MAIN_STYLE = {
 
 FOCUS_STYLE = {
 
-    VAR_POINT_PREFIX + VAR_MATERIAL: CHROME_MATERIAL,
-    VAR_POINT_PREFIX + VAR_COLOR: GOLD_COLOR,
-    VAR_POINT_PREFIX + VAR_TRANSPARENCY: 0,
+    VAR_POINT_MATERIAL: CHROME_MATERIAL,
+    VAR_POINT_COLOR: GOLD_COLOR,
+    VAR_POINT_TRANSPARENCY: 0,
 
-    VAR_LINE_PREFIX + VAR_MATERIAL: CHROME_MATERIAL,
-    VAR_LINE_PREFIX + VAR_COLOR: BLUE_COLOR,
-    VAR_LINE_PREFIX + VAR_TRANSPARENCY: 0,
+    VAR_LINE_MATERIAL: CHROME_MATERIAL,
+    VAR_LINE_COLOR: BLUE_COLOR,
+    VAR_LINE_TRANSPARENCY: 0,
 
-    VAR_SOLID_PREFIX + VAR_MATERIAL: CHROME_MATERIAL,
-    VAR_SOLID_PREFIX + VAR_COLOR: WHITE_COLOR,
-    VAR_SOLID_PREFIX + VAR_TRANSPARENCY: 0,
+    VAR_SOLID_MATERIAL: CHROME_MATERIAL,
+    VAR_SOLID_COLOR: WHITE_COLOR,
+    VAR_SOLID_TRANSPARENCY: 0,
 
-    VAR_SURFACE_PREFIX + VAR_MATERIAL: CHROME_MATERIAL,
-    VAR_SURFACE_PREFIX + VAR_COLOR: GRAY_COLOR,
-    VAR_SURFACE_PREFIX + VAR_TRANSPARENCY: 0,
+    VAR_SURFACE_MATERIAL: CHROME_MATERIAL,
+    VAR_SURFACE_COLOR: GRAY_COLOR,
+    VAR_SURFACE_TRANSPARENCY: 0.6,
 
-    VAR_LABEL_PREFIX + VAR_COLOR: GRAY_COLOR,
-    VAR_LABEL_PREFIX + VAR_TRANSPARENCY: 0,
+    VAR_LABEL_COLOR: GRAY_COLOR,
+    VAR_LABEL_TRANSPARENCY: 0,
 
-    VAR_GEOM_SCALE: 1
+    VAR_GEOM_SCALE: 0.7
 
 }
 
 INFO_STYLE = {
 
-    VAR_POINT_PREFIX + VAR_MATERIAL: CHROME_MATERIAL,
-    VAR_POINT_PREFIX + VAR_COLOR: GOLD_COLOR,
-    VAR_POINT_PREFIX + VAR_TRANSPARENCY: 0,
+    VAR_POINT_MATERIAL: CHROME_MATERIAL,
+    VAR_POINT_COLOR: GOLD_COLOR,
+    VAR_POINT_TRANSPARENCY: 0,
 
-    VAR_LINE_PREFIX + VAR_MATERIAL: CHROME_MATERIAL,
-    VAR_LINE_PREFIX + VAR_COLOR: BLUE_COLOR,
-    VAR_LINE_PREFIX + VAR_TRANSPARENCY: 0,
+    VAR_LINE_MATERIAL: CHROME_MATERIAL,
+    VAR_LINE_COLOR: BLUE_COLOR,
+    VAR_LINE_TRANSPARENCY: 0,
 
-    VAR_SOLID_PREFIX + VAR_MATERIAL: CHROME_MATERIAL,
-    VAR_SOLID_PREFIX + VAR_COLOR: WHITE_COLOR,
-    VAR_SOLID_PREFIX + VAR_TRANSPARENCY: 0,
+    VAR_SOLID_MATERIAL: CHROME_MATERIAL,
+    VAR_SOLID_COLOR: WHITE_COLOR,
+    VAR_SOLID_TRANSPARENCY: 0,
 
-    VAR_SURFACE_PREFIX + VAR_MATERIAL: CHROME_MATERIAL,
-    VAR_SURFACE_PREFIX + VAR_COLOR: GRAY_COLOR,
-    VAR_SURFACE_PREFIX + VAR_TRANSPARENCY: 0,
+    VAR_SURFACE_MATERIAL: CHROME_MATERIAL,
+    VAR_SURFACE_COLOR: GRAY_COLOR,
+    VAR_SURFACE_TRANSPARENCY: 0.6,
 
-    VAR_LABEL_PREFIX + VAR_COLOR: GRAY_COLOR,
-    VAR_LABEL_PREFIX + VAR_TRANSPARENCY: 0,
+    VAR_LABEL_COLOR: GRAY_COLOR,
+    VAR_LABEL_TRANSPARENCY: 0,
 
-    VAR_GEOM_SCALE: 1
+    VAR_GEOM_SCALE: 0.7
+
 
 }
 
-DESK_TEXT_STR = 'A0 M1:1'
-DESK_HEIGHT = 20
-DESK_BORDER_SIZE = 60
-DESK_PAPER_XYZ = (1189, 841, 1)  # A0
-DESK_AXIS_SIZE = 300
-DESK_COORD_MARK_DIV = 6
-DESK_PIN_OFFSET = 30
-DESK_PIN_RADIUS = 10
-DESK_PIN_HEIGHT = 2
-DESK_DRAW_AREA_SIZE = 400
+
+M_1_1_SCALE = {
+    VAR_MAIN_SCALE_TEXT: 'A0 M1:1',
+    VAR_MAIN_SCALE: 1
+}
+
+M_5_1_SCALE = {
+    VAR_MAIN_SCALE_TEXT: 'A0 M5:1',
+    VAR_MAIN_SCALE: 1/5
+}
+
+
 
 DESK_BOARD_STYLE = {
-    VAR_SOLID_PREFIX + VAR_MATERIAL: PLASTIC_MATERIAL,
-    VAR_SOLID_PREFIX + VAR_COLOR: WOOD_COLOR
+    VAR_SOLID_MATERIAL: PLASTIC_MATERIAL,
+    VAR_SOLID_COLOR: WOOD_COLOR
     }
 
 DESK_PAPER_STYLE = {
-    VAR_SOLID_PREFIX + VAR_MATERIAL: PLASTIC_MATERIAL,
-    VAR_SOLID_PREFIX + VAR_COLOR: PAPER_COLOR
+    VAR_SOLID_MATERIAL: PLASTIC_MATERIAL,
+    VAR_SOLID_COLOR: PAPER_COLOR
     }
 
 DESK_PIN_STYLE = {
-    VAR_SOLID_PREFIX + VAR_MATERIAL: STEEL_MATERIAL,
-    VAR_SOLID_PREFIX + VAR_COLOR: None
+    VAR_SOLID_MATERIAL: STEEL_MATERIAL,
+    VAR_SOLID_COLOR: None
     }
 
 COORD_X_COLOR = RED_COLOR
@@ -306,6 +367,7 @@ class Scene:
         self.parentAis: Optional[AIS_Shape] = None
         self.currentAis: Optional[AIS_Shape] = None
         self.dummyShape = BRepPrimAPI_MakeSphere(1)
+        self.drawType = SOLID_DRAW_TYPE
 
 
     def render(self, screenX: int = 1200, screenY: int = 980):
@@ -387,21 +449,6 @@ class Scene:
         material = GetVar(VAR_POINT_MATERIAL)
 
 
-VAR_POINT_MATERIAL = 'VAR_POINT_MATERIAL'
-VAR_POINT_COLOR = 'VAR_POINT_COLOR'
-VAR_POINT_TRANSPARENCY = 'VAR_POINT_TRANSPARENCY'
-
-VAR_LINE_MATERIAL = 'VAR_LINE_MATERIAL'
-VAR_LINE_COLOR = 'VAR_LINE_COLOR'
-VAR_LINE_TRANSPARENCY = 'VAR_LINE_TRANSPARENCY'
-
-VAR_SOLID_MATERIAL = 'VAR_SOLID_MATERIAL'
-VAR_SOLID_COLOR = 'VAR_SOLID_COLOR'
-VAR_SOLID_TRANSPARENCY = 'VAR_SOLID_TRANSPARENCY'
-
-VAR_SURFACE_MATERIAL = 'VAR_SHAPE_MATERIAL'
-VAR_SURFACE_COLOR = 'VAR_SHAPE_COLOR'
-VAR_SURFACE_TRANSPARENCY = 'VAR_SHAPE_TRANSPARENCY'
 
 scene = Scene()
 comp = DeskComputer()
@@ -430,16 +477,24 @@ def GetVars():
     return registry.copy()
 
 
-def GetScaledVar(varName, varValue):
-    varValue = GetVar(varName)
+def GetMainScaledVar(scaledVarName):
+    varValue = GetVar(scaledVarName)
     mainScale = GetVar(VAR_MAIN_SCALE)
     return varValue * mainScale
 
 
-def GetGeomVar(varName, varValue):
-    scaledValue = GetScaledVar(varName)
+def GetGeomScaledVar(scaledVarName):
+    scaledValue = GetMainScaledVar(scaledVarName)
     geomScale = GetVar(VAR_GEOM_SCALE)
     return scaledValue * geomScale
+
+
+def SetDrawType(drawType):
+    scene.drawTypeForSet = drawType
+
+
+def SetDrawVar(drawVarName, drawVarValue):
+    SetVar(MakeDrawVarName(scene.drawType, drawVarName), drawVarValue)
 
 
 # *************************************************************
@@ -507,16 +562,16 @@ def DrawLabel(pnt, text):
     transparency = GetVar(VAR_LABEL_TRANSPARENCY)
     color = GetVar(VAR_LABEL_COLOR)
     heightPx = GetVar(VAR_LABEL_HEIGHT_PX)
-    delta = GetScaledVar(VAR_LABEL_DELTA)
+    delta = GetMainScaledVar(VAR_LABEL_DELTA)
 
     targetPnt = pnt.Translated(gp_Vec(delta, delta, delta))
     scene.drawLabel(targetPnt, text, heightPx, color, transparency)
 
 
-def DrawShape(shape, varPrefix):
-    material = GetVar(varPrefix + '_MATERIAL')
-    color = GetVar(varPrefix + '_COLOR')
-    transparency = GetVar(varPrefix + '_TRANSPARENCY')
+def DrawShape(shape, stylePrefix):
+    material = GetVar(stylePrefix + '_MATERIAL')
+    color = GetVar(stylePrefix + '_COLOR')
+    transparency = GetVar(stylePrefix + '_TRANSPARENCY')
     scene.drawShape(shape, color, transparency, material)
 
 
@@ -554,12 +609,12 @@ def DrawTorus(r1, r2):
 
 
 def DrawPoint(pnt):
-    r = GetGeomVar(VAR_POINT_RADIUS)
+    r = GetGeomScaledVar(VAR_POINT_RADIUS)
     DrawShape(r, 'VAR_POINT')
 
 
 def DrawLine(pnt1, pnt2):
-    r = GetGeomVar(VAR_LINE_RADIUS)
+    r = GetGeomScaledVar(VAR_LINE_RADIUS)
     length = gp_Vec(pnt1, pnt2).Magnitude()
 
     shape = comp.compute('computeCylinder', r, length)
@@ -568,8 +623,8 @@ def DrawLine(pnt1, pnt2):
 
 
 def DrawArrow(pnt1, pnt2):
-    r = GetGeomVar(VAR_ARROW_RADIUS)
-    h = GetGeomVar(VAR_ARROW_LENGTH)
+    r = GetGeomScaledVar(VAR_ARROW_RADIUS)
+    h = GetGeomScaledVar(VAR_ARROW_LENGTH)
 
     shape = comp.compute('computeCone', r, 0, h)
     DrawShape(shape, 'VAR_LINE')
@@ -578,7 +633,7 @@ def DrawArrow(pnt1, pnt2):
 
 def DrawLineArrow(pnt1, pnt2):
 
-    arrowLength = GetGeomVar(VAR_ARROW_LENGTH)
+    arrowLength = GetGeomScaledVar(VAR_ARROW_LENGTH)
 
     v = gp_Vec(pnt1, pnt2)
     vLen = v.Magnitude()
@@ -593,7 +648,7 @@ def DrawLineArrow(pnt1, pnt2):
 
 def DrawLineArrow2(pnt1, pnt2):
 
-    arrowLength = GetGeomVar(VAR_ARROW_LENGTH)
+    arrowLength = GetGeomScaledVar(VAR_ARROW_LENGTH)
 
     v = gp_Vec(pnt1, pnt2)
     vLen = v.Magnitude()
@@ -611,7 +666,7 @@ def DrawLineArrow2(pnt1, pnt2):
 
 def DrawWire(wire):
 
-    wireRadius = GetGeomVar(VAR_LINE_RADIUS)
+    wireRadius = GetGeomScaledVar(VAR_LINE_RADIUS)
 
     # getWireStartPointAndTangentDir:
     ex = BRepTools_WireExplorer(wire)
@@ -630,108 +685,78 @@ def DrawWire(wire):
     profileWire = BRepBuilderAPI_MakeWire(profileEdge).Wire()
 
     shape = BRepOffsetAPI_MakePipe(wire, profileWire).Shape()
-    DrawShape(shape, 'VAR_LINE')
+    DrawShape(shape, LINE_DRAW_TYPE)
 
 
 def SetSolidColor(color):
-    SetVarPrefix(SOLID_VAR_PREFIX)
-    SetVarWithPrefix('_COLOR', color)
+    SetDrawType(SOLID_DRAW_TYPE)
+    SetDrawVar(COLOR_DRAW_VAR, color)
 
 
 def SetSurfaceColor(color):
-    SetVarPrefix(SURFACE_VAR_PREFIX)
-    SetVarWithPrefix('COLOR', color)
+    SetDrawType(SURFACE_DRAW_TYPE)
+    SetDrawVar(COLOR_DRAW_VAR, color)
 
 
 def SetPointColor(color):
-    SetVarPrefix(POINT_VAR_PREFIX)
-    SetVarWithPrefix('COLOR', color)
+    SetDrawType(POINT_DRAW_TYPE)
+    SetDrawVar(COLOR_DRAW_VAR, color)
 
 
 def SetLineColor(color):
-    SetVarPrefix(LINE_VAR_PREFIX)
-    SetVarWithPrefix('COLOR', color)
+    SetDrawType(LINE_DRAW_TYPE)
+    SetDrawVar(COLOR_DRAW_VAR, color)
 
 
 def SetLabelColor(color):
-    SetVarPrefix(LABEL_VAR_PREFIX)
-    SetVarWithPrefix('COLOR', color)
+    SetDrawType(LABEL_DRAW_TYPE)
+    SetDrawVar(COLOR_DRAW_VAR, color)
 
 
 def SetTransparency(transparency):
-    SetVarWithPrefix('TRANSPARENCY', transparency)
+    SetDrawVar(TRANSPARENCY_DRAW_VAR, transparency)
 
 
 def SetMaterial(material):
-    SetVarWithPrefix('MATERIAL', material)
+    SetDrawVar(MATERIAL_DRAW_VAR, material)
 
 
-def SetStyle(style)
-    SetVars(style)
+def SetStyle(styleVars):
+    SetVars(styleVars)
 
 
-def SetScale(scaleStyle)
-    SetVars(scaleStyle)
+def SetScale(scaleVars):
+    SetVars(scaleVars)
+
 
 # *************************************************************
 # Use level
 # *************************************************************
 
+
 def helperCircleWire(pnt1, pnt2, pnt3):
+
     geomCircle = GC_MakeCircle(pnt1, pnt2, pnt3).Value()
     edge = BRepBuilderAPI_MakeEdge(geomCircle).Edge()
     return BRepBuilderAPI_MakeWire(edge).Wire()
 
 
-
-
-def SetTransparency(transparency):
-    SetVar(VAR_POINT_TRANSPARENCY, transparency)
-    SetVar(VAR_LINE_TRANSPARENCY, transparency)
-    SetVar(VAR_SOLID_TRANSPARENCY, transparency)
-    SetVar(VAR_SHAPE_TRANSPARENCY, transparency)
-    SetVar(VAR_LABEL_TRANSPARENCY, transparency)
-
-
-def SetMaterial(material):
-    SetVar(VAR_POINT_MATERIAL, material)
-    SetVar(VAR_LINE_MATERIAL, material)
-    SetVar(VAR_SOLID_MATERIAL, material)
-    SetVar(VAR_SHAPE_MATERIAL, material)
-
-
-def SetStyle(style):
-    for var in style:
-        SetVar(var, style[var])
-
-
-def DrawCircle(argCoord1, argCoord2, argCoord3):
-    coord1 = GetVar(ARG_COORD_1, argCoord1)
-    coord2 = GetVar(ARG_COORD_2, argCoord2)
-    coord3 = GetVar(ARG_COORD_3, argCoord3)
-
-    pnt1 = _pnt(coord1)
-    pnt2 = _pnt(coord2)
-    pnt3 = _pnt(coord3)
+def DrawCircle(pnt1, pnt2, pnt3):
 
     geomCircle = GC_MakeCircle(pnt1, pnt2, pnt3).Value()
     edge = BRepBuilderAPI_MakeEdge(geomCircle).Edge()
     wire = BRepBuilderAPI_MakeWire(edge).Wire()
 
-    LevelBegin('CircleWire')
     DrawWire(wire)
-    LevelEnd()
 
 
 def DrawDesk():
+
     mainScale = GetVar(VAR_MAIN_SCALE)
     borderSize = GetVar(VAR_DESK_BORDER_SIZE)
     height = GetVar(VAR_DESK_HEIGHT)
-    paperStyle = GetVar(VAR_DESK_PAPER_STYLE)
-    boardStyle = GetVar(VAR_DESK_BOARD_STYLE)
 
     textStr = GetVar(VAR_DESK_TEXT_STR)
-    textStyle = GetVar(VAR_DESK_TEXT_STYLE)
 
     pinOffset = GetVar(VAR_DESK_PIN_OFFSET)
     pinRadius = GetVar(VAR_DESK_PIN_RADIUS)
@@ -744,45 +769,38 @@ def DrawDesk():
     bsy = (paperSizeY + borderSize * 2) * mainScale
     bsz = height * mainScale
 
-    LevelBegin('BoardBox')
-    SetStyle(boardStyle)
+    savedVars = GetVars()
+
+    SetStyle(DESK_BOARD_STYLE)
     DrawBox(bsx, bsy, bsz)
-    DoMove(Decart(-bsx / 2, -bsy / 2, -bsz - psz))
-    LevelEnd()
+    DoMove(DecartPnt(-bsx / 2, -bsy / 2, -bsz - psz))
 
-    LevelBegin('PaperBox')
-    SetStyle(paperStyle)
+    SetStyle(DESK_PAPER_STYLE)
     DrawBox(psx, psy, psz)
-    DoMove(Decart(-psx / 2, -psy / 2, -psz))
-    LevelEnd()
+    DoMove(DecartPnt(-psx / 2, -psy / 2, -psz))
 
-    LevelBegin('DeskLabel')
-    SetStyle(textStyle)
-    DrawLabel(Decart(-bsx / 2, -bsy / 2, bsz * 3), textStr)
-    LevelEnd()
+    SetStyle(DESK_TEXT_STYLE)
+    DrawLabel(DecartPnt(-bsx / 2, -bsy / 2, bsz * 3), textStr)
 
     dx = (paperSizeX / 2 - pinOffset * mainScale)
     dy = (paperSizeY / 2 - pinOffset * mainScale)
 
     pins = [
-        ('DeskPin01Cylinder', -dx, -dy),
-        ('DeskPin02Cylinder', dx, -dy),
-        ('DeskPin03Cylinder', dx, dy),
-        ('DeskPin04Cylinder', -dx, dy),
+        (-dx, -dy),
+        (dx, -dy),
+        (dx, dy),
+        (-dx, dy),
     ]
 
     SetStyle(pinStyle)
-    for pinName, x, y in pins:
-        LevelBegin(pinName)
+    for x, y in pins:
         DrawCylinder(pinRadius * mainScale, pinHeight * mainScale)
-        DoMove(Decart(x, y, 0))
-        LevelEnd()
+        DoMove(DecartPnt(x, y, 0))
+
+    SetVars(savedVars)
 
 
-def DrawAxis(argCoord1, argCoord2, argDelta):
-    coord1 = GetVar(ARG_COORD_1, argCoord1)
-    coord2 = GetVar(ARG_COORD_2, argCoord2)
-    delta = GetVar(ARG_DELTA, argDelta)
+def DrawAxis(pnt1, pnt2, step):
 
     mainScale = GetVar(VAR_MAIN_SCALE)
     geomScale = GetVar(VAR_GEOM_SCALE)
