@@ -143,13 +143,15 @@ VAR_LABEL_HEIGHT_PX = 'TEXT_HEIGHT_PX'
 
 VAR_DESK_HEIGHT = 'VAR_DESK_HEIGHT'
 VAR_DESK_BORDER_SIZE = 'VAR_DESK_BORDER_SIZE'
-VAR_DESK_PAPER_XYZ: 'VAR_DESK_PAPER_XYZ'
-VAR_DESK_AXIS_SIZE: 'VAR_DESK_AXIS_SIZE'
-VAR_DESK_COORD_MARK_DIV: 'VAR_DESK_COORD_MARK_DIV'
-VAR_DESK_PIN_OFFSET: 'VAR_DESK_PIN_OFFSET'
-VAR_DESK_PIN_RADIUS: 'VAR_DESK_PIN_RADIUS'
-VAR_DESK_PIN_HEIGHT: 'VAR_DESK_PIN_HEIGHT'
-VAR_DESK_DRAW_AREA_SIZE: 'VAR_DESK_DRAW_AREA_SIZE'
+VAR_DESK_PAPER_X = 'VAR_DESK_PAPER_X'
+VAR_DESK_PAPER_Y = 'VAR_DESK_PAPER_Y'
+VAR_DESK_PAPER_Z = 'VAR_DESK_PAPER_Z'
+VAR_DESK_AXIS_SIZE = 'VAR_DESK_AXIS_SIZE'
+VAR_DESK_COORD_MARK_DIV = 'VAR_DESK_COORD_MARK_DIV'
+VAR_DESK_PIN_OFFSET = 'VAR_DESK_PIN_OFFSET'
+VAR_DESK_PIN_RADIUS = 'VAR_DESK_PIN_RADIUS'
+VAR_DESK_PIN_HEIGHT = 'VAR_DESK_PIN_HEIGHT'
+VAR_DESK_DRAW_AREA_SIZE = 'VAR_DESK_DRAW_AREA_SIZE'
 
 # ***************************************************
 # ***************************************************
@@ -170,7 +172,9 @@ DEFAULT_VARS = {
 
     VAR_DESK_HEIGHT: 20,
     VAR_DESK_BORDER_SIZE: 60,
-    VAR_DESK_PAPER_XYZ: (1189, 841, 1),  # A0
+    VAR_DESK_PAPER_X: 1189,  # A0
+    VAR_DESK_PAPER_Y: 841,  # A0
+    VAR_DESK_PAPER_Z: 1,  # A0
     VAR_DESK_AXIS_SIZE: 300,
     VAR_DESK_COORD_MARK_DIV: 6,
     VAR_DESK_PIN_OFFSET: 30,
@@ -283,6 +287,10 @@ DESK_PAPER_STYLE = {
 DESK_PIN_STYLE = {
     VAR_SOLID_MATERIAL: STEEL_MATERIAL,
     VAR_SOLID_COLOR: None
+    }
+
+DESK_LABEL_STYLE = {
+    VAR_LABEL_COLOR: WHITE_COLOR
     }
 
 COORD_X_COLOR = RED_COLOR
@@ -752,22 +760,21 @@ def DrawCircle(pnt1, pnt2, pnt3):
 
 def DrawDesk():
 
-    mainScale = GetVar(VAR_MAIN_SCALE)
-    borderSize = GetVar(VAR_DESK_BORDER_SIZE)
-    height = GetVar(VAR_DESK_HEIGHT)
+    borderSize = GetMainScaledVar(VAR_DESK_BORDER_SIZE)
+    deskHeight = GetMainScaledVar(VAR_DESK_HEIGHT)
 
-    textStr = GetVar(VAR_DESK_TEXT_STR)
+    textStr = GetVar(VAR_MAIN_SCALE_TEXT)
 
-    pinOffset = GetVar(VAR_DESK_PIN_OFFSET)
-    pinRadius = GetVar(VAR_DESK_PIN_RADIUS)
-    pinHeight = GetVar(VAR_DESK_PIN_HEIGHT)
-    pinStyle = GetVar(VAR_DESK_PIN_STYLE)
+    pinOffset = GetMainScaledVar(VAR_DESK_PIN_OFFSET)
+    pinRadius = GetMainScaledVar(VAR_DESK_PIN_RADIUS)
+    pinHeight = GetMainScaledVar(VAR_DESK_PIN_HEIGHT)
 
-    paperSizeX, paperSizeY, paperSizeZ = GetVar(VAR_DESK_PAPER_XYZ)
-    psx, psy, psz = paperSizeX * mainScale, paperSizeY * mainScale, paperSizeZ * mainScale
-    bsx = (paperSizeX + borderSize * 2) * mainScale
-    bsy = (paperSizeY + borderSize * 2) * mainScale
-    bsz = height * mainScale
+    psx = GetMainScaledVar(VAR_DESK_PAPER_X)
+    psy = GetMainScaledVar(VAR_DESK_PAPER_Y)
+    psz = GetMainScaledVar(VAR_DESK_PAPER_Z)
+    bsx = psx + borderSize * 2
+    bsy = psy + borderSize * 2
+    bsz = deskHeight
 
     savedVars = GetVars()
 
@@ -779,11 +786,11 @@ def DrawDesk():
     DrawBox(psx, psy, psz)
     DoMove(DecartPnt(-psx / 2, -psy / 2, -psz))
 
-    SetStyle(DESK_TEXT_STYLE)
+    SetStyle(DESK_LABEL_STYLE)
     DrawLabel(DecartPnt(-bsx / 2, -bsy / 2, bsz * 3), textStr)
 
-    dx = (paperSizeX / 2 - pinOffset * mainScale)
-    dy = (paperSizeY / 2 - pinOffset * mainScale)
+    dx = (psx / 2 - pinOffset)
+    dy = (psy / 2 - pinOffset)
 
     pins = [
         (-dx, -dy),
@@ -792,7 +799,7 @@ def DrawDesk():
         (-dx, dy),
     ]
 
-    SetStyle(pinStyle)
+    SetStyle(DESK_PIN_STYLE)
     for x, y in pins:
         DrawCylinder(pinRadius * mainScale, pinHeight * mainScale)
         DoMove(DecartPnt(x, y, 0))
