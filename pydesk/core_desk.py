@@ -137,20 +137,14 @@ VAR_ARROW_RADIUS = 'VAR_ARROW_RADIUS'
 VAR_ARROW_LENGTH = 'VAR_ARROW_LENGTH'
 VAR_SURFACE_WIDTH = 'VAR_SURFACE_WIDTH'
 
-VAR_LABEL_DELTA = 'DELTA'
+VAR_LABEL_STEP = 'VAR_LABEL_STEP'
 VAR_LABEL_HEIGHT_PX = 'TEXT_HEIGHT_PX'
 
-VAR_DESK_HEIGHT = 'VAR_DESK_HEIGHT'
-VAR_DESK_BORDER_SIZE = 'VAR_DESK_BORDER_SIZE'
-VAR_DESK_PAPER_X = 'VAR_DESK_PAPER_X'
-VAR_DESK_PAPER_Y = 'VAR_DESK_PAPER_Y'
-VAR_DESK_PAPER_Z = 'VAR_DESK_PAPER_Z'
-VAR_DESK_AXIS_SIZE = 'VAR_DESK_AXIS_SIZE'
-VAR_DESK_COORD_MARK_DIV = 'VAR_DESK_COORD_MARK_DIV'
-VAR_DESK_PIN_OFFSET = 'VAR_DESK_PIN_OFFSET'
-VAR_DESK_PIN_RADIUS = 'VAR_DESK_PIN_RADIUS'
-VAR_DESK_PIN_HEIGHT = 'VAR_DESK_PIN_HEIGHT'
-VAR_DESK_DRAW_AREA_SIZE = 'VAR_DESK_DRAW_AREA_SIZE'
+VAR_AXES_X_COLOR = 'VAR_AXES_X_COLOR'
+VAR_AXES_Y_COLOR = 'VAR_AXES_Y_COLOR'
+VAR_AXES_Z_COLOR = 'VAR_AXES_Z_COLOR'
+VAR_AXES_C_COLOR = 'VAR_AXES_C_COLOR'
+VAR_AXES_LABEL_COLOR = 'VAR_AXES_LABEL_COLOR'
 
 # ***************************************************
 # ***************************************************
@@ -161,7 +155,7 @@ DEFAULT_VARS = {
     VAR_MAIN_SCALE: 1,
 
     VAR_LABEL_HEIGHT_PX: 20,  # not scaled
-    VAR_LABEL_DELTA: 5,
+    VAR_LABEL_STEP: 5,
 
     VAR_POINT_RADIUS: 8,
     VAR_LINE_RADIUS: 4,
@@ -171,17 +165,11 @@ DEFAULT_VARS = {
     VAR_ARROW_LENGTH: 30,
     VAR_SURFACE_WIDTH: 2,
 
-    VAR_DESK_HEIGHT: 20,
-    VAR_DESK_BORDER_SIZE: 60,
-    VAR_DESK_PAPER_X: 1189,  # A0
-    VAR_DESK_PAPER_Y: 841,  # A0
-    VAR_DESK_PAPER_Z: 1,  # A0
-    VAR_DESK_AXIS_SIZE: 300,
-    VAR_DESK_COORD_MARK_DIV: 6,
-    VAR_DESK_PIN_OFFSET: 30,
-    VAR_DESK_PIN_RADIUS: 10,
-    VAR_DESK_PIN_HEIGHT: 2,
-    VAR_DESK_DRAW_AREA_SIZE: 400
+    VAR_AXES_X_COLOR: RED_COLOR,
+    VAR_AXES_Y_COLOR: GREEN_COLOR,
+    VAR_AXES_Z_COLOR: BLUE_COLOR,
+    VAR_AXES_C_COLOR: WHITE_COLOR,
+    VAR_AXES_LABEL_COLOR: YELLOW_COLOR,
 
 }
 
@@ -274,7 +262,6 @@ M_5_1_SCALE = {
 }
 
 
-
 DESK_BOARD_STYLE = {
     VAR_SOLID_MATERIAL: PLASTIC_MATERIAL,
     VAR_SOLID_COLOR: WOOD_COLOR
@@ -294,12 +281,24 @@ DESK_LABEL_STYLE = {
     VAR_LABEL_COLOR: WHITE_COLOR
     }
 
-COORD_X_COLOR = RED_COLOR
-COORD_Y_COLOR = GREEN_COLOR
-COORD_Z_COLOR = BLUE_COLOR
-COORD_C_COLOR = WHITE_COLOR
-COORD_DELTA = 50
+DESK_HEIGHT = 20
+DESK_BORDER_SIZE = 60
+DESK_PAPER_X: 1189  # A0
+DESK_PAPER_Y: 841  # A0
+DESK_PAPER_Z: 1  # A0
+DESK_PIN_OFFSET: 30
+DESK_PIN_RADIUS: 10
+DESK_PIN_HEIGHT: 2
 
+DESK_DRAW_AREA_X1: -400
+DESK_DRAW_AREA_Y1: -300
+DESK_DRAW_AREA_Z1: 0
+
+DESK_DRAW_AREA_X2: 400
+DESK_DRAW_AREA_Y2: 300
+DESK_DRAW_AREA_Z2: 400
+
+DESK_AXES_STEP: 50
 
 class Computer:
 
@@ -481,16 +480,15 @@ def GetVars():
     return registry.copy()
 
 
-def GetMainScaledVar(scaledVarName):
-    varValue = GetVar(scaledVarName)
+def ScaleMain(value):
     mainScale = GetVar(VAR_MAIN_SCALE)
-    return varValue * mainScale
+    return value * mainScale
 
 
-def GetGeomScaledVar(scaledVarName):
-    scaledValue = GetMainScaledVar(scaledVarName)
+def ScaleGeom(value):
+    mainScale = GetVar(VAR_MAIN_SCALE)
     geomScale = GetVar(VAR_GEOM_SCALE)
-    return scaledValue * geomScale
+    return value * mainScale * geomScale
 
 
 def SetStyleVar(drawType, styleVar, varValue):
@@ -571,9 +569,9 @@ def DrawLabel(pnt, text):
     transparency = GetVar(VAR_LABEL_TRANSPARENCY)
     color = GetVar(VAR_LABEL_COLOR)
     heightPx = GetVar(VAR_LABEL_HEIGHT_PX)
-    delta = GetMainScaledVar(VAR_LABEL_DELTA)
+    step = ScaleMain(GetVar(VAR_LABEL_STEP))
 
-    targetPnt = pnt.Translated(gp_Vec(delta, delta, delta))
+    targetPnt = pnt.Translated(gp_Vec(step, step, step))
     scene.drawLabel(targetPnt, text, heightPx, color, transparency)
 
 
@@ -618,12 +616,12 @@ def DrawTorus(r1, r2):
 
 
 def DrawPoint(pnt):
-    r = GetGeomScaledVar(VAR_POINT_RADIUS)
+    r = ScaleGeom(GetVar(VAR_POINT_RADIUS))
     DrawShape(r, 'VAR_POINT')
 
 
 def DrawLine(pnt1, pnt2):
-    r = GetGeomScaledVar(VAR_LINE_RADIUS)
+    r = ScaleGeom(GetVar(VAR_LINE_RADIUS))
     length = gp_Vec(pnt1, pnt2).Magnitude()
 
     shape = comp.compute('computeCylinder', r, length)
@@ -632,8 +630,8 @@ def DrawLine(pnt1, pnt2):
 
 
 def DrawArrow(pnt1, pnt2):
-    r = GetGeomScaledVar(VAR_ARROW_RADIUS)
-    h = GetGeomScaledVar(VAR_ARROW_LENGTH)
+    r = ScaleGeom(GetVar(VAR_ARROW_RADIUS))
+    h = ScaleGeom(GetVar(VAR_ARROW_LENGTH))
 
     shape = comp.compute('computeCone', r, 0, h)
     DrawShape(shape, 'VAR_LINE')
@@ -642,7 +640,7 @@ def DrawArrow(pnt1, pnt2):
 
 def DrawLineArrow(pnt1, pnt2):
 
-    arrowLength = GetGeomScaledVar(VAR_ARROW_LENGTH)
+    arrowLength = ScaleGeom(GetVar(VAR_ARROW_LENGTH))
 
     v = gp_Vec(pnt1, pnt2)
     vLen = v.Magnitude()
@@ -657,7 +655,7 @@ def DrawLineArrow(pnt1, pnt2):
 
 def DrawLineArrow2(pnt1, pnt2):
 
-    arrowLength = GetGeomScaledVar(VAR_ARROW_LENGTH)
+    arrowLength = ScaleGeom(GetVar(VAR_ARROW_LENGTH))
 
     v = gp_Vec(pnt1, pnt2)
     vLen = v.Magnitude()
@@ -675,7 +673,7 @@ def DrawLineArrow2(pnt1, pnt2):
 
 def DrawWire(wire):
 
-    wireRadius = GetGeomScaledVar(VAR_LINE_RADIUS)
+    wireRadius = ScaleGeom(GetVar(VAR_LINE_RADIUS))
 
     # getWireStartPointAndTangentDir:
     ex = BRepTools_WireExplorer(wire)
@@ -740,18 +738,18 @@ def DrawCircle(pnt1, pnt2, pnt3):
 
 def DrawDesk():
 
-    borderSize = GetMainScaledVar(VAR_DESK_BORDER_SIZE)
-    deskHeight = GetMainScaledVar(VAR_DESK_HEIGHT)
+    borderSize = GetMainScaled(DESK_BORDER_SIZE)
+    deskHeight = GetMainScaled(DESK_HEIGHT)
 
     textStr = GetVar(VAR_MAIN_SCALE_TEXT)
 
-    pinOffset = GetMainScaledVar(VAR_DESK_PIN_OFFSET)
-    pinRadius = GetMainScaledVar(VAR_DESK_PIN_RADIUS)
-    pinHeight = GetMainScaledVar(VAR_DESK_PIN_HEIGHT)
+    pinOffset = GetMainScaled(GetVar(DESK_PIN_OFFSET))
+    pinRadius = GetMainScaled(GetVar(DESK_PIN_RADIUS))
+    pinHeight = GetMainScaled(GetVar(DESK_PIN_HEIGHT))
 
-    psx = GetMainScaledVar(VAR_DESK_PAPER_X)
-    psy = GetMainScaledVar(VAR_DESK_PAPER_Y)
-    psz = GetMainScaledVar(VAR_DESK_PAPER_Z)
+    psx = GetMainScaled(GetVar(DESK_PAPER_X))
+    psy = GetMainScaled(GetVar(DESK_PAPER_Y))
+    psz = GetMainScaled(GetVar(DESK_PAPER_Z))
     bsx = psx + borderSize * 2
     bsy = psy + borderSize * 2
     bsz = deskHeight
@@ -804,23 +802,20 @@ def DrawAxis(pnt1, pnt2, step):
         v *= targetLen / totalLen
         pntMark = pnt1.Translated(v)
 
-        LevelBegin('Mark' + str(i))
         DrawCylinder(markRadius, markLength)
-        DoDirect(_coord(pntMark), _coord(pnt2))
-        LevelEnd()
+        DoMove(DecartPnt(0, 0, -markLength/2))
+        DoDirect(pntMark, pnt2)
 
 
-def DrawCoord(argCoord1, argCoord2):
-    coord1 = GetVar(ARG_COORD_1, argCoord1)
-    coord2 = GetVar(ARG_COORD_2, argCoord2)
+def DrawAxes(pnt1, pnt2, step):
 
-    xColor = GetVar(VAR_COORD_X_COLOR)
-    yColor = GetVar(VAR_COORD_Y_COLOR)
-    zColor = GetVar(VAR_COORD_Z_COLOR)
-    cColor = GetVar(VAR_COORD_C_COLOR)
-    labelColor = GetVar(VAR_COORD_LABEL_COLOR)
+    xColor = GetVar(VAR_AXES_X_COLOR)
+    yColor = GetVar(VAR_AXES_Y_COLOR)
+    zColor = GetVar(VAR_AXES_Z_COLOR)
+    cColor = GetVar(VAR_AXES_C_COLOR)
+    labelColor = GetVar(VAR_AXES_LABEL_COLOR)
 
-    normDelta = GetVar(VAR_COORD_DELTA)
+    normDelta = GetVar(VAR_AXES_STEP)
     mainScale = GetVar(VAR_MAIN_SCALE)
     delta = normDelta * mainScale
 
