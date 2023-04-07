@@ -116,12 +116,9 @@ SURFACE_DRAW_TYPE = 'SURFACE'
 POINT_DRAW_TYPE = 'POINT'
 LINE_DRAW_TYPE = 'LINE'
 
-COLOR_DRAW_VAR = 'COLOR'
-MATERIAL_DRAW_VAR = 'MATERIAL'
-TRANSPARENCY_DRAW_VAR = 'TRANSPARENCY'
-
-def MakeDrawVarName(drawType, drawVar):
-    return 'VAR_' + drawType + '_' + drawVar
+COLOR_VAR = 'COLOR'
+MATERIAL_VAR = 'MATERIAL'
+TRANSPARENCY_VAR = 'TRANSPARENCY'
 
 # *************************************************
 # Geom vars
@@ -134,6 +131,8 @@ VAR_LABEL_SCALE = 'VAR_LABEL_SCALE'
 
 VAR_POINT_RADIUS = 'VAR_POINT_RADIUS'
 VAR_LINE_RADIUS = 'VAR_LINE_RADIUS'
+VAR_MARK_RADIUS = 'VAR_MARK_RADIUS'
+VAR_MARK_LENGTH = 'VAR_MARK_LENGTH'
 VAR_ARROW_RADIUS = 'VAR_ARROW_RADIUS'
 VAR_ARROW_LENGTH = 'VAR_ARROW_LENGTH'
 VAR_SURFACE_WIDTH = 'VAR_SURFACE_WIDTH'
@@ -166,6 +165,8 @@ DEFAULT_VARS = {
 
     VAR_POINT_RADIUS: 8,
     VAR_LINE_RADIUS: 4,
+    VAR_MARK_RADIUS: 8,
+    VAR_MARK_LENGTH: 4,
     VAR_ARROW_RADIUS: 8,
     VAR_ARROW_LENGTH: 30,
     VAR_SURFACE_WIDTH: 2,
@@ -299,6 +300,7 @@ COORD_Z_COLOR = BLUE_COLOR
 COORD_C_COLOR = WHITE_COLOR
 COORD_DELTA = 50
 
+
 class Computer:
 
     def __init__(self):
@@ -375,8 +377,6 @@ class Scene:
         self.parentAis: Optional[AIS_Shape] = None
         self.currentAis: Optional[AIS_Shape] = None
         self.dummyShape = BRepPrimAPI_MakeSphere(1)
-        self.drawType = SOLID_DRAW_TYPE
-
 
     def render(self, screenX: int = 1200, screenY: int = 980):
         display, display_start, add_menu, add_function_to_menu = init_display(
@@ -453,10 +453,6 @@ class Scene:
 
         self.drawAis(ais)
 
-    def drawAsPoint(self):
-        material = GetVar(VAR_POINT_MATERIAL)
-
-
 
 scene = Scene()
 comp = DeskComputer()
@@ -497,12 +493,17 @@ def GetGeomScaledVar(scaledVarName):
     return scaledValue * geomScale
 
 
-def SetDrawType(drawType):
-    scene.drawTypeForSet = drawType
+def SetStyleVar(drawType, styleVar, varValue):
+    if drawType is not None:
+        drawTypes = [drawType]
+    else:
+        drawTypes = [POINT_DRAW_TYPE, LINE_DRAW_TYPE, SURFACE_DRAW_TYPE, SOLID_DRAW_TYPE]
+    for styleDrawType in drawTypes:
+        SetVar('VAR_' + styleDrawType + '_' + styleVar, varValue)
 
 
-def SetDrawVar(drawVarName, drawVarValue):
-    SetVar(MakeDrawVarName(scene.drawType, drawVarName), drawVarValue)
+def MakeDrawVarName(drawType, drawVar):
+    return 'VAR_' + drawType + '_' + drawVar
 
 
 # *************************************************************
@@ -696,37 +697,16 @@ def DrawWire(wire):
     DrawShape(shape, LINE_DRAW_TYPE)
 
 
-def SetSolidColor(color):
-    SetDrawType(SOLID_DRAW_TYPE)
-    SetDrawVar(COLOR_DRAW_VAR, color)
+def SetColor(color, drawType=None):
+    SetStyleVar(COLOR_VAR, drawType, color)
 
 
-def SetSurfaceColor(color):
-    SetDrawType(SURFACE_DRAW_TYPE)
-    SetDrawVar(COLOR_DRAW_VAR, color)
+def SetTransparency(transparency, drawType=None):
+    SetStyleVar(TRANSPARENCY_VAR, drawType, transparency)
 
 
-def SetPointColor(color):
-    SetDrawType(POINT_DRAW_TYPE)
-    SetDrawVar(COLOR_DRAW_VAR, color)
-
-
-def SetLineColor(color):
-    SetDrawType(LINE_DRAW_TYPE)
-    SetDrawVar(COLOR_DRAW_VAR, color)
-
-
-def SetLabelColor(color):
-    SetDrawType(LABEL_DRAW_TYPE)
-    SetDrawVar(COLOR_DRAW_VAR, color)
-
-
-def SetTransparency(transparency):
-    SetDrawVar(TRANSPARENCY_DRAW_VAR, transparency)
-
-
-def SetMaterial(material):
-    SetDrawVar(MATERIAL_DRAW_VAR, material)
+def SetMaterial(material, drawType=None):
+    SetStyleVar(MATERIAL_VAR, drawType, material)
 
 
 def SetStyle(styleVars):
@@ -801,7 +781,7 @@ def DrawDesk():
 
     SetStyle(DESK_PIN_STYLE)
     for x, y in pins:
-        DrawCylinder(pinRadius * mainScale, pinHeight * mainScale)
+        DrawCylinder(pinRadius, pinHeight)
         DoMove(DecartPnt(x, y, 0))
 
     SetVars(savedVars)
@@ -809,31 +789,23 @@ def DrawDesk():
 
 def DrawAxis(pnt1, pnt2, step):
 
-    mainScale = GetVar(VAR_MAIN_SCALE)
-    geomScale = GetVar(VAR_GEOM_SCALE)
-    pointRadius = GetVar(VAR_POINT_RADIUS)
+    markRadius = GetGeomScaledVar(VAR_MARK_RADIUS)
+    markLength = GetGeomScaledVar(VAR_MARK_LENGTH)
 
-    pnt1 = _pnt(coord1)
-    pnt2 = _pnt(coord2)
-
-    markRadius = pointRadius * mainScale * geomScale
-
-    LevelBegin('AxisArrow')
-    DrawArrow(coord1, coord2)
-    LevelEnd()
+    DrawArrow(pnt1, pnt2)
 
     v = gp_Vec(pnt1, pnt2)
     totalLen = v.Magnitude()
-    cnt = int(totalLen / delta - 1)
+    cnt = int(totalLen / step - 1)
 
     for i in range(cnt):
-        targetLen = (1 + i) * delta
+        targetLen = (1 + i) * step
         v = gp_Vec(pnt1, pnt2)
         v *= targetLen / totalLen
         pntMark = pnt1.Translated(v)
 
         LevelBegin('Mark' + str(i))
-        DrawCylinder(markRadius, markRadius / 2)
+        DrawCylinder(markRadius, markLength)
         DoDirect(_coord(pntMark), _coord(pnt2))
         LevelEnd()
 
