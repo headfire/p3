@@ -85,6 +85,15 @@ FULL_VISIBLE_TRANSPARENCY = 0
 SEMI_VISIBLE_TRANSPARENCY = 0.5
 NO_VISIBLE_TRANSPARENCY = 1
 
+LABEL = 'DESK_LABEL_'
+SOLID = 'DESK_SOLID_'
+SURFACE = 'DESK_SURFACE_'
+POINT = 'DESK_POINT_'
+LINE = 'DESK_LINE_'
+
+COLOR = 'COLOR'
+MATERIAL = 'MATERIAL'
+TRANSPARENCY = 'TRANSPARENCY'
 
 # *************************************************
 # Style vars
@@ -110,15 +119,6 @@ DESK_SURFACE_MATERIAL = 'DESK_SURFACE_MATERIAL'
 DESK_SURFACE_COLOR = 'DESK_SURFACE_COLOR'
 DESK_SURFACE_TRANSPARENCY = 'DESK_SURFACE_TRANSPARENCY'
 
-DESK_LABEL_PREFIX = 'DESK_LABEL_'
-DESK_SOLID_PREFIX = 'DESK_SOLID_'
-DESK_SURFACE_PREFIX = 'DESK_SURFACE_'
-DESK_POINT_PREFIX = 'DESK_POINT_'
-DESK_LINE_PREFIX = 'DESK_LINE_'
-
-DESK_COLOR_POSTFIX = 'COLOR'
-DESK_MATERIAL_POSTFIX = 'MATERIAL'
-DESK_TRANSPARENCY_POSTFIX = 'TRANSPARENCY'
 
 # *************************************************
 # Geom vars
@@ -457,6 +457,9 @@ scene = Scene()
 comp = DeskComputer()
 registry = {}
 
+SetStyle(DEFAULT_VARS)
+SetStyle(MAIN_STYLE)
+
 
 def SetVar(varName, varValue):
     registry[varName] = varValue
@@ -495,9 +498,9 @@ def SetStyleVar(drawType, styleVar, varValue):
     if drawType is not None:
         drawTypes = [drawType]
     else:
-        drawTypes = [POINT_DRAW_TYPE, LINE_DRAW_TYPE, SURFACE_DRAW_TYPE, SOLID_DRAW_TYPE]
+        drawTypes = [POINT, LINE, SURFACE, SOLID, LABEL]
     for styleDrawType in drawTypes:
-        SetVar('DESK_' + styleDrawType + '_' + styleVar, varValue)
+        SetVar(styleDrawType + styleVar, varValue)
 
 
 def MakeDrawVarName(drawType, drawVar):
@@ -509,7 +512,7 @@ def MakeDrawVarName(drawType, drawVar):
 # *************************************************************
 
 
-def DecartPnt(x, y, z):
+def Decart(x, y, z):
     return gp_Pnt(x, y, z)
 
 
@@ -523,7 +526,7 @@ def GroupEnd():
 
 def DoMove(pnt):
     trsf = gp_Trsf()
-    trsf.SetTranslation(gp_Vec(DecartPnt(0,0,0), pnt))
+    trsf.SetTranslation(gp_Vec(Decart(0,0,0), pnt))
     scene.doTrsf(trsf)
 
 
@@ -535,15 +538,15 @@ def DoRotate(axFromPnt, axToPnt, angle):
 
 
 def DoRotateX(angle):
-    DoRotate(DecartPnt(0, 0, 0), DecartPnt(1, 0, 0), angle)
+    DoRotate(Decart(0, 0, 0), Decart(1, 0, 0), angle)
 
 
 def DoRotateY(angle):
-    DoRotate(DecartPnt(0, 0, 0), DecartPnt(0, 1, 0), angle)
+    DoRotate(Decart(0, 0, 0), Decart(0, 1, 0), angle)
 
 
 def DoRotateZ(angle):
-    DoRotate(DecartPnt(0, 0, 0), DecartPnt(0, 0, 1), angle)
+    DoRotate(Decart(0, 0, 0), Decart(0, 0, 1), angle)
 
 
 def DoDirect(fromPnt, toPnt):
@@ -560,7 +563,7 @@ def DoDirect(fromPnt, toPnt):
         rotateDir = gp_Dir(0, 1, 0)
 
     trsf.SetRotation(gp_Ax1(gp_Pnt(0, 0, 0), rotateDir), rotateAngle)
-    trsf.SetTranslationPart(gp_Vec(DecartPnt(0, 0, 0), fromPnt))
+    trsf.SetTranslationPart(gp_Vec(Decart(0, 0, 0), fromPnt))
     scene.doTrsf(trsf)
 
 
@@ -692,19 +695,19 @@ def DrawWire(wire):
     profileWire = BRepBuilderAPI_MakeWire(profileEdge).Wire()
 
     shape = BRepOffsetAPI_MakePipe(wire, profileWire).Shape()
-    DrawShape(shape, LINE_DRAW_TYPE)
+    DrawShape(shape, LINE)
 
 
 def SetColor(color, drawType=None):
-    SetStyleVar(COLOR_VAR, drawType, color)
+    SetStyleVar(COLOR, drawType, color)
 
 
 def SetTransparency(transparency, drawType=None):
-    SetStyleVar(TRANSPARENCY_VAR, drawType, transparency)
+    SetStyleVar(TRANSPARENCY, drawType, transparency)
 
 
 def SetMaterial(material, drawType=None):
-    SetStyleVar(MATERIAL_VAR, drawType, material)
+    SetStyleVar(MATERIAL, drawType, material)
 
 
 def SetStyle(styleVars):
@@ -719,14 +722,6 @@ def SetScale(scaleVars):
 # Use level
 # *************************************************************
 
-
-def helperCircleWire(pnt1, pnt2, pnt3):
-
-    geomCircle = GC_MakeCircle(pnt1, pnt2, pnt3).Value()
-    edge = BRepBuilderAPI_MakeEdge(geomCircle).Edge()
-    return BRepBuilderAPI_MakeWire(edge).Wire()
-
-
 def DrawCircle(pnt1, pnt2, pnt3):
 
     geomCircle = GC_MakeCircle(pnt1, pnt2, pnt3).Value()
@@ -738,18 +733,18 @@ def DrawCircle(pnt1, pnt2, pnt3):
 
 def DrawDesk():
 
-    borderSize = GetMainScaled(DESK_BORDER_SIZE)
-    deskHeight = GetMainScaled(DESK_HEIGHT)
+    borderSize = ScaleMain(GetVar(DESK_BORDER_SIZE))
+    deskHeight = ScaleMain(GetVar(DESK_HEIGHT))
 
     textStr = GetVar(DESK_MAIN_SCALE_TEXT)
 
-    pinOffset = GetMainScaled(GetVar(DESK_PIN_OFFSET))
-    pinRadius = GetMainScaled(GetVar(DESK_PIN_RADIUS))
-    pinHeight = GetMainScaled(GetVar(DESK_PIN_HEIGHT))
+    pinOffset = ScaleMain(GetVar(DESK_PIN_OFFSET))
+    pinRadius = ScaleMain(GetVar(DESK_PIN_RADIUS))
+    pinHeight = ScaleMain(GetVar(DESK_PIN_HEIGHT))
 
-    psx = GetMainScaled(GetVar(DESK_PAPER_X))
-    psy = GetMainScaled(GetVar(DESK_PAPER_Y))
-    psz = GetMainScaled(GetVar(DESK_PAPER_Z))
+    psx = ScaleMain(GetVar(DESK_PAPER_X))
+    psy = ScaleMain(GetVar(DESK_PAPER_Y))
+    psz = ScaleMain(GetVar(DESK_PAPER_Z))
     bsx = psx + borderSize * 2
     bsy = psy + borderSize * 2
     bsz = deskHeight
@@ -758,14 +753,14 @@ def DrawDesk():
 
     SetStyle(DESK_BOARD_STYLE)
     DrawBox(bsx, bsy, bsz)
-    DoMove(DecartPnt(-bsx / 2, -bsy / 2, -bsz - psz))
+    DoMove(Decart(-bsx / 2, -bsy / 2, -bsz - psz))
 
     SetStyle(DESK_PAPER_STYLE)
     DrawBox(psx, psy, psz)
-    DoMove(DecartPnt(-psx / 2, -psy / 2, -psz))
+    DoMove(Decart(-psx / 2, -psy / 2, -psz))
 
     SetStyle(DESK_LABEL_STYLE)
-    DrawLabel(DecartPnt(-bsx / 2, -bsy / 2, bsz * 3), textStr)
+    DrawLabel(Decart(-bsx / 2, -bsy / 2, bsz * 3), textStr)
 
     dx = (psx / 2 - pinOffset)
     dy = (psy / 2 - pinOffset)
@@ -780,15 +775,15 @@ def DrawDesk():
     SetStyle(DESK_PIN_STYLE)
     for x, y in pins:
         DrawCylinder(pinRadius, pinHeight)
-        DoMove(DecartPnt(x, y, 0))
+        DoMove(Decart(x, y, 0))
 
     SetVars(savedVars)
 
 
 def DrawAxis(pnt1, pnt2, step):
 
-    markRadius = GetGeomScaledVar(DESK_MARK_RADIUS)
-    markLength = GetGeomScaledVar(DESK_MARK_LENGTH)
+    markRadius = ScaleGeom(GetVar(DESK_MARK_RADIUS))
+    markLength = ScaleGeom(GetVar(DESK_MARK_LENGTH))
 
     DrawArrow(pnt1, pnt2)
 
@@ -803,7 +798,7 @@ def DrawAxis(pnt1, pnt2, step):
         pntMark = pnt1.Translated(v)
 
         DrawCylinder(markRadius, markLength)
-        DoMove(DecartPnt(0, 0, -markLength/2))
+        DoMove(Decart(0, 0, -markLength/2))
         DoDirect(pntMark, pnt2)
 
 
@@ -815,65 +810,45 @@ def DrawAxes(pnt1, pnt2, step):
     cColor = GetVar(DESK_AXES_C_COLOR)
     labelColor = GetVar(DESK_AXES_LABEL_COLOR)
 
-    normDelta = GetVar(DESK_AXES_STEP)
-    mainScale = GetVar(DESK_MAIN_SCALE)
-    delta = normDelta * mainScale
-
-    x1, y1, z1 = UnDecart(coord1)
-    x2, y2, z2 = UnDecart(coord2)
-
-    cCoord = Decart(x1, y1, z1)
-    xCoord = Decart(x2, y1, z1)
-    yCoord = Decart(x1, y2, z1)
-    zCoord = Decart(x1, y1, z2)
+    xPnt = Decart(pnt2.X(), pnt1.Y(), pnt1.Z())
+    yPnt = Decart(pnt1.X(), pnt2.Y(), pnt1.Z())
+    zPnt = Decart(pnt1.X(), pnt1.Y(), pnt2.Z())
 
     SetColor(xColor)
-    DrawAxis(cCoord, xCoord, delta)
+    DrawAxis(pnt1, xPnt, step)
 
     SetColor(yColor)
-    DrawAxis(cCoord, yCoord, delta)
+    DrawAxis(pnt1, yPnt, step)
 
     SetColor(zColor)
-    DrawAxis(cCoord, zCoord, delta)
+    DrawAxis(pnt1, yPnt, step)
 
     SetColor(cColor)
-    DrawPoint(cCoord)
+    DrawPoint(pnt1)
 
     SetColor(labelColor)
-    DrawLabel(xCoord, 'X')
-    DrawLabel(yCoord, 'Y')
-    DrawLabel(zCoord, 'Z')
+    DrawLabel(xPnt, 'X')
+    DrawLabel(yPnt, 'Y')
+    DrawLabel(zPnt, 'Z')
 
 
-def DrawFrame(argVertexes, argEdges):
-    vertexes = GetVar(ARG_FRAME_VERTEXES, argVertexes)
-    edges = GetVar(ARG_FRAME_EDGES, argEdges)
+def DrawFrame(points, lines, isLabeled):
 
-    pointColor = GetVar(DESK_FRAME_POINT_COLOR)
-    lineColor = GetVar(DESK_FRAME_LINE_COLOR)
-    material = GetVar(DESK_FRAME_MATERIAL)
+    for pnt in points:
+        DrawPoint(pnt)
 
-    SetMaterial(material)
-    SetColor(pointColor)
-    for coord in vertexes:
-        DrawPoint(coord)
+    for i1, i2 in lines:
+        DrawLine(points[i1], points[i2])
 
-    SetColor(lineColor)
-    for i1, i2 in edges:
-        DrawLine(vertexes[i1], vertexes[i2])
-
-    SetColor(NICE_YELLOW_COLOR)
-    for coord in vertexes:
-        x, y, z = UnDecart(coord)
-        DrawLabel(coord, '(' + str(x) + ',' + str(y) + ',' + str(z) + ')')
+    if isLabeled:
+        for pnt in points:
+            DrawLabel(pnt, '(' + str(pnt.X()) + ',' + str(pnt.Y()) + ',' + str(pnt.Z()) + ')')
 
 
-def DrawBoxFrame(argCoord1, argCoord2, isLabeled):
-    coord1 = GetVar(ARG_COORD_1, argCoord1)
-    coord2 = GetVar(ARG_COORD_2, argCoord2)
+def DrawBoxFrame(pnt1, pnt2, isLabeled):
 
-    x1, y1, z1 = UnDecart(coord1)
-    x2, y2, z2 = UnDecart(coord2)
+    x1, y1, z1 = pnt1.X(), pnt1.Y(), pnt1.Z()
+    x2, y2, z2 = pnt2.X(), pnt2.Y(), pnt2.Z()
 
     vertexes = [
         Decart(x1, y1, z1),
@@ -893,37 +868,10 @@ def DrawBoxFrame(argCoord1, argCoord2, isLabeled):
         (0, 4), (1, 5), (2, 6), (3, 7),
     ]
 
-    LevelBegin('BoxFrame')
-    DrawFrame(vertexes, edges)
-    LevelEnd()
+    DrawFrame(vertexes, edges, isLabeled)
 
 
-def SetScale(scale):
-    SetVar()
-
-
-def SceneShow(isDesk=True, isCoord=True, isLimits=True, screenX=1200, screenY=900):
-
-
-    if isDesk:
-        DrawDummy()
-        ChildrenBegin()
-        DrawDesk()
-        ChildrenEnd()
-        DoMove(Decart(0, 0, -100))
-    if isCoord:
-        DrawCoord(Decart(0, 0, 0), Decart(500, 400, 500))
-    if isLimits:
-        SetVar(DESK_FRAME_POINT_COLOR, NICE_GRAY_COLOR, 'BoxFrame')
-        SetVar(DESK_FRAME_LINE_COLOR, NICE_GRAY_COLOR, 'BoxFrame')
-        DrawBoxFrame(Decart(-400, -300, 0), Decart(400, 300, 400), True)
-
+def Show():
     scene.render()
 
-    global scene, reg
-    scene = Scene(screenX, screenY)
-    reg = Registry(DESK_DEFAULTS)
-
-SetStyle(DEFAULT_VARS)
-SetStyle(MAIN_STYLE)
 
