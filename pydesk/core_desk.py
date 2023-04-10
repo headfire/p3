@@ -25,6 +25,93 @@ from OCC.Core.Graphic3d import Graphic3d_MaterialAspect
 
 from OCC.Display.SimpleGui import init_display
 
+class Scene:
+
+    def __init__(self):
+        self.rootsAis: [Optional[AIS_Shape]] = []
+        self.parentAis: Optional[AIS_Shape] = None
+        self.currentAis: Optional[AIS_Shape] = None
+        self.dummyShape = BRepPrimAPI_MakeSphere(1)
+
+
+    def render(self, screenX: int = 1200, screenY: int = 980):
+        display, display_start, add_menu, add_function_to_menu = init_display(
+            None, (screenX, screenY), True, [128, 128, 128], [128, 128, 128])
+
+        for ais in self.rootsAis:
+            display.Context.Display(ais, False)
+
+        # display.DisplayMessage(labelPnt, text, heightPx, color, False)
+
+        display.FitAll()
+        display_start()
+
+    def groupBegin(self):
+        self.drawShape(self.dummyShape, None, 1, None)
+        self.parentAis = self.currentAis
+        self.currentAis = None
+
+    def groupEnd(self):
+        self.currentAis = self.parentAis
+        self.parentAis = self.parentAis.Parent()
+
+    def drawAis(self, ais: AIS_InteractiveObject):
+        if self.parentAis is None:
+            self.rootsAis.append(ais)
+        else:
+            self.parentAis.AddChild(ais)
+        self.currentAis = ais
+
+    def doTrsf(self, trsf):
+        trsf *= self.currentAis.LocalTransformation()
+        self.currentAis.SetLocalTransformation(trsf)
+
+    def doHide(self):
+        self.currentAis.SetTransparency(NO_VISIBLE_TRANSPARENCY)
+
+    def drawShape(self, shape, color, transparency, material):
+        # print(self.curPath, shape, material, transparency, color)
+
+        ais = AIS_Shape(shape)
+
+        # material set anyway
+        if material is None:
+            material = GOLD_MATERIAL
+        aspect = Graphic3d_MaterialAspect(material)
+        ais.SetMaterial(aspect)
+
+        if transparency is not None:
+            ais.SetTransparency(transparency)
+
+        if color is not None:
+            r, g, b = color
+            qColor = Quantity_Color(r, g, b, Quantity_TypeOfColor(Quantity_TypeOfColor.Quantity_TOC_RGB))
+            ais.SetColor(qColor)
+
+        self.drawAis(ais)
+
+    def drawLabel(self, pnt, text, height, color, transparency):
+        # labelPnt = pnt.Transformed(position.trsf)
+        # self.display.DisplayMessage(labelPnt, text, heightPx, color, False)
+        ais = AIS_TextLabel()
+
+        ais.SetText(TCollection_ExtendedString(text, True))
+        ais.SetPosition(pnt)
+        ais.SetHeight(height)
+
+        if transparency is not None:
+            ais.SetTransparency(transparency)
+
+        if color is not None:
+            r, g, b = color
+            qColor = Quantity_Color(r, g, b, Quantity_TypeOfColor(Quantity_TypeOfColor.Quantity_TOC_RGB))
+            ais.SetColor(qColor)
+
+        self.drawAis(ais)
+
+
+scene = Scene()
+
 
 BRASS_MATERIAL = Graphic3d_NameOfMaterial.Graphic3d_NOM_BRASS
 BRONZE_MATERIAL = Graphic3d_NameOfMaterial.Graphic3d_NOM_BRONZE
@@ -79,7 +166,6 @@ WOOD_COLOR = 0xD0751C
 PAPER_COLOR = 0xE6E6E6
 STEEL_COLOR = 0x646464
 GOLD_COLOR = 0xFFB92D
-
 
 FULL_VISIBLE_TRANSPARENCY = 0
 SEMI_VISIBLE_TRANSPARENCY = 0.5
@@ -145,6 +231,19 @@ DESK_AXES_Y_COLOR = 'DESK_AXES_Y_COLOR'
 DESK_AXES_Z_COLOR = 'DESK_AXES_Z_COLOR'
 DESK_AXES_C_COLOR = 'DESK_AXES_C_COLOR'
 DESK_AXES_LABEL_COLOR = 'DESK_AXES_LABEL_COLOR'
+DESK_AXES_STEP = 'DESK_AXES_STEP'
+
+
+DESK_BOARD_HEIGHT = DESK_BOARD_HEIGHT
+DESK_BOARD_BORDER_SIZE = DESK_BOARD_BORDER_SIZE
+DESK_PAPER_XYZ = DESK_PAPER_XYZ  # A0
+DESK_PIN_OFFSET = DESK_PIN_OFFSET
+DESK_PIN_RADIUS = DESK_PIN_RADIUS
+DESK_PIN_HEIGHT = DESK_PIN_HEIGHT
+
+DESK_LIMITS_XYZ_1 = DESK_LIMITS_XYZ_1
+DESK_LIMITS_XYZ_2 = DESK_LIMITS_XYZ_2
+
 
 # ***************************************************
 # ***************************************************
@@ -168,6 +267,26 @@ DESK_DEFAULT_STYLE = {
     DESK_AXES_Z_COLOR: BLUE_COLOR,
     DESK_AXES_C_COLOR: WHITE_COLOR,
     DESK_AXES_LABEL_COLOR: YELLOW_COLOR,
+    DESK_AXES_STEP: 50
+
+
+
+    DESK_BOARD_HEIGHT: 20,
+    DESK_BOARD_BORDER_SIZE: 60,
+    DESK_PAPER_X: 1189,  # A0
+    DESK_PAPER_Y: 841,  # A0
+    DESK_PAPER_Z: 1,  # A0
+    DESK_PIN_OFFSET: 30,
+    DESK_PIN_RADIUS: 10,
+    DESK_PIN_HEIGHT: 2,
+
+    DESK_LIMITS_X1: -400,
+    DESK_LIMITS_Y1: -300,
+    DESK_LIMITS_Z1: 0,
+
+    DESK_LIMITS_X2: 400,
+    DESK_LIMITS_AREA_Y2: 300,
+    DESK_LIMITS_AREA_Z2: 400
 
 }
 
@@ -279,24 +398,33 @@ DESK_LABEL_STYLE = {
     DESK_LABEL_COLOR: WHITE_COLOR
     }
 
-DESK_HEIGHT = 20
-DESK_BORDER_SIZE = 60
-DESK_PAPER_X: 1189  # A0
-DESK_PAPER_Y: 841  # A0
-DESK_PAPER_Z: 1  # A0
-DESK_PIN_OFFSET: 30
-DESK_PIN_RADIUS: 10
-DESK_PIN_HEIGHT: 2
 
-DESK_DRAW_AREA_X1: -400
-DESK_DRAW_AREA_Y1: -300
-DESK_DRAW_AREA_Z1: 0
+def setVar(self, varName, varValue):
+    self.registry[varName] = varValue
 
-DESK_DRAW_AREA_X2: 400
-DESK_DRAW_AREA_Y2: 300
-DESK_DRAW_AREA_Z2: 400
 
-DESK_AXES_STEP: 50
+def getVar(self, varName):
+    return self.registry[varName]
+
+
+def backupVars(self):
+    return self.registry.copy()
+
+
+def restoreVars(self, backup):
+    self.registry = backup
+
+
+def setStyle(self, style):
+    for var in style:
+        self.registry[var] = style[var]
+
+
+self.registry = {}
+self.setStyle(DESK_DEFAULT_STYLE)
+self.setStyle(DESK_MAIN_STYLE)
+self.setStyle(DESK_M_1_1_STYLE)
+
 
 class Computer:
 
@@ -367,111 +495,7 @@ class Scripting:
         pass
 
 
-class Scene:
 
-    def __init__(self):
-        self.rootsAis: [Optional[AIS_Shape]] = []
-        self.parentAis: Optional[AIS_Shape] = None
-        self.currentAis: Optional[AIS_Shape] = None
-        self.dummyShape = BRepPrimAPI_MakeSphere(1)
-        self.registry = {}
-        self.setStyle(DESK_DEFAULT_STYLE)
-        self.setStyle(DESK_MAIN_STYLE)
-        self.setStyle(DESK_M_1_1_STYLE)
-
-    def setVar(self, varName, varValue):
-        self.registry[varName] = varValue
-
-    def getVar(self, varName):
-        return self.registry[varName]
-
-    def backupVars(self):
-        return self.registry.copy()
-
-    def restoreVars(self, backup):
-        self.registry = backup
-
-    def setStyle(self, style):
-        for var in style:
-            self.registry[var] = style[var]
-
-    def render(self, screenX: int = 1200, screenY: int = 980):
-        display, display_start, add_menu, add_function_to_menu = init_display(
-            None, (screenX, screenY), True, [128, 128, 128], [128, 128, 128])
-
-        for ais in self.rootsAis:
-            display.Context.Display(ais, False)
-
-        # display.DisplayMessage(labelPnt, text, heightPx, color, False)
-
-        display.FitAll()
-        display_start()
-
-    def groupBegin(self):
-        self.drawShape(self.dummyShape, None, 1, None)
-        self.parentAis = self.currentAis
-        self.currentAis = None
-
-    def groupEnd(self):
-        self.currentAis = self.parentAis
-        self.parentAis = self.parentAis.Parent()
-
-    def drawAis(self, ais: AIS_InteractiveObject):
-        if self.parentAis is None:
-            self.rootsAis.append(ais)
-        else:
-            self.parentAis.AddChild(ais)
-        self.currentAis = ais
-
-    def doTrsf(self, trsf):
-        trsf *= self.currentAis.LocalTransformation()
-        self.currentAis.SetLocalTransformation(trsf)
-
-    def doHide(self):
-        self.currentAis.SetTransparency(NO_VISIBLE_TRANSPARENCY)
-
-    def drawShape(self, shape, color, transparency, material):
-        # print(self.curPath, shape, material, transparency, color)
-
-        ais = AIS_Shape(shape)
-
-        # material set anyway
-        if material is None:
-            material = GOLD_MATERIAL
-        aspect = Graphic3d_MaterialAspect(material)
-        ais.SetMaterial(aspect)
-
-        if transparency is not None:
-            ais.SetTransparency(transparency)
-
-        if color is not None:
-            r, g, b = color
-            qColor = Quantity_Color(r, g, b, Quantity_TypeOfColor(Quantity_TypeOfColor.Quantity_TOC_RGB))
-            ais.SetColor(qColor)
-
-        self.drawAis(ais)
-
-    def drawLabel(self, pnt, text, height, color, transparency):
-        # labelPnt = pnt.Transformed(position.trsf)
-        # self.display.DisplayMessage(labelPnt, text, heightPx, color, False)
-        ais = AIS_TextLabel()
-
-        ais.SetText(TCollection_ExtendedString(text, True))
-        ais.SetPosition(pnt)
-        ais.SetHeight(height)
-
-        if transparency is not None:
-            ais.SetTransparency(transparency)
-
-        if color is not None:
-            r, g, b = color
-            qColor = Quantity_Color(r, g, b, Quantity_TypeOfColor(Quantity_TypeOfColor.Quantity_TOC_RGB))
-            ais.SetColor(qColor)
-
-        self.drawAis(ais)
-
-
-scene = Scene()
 comp = DeskComputer()
 
 
