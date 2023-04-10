@@ -25,405 +25,17 @@ from OCC.Core.Graphic3d import Graphic3d_MaterialAspect
 
 from OCC.Display.SimpleGui import init_display
 
-class Scene:
 
-    def __init__(self):
-        self.rootsAis: [Optional[AIS_Shape]] = []
-        self.parentAis: Optional[AIS_Shape] = None
-        self.currentAis: Optional[AIS_Shape] = None
-        self.dummyShape = BRepPrimAPI_MakeSphere(1)
+def Plastic(color, transparency=0.0):
+    return color, transparency, Graphic3d_NameOfMaterial.Graphic3d_NOM_PLASTIC
 
 
-    def render(self, screenX: int = 1200, screenY: int = 980):
-        display, display_start, add_menu, add_function_to_menu = init_display(
-            None, (screenX, screenY), True, [128, 128, 128], [128, 128, 128])
+def Chrome(color, transparency=0.0):
+    return color, transparency, Graphic3d_NameOfMaterial.Graphic3d_NOM_CHROME
 
-        for ais in self.rootsAis:
-            display.Context.Display(ais, False)
 
-        # display.DisplayMessage(labelPnt, text, heightPx, color, False)
-
-        display.FitAll()
-        display_start()
-
-    def groupBegin(self):
-        self.drawShape(self.dummyShape, None, 1, None)
-        self.parentAis = self.currentAis
-        self.currentAis = None
-
-    def groupEnd(self):
-        self.currentAis = self.parentAis
-        self.parentAis = self.parentAis.Parent()
-
-    def drawAis(self, ais: AIS_InteractiveObject):
-        if self.parentAis is None:
-            self.rootsAis.append(ais)
-        else:
-            self.parentAis.AddChild(ais)
-        self.currentAis = ais
-
-    def doTrsf(self, trsf):
-        trsf *= self.currentAis.LocalTransformation()
-        self.currentAis.SetLocalTransformation(trsf)
-
-    def doHide(self):
-        self.currentAis.SetTransparency(NO_VISIBLE_TRANSPARENCY)
-
-    def drawShape(self, shape, color, transparency, material):
-        # print(self.curPath, shape, material, transparency, color)
-
-        ais = AIS_Shape(shape)
-
-        # material set anyway
-        if material is None:
-            material = GOLD_MATERIAL
-        aspect = Graphic3d_MaterialAspect(material)
-        ais.SetMaterial(aspect)
-
-        if transparency is not None:
-            ais.SetTransparency(transparency)
-
-        if color is not None:
-            r, g, b = color
-            qColor = Quantity_Color(r, g, b, Quantity_TypeOfColor(Quantity_TypeOfColor.Quantity_TOC_RGB))
-            ais.SetColor(qColor)
-
-        self.drawAis(ais)
-
-    def drawLabel(self, pnt, text, height, color, transparency):
-        # labelPnt = pnt.Transformed(position.trsf)
-        # self.display.DisplayMessage(labelPnt, text, heightPx, color, False)
-        ais = AIS_TextLabel()
-
-        ais.SetText(TCollection_ExtendedString(text, True))
-        ais.SetPosition(pnt)
-        ais.SetHeight(height)
-
-        if transparency is not None:
-            ais.SetTransparency(transparency)
-
-        if color is not None:
-            r, g, b = color
-            qColor = Quantity_Color(r, g, b, Quantity_TypeOfColor(Quantity_TypeOfColor.Quantity_TOC_RGB))
-            ais.SetColor(qColor)
-
-        self.drawAis(ais)
-
-
-scene = Scene()
-
-
-BRASS_MATERIAL = Graphic3d_NameOfMaterial.Graphic3d_NOM_BRASS
-BRONZE_MATERIAL = Graphic3d_NameOfMaterial.Graphic3d_NOM_BRONZE
-COPPER_MATERIAL = Graphic3d_NameOfMaterial.Graphic3d_NOM_COPPER
-GOLD_MATERIAL = Graphic3d_NameOfMaterial.Graphic3d_NOM_GOLD
-PEWTER_MATERIAL = Graphic3d_NameOfMaterial.Graphic3d_NOM_PEWTER
-PLASTER_MATERIAL = Graphic3d_NameOfMaterial.Graphic3d_NOM_PLASTER
-PLASTIC_MATERIAL = Graphic3d_NameOfMaterial.Graphic3d_NOM_PLASTIC
-SILVER_MATERIAL = Graphic3d_NameOfMaterial.Graphic3d_NOM_SILVER
-STEEL_MATERIAL = Graphic3d_NameOfMaterial.Graphic3d_NOM_STEEL
-STONE_MATERIAL = Graphic3d_NameOfMaterial.Graphic3d_NOM_STONE
-SHINY_PLASTIC_MATERIAL = Graphic3d_NameOfMaterial.Graphic3d_NOM_SHINY_PLASTIC
-SATIN_MATERIAL = Graphic3d_NameOfMaterial.Graphic3d_NOM_SATIN
-METALIZED_MATERIAL = Graphic3d_NameOfMaterial.Graphic3d_NOM_METALIZED
-NEON_GNC_MATERIAL = Graphic3d_NameOfMaterial.Graphic3d_NOM_NEON_GNC
-CHROME_MATERIAL = Graphic3d_NameOfMaterial.Graphic3d_NOM_CHROME
-ALUMINIUM_MATERIAL = Graphic3d_NameOfMaterial.Graphic3d_NOM_ALUMINIUM
-OBSIDIAN_MATERIAL = Graphic3d_NameOfMaterial.Graphic3d_NOM_OBSIDIAN
-NEON_PHC_MATERIAL = Graphic3d_NameOfMaterial.Graphic3d_NOM_NEON_PHC
-JADE_MATERIAL = Graphic3d_NameOfMaterial.Graphic3d_NOM_JADE
-CHARCOAL_MATERIAL = Graphic3d_NameOfMaterial.Graphic3d_NOM_CHARCOAL
-WATER_MATERIAL = Graphic3d_NameOfMaterial.Graphic3d_NOM_WATER
-GLASS_MATERIAL = Graphic3d_NameOfMaterial.Graphic3d_NOM_GLASS
-DIAMOND_MATERIAL = Graphic3d_NameOfMaterial.Graphic3d_NOM_DIAMOND
-TRANSPARENT_MATERIAL = Graphic3d_NameOfMaterial.Graphic3d_NOM_TRANSPARENT
-DEFAULT_MATERIAL = Graphic3d_NameOfMaterial.Graphic3d_NOM_DEFAULT
-
-WHITE_COLOR = 0xF0F0F0
-GRAY_COLOR = 0x646464
-
-RED_COLOR = 0xC81E1E
-GREEN_COLOR = 0x1EC81E
-BLUE_COLOR =  0x1E1EC8
-
-YELLOW_COLOR = 0xC8C81E
-CYAN_COLOR = 0x1EC8C8
-MAGENTA_COLOR = 0xC81EC8
-
-DARK_WHITE_COLOR = 0x787878
-DARK_GRAY_COLOR = 0x323232
-
-DARK_RED_COLOR = 0x640F0F
-DARK_GREEN_COLOR = 0x0F640F
-DARK_BLUE_COLOR =  0x0F0F64
-
-DARK_YELLOW_COLOR = 0x64640F
-DARK_CYAN_COLOR = 0x0F6464
-DARK_MAGENTA_COLOR = 0x640F64
-
-
-WOOD_COLOR = 0xD0751C
-PAPER_COLOR = 0xE6E6E6
-STEEL_COLOR = 0x646464
-GOLD_COLOR = 0xFFB92D
-
-FULL_VISIBLE_TRANSPARENCY = 0
-SEMI_VISIBLE_TRANSPARENCY = 0.5
-NO_VISIBLE_TRANSPARENCY = 1
-
-LABEL = 'DESK_LABEL_'
-SOLID = 'DESK_SOLID_'
-SURFACE = 'DESK_SURFACE_'
-POINT = 'DESK_POINT_'
-LINE = 'DESK_LINE_'
-
-COLOR = 'COLOR'
-MATERIAL = 'MATERIAL'
-TRANSPARENCY = 'TRANSPARENCY'
-
-# *************************************************
-# Style vars
-# *************************************************
-
-DESK_LABEL_MATERIAL = 'DESK_LABEL_MATERIAL'
-DESK_LABEL_COLOR = 'DESK_LABEL_COLOR'
-DESK_LABEL_TRANSPARENCY = 'DESK_LABEL_TRANSPARENCY'
-
-DESK_POINT_MATERIAL = 'DESK_POINT_MATERIAL'
-DESK_POINT_COLOR = 'DESK_POINT_COLOR'
-DESK_POINT_TRANSPARENCY = 'DESK_POINT_TRANSPARENCY'
-
-DESK_LINE_MATERIAL = 'DESK_LINE_MATERIAL'
-DESK_LINE_COLOR = 'DESK_LINE_COLOR'
-DESK_LINE_TRANSPARENCY = 'DESK_LINE_TRANSPARENCY'
-
-DESK_SOLID_MATERIAL = 'DESK_SOLID_MATERIAL'
-DESK_SOLID_COLOR = 'DESK_SOLID_COLOR'
-DESK_SOLID_TRANSPARENCY = 'DESK_SOLID_TRANSPARENCY'
-
-DESK_SURFACE_MATERIAL = 'DESK_SURFACE_MATERIAL'
-DESK_SURFACE_COLOR = 'DESK_SURFACE_COLOR'
-DESK_SURFACE_TRANSPARENCY = 'DESK_SURFACE_TRANSPARENCY'
-
-
-# *************************************************
-# Geom vars
-# *************************************************
-
-DESK_MAIN_SCALE_TEXT = 'DESK_MAIN_SCALE_TEXT'
-DESK_MAIN_SCALE = 'DESK_MAIN_SCALE'
-DESK_GEOM_SCALE = 'DESK_GEOM_SCALE'
-DESK_LABEL_SCALE = 'DESK_LABEL_SCALE'
-
-DESK_POINT_RADIUS = 'DESK_POINT_RADIUS'
-DESK_LINE_RADIUS = 'DESK_LINE_RADIUS'
-DESK_MARK_RADIUS = 'DESK_MARK_RADIUS'
-DESK_MARK_LENGTH = 'DESK_MARK_LENGTH'
-DESK_ARROW_RADIUS = 'DESK_ARROW_RADIUS'
-DESK_ARROW_LENGTH = 'DESK_ARROW_LENGTH'
-DESK_SURFACE_WIDTH = 'DESK_SURFACE_WIDTH'
-
-DESK_LABEL_STEP = 'DESK_LABEL_STEP'
-DESK_LABEL_HEIGHT_PX = 'TEXT_HEIGHT_PX'
-
-DESK_AXES_X_COLOR = 'DESK_AXES_X_COLOR'
-DESK_AXES_Y_COLOR = 'DESK_AXES_Y_COLOR'
-DESK_AXES_Z_COLOR = 'DESK_AXES_Z_COLOR'
-DESK_AXES_C_COLOR = 'DESK_AXES_C_COLOR'
-DESK_AXES_LABEL_COLOR = 'DESK_AXES_LABEL_COLOR'
-DESK_AXES_STEP = 'DESK_AXES_STEP'
-
-
-DESK_BOARD_HEIGHT = DESK_BOARD_HEIGHT
-DESK_BOARD_BORDER_SIZE = DESK_BOARD_BORDER_SIZE
-DESK_PAPER_XYZ = DESK_PAPER_XYZ  # A0
-DESK_PIN_OFFSET = DESK_PIN_OFFSET
-DESK_PIN_RADIUS = DESK_PIN_RADIUS
-DESK_PIN_HEIGHT = DESK_PIN_HEIGHT
-
-DESK_LIMITS_XYZ_1 = DESK_LIMITS_XYZ_1
-DESK_LIMITS_XYZ_2 = DESK_LIMITS_XYZ_2
-
-
-# ***************************************************
-# ***************************************************
-# ***************************************************
-
-DESK_DEFAULT_STYLE = {
-
-    DESK_LABEL_HEIGHT_PX: 20,  # not scaled
-    DESK_LABEL_STEP: 5,
-
-    DESK_POINT_RADIUS: 8,
-    DESK_LINE_RADIUS: 4,
-    DESK_MARK_RADIUS: 8,
-    DESK_MARK_LENGTH: 4,
-    DESK_ARROW_RADIUS: 8,
-    DESK_ARROW_LENGTH: 30,
-    DESK_SURFACE_WIDTH: 2,
-
-    DESK_AXES_X_COLOR: RED_COLOR,
-    DESK_AXES_Y_COLOR: GREEN_COLOR,
-    DESK_AXES_Z_COLOR: BLUE_COLOR,
-    DESK_AXES_C_COLOR: WHITE_COLOR,
-    DESK_AXES_LABEL_COLOR: YELLOW_COLOR,
-    DESK_AXES_STEP: 50
-
-
-
-    DESK_BOARD_HEIGHT: 20,
-    DESK_BOARD_BORDER_SIZE: 60,
-    DESK_PAPER_X: 1189,  # A0
-    DESK_PAPER_Y: 841,  # A0
-    DESK_PAPER_Z: 1,  # A0
-    DESK_PIN_OFFSET: 30,
-    DESK_PIN_RADIUS: 10,
-    DESK_PIN_HEIGHT: 2,
-
-    DESK_LIMITS_X1: -400,
-    DESK_LIMITS_Y1: -300,
-    DESK_LIMITS_Z1: 0,
-
-    DESK_LIMITS_X2: 400,
-    DESK_LIMITS_AREA_Y2: 300,
-    DESK_LIMITS_AREA_Z2: 400
-
-}
-
-
-DESK_MAIN_STYLE = {
-
-    DESK_POINT_MATERIAL: CHROME_MATERIAL,
-    DESK_POINT_COLOR: GOLD_COLOR,
-    DESK_POINT_TRANSPARENCY: 0,
-
-    DESK_LINE_MATERIAL: CHROME_MATERIAL,
-    DESK_LINE_COLOR: BLUE_COLOR,
-    DESK_LINE_TRANSPARENCY: 0,
-
-    DESK_SOLID_MATERIAL: CHROME_MATERIAL,
-    DESK_SOLID_COLOR: WHITE_COLOR,
-    DESK_SOLID_TRANSPARENCY: 0,
-
-    DESK_SURFACE_MATERIAL: CHROME_MATERIAL,
-    DESK_SURFACE_COLOR: GRAY_COLOR,
-    DESK_SURFACE_TRANSPARENCY: 0.6,
-
-    DESK_LABEL_COLOR: YELLOW_COLOR,
-    DESK_LABEL_TRANSPARENCY: 0,
-
-    DESK_GEOM_SCALE: 1
-
-}
-
-FOCUS_STYLE = {
-
-    DESK_POINT_MATERIAL: CHROME_MATERIAL,
-    DESK_POINT_COLOR: GOLD_COLOR,
-    DESK_POINT_TRANSPARENCY: 0,
-
-    DESK_LINE_MATERIAL: CHROME_MATERIAL,
-    DESK_LINE_COLOR: BLUE_COLOR,
-    DESK_LINE_TRANSPARENCY: 0,
-
-    DESK_SOLID_MATERIAL: CHROME_MATERIAL,
-    DESK_SOLID_COLOR: WHITE_COLOR,
-    DESK_SOLID_TRANSPARENCY: 0,
-
-    DESK_SURFACE_MATERIAL: CHROME_MATERIAL,
-    DESK_SURFACE_COLOR: GRAY_COLOR,
-    DESK_SURFACE_TRANSPARENCY: 0.6,
-
-    DESK_LABEL_COLOR: GRAY_COLOR,
-    DESK_LABEL_TRANSPARENCY: 0,
-
-    DESK_GEOM_SCALE: 0.7
-
-}
-
-INFO_STYLE = {
-
-    DESK_POINT_MATERIAL: CHROME_MATERIAL,
-    DESK_POINT_COLOR: GOLD_COLOR,
-    DESK_POINT_TRANSPARENCY: 0,
-
-    DESK_LINE_MATERIAL: CHROME_MATERIAL,
-    DESK_LINE_COLOR: BLUE_COLOR,
-    DESK_LINE_TRANSPARENCY: 0,
-
-    DESK_SOLID_MATERIAL: CHROME_MATERIAL,
-    DESK_SOLID_COLOR: WHITE_COLOR,
-    DESK_SOLID_TRANSPARENCY: 0,
-
-    DESK_SURFACE_MATERIAL: CHROME_MATERIAL,
-    DESK_SURFACE_COLOR: GRAY_COLOR,
-    DESK_SURFACE_TRANSPARENCY: 0.6,
-
-    DESK_LABEL_COLOR: GRAY_COLOR,
-    DESK_LABEL_TRANSPARENCY: 0,
-
-    DESK_GEOM_SCALE: 0.7
-
-
-}
-
-
-DESK_M_1_1_STYLE = {
-    DESK_MAIN_SCALE_TEXT: 'A0 M1:1',
-    DESK_MAIN_SCALE: 1
-}
-
-DESK_M_5_1_STYLE = {
-    DESK_MAIN_SCALE_TEXT: 'A0 M5:1',
-    DESK_MAIN_SCALE: 1/5
-}
-
-
-DESK_BOARD_STYLE = {
-    DESK_SOLID_MATERIAL: PLASTIC_MATERIAL,
-    DESK_SOLID_COLOR: WOOD_COLOR
-    }
-
-DESK_PAPER_STYLE = {
-    DESK_SOLID_MATERIAL: PLASTIC_MATERIAL,
-    DESK_SOLID_COLOR: PAPER_COLOR
-    }
-
-DESK_PIN_STYLE = {
-    DESK_SOLID_MATERIAL: STEEL_MATERIAL,
-    DESK_SOLID_COLOR: None
-    }
-
-DESK_LABEL_STYLE = {
-    DESK_LABEL_COLOR: WHITE_COLOR
-    }
-
-
-def setVar(self, varName, varValue):
-    self.registry[varName] = varValue
-
-
-def getVar(self, varName):
-    return self.registry[varName]
-
-
-def backupVars(self):
-    return self.registry.copy()
-
-
-def restoreVars(self, backup):
-    self.registry = backup
-
-
-def setStyle(self, style):
-    for var in style:
-        self.registry[var] = style[var]
-
-
-self.registry = {}
-self.setStyle(DESK_DEFAULT_STYLE)
-self.setStyle(DESK_MAIN_STYLE)
-self.setStyle(DESK_M_1_1_STYLE)
+def Decart(x, y, z):
+    return gp_Pnt(x, y, z)
 
 
 class Computer:
@@ -461,7 +73,7 @@ class Computer:
         return obj
 
 
-class DeskComputer(Computer):
+class SceneComputer(Computer):
 
     @staticmethod
     def computeSphere(argRadius):
@@ -484,60 +96,394 @@ class DeskComputer(Computer):
         return BRepPrimAPI_MakeTorus(argRadius1, argRadius2).Shape()
 
 
-class Scripting:
+class Scene:
+
     def __init__(self):
-        self.script = []
+        self.rootsAis: [Optional[AIS_Shape]] = []
+        self.parentAis: Optional[AIS_Shape] = None
+        self.currentAis: Optional[AIS_Shape] = None
+        self.dummyShape = BRepPrimAPI_MakeSphere(1)
+        self.dummyBrash = Plastic(WHITE_COLOR, 1)
+        self.computer = SceneComputer()
 
-    def addLine(self, line):
-        self.script.append(line)
+    def _drawAis(self, ais: AIS_InteractiveObject):
+        if self.parentAis is None:
+            self.rootsAis.append(ais)
+        else:
+            self.parentAis.AddChild(ais)
+        self.currentAis = ais
 
-    def addShape(self, shape):
-        pass
+    def _doTrsf(self, trsf):
+        trsf *= self.currentAis.LocalTransformation()
+        self.currentAis.SetLocalTransformation(trsf)
+
+    def _doMove(self, pnt):
+        trsf = gp_Trsf()
+        trsf.SetTranslation(gp_Vec(Decart(0, 0, 0), pnt))
+        self._doTrsf(trsf)
+
+    def _doRotate(self, axFromPnt, axToPnt, angle):
+        trsf = gp_Trsf()
+        ax1 = gp_Ax1(axFromPnt, gp_Dir(gp_Vec(axFromPnt, axToPnt)))
+        trsf.SetRotation(ax1, angle / 180 * math.pi)
+        self._doTrsf(trsf)
+
+    def _doDirect(self, fromPnt, toPnt):
+        trsf = gp_Trsf()
+
+        dirVec = gp_Vec(fromPnt, toPnt)
+        targetDir = gp_Dir(dirVec)
+
+        rotateAngle = gp_Dir(0, 0, 1).Angle(targetDir)
+        if not gp_Dir(0, 0, 1).IsParallel(targetDir, 0.001):
+            rotateDir = gp_Dir(0, 0, 1)
+            rotateDir.Cross(targetDir)
+        else:
+            rotateDir = gp_Dir(0, 1, 0)
+
+        trsf.SetRotation(gp_Ax1(gp_Pnt(0, 0, 0), rotateDir), rotateAngle)
+        trsf.SetTranslationPart(gp_Vec(Decart(0, 0, 0), fromPnt))
+        self._doTrsf(trsf)
+
+    def _render(self, screenX: int = 1200, screenY: int = 980):
+        display, display_start, add_menu, add_function_to_menu = init_display(
+            None, (screenX, screenY), True, [128, 128, 128], [128, 128, 128])
+
+        for ais in self.rootsAis:
+            display.Context.Display(ais, False)
+
+        # display.DisplayMessage(labelPnt, text, heightPx, color, False)
+
+        display.FitAll()
+        display_start()
+
+    def _groupBegin(self):
+        self.drawShape(self.dummyShape, self.dummyBrash)
+        self.parentAis = self.currentAis
+        self.currentAis = None
+
+    def _groupEnd(self):
+        self.currentAis = self.parentAis
+        self.parentAis = self.parentAis.Parent()
+
+    def _drawLabel(self, pnt, text, height, brash):
+
+        color, transparency, material = brash
+
+        ais = AIS_TextLabel()
+
+        ais.SetText(TCollection_ExtendedString(text, True))
+        ais.SetPosition(pnt)
+        ais.SetHeight(height)
+
+        if transparency is not None:
+            ais.SetTransparency(transparency)
+
+        if color is not None:
+            r, g, b = color
+            qColor = Quantity_Color(r, g, b, Quantity_TypeOfColor(Quantity_TypeOfColor.Quantity_TOC_RGB))
+            ais.SetColor(qColor)
+
+        self._drawAis(ais)
+
+    def _drawShape(self, shape, brash):
+        color, transparency, material = brash
+
+        ais = AIS_Shape(shape)
+
+        # material set anyway
+        aspect = Graphic3d_MaterialAspect(material)
+        ais.SetMaterial(aspect)
+
+        ais.SetTransparency(transparency)
+
+        r, g, b = color
+        qColor = Quantity_Color(r, g, b, Quantity_TypeOfColor(Quantity_TypeOfColor.Quantity_TOC_RGB))
+        ais.SetColor(qColor)
+
+        self._drawAis(ais)
+
+    def _drawWire(self, wire, wireRadius, brash):
+
+        # getWireStartPointAndTangentDir:
+        ex = BRepTools_WireExplorer(wire)
+        edge = ex.Current()
+        vertex = ex.CurrentVertex()
+        aCurve, aFP, aLP = BRep_Tool.Curve(edge)
+        aP = aFP
+        tangentVec = gp_Vec()
+        tempPnt = gp_Pnt()
+        aCurve.D1(aP, tempPnt, tangentVec)
+        tangentDir = gp_Dir(tangentVec)
+        startPoint = BRep_Tool.Pnt(vertex)
+
+        profileCircle = GC_MakeCircle(startPoint, tangentDir, wireRadius).Value()
+        profileEdge = BRepBuilderAPI_MakeEdge(profileCircle).Edge()
+        profileWire = BRepBuilderAPI_MakeWire(profileEdge).Wire()
+
+        shape = BRepOffsetAPI_MakePipe(wire, profileWire).Shape()
+        self._drawShape(shape, brash)
+
+    def doMove(self, pnt):
+        self._doMove(pnt)
+
+    def doRotate(self, axFromPnt, axToPnt, angle):
+        self._doRotate(axFromPnt, axToPnt, angle)
+
+    def doRotateX(self, angle):
+        self._doRotate(gp_Pnt(0, 0, 0), gp_Pnt(1, 0, 0), angle)
+
+    def doRotateY(self, angle):
+        self._doRotate(gp_Pnt(0, 0, 0), Decart(0, 1, 0), angle)
+
+    def doRotateZ(self, angle):
+        self._doRotate(gp_Pnt(0, 0, 0), Decart(0, 0, 1), angle)
+
+    def doDirect(self, fromPnt, toPnt):
+        self._doDirect(fromPnt, toPnt)
+
+    def drawLabel(self, pnt, text, height, brash):
+        self._drawLabel(pnt, text, height, brash)
+
+    def drawShape(self, shape, brash):
+        self._drawShape(shape, brash)
+
+    def drawWire(self, wire, wireRadius, brash):
+        self._drawWire(wire, wireRadius, brash)
+
+    def drawSphere(self, r, brash):
+        shape = self.computer.compute('computeSphere', r)
+        self._drawShape(shape, brash)
+
+    def drawBox(self, x, y, z, brash):
+        shape = self.computer.compute('computeBox', x, y, z)
+        self._drawShape(shape, brash)
+
+    def drawCone(self, r1, r2, h, brash):
+        shape = self.computer.compute('computeCone', r1, r2, h)
+        self._drawShape(shape, brash)
+
+    def drawCylinder(self, r, h, brash):
+        shape = self.computer.compute('computeCylinder', r, h)
+        self._drawShape(shape, brash)
+
+    def drawTorus(self, r1, r2, brash):
+        shape = self.computer.compute('computeTorus', r1, r2)
+        self._drawShape(shape, brash)
+
+    def groupBegin(self):
+        self._groupBegin()
+
+    def groupEnd(self):
+        self._groupEnd()
+
+    def show(self):
+        self._render()
 
 
+scene = Scene()
 
-comp = DeskComputer()
+WHITE_COLOR = 0xF0F0F0
+GRAY_COLOR = 0x646464
+
+RED_COLOR = 0xC81E1E
+GREEN_COLOR = 0x1EC81E
+BLUE_COLOR = 0x1E1EC8
+
+YELLOW_COLOR = 0xC8C81E
+CYAN_COLOR = 0x1EC8C8
+MAGENTA_COLOR = 0xC81EC8
+
+DARK_WHITE_COLOR = 0x787878
+DARK_GRAY_COLOR = 0x323232
+
+DARK_RED_COLOR = 0x640F0F
+DARK_GREEN_COLOR = 0x0F640F
+DARK_BLUE_COLOR = 0x0F0F64
+
+DARK_YELLOW_COLOR = 0x64640F
+DARK_CYAN_COLOR = 0x0F6464
+DARK_MAGENTA_COLOR = 0x640F64
+
+WOOD_COLOR = 0xD0751C
+PAPER_COLOR = 0xE6E6E6
+STEEL_COLOR = 0x646464
+GOLD_COLOR = 0xFFB92D
+
+# *************************************************
+# Style vars
+# *************************************************
+
+DESK_LABEL_BRASH = 'DESK_LABEL_BRASH'
+DESK_POINT_BRASH = 'DESK_POINT_BRASH'
+DESK_LINE_BRASH = 'DESK_LINE_BRASH'
+DESK_SOLID_BRASH = 'DESK_SOLID_BRASH'
+DESK_SURFACE_BRASH = 'DESK_SURFACE_BRASH'
+
+# *************************************************
+# Geom vars
+# *************************************************
+
+DESK_SCALE_TEXT = 'DESK_SCALE_TEXT'
+DESK_MAIN_SCALE = 'DESK_MAIN_SCALE'
+DESK_GEOM_SCALE = 'DESK_GEOM_SCALE'
+DESK_LABEL_SCALE = 'DESK_LABEL_SCALE'
+
+DESK_POINT_RADIUS = 'DESK_POINT_RADIUS'
+DESK_LINE_RADIUS = 'DESK_LINE_RADIUS'
+DESK_MARK_RADIUS = 'DESK_MARK_RADIUS'
+DESK_MARK_LENGTH = 'DESK_MARK_LENGTH'
+DESK_ARROW_RADIUS = 'DESK_ARROW_RADIUS'
+DESK_ARROW_LENGTH = 'DESK_ARROW_LENGTH'
+DESK_SURFACE_WIDTH = 'DESK_SURFACE_WIDTH'
+
+DESK_LABEL_STEP = 'DESK_LABEL_STEP'
+DESK_LABEL_HEIGHT_PX = 'TEXT_HEIGHT_PX'
+
+DESK_AXES_X_BRASH = 'DESK_AXES_X_BRASH'
+DESK_AXES_Y_BRASH = 'DESK_AXES_Y_BRASH'
+DESK_AXES_Z_BRASH = 'DESK_AXES_Z_BRASH'
+DESK_AXES_C_BRASH = 'DESK_AXES_C_BRASH'
+DESK_AXES_LABEL_BRASH = 'DESK_AXES_LABEL_BRASH'
+DESK_AXES_STEP = 'DESK_AXES_STEP'
+
+DESK_BOARD_HEIGHT = 'DESK_BOARD_HEIGHT'
+DESK_BOARD_BORDER_SIZE = 'DESK_BOARD_BORDER_SIZE'
+DESK_PAPER_SIZES = 'DESK_PAPER_XYZ'
+DESK_PIN_OFFSET = 'DESK_PIN_OFFSET'
+DESK_PIN_RADIUS = 'DESK_PIN_RADIUS'
+DESK_PIN_HEIGHT = 'DESK_PIN_HEIGHT'
+
+DESK_LIMITS_PNT1 = 'DESK_LIMITS_PNT1'
+DESK_LIMITS_PNT2 = 'DESK_LIMITS_PNT2'
+
+DESK_BOARD_BRASH = 'DESK_BOARD_BRASH'
+DESK_PAPER_BRASH = 'DESK_PAPER_BRASH'
+DESK_PIN_BRASH = 'DESK_PIN_BRASH'
+
+# ***************************************************
+# ***************************************************
+# ***************************************************
+
+DESK_DEFAULT_STYLE = {
+
+    DESK_LABEL_HEIGHT_PX: 20,  # not scaled
+    DESK_LABEL_STEP: 5,
+
+    DESK_POINT_RADIUS: 8,
+    DESK_LINE_RADIUS: 4,
+    DESK_MARK_RADIUS: 8,
+    DESK_MARK_LENGTH: 4,
+    DESK_ARROW_RADIUS: 8,
+    DESK_ARROW_LENGTH: 30,
+    DESK_SURFACE_WIDTH: 2,
+
+    DESK_AXES_X_BRASH: Plastic(RED_COLOR),
+    DESK_AXES_Y_BRASH: Plastic(GREEN_COLOR),
+    DESK_AXES_Z_BRASH: Plastic(BLUE_COLOR),
+    DESK_AXES_C_BRASH: Plastic(WHITE_COLOR),
+    DESK_AXES_LABEL_BRASH: Plastic(YELLOW_COLOR),
+    DESK_AXES_STEP: 50,
+
+    DESK_BOARD_HEIGHT: 20,
+    DESK_BOARD_BORDER_SIZE: 60,
+    DESK_PAPER_SIZES: Decart(1189, 841, 1),  # A0
+    DESK_PIN_OFFSET: 30,
+    DESK_PIN_RADIUS: 10,
+    DESK_PIN_HEIGHT: 2,
+
+    DESK_LIMITS_PNT1: Decart(-400, -300, 0),
+    DESK_LIMITS_PNT2: Decart(400, 300, 400),
+
+    DESK_BOARD_BRASH: Plastic(WOOD_COLOR),
+    DESK_PAPER_BRASH: Plastic(PAPER_COLOR),
+    DESK_PIN_BRASH: Chrome(STEEL_COLOR),
+
+}
+
+DESK_MAIN_STYLE = {
+    DESK_POINT_BRASH: Chrome(GOLD_COLOR),
+    DESK_LINE_BRASH: Chrome(BLUE_COLOR),
+    DESK_SOLID_BRASH: Chrome(WHITE_COLOR),
+    DESK_SURFACE_BRASH: Chrome(GRAY_COLOR, 0.6),
+    DESK_LABEL_BRASH: Plastic(YELLOW_COLOR),
+    DESK_GEOM_SCALE: 1
+}
+
+DESK_FOCUS_STYLE = {
+    DESK_POINT_BRASH: Chrome(RED_COLOR),
+    DESK_LINE_BRASH: Chrome(RED_COLOR),
+    DESK_SOLID_BRASH: Chrome(RED_COLOR),
+    DESK_SURFACE_BRASH: Chrome(RED_COLOR, 0.6),
+    DESK_LABEL_BRASH: Plastic(RED_COLOR),
+    DESK_GEOM_SCALE: 0.7
+}
+
+DESK_INFO_STYLE = {
+    DESK_POINT_BRASH: Chrome(GRAY_COLOR),
+    DESK_LINE_BRASH: Chrome(GRAY_COLOR),
+    DESK_SOLID_BRASH: Chrome(GRAY_COLOR),
+    DESK_SURFACE_BRASH: Chrome(GRAY_COLOR, 0.6),
+    DESK_LABEL_BRASH: Plastic(GRAY_COLOR),
+    DESK_GEOM_SCALE: 0.5
+}
+
+styles = {}
 
 
 def SetVar(varName, varValue):
-    scene.setVar(varName, varValue)
+    global styles
+    styles[varName] = varValue
 
 
 def GetVar(varName):
-    return scene.getVar(varName)
+    global styles
+    return styles[varName]
 
 
 def BackupVars():
-    return scene.backupVars()
+    global styles
+    return styles.copy()
 
 
 def RestoreVars(backup):
-    scene.restoreVars(backup)
+    global styles
+    styles = backup
 
 
 def SetStyle(style):
-    scene.setStyle(style)
+    global styles
+    for var in style:
+        styles[var] = style[var]
 
 
-def SetStyleVar(drawType, styleVar, varValue):
-    if drawType is not None:
-        drawTypes = [drawType]
-    else:
-        drawTypes = [POINT, LINE, SURFACE, SOLID, LABEL]
-    for styleDrawType in drawTypes:
-        SetVar(styleDrawType + styleVar, varValue)
+def SetLabelBrash(brash):
+    SetVar(DESK_LABEL_BRASH, brash)
 
 
-def SetColor(color, drawType=None):
-    SetStyleVar(COLOR, drawType, color)
+def SetPointBrash(brash):
+    SetVar(DESK_POINT_BRASH, brash)
 
 
-def SetTransparency(transparency, drawType=None):
-    SetStyleVar(TRANSPARENCY, drawType, transparency)
+def SetLineBrash(brash):
+    SetVar(DESK_LINE_BRASH, brash)
 
 
-def SetMaterial(material, drawType=None):
-    SetStyleVar(MATERIAL, drawType, material)
+def SetSurfaceBrash(brash):
+    SetVar(DESK_SURFACE_BRASH, brash)
+
+
+def SetSolidBrash(brash):
+    SetVar(DESK_SOLID_BRASH, brash)
+
+
+def SetScale(zoom, div):
+    SetVar(DESK_SCALE_TEXT, 'M' + str(zoom) + ':' + str(div))
+    SetVar(DESK_MAIN_SCALE, div / zoom)
+
+
+def SetScaleGeom(scaleValue):
+    SetVar(DESK_GEOM_SCALE, scaleValue)
 
 
 def ScaleMain(value):
@@ -551,15 +497,6 @@ def ScaleGeom(value):
     return value * mainScale * geomScale
 
 
-# *************************************************************
-# VM level
-# *************************************************************
-
-
-def Decart(x, y, z):
-    return gp_Pnt(x, y, z)
-
-
 def GroupBegin():
     scene.groupBegin()
 
@@ -569,146 +506,106 @@ def GroupEnd():
 
 
 def DoMove(pnt):
-    trsf = gp_Trsf()
-    trsf.SetTranslation(gp_Vec(Decart(0,0,0), pnt))
-    scene.doTrsf(trsf)
+    scene.doMove(pnt)
 
 
 def DoRotate(axFromPnt, axToPnt, angle):
-    trsf = gp_Trsf()
-    ax1 = gp_Ax1(axFromPnt, gp_Dir(gp_Vec(axFromPnt, axToPnt)))
-    trsf.SetRotation(ax1, angle / 180 * math.pi)
-    scene.doTrsf(trsf)
+    scene.doRotate(axFromPnt, axToPnt, angle)
 
 
 def DoRotateX(angle):
-    DoRotate(Decart(0, 0, 0), Decart(1, 0, 0), angle)
+    scene.doRotateX(angle)
 
 
 def DoRotateY(angle):
-    DoRotate(Decart(0, 0, 0), Decart(0, 1, 0), angle)
+    scene.doRotateY(angle)
 
 
 def DoRotateZ(angle):
-    DoRotate(Decart(0, 0, 0), Decart(0, 0, 1), angle)
+    scene.doRotateZ(angle)
 
 
 def DoDirect(fromPnt, toPnt):
-    trsf = gp_Trsf()
-
-    dirVec = gp_Vec(fromPnt, toPnt)
-    targetDir = gp_Dir(dirVec)
-
-    rotateAngle = gp_Dir(0, 0, 1).Angle(targetDir)
-    if not gp_Dir(0, 0, 1).IsParallel(targetDir, 0.001):
-        rotateDir = gp_Dir(0, 0, 1)
-        rotateDir.Cross(targetDir)
-    else:
-        rotateDir = gp_Dir(0, 1, 0)
-
-    trsf.SetRotation(gp_Ax1(gp_Pnt(0, 0, 0), rotateDir), rotateAngle)
-    trsf.SetTranslationPart(gp_Vec(Decart(0, 0, 0), fromPnt))
-    scene.doTrsf(trsf)
+    scene.doDirect(fromPnt, toPnt)
 
 
 def DrawLabel(pnt, text):
-
-    transparency = GetVar(DESK_LABEL_TRANSPARENCY)
-    color = GetVar(DESK_LABEL_COLOR)
+    brash = GetVar(DESK_LABEL_BRASH)
     heightPx = GetVar(DESK_LABEL_HEIGHT_PX)
     step = ScaleMain(GetVar(DESK_LABEL_STEP))
-
     targetPnt = pnt.Translated(gp_Vec(step, step, step))
-    scene.drawLabel(targetPnt, text, heightPx, color, transparency)
-
-
-def DrawShape(shape, stylePrefix):
-    material = GetVar(stylePrefix + '_MATERIAL')
-    color = GetVar(stylePrefix + '_COLOR')
-    transparency = GetVar(stylePrefix + '_TRANSPARENCY')
-    scene.drawShape(shape, color, transparency, material)
+    scene.drawLabel(targetPnt, text, heightPx, brash)
 
 
 def DrawSolid(shape):
-    DrawShape(shape, 'DESK_SOLID')
+    brash = GetVar(DESK_SOLID_BRASH)
+    scene.drawShape(shape, brash)
 
 
 def DrawSurface(shape):
-    DrawShape(shape, 'DESK_SURFACE')
-
-
-def DrawPipe(wire, wireRadius):
-
-    # getWireStartPointAndTangentDir:
-    ex = BRepTools_WireExplorer(wire)
-    edge = ex.Current()
-    vertex = ex.CurrentVertex()
-    aCurve, aFP, aLP = BRep_Tool.Curve(edge)
-    aP = aFP
-    tangentVec = gp_Vec()
-    tempPnt = gp_Pnt()
-    aCurve.D1(aP, tempPnt, tangentVec)
-    tangentDir = gp_Dir(tangentVec)
-    startPoint = BRep_Tool.Pnt(vertex)
-
-    profileCircle = GC_MakeCircle(startPoint, tangentDir, wireRadius).Value()
-    profileEdge = BRepBuilderAPI_MakeEdge(profileCircle).Edge()
-    profileWire = BRepBuilderAPI_MakeWire(profileEdge).Wire()
-
-    shape = BRepOffsetAPI_MakePipe(wire, profileWire).Shape()
-    DrawShape(shape, LINE)
+    brash = GetVar(DESK_SURFACE_BRASH)
+    scene.drawShape(shape, brash)
 
 
 def DrawSphere(r):
-    shape = comp.compute('computeSphere', r)
-    DrawSolid(shape)
+    brash = GetVar(DESK_SOLID_BRASH)
+    scene.drawSphere(r, brash)
 
 
 def DrawBox(x, y, z):
-    shape = comp.compute('computeBox', x, y, z)
-    DrawSolid(shape)
+    brash = GetVar(DESK_SOLID_BRASH)
+    scene.drawBox(x, y, z, brash)
 
 
 def DrawCone(r1, r2, h):
-    shape = comp.compute('computeCone', r1, r2, h)
-    DrawSolid(shape)
+    brash = GetVar(DESK_SOLID_BRASH)
+    scene.drawCone(r1, r2, h, brash)
 
 
 def DrawCylinder(r, h):
-    shape = comp.compute('computeCylinder', r, h)
-    DrawSolid(shape)
+    brash = GetVar(DESK_SOLID_BRASH)
+    scene.drawCylinder(r, h, brash)
 
 
 def DrawTorus(r1, r2):
-    shape = comp.compute('computeTorus', r1, r2)
-    DrawSolid(shape)
+    brash = GetVar(DESK_SOLID_BRASH)
+    scene.drawTorus(r1, r2, brash)
 
 
 def DrawPoint(pnt):
+    brash = GetVar(DESK_POINT_BRASH)
     r = ScaleGeom(GetVar(DESK_POINT_RADIUS))
-    DrawShape(r, 'DESK_POINT')
+    scene.drawSphere(r, brash)
+    scene.doMove(pnt)
 
 
 def DrawLine(pnt1, pnt2):
+    brash = GetVar(DESK_LINE_BRASH)
     r = ScaleGeom(GetVar(DESK_LINE_RADIUS))
     length = gp_Vec(pnt1, pnt2).Magnitude()
-
-    shape = comp.compute('computeCylinder', r, length)
-    DrawShape(shape, 'DESK_LINE')
-    DoDirect(pnt1, pnt2)
+    scene.drawCylinder(r, length, brash)
+    scene.doDirect(pnt1, pnt2)
 
 
-def DrawArrow(pnt1, pnt2):
+def DrawArrowEnd(pnt1, pnt2):
+    brash = GetVar(DESK_LINE_BRASH)
     r = ScaleGeom(GetVar(DESK_ARROW_RADIUS))
     h = ScaleGeom(GetVar(DESK_ARROW_LENGTH))
-
-    shape = comp.compute('computeCone', r, 0, h)
-    DrawShape(shape, 'DESK_LINE')
-    DoDirect(pnt1, pnt2)
+    scene.drawCone(r, 0, h, brash)
+    scene.doDirect(pnt1, pnt2)
 
 
-def DrawLineArrow(pnt1, pnt2):
+def DrawWire(wire):
+    brash = GetVar(DESK_LINE_BRASH)
+    wireRadius = ScaleGeom(GetVar(DESK_LINE_RADIUS))
+    scene.drawWire(wire, wireRadius, brash)
 
+
+# *************************************************************
+# Complex level
+# *************************************************************
+
+def DrawArrow(pnt1, pnt2):
     arrowLength = ScaleGeom(GetVar(DESK_ARROW_LENGTH))
 
     v = gp_Vec(pnt1, pnt2)
@@ -722,8 +619,7 @@ def DrawLineArrow(pnt1, pnt2):
     GroupEnd()
 
 
-def DrawLineArrow2(pnt1, pnt2):
-
+def DrawArrow2(pnt1, pnt2):
     arrowLength = ScaleGeom(GetVar(DESK_ARROW_LENGTH))
 
     v = gp_Vec(pnt1, pnt2)
@@ -740,37 +636,7 @@ def DrawLineArrow2(pnt1, pnt2):
     GroupEnd()
 
 
-def DrawWire(wire):
-
-    wireRadius = ScaleGeom(GetVar(DESK_LINE_RADIUS))
-
-    # getWireStartPointAndTangentDir:
-    ex = BRepTools_WireExplorer(wire)
-    edge = ex.Current()
-    vertex = ex.CurrentVertex()
-    aCurve, aFP, aLP = BRep_Tool.Curve(edge)
-    aP = aFP
-    tangentVec = gp_Vec()
-    tempPnt = gp_Pnt()
-    aCurve.D1(aP, tempPnt, tangentVec)
-    tangentDir = gp_Dir(tangentVec)
-    startPoint = BRep_Tool.Pnt(vertex)
-
-    profileCircle = GC_MakeCircle(startPoint, tangentDir, wireRadius).Value()
-    profileEdge = BRepBuilderAPI_MakeEdge(profileCircle).Edge()
-    profileWire = BRepBuilderAPI_MakeWire(profileEdge).Wire()
-
-    shape = BRepOffsetAPI_MakePipe(wire, profileWire).Shape()
-    DrawShape(shape, LINE)
-
-
-
-# *************************************************************
-# Use level
-# *************************************************************
-
 def DrawCircle(pnt1, pnt2, pnt3):
-
     geomCircle = GC_MakeCircle(pnt1, pnt2, pnt3).Value()
     edge = BRepBuilderAPI_MakeEdge(geomCircle).Edge()
     wire = BRepBuilderAPI_MakeWire(edge).Wire()
@@ -779,34 +645,35 @@ def DrawCircle(pnt1, pnt2, pnt3):
 
 
 def DrawDesk():
+    borderSize = ScaleMain(GetVar(DESK_BOARD_BORDER_SIZE))
+    deskHeight = ScaleMain(GetVar(DESK_BOARD_HEIGHT))
 
-    borderSize = ScaleMain(GetVar(DESK_BORDER_SIZE))
-    deskHeight = ScaleMain(GetVar(DESK_HEIGHT))
-
-    textStr = GetVar(DESK_MAIN_SCALE_TEXT)
+    textStr = 'A0 ' + GetVar(DESK_SCALE_TEXT)
 
     pinOffset = ScaleMain(GetVar(DESK_PIN_OFFSET))
     pinRadius = ScaleMain(GetVar(DESK_PIN_RADIUS))
     pinHeight = ScaleMain(GetVar(DESK_PIN_HEIGHT))
 
-    psx = ScaleMain(GetVar(DESK_PAPER_X))
-    psy = ScaleMain(GetVar(DESK_PAPER_Y))
-    psz = ScaleMain(GetVar(DESK_PAPER_Z))
+    decart = GetVar(DESK_PAPER_SIZES)
+    x, y, z = decart.X(), decart.Y(), decart.Z()
+    psx = ScaleMain(x)
+    psy = ScaleMain(y)
+    psz = ScaleMain(z)
     bsx = psx + borderSize * 2
     bsy = psy + borderSize * 2
     bsz = deskHeight
 
     backup = BackupVars()
 
-    SetStyle(DESK_BOARD_STYLE)
+    SetSolidBrash(DESK_BOARD_BRASH)
     DrawBox(bsx, bsy, bsz)
     DoMove(Decart(-bsx / 2, -bsy / 2, -bsz - psz))
 
-    SetStyle(DESK_PAPER_STYLE)
+    SetSolidBrash(DESK_PAPER_BRASH)
     DrawBox(psx, psy, psz)
     DoMove(Decart(-psx / 2, -psy / 2, -psz))
 
-    SetStyle(DESK_LABEL_STYLE)
+    SetLabelBrash(DESK_LABEL_BRASH)
     DrawLabel(Decart(-bsx / 2, -bsy / 2, bsz * 3), textStr)
 
     dx = (psx / 2 - pinOffset)
@@ -819,7 +686,7 @@ def DrawDesk():
         (-dx, dy),
     ]
 
-    SetStyle(DESK_PIN_STYLE)
+    SetSolidBrash(DESK_PIN_BRASH)
     for x, y in pins:
         DrawCylinder(pinRadius, pinHeight)
         DoMove(Decart(x, y, 0))
@@ -828,7 +695,6 @@ def DrawDesk():
 
 
 def DrawAxis(pnt1, pnt2, step):
-
     markRadius = ScaleGeom(GetVar(DESK_MARK_RADIUS))
     markLength = ScaleGeom(GetVar(DESK_MARK_LENGTH))
 
@@ -845,42 +711,40 @@ def DrawAxis(pnt1, pnt2, step):
         pntMark = pnt1.Translated(v)
 
         DrawCylinder(markRadius, markLength)
-        DoMove(Decart(0, 0, -markLength/2))
+        DoMove(Decart(0, 0, -markLength / 2))
         DoDirect(pntMark, pnt2)
 
 
 def DrawAxes(pnt1, pnt2, step):
-
-    xColor = GetVar(DESK_AXES_X_COLOR)
-    yColor = GetVar(DESK_AXES_Y_COLOR)
-    zColor = GetVar(DESK_AXES_Z_COLOR)
-    cColor = GetVar(DESK_AXES_C_COLOR)
-    labelColor = GetVar(DESK_AXES_LABEL_COLOR)
+    xBrash = GetVar(DESK_AXES_X_BRASH)
+    yBrash = GetVar(DESK_AXES_Y_BRASH)
+    zBrash = GetVar(DESK_AXES_Z_BRASH)
+    cBrash = GetVar(DESK_AXES_C_BRASH)
+    labelBrash = GetVar(DESK_AXES_LABEL_BRASH)
 
     xPnt = Decart(pnt2.X(), pnt1.Y(), pnt1.Z())
     yPnt = Decart(pnt1.X(), pnt2.Y(), pnt1.Z())
     zPnt = Decart(pnt1.X(), pnt1.Y(), pnt2.Z())
 
-    SetColor(xColor)
+    SetLineBrash(xBrash)
     DrawAxis(pnt1, xPnt, step)
 
-    SetColor(yColor)
+    SetLineBrash(yBrash)
     DrawAxis(pnt1, yPnt, step)
 
-    SetColor(zColor)
+    SetLineBrash(zBrash)
     DrawAxis(pnt1, yPnt, step)
 
-    SetColor(cColor)
+    SetPointBrash(cBrash)
     DrawPoint(pnt1)
 
-    SetColor(labelColor)
+    SetLabelBrash(labelBrash)
     DrawLabel(xPnt, 'X')
     DrawLabel(yPnt, 'Y')
     DrawLabel(zPnt, 'Z')
 
 
 def DrawFrame(points, lines, isLabeled):
-
     for pnt in points:
         DrawPoint(pnt)
 
@@ -893,7 +757,6 @@ def DrawFrame(points, lines, isLabeled):
 
 
 def DrawBoxFrame(pnt1, pnt2, isLabeled):
-
     x1, y1, z1 = pnt1.X(), pnt1.Y(), pnt1.Z()
     x2, y2, z2 = pnt2.X(), pnt2.Y(), pnt2.Z()
 
@@ -919,6 +782,13 @@ def DrawBoxFrame(pnt1, pnt2, isLabeled):
 
 
 def Show():
-    scene.render()
+    scene.show()
 
 
+# ************************************
+# ************************************
+# ************************************
+
+SetScale(5, 1)
+SetStyle(DESK_DEFAULT_STYLE)
+SetStyle(DESK_MAIN_STYLE)
