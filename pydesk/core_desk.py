@@ -150,9 +150,7 @@ DESK_AXES_LABEL_COLOR = 'DESK_AXES_LABEL_COLOR'
 # ***************************************************
 # ***************************************************
 
-DEFAULT_VARS = {
-
-    DESK_MAIN_SCALE: 1,
+DESK_DEFAULT_STYLE = {
 
     DESK_LABEL_HEIGHT_PX: 20,  # not scaled
     DESK_LABEL_STEP: 5,
@@ -174,7 +172,7 @@ DEFAULT_VARS = {
 }
 
 
-MAIN_STYLE = {
+DESK_MAIN_STYLE = {
 
     DESK_POINT_MATERIAL: CHROME_MATERIAL,
     DESK_POINT_COLOR: GOLD_COLOR,
@@ -251,12 +249,12 @@ INFO_STYLE = {
 }
 
 
-M_1_1_SCALE = {
+DESK_M_1_1_STYLE = {
     DESK_MAIN_SCALE_TEXT: 'A0 M1:1',
     DESK_MAIN_SCALE: 1
 }
 
-M_5_1_SCALE = {
+DESK_M_5_1_STYLE = {
     DESK_MAIN_SCALE_TEXT: 'A0 M5:1',
     DESK_MAIN_SCALE: 1/5
 }
@@ -376,6 +374,26 @@ class Scene:
         self.parentAis: Optional[AIS_Shape] = None
         self.currentAis: Optional[AIS_Shape] = None
         self.dummyShape = BRepPrimAPI_MakeSphere(1)
+        self.registry = {}
+        self.setStyle(DESK_DEFAULT_STYLE)
+        self.setStyle(DESK_MAIN_STYLE)
+        self.setStyle(DESK_M_1_1_STYLE)
+
+    def setVar(self, varName, varValue):
+        self.registry[varName] = varValue
+
+    def getVar(self, varName):
+        return self.registry[varName]
+
+    def backupVars(self):
+        return self.registry.copy()
+
+    def restoreVars(self, backup):
+        self.registry = backup
+
+    def setStyle(self, style):
+        for var in style:
+            self.registry[var] = style[var]
 
     def render(self, screenX: int = 1200, screenY: int = 980):
         display, display_start, add_menu, add_function_to_menu = init_display(
@@ -455,43 +473,26 @@ class Scene:
 
 scene = Scene()
 comp = DeskComputer()
-registry = {}
-
-SetStyle(DEFAULT_VARS)
-SetStyle(MAIN_STYLE)
 
 
 def SetVar(varName, varValue):
-    registry[varName] = varValue
+    scene.setVar(varName, varValue)
 
 
-def GetVar(varName, style=None):
-    if style is not None:
-        if varName in style:
-            return style[varName]
-    if varName in registry:
-        return registry[varName]
-    return None
+def GetVar(varName):
+    return scene.getVar(varName)
 
 
-def SetVars(vars):
-    for var in vars:
-        registry[var] = vars[var]
+def BackupVars():
+    return scene.backupVars()
 
 
-def GetVars():
-    return registry.copy()
+def RestoreVars(backup):
+    scene.restoreVars(backup)
 
 
-def ScaleMain(value):
-    mainScale = GetVar(DESK_MAIN_SCALE)
-    return value * mainScale
-
-
-def ScaleGeom(value):
-    mainScale = GetVar(DESK_MAIN_SCALE)
-    geomScale = GetVar(DESK_GEOM_SCALE)
-    return value * mainScale * geomScale
+def SetStyle(style):
+    scene.setStyle(style)
 
 
 def SetStyleVar(drawType, styleVar, varValue):
@@ -503,8 +504,27 @@ def SetStyleVar(drawType, styleVar, varValue):
         SetVar(styleDrawType + styleVar, varValue)
 
 
-def MakeDrawVarName(drawType, drawVar):
-    return 'DESK_' + drawType + '_' + drawVar
+def SetColor(color, drawType=None):
+    SetStyleVar(COLOR, drawType, color)
+
+
+def SetTransparency(transparency, drawType=None):
+    SetStyleVar(TRANSPARENCY, drawType, transparency)
+
+
+def SetMaterial(material, drawType=None):
+    SetStyleVar(MATERIAL, drawType, material)
+
+
+def ScaleMain(value):
+    mainScale = GetVar(DESK_MAIN_SCALE)
+    return value * mainScale
+
+
+def ScaleGeom(value):
+    mainScale = GetVar(DESK_MAIN_SCALE)
+    geomScale = GetVar(DESK_GEOM_SCALE)
+    return value * mainScale * geomScale
 
 
 # *************************************************************
@@ -593,6 +613,28 @@ def DrawSurface(shape):
     DrawShape(shape, 'DESK_SURFACE')
 
 
+def DrawPipe(wire, wireRadius):
+
+    # getWireStartPointAndTangentDir:
+    ex = BRepTools_WireExplorer(wire)
+    edge = ex.Current()
+    vertex = ex.CurrentVertex()
+    aCurve, aFP, aLP = BRep_Tool.Curve(edge)
+    aP = aFP
+    tangentVec = gp_Vec()
+    tempPnt = gp_Pnt()
+    aCurve.D1(aP, tempPnt, tangentVec)
+    tangentDir = gp_Dir(tangentVec)
+    startPoint = BRep_Tool.Pnt(vertex)
+
+    profileCircle = GC_MakeCircle(startPoint, tangentDir, wireRadius).Value()
+    profileEdge = BRepBuilderAPI_MakeEdge(profileCircle).Edge()
+    profileWire = BRepBuilderAPI_MakeWire(profileEdge).Wire()
+
+    shape = BRepOffsetAPI_MakePipe(wire, profileWire).Shape()
+    DrawShape(shape, LINE)
+
+
 def DrawSphere(r):
     shape = comp.compute('computeSphere', r)
     DrawSolid(shape)
@@ -615,7 +657,7 @@ def DrawCylinder(r, h):
 
 def DrawTorus(r1, r2):
     shape = comp.compute('computeTorus', r1, r2)
-    DrawShape(shape)
+    DrawSolid(shape)
 
 
 def DrawPoint(pnt):
@@ -698,25 +740,6 @@ def DrawWire(wire):
     DrawShape(shape, LINE)
 
 
-def SetColor(color, drawType=None):
-    SetStyleVar(COLOR, drawType, color)
-
-
-def SetTransparency(transparency, drawType=None):
-    SetStyleVar(TRANSPARENCY, drawType, transparency)
-
-
-def SetMaterial(material, drawType=None):
-    SetStyleVar(MATERIAL, drawType, material)
-
-
-def SetStyle(styleVars):
-    SetVars(styleVars)
-
-
-def SetScale(scaleVars):
-    SetVars(scaleVars)
-
 
 # *************************************************************
 # Use level
@@ -749,7 +772,7 @@ def DrawDesk():
     bsy = psy + borderSize * 2
     bsz = deskHeight
 
-    savedVars = GetVars()
+    backup = BackupVars()
 
     SetStyle(DESK_BOARD_STYLE)
     DrawBox(bsx, bsy, bsz)
@@ -777,7 +800,7 @@ def DrawDesk():
         DrawCylinder(pinRadius, pinHeight)
         DoMove(Decart(x, y, 0))
 
-    SetVars(savedVars)
+    RestoreVars(backup)
 
 
 def DrawAxis(pnt1, pnt2, step):
