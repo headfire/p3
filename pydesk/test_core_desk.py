@@ -24,88 +24,80 @@ def TestColor():
     for ix in range(n):
         for iy in range(n):
             for iz in range(n):
-                SetColor([ix / (n - 1), iy / (n - 1), iz / (n - 1)])
+                SetSolidBrash(Chrome(([ix / (n - 1), iy / (n - 1), iz / (n - 1)])))
                 DrawSphere(10)
                 DoMove(Decart(ix * 30, iy * 30, iz * 30))
 
 
 def TestTransparency():
-    SetColor(NICE_BLUE_COLOR)
     n = 5
     for ix in range(n):
         for iy in range(n):
             for iz in range(n):
-                SetTransparency((ix + iy + iz) / ((n - 1) * 3))
+                SetSolidBrash(Plastic(BLUE_COLOR, (ix + iy + iz) / ((n - 1) * 3)))
                 DrawSphere(10)
                 DoMove(Decart(ix * 30, iy * 30, iz * 30))
 
 
-def TestMaterial():
-    mats = [
-        BRASS_MATERIAL,
-        BRONZE_MATERIAL,
-        COPPER_MATERIAL,
-        GOLD_MATERIAL,
-        PEWTER_MATERIAL,
+def TestStandartBrash():
 
-        PLASTER_MATERIAL,
-        PLASTIC_MATERIAL,
-        SILVER_MATERIAL,
-        STEEL_MATERIAL,
-        STONE_MATERIAL,
+    colors = [
+        WHITE_COLOR,
+        GRAY_COLOR,
+        DARK_GRAY_COLOR,
 
-        SHINY_PLASTIC_MATERIAL,
-        SATIN_MATERIAL,
-        METALIZED_MATERIAL,
-        NEON_GNC_MATERIAL,
-        CHROME_MATERIAL,
+        RED_COLOR,
+        GREEN_COLOR,
+        BLUE_COLOR,
 
-        ALUMINIUM_MATERIAL,
-        OBSIDIAN_MATERIAL,
-        NEON_PHC_MATERIAL,
-        JADE_MATERIAL,
-        CHARCOAL_MATERIAL,
+        YELLOW_COLOR,
+        CYAN_COLOR,
+        MAGENTA_COLOR,
 
-        WATER_MATERIAL,
-        GLASS_MATERIAL,
-        PLASTIC_MATERIAL,
-        PLASTIC_MATERIAL,
-        PLASTIC_MATERIAL,
+        DARK_RED_COLOR,
+        DARK_GREEN_COLOR,
+        DARK_BLUE_COLOR,
+
+        DARK_YELLOW_COLOR,
+        DARK_CYAN_COLOR,
+        DARK_MAGENTA_COLOR,
+
+        WOOD_COLOR,
+        PAPER_COLOR,
+        STEEL_COLOR,
+        GOLD_COLOR,
     ]
-    SetColor(NICE_YELLOW_COLOR)
-    n = 5
-    for ix in range(n):
-        for iy in range(n):
-            SetMaterial(mats[ix * 5 + iy])
+
+    i = 0
+    for color in colors:
+        i = i + 1
+        for tr in range(5):
+            SetSolidBrash(Plastic(color, tr/4))
             DrawSphere(10)
-            DoMove(Decart(ix * 30, iy * 30, 0))
+            DoMove(Decart(i * 30, tr * 30, 0))
 
 
 def TestRotate():
-    SetMaterial(CHROME_MATERIAL)
-    SetColor(NICE_BLUE_COLOR)
+    SetSolidBrash(Chrome(BLUE_COLOR))
     n = 24
     for i in range(n):
         DrawSphere(10)
         DoMove(Decart(100, 0, 0))
         DoRotateZ(i * 360 / n)
 
-    SetMaterial(CHROME_MATERIAL)
-    SetColor(NICE_YELLOW_COLOR)
+    SetSolidBrash(Chrome(YELLOW_COLOR))
     for i in range(n):
         DrawSphere(10)
         DoMove(Decart(100, 0, 0))
         DoRotateY(i * 360 / n)
 
-    SetMaterial(CHROME_MATERIAL)
-    SetColor(NICE_RED_COLOR)
+    SetSolidBrash(Chrome(RED_COLOR))
     for i in range(n):
         DrawSphere(10)
         DoMove(Decart(0, 100, 0))
         DoRotateX(i * 360 / n)
 
-    SetMaterial(CHROME_MATERIAL)
-    SetColor(NICE_WHITE_COLOR)
+    SetSolidBrash(Chrome(WHITE_COLOR))
     for i in range(n):
         DrawSphere(10)
         DoRotate(Decart(0, 0, 50), Decart(0, 100, 100), i * 360 / n)
@@ -144,13 +136,10 @@ def TestBox():
     x, y, z = 10, 15, 20
     d = 3
 
-    SetMaterial(CHROME_MATERIAL)
-
-    SetColor(NICE_YELLOW_COLOR)
+    SetSolidBrash(Chrome(YELLOW_COLOR))
     DrawBox(x, y, z)
 
-    SetColor(NICE_BLUE_COLOR)
-    SetTransparency(SEMI_VISIBLE_TRANSPARENCY)
+    SetSolidBrash(Chrome(BLUE_COLOR, 0.5))
 
     DrawBox(x, y, d)
     DoMove(Decart(0, 0, z + d))
@@ -192,22 +181,19 @@ def TestTorus():
 
 
 def TestLabel():
+    SetSolidBrash(Chrome(BLUE_COLOR))
+    SetLabelBrash(Plastic((0, 0, 0.5), 0.5)
     for ix in [-1, 1]:
         for iy in [-1, 1]:
             for iz in [-1, 1]:
-                SetColor(None)
-                SetTransparency(0)
                 DrawSphere(5)
                 DoMove(Decart(ix * 20, iy * 20, iz * 20))
-
-                SetColor(Rgb(0, 0, 0.5))
-                SetTransparency(0.5)
                 DrawLabel(Decart(ix * 20, iy * 20, iz * 20), 'P(' + str(ix) + ',' + str(iy) + ',' + str(iz) + ')')
 
 
 def TestPoint():
-    SetMaterial(CHROME_MATERIAL)
-    SetColor(NICE_BLUE_COLOR)
+    SetPointBrash(Chrome(BLUE_COLOR))
+    SetLabelBrash(Chrome(BLUE_COLOR))
     for ix in [-1, 1]:
         for iy in [-1, 1]:
             for iz in [-1, 1]:
@@ -234,7 +220,7 @@ def TestLine():
     DrawPoint(pnt110)
     DrawPoint(pnt111)
 
-    SetColor(NICE_BLUE_COLOR)
+    SetLineBrash(Chrome(BLUE_COLOR))
     DrawLine(pnt000, pnt001)
     DrawLine(pnt001, pnt011)
     DrawLine(pnt011, pnt010)
@@ -268,7 +254,7 @@ def TestArrow():
     DrawPoint(pnt010)
     DrawPoint(pnt011)
 
-    SetColor(NICE_BLUE_COLOR)
+    SetLineBrash(Chrome(BLUE_COLOR))
     DrawArrow(pntC, pnt000)
     DrawArrow(pntC, pnt001)
     DrawArrow(pntC, pnt010)
@@ -297,7 +283,7 @@ def TestArrow2():
     DrawPoint(pnt010)
     DrawPoint(pnt011)
 
-    SetColor(NICE_BLUE_COLOR)
+    SetLineBrash(Chrome(BLUE_COLOR))
     DrawArrow2(pntC, pnt000)
     DrawArrow2(pntC, pnt001)
     DrawArrow2(pntC, pnt010)
@@ -373,21 +359,21 @@ def TestDesk():
 
 def TestAxis():
 
-    SetColor(NICE_RED_COLOR)
+    SetLineBrash(Chrome(RED_COLOR))
     DrawAxis(Decart(0, 0, 0), Decart(200, 0, 0), 50)
 
-    SetColor(NICE_GREEN_COLOR)
+    SetLineBrash(Chrome(GREEN_COLOR))
     DrawAxis(Decart(0, 0, 0), Decart(0, 200, 0), 50)
 
-    SetColor(NICE_BLUE_COLOR)
+    SetLineBrash(Chrome(BLUE_COLOR))
     DrawAxis(Decart(0, 0, 0), Decart(0, 0, 200), 50)
 
-    SetColor(NICE_WHITE_COLOR)
+    SetPointBrash(Chrome(WHITE_COLOR))
     DrawPoint(Decart(0, 0, 0))
     dlen = 200/sqrt(3)
     DrawAxis(Decart(0, 0, 0), Decart(dlen, dlen, dlen), 50)
 
-    SetColor(NICE_YELLOW_COLOR)
+    SetLabelBrash(Chrome(WHITE_COLOR))
     DrawLabel(Decart(200, 0, 0), 'X')
     DrawLabel(Decart(0, 200, 0), 'Y')
     DrawLabel(Decart(0, 0, 200), 'Z')
@@ -395,7 +381,7 @@ def TestAxis():
 
 def TestCoord():
     # DrawDesk()
-    DrawCoord(Decart(0, 0, 100), Decart(300, 300, 400))
+    DrawAxis(Decart(0, 0, 100), Decart(300, 300, 400))
     # DrawLimits()
 
 
@@ -404,11 +390,13 @@ def TestBoxFrame():
 
 
 def TestLimits():
-    DrawLimits(Decart(0, 0, 0), Decart(200, 200, 100))
+    pass
+# DrawLimits(Decart(0, 0, 0), Decart(200, 200, 100))
 
 
 def TestDecor():
-    DrawDecor()
+    pass
+# DrawDecor()
 
 
 '''
@@ -422,7 +410,7 @@ tests = [
 
     TestColor,
     TestTransparency,
-    TestMaterial,
+    TestStandartBrash,
 
     TestMove,
     TestRotate,
@@ -454,7 +442,7 @@ tests = [
 # exit()
 
 tests.pop()()
-Render()
+Show()
 
 '''
 for test in tests:
