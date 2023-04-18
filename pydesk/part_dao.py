@@ -16,42 +16,6 @@ from OCC.Core.BRepOffsetAPI import BRepOffsetAPI_MakeOffset, BRepOffsetAPI_ThruS
 from OCC.Core.BRepPrimAPI import BRepPrimAPI_MakeSphere, BRepPrimAPI_MakeBox
 from OCC.Core.BRepAlgoAPI import BRepAlgoAPI_Common, BRepAlgoAPI_Cut
 
-from math import pi
-
-
-class DrawLib:
-
-    def __init__(self):
-        self.cache = {}
-
-    def getCached(self, methodName, param1=None, param2=None):
-
-        params = ''
-        if param1 is not None:
-            params += str(param1)
-        if param2 is not None:
-            params += ',' + str(param2)
-
-        cacheKey = methodName + '(' + params + ')'
-
-        method = self.__getattribute__(methodName)
-        if cacheKey in self.cache:
-            print('==> Get from cache', cacheKey)
-            obj = self.cache[cacheKey]
-        else:
-            print('==> Compute', cacheKey)
-            if param1 is None:
-                obj = method()
-            elif param2 is None:
-                obj = method(param1)
-            else:
-                obj = method(param1, param2)
-            self.cache[cacheKey] = obj
-        return obj
-
-
-EQUAL_POINTS_PRECISION = 0.001
-
 
 def getXYZ(gpPnt):
     return gpPnt.X(), gpPnt.Y(), gpPnt.Z()
@@ -59,7 +23,7 @@ def getXYZ(gpPnt):
 
 def isPointExistInPoints(findingPoint, aPoints):
     for aPoint in aPoints:
-        if aPoint.IsEqual(findingPoint, EQUAL_POINTS_PRECISION):
+        if IsEqualPnt(aPoint, findingPoint):
             return True
     return False
 
@@ -211,16 +175,34 @@ def helperFaceFromPnts(pnts):
 # *********************************************************************************
 # *********************************************************************************
 
+DAO_BASE_RADIUS = 'DAO_BASE_RADIUS'
+DAO_OFFSET = 'DAO_OFFSET'
+DAO_SLICE_FACE_HEIGHT = 'DAO_SLICE_FACE_HEIGHT'
+DAO_SKINNING_SLICES_KS = 'DAO_SKINNING_SLICES_KS'
+DAO_SLICE_EXAMPLE_K = 'DAO_SLICE_EXAMPLE_K'
+DAO_SLICE_COUNT = 'DAO_SLICE_COUNT'
+DAO_SURFACE_Z_SCALE = 'DAO_SURFACE_Z_SCALE'
+DAO_CASE_HEIGHT = 'DAO_CASE_HEIGHT'
+DAO_CASE_GAP = 'DAO_CASE_GAP'
 
-class DaoDrawLib(DrawLib):
+
+DAO_SETTING = {
+    DAO_BASE_RADIUS: 40,
+    DAO_OFFSET: 3,
+    DAO_SLICE_FACE_HEIGHT: 30,
+    DAO_SKINNING_SLICES_KS: [0.03, 0.09, 0.16, 0.24, 0.35, 0.50, 0.70, 0.85],
+    DAO_SLICE_EXAMPLE_K: 0.5,
+    DAO_SLICE_COUNT: 20,
+    DAO_SURFACE_Z_SCALE: 0.7,
+    DAO_CASE_HEIGHT: 30,
+    DAO_CASE_GAP: 1,
+}
+
+
+class DaoDrawLib:
 
     def __init__(self):
-        self.scaleA = 5
-        self.scaleB = 1
-        # super().__init__(self.scaleA / self.scaleB, 'A0 M5:1')
-        super().__init__()
 
-        self.aBaseRadius = 40
         self.aOffset = 3
         self.aSliceFaceHeight = 30
         self.aSkinningSlicesKs = [0.03, 0.09, 0.16, 0.24, 0.35, 0.50, 0.70, 0.85]
@@ -230,227 +212,243 @@ class DaoDrawLib(DrawLib):
         self.aCaseHeight = 30
         self.aCaseGap = 1
 
-    def getDaoBasePoints(self):
 
-        r = self.aBaseRadius
+def ComputeDaoBasePoints():
 
-        r2 = r / 2
+    r = GetVar(DAO_BASE_RADIUS)
 
-        gpPntMinC = gp_Pnt(0, r2, 0)
+    r2 = r / 2
 
-        origin = gp_Pnt(0, 0, 0)
+    gpPntMinC = gp_Pnt(0, r2, 0)
 
-        ps = {
-            0: origin,
-            1: getPntRotate(gpPntMinC, origin, -pi / 4),
-            2: gp_Pnt(-r2, r2, 0),
-            3: getPntRotate(gpPntMinC, origin, -pi / 4 * 3),
-            4: gp_Pnt(0, r, 0),
-            5: gp_Pnt(r, 0, 0),
-            6: gp_Pnt(0, -r, 0),
-            7: gp_Pnt(r2, -r2, 0)
-        }
-        return ps
+    origin = gp_Pnt(0, 0, 0)
 
-    def getDaoClassicWire(self):
+    ps = {
+        0: origin,
+        1: getPntRotate(gpPntMinC, origin, -pi / 4),
+        2: gp_Pnt(-r2, r2, 0),
+        3: getPntRotate(gpPntMinC, origin, -pi / 4 * 3),
+        4: gp_Pnt(0, r, 0),
+        5: gp_Pnt(r, 0, 0),
+        6: gp_Pnt(0, -r, 0),
+        7: gp_Pnt(r2, -r2, 0)
+    }
+    return ps
 
-        p = self.getCached('getDaoBasePoints')
 
-        arc0 = GC_MakeArcOfCircle(p[0], p[1], p[2]).Value()
-        arc1 = GC_MakeArcOfCircle(p[2], p[3], p[4]).Value()
-        arc2 = GC_MakeArcOfCircle(p[4], p[5], p[6]).Value()
-        arc3 = GC_MakeArcOfCircle(p[6], p[7], p[0]).Value()
+def ComputeDaoClassicWire():
 
-        edge0 = BRepBuilderAPI_MakeEdge(arc0).Edge()
-        edge1 = BRepBuilderAPI_MakeEdge(arc1).Edge()
-        edge2 = BRepBuilderAPI_MakeEdge(arc2).Edge()
-        edge3 = BRepBuilderAPI_MakeEdge(arc3).Edge()
+    p = Compute(ComputeDaoBasePoints)
 
-        aWire = BRepBuilderAPI_MakeWire(edge0, edge1, edge2, edge3).Wire()
+    arc0 = GC_MakeArcOfCircle(p[0], p[1], p[2]).Value()
+    arc1 = GC_MakeArcOfCircle(p[2], p[3], p[4]).Value()
+    arc2 = GC_MakeArcOfCircle(p[4], p[5], p[6]).Value()
+    arc3 = GC_MakeArcOfCircle(p[6], p[7], p[0]).Value()
 
-        return aWire
+    edge0 = BRepBuilderAPI_MakeEdge(arc0).Edge()
+    edge1 = BRepBuilderAPI_MakeEdge(arc1).Edge()
+    edge2 = BRepBuilderAPI_MakeEdge(arc2).Edge()
+    edge3 = BRepBuilderAPI_MakeEdge(arc3).Edge()
 
-    def getDaoOffsetWire(self, offset):
+    aWire = BRepBuilderAPI_MakeWire(edge0, edge1, edge2, edge3).Wire()
 
-        classicWire = self.getCached('getDaoClassicWire')
+    return aWire
 
-        tool = BRepOffsetAPI_MakeOffset()
-        tool.AddWire(classicWire)
-        tool.Perform(-offset)
-        offsetWire = tool.Shape()
 
-        return offsetWire
+def ComputeDaoOffsetWire(offset):
 
-    def getDaoOffsetPnts(self, offset):
+    classicWire = Compute(ComputeDaoClassicWire)
 
-        aWire = self.getCached('getDaoOffsetWire', offset)
+    tool = BRepOffsetAPI_MakeOffset()
+    tool.AddWire(classicWire)
+    tool.Perform(-offset)
+    offsetWire = tool.Shape()
 
-        p = utilGetShapePoints(aWire)
+    return offsetWire
 
-        namedPoints = {
-            'Left': p[0],
-            'Begin': p[1],
-            'Right': p[2],
-            'End': p[3]
-        }
 
-        return namedPoints
+def ComputeDaoOffsetPnts(offset):
 
-    def getDaoSecondOffsetWire(self, offset):
+    aWire = Compute(ComputeDaoOffsetWire, offset)
 
-        firstWire = self.getCached('getDaoOffsetWire', offset)
-        secondWire = utilGetZRotatedShape(firstWire, pi)
+    p = utilGetShapePoints(aWire)
 
-        return secondWire
+    namedPoints = {
+        'Left': p[0],
+        'Begin': p[1],
+        'Right': p[2],
+        'End': p[3]
+    }
 
-    def getDaoFocusPnt(self):
+    return namedPoints
 
-        r = self.aBaseRadius
 
-        focusPoint = gp_Pnt(0, -r / 4, 0)
+def ComputeDaoSecondOffsetWire(offset):
 
-        return focusPoint
+    firstWire = Compute(ComputeDaoOffsetWire, offset)
+    secondWire = utilGetZRotatedShape(firstWire, pi)
 
-    def getDaoSliceLinePnt2(self, offset, sliceK):
+    return secondWire
 
-        limitPoints = self.getCached('getDaoOffsetPnts', offset)
 
-        beginPoint = limitPoints['Begin']
-        rightPoint = limitPoints['Right']
-        endPoint = limitPoints['End']
+def ComputeDaoFocusPnt():
 
-        focusPoint = self.getCached('getDaoFocusPnt')
+    r = GetVar(DAO_BASE_RADIUS)
 
-        limitAngle = 0
-        limitPoint = getPntScale(focusPoint, rightPoint, 1.2)
-        BeginAngle = getAngle(focusPoint, limitPoint, beginPoint)
-        endAngle = getAngle(focusPoint, limitPoint, endPoint)
-        limitK = (limitAngle - BeginAngle) / (endAngle - BeginAngle)
-        if sliceK < limitK:  # head
-            headK = (sliceK - 0) / (limitK - 0)
-            BeginX = rightPoint.X()
-            endX = beginPoint.X()
-            deltaX = (endX - BeginX) * (1 - headK)
-            lineBeginPoint = getTranslatedPoint(focusPoint, deltaX, 0, 0)
-            lineEndPoint = getTranslatedPoint(limitPoint, deltaX, 0, 0)
-        else:  # tail
-            tailK = (sliceK - limitK) / (1 - limitK)
-            tailAngle = -(endAngle * tailK)
-            lineBeginPoint = focusPoint
-            lineEndPoint = getPntRotate(focusPoint, limitPoint, tailAngle)
+    focusPoint = gp_Pnt(0, -r / 4, 0)
 
-        return lineBeginPoint, lineEndPoint
+    return focusPoint
 
-    def getDaoSliceFacePnts(self, offset, sliceK):
 
-        h = self.aSliceFaceHeight
-        beginPoint, endPoint = self.getCached('getDaoSliceLinePnt2', offset, sliceK)
+def ComputeDaoSliceLinePnt2(offset, sliceK):
 
-        x1, y1, z1 = getXYZ(beginPoint)
-        x2, y2, z2 = getXYZ(endPoint)
+    limitPoints = Compute(ComputeDaoOffsetPnts, offset)
 
-        pnt0 = gp_Pnt(x1, y1, -h)
-        pnt1 = gp_Pnt(x1, y1, +h)
-        pnt2 = gp_Pnt(x2, y2, +h)
-        pnt3 = gp_Pnt(x2, y2, -h)
+    beginPoint = limitPoints['Begin']
+    rightPoint = limitPoints['Right']
+    endPoint = limitPoints['End']
 
-        return [pnt0, pnt1, pnt2, pnt3]
+    focusPoint = Compute(ComputeDaoFocusPnt)
 
-    def getDaoSlicePnts(self, offset, sliceK):
+    limitAngle = 0
+    limitPoint = getPntScale(focusPoint, rightPoint, 1.2)
+    BeginAngle = getAngle(focusPoint, limitPoint, beginPoint)
+    endAngle = getAngle(focusPoint, limitPoint, endPoint)
+    limitK = (limitAngle - BeginAngle) / (endAngle - BeginAngle)
+    if sliceK < limitK:  # head
+        headK = (sliceK - 0) / (limitK - 0)
+        BeginX = rightPoint.X()
+        endX = beginPoint.X()
+        deltaX = (endX - BeginX) * (1 - headK)
+        lineBeginPoint = getTranslatedPoint(focusPoint, deltaX, 0, 0)
+        lineEndPoint = getTranslatedPoint(limitPoint, deltaX, 0, 0)
+    else:  # tail
+        tailK = (sliceK - limitK) / (1 - limitK)
+        tailAngle = -(endAngle * tailK)
+        lineBeginPoint = focusPoint
+        lineEndPoint = getPntRotate(focusPoint, limitPoint, tailAngle)
 
-        aWire = self.getCached('getDaoOffsetWire', offset)
-        aFacePnts = self.getCached('getDaoSliceFacePnts', offset, sliceK)
-        aFace = helperFaceFromPnts(aFacePnts)
+    return lineBeginPoint, lineEndPoint
 
-        farPoint, nearPoint = makeEdgesFacesIntersectPoints(aWire, aFace)
 
-        return {'Near': nearPoint, 'Far': farPoint}
+def ComputeDaoSliceFacePnts(offset, sliceK):
 
-    def getDaoSliceCirclePnt3(self, offset, sliceK):
+    h = dao.aSliceFaceHeight
+    beginPoint, endPoint = Compute(ComputeDaoSliceLinePnt2, offset, sliceK)
 
-        slicePoints = self.getCached('getDaoSlicePnts', offset, sliceK)
-        nearPoint = slicePoints['Near']
-        farPoint = slicePoints['Far']
+    x1, y1, z1 = getXYZ(beginPoint)
+    x2, y2, z2 = getXYZ(endPoint)
 
-        directionVector = gp_Vec(nearPoint, farPoint)
-        directionVector.Scale(0.5)
-        upVector = gp_Vec(0, 0, directionVector.Magnitude())
-        upPoint = gp_Pnt(nearPoint.XYZ())
-        upPoint.Translate(directionVector)
-        upPoint.Translate(upVector)
+    pnt0 = gp_Pnt(x1, y1, -h)
+    pnt1 = gp_Pnt(x1, y1, +h)
+    pnt2 = gp_Pnt(x2, y2, +h)
+    pnt3 = gp_Pnt(x2, y2, -h)
 
-        return nearPoint, upPoint, farPoint
+    return [pnt0, pnt1, pnt2, pnt3]
 
-    def getDaoSliceCircleWire(self, offset, sliceK):
-        pnt1, pnt2, pnt3 = self.getCached('getDaoSliceCirclePnt3', offset, sliceK)
-        return helperCircleWire(pnt1, pnt2, pnt3)
 
-    def getDaoSkinningSurface(self, offset):
+def ComputeDaoSlicePnts(offset, sliceK):
 
-        limitPoints = self.getCached('getDaoOffsetPnts', offset)
-        beginPoint = limitPoints['Begin']
-        endPoint = limitPoints['End']
+    aWire = Compute(ComputeDaoOffsetWire, offset)
+    aFacePnts = Compute(ComputeDaoSliceFacePnts, offset, sliceK)
+    aFace = helperFaceFromPnts(aFacePnts)
 
-        skinner = BRepOffsetAPI_ThruSections(True)
-        skinner.SetSmoothing(True)
+    farPoint, nearPoint = makeEdgesFacesIntersectPoints(aWire, aFace)
 
-        beginVertex = BRepBuilderAPI_MakeVertex(beginPoint).Vertex()
-        skinner.AddVertex(beginVertex)
+    return {'Near': nearPoint, 'Far': farPoint}
 
-        ks = self.aSkinningSlicesKs
-        for i in range(len(ks)):
-            sliceWire = self.getCached('getDaoSliceCircleWire', offset, ks[i])
-            skinner.AddWire(sliceWire)
 
-        endVertex = BRepBuilderAPI_MakeVertex(endPoint).Vertex()
-        skinner.AddVertex(endVertex)
+def ComputeDaoSliceCirclePnt3(offset, sliceK):
 
-        skinner.Build()
-        surface = skinner.Shape()
+    slicePoints = Compute(ComputeDaoSlicePnts, offset, sliceK)
+    nearPoint = slicePoints['Near']
+    farPoint = slicePoints['Far']
 
-        return surface
+    directionVector = gp_Vec(nearPoint, farPoint)
+    directionVector.Scale(0.5)
+    upVector = gp_Vec(0, 0, directionVector.Magnitude())
+    upPoint = gp_Pnt(nearPoint.XYZ())
+    upPoint.Translate(directionVector)
+    upPoint.Translate(upVector)
 
-    def getDaoIngSurface(self, offset):
-        scale = self.aSurfaceZScale
-        sourceSurface = self.getCached('getDaoSkinningSurface', offset)
-        scaledSurface = utilShapeZScale(sourceSurface, scale)
-        return scaledSurface
+    return nearPoint, upPoint, farPoint
 
-    def getDaoYangSurface(self, offset):
-        sourceSurface = self.getCached('getDaoIngSurface', offset)
-        rotatedSurface = utilGetZRotatedShape(sourceSurface, pi)
-        return rotatedSurface
 
-    def getDaoCaseSurface(self):
+def ComputeDaoSliceCircleWire(offset, sliceK):
+    pnt1, pnt2, pnt3 = Compute(ComputeDaoSliceCirclePnt3, offset, sliceK)
+    return helperCircleWire(pnt1, pnt2, pnt3)
 
-        r = self.aBaseRadius
-        r2 = r * 2
-        h = self.aCaseHeight
-        h2 = h / 2
-        offset = self.aOffset
-        gap = self.aCaseGap
-        rTop = r + offset + gap
 
-        rSphere = gp_Vec(0, rTop, h2).Magnitude()
-        sphere = BRepPrimAPI_MakeSphere(rSphere).Shape()
+def ComputeDaoSkinningSurface(offset):
 
-        limit = BRepPrimAPI_MakeBox(gp_Pnt(-r2, -r2, -h2), gp_Pnt(r2, r2, h2)).Shape()
-        step01Surface = BRepAlgoAPI_Common(sphere, limit).Shape()
+    limitPoints = Compute(ComputeDaoOffsetPnts, offset)
+    beginPoint = limitPoints['Begin']
+    endPoint = limitPoints['End']
 
-        step02Surface = getShapeTranslate(step01Surface, 0, 0, -h2)
+    skinner = BRepOffsetAPI_ThruSections(True)
+    skinner.SetSmoothing(True)
 
-        cutIngSurface = self.getCached('getDaoIngSurface', offset - gap)
-        cutYangSurface = self.getCached('getDaoYangSurface', offset - gap)
-        step03Surface = BRepAlgoAPI_Cut(step02Surface, cutIngSurface).Shape()
-        step04Surface = BRepAlgoAPI_Cut(step03Surface, cutYangSurface).Shape()
+    beginVertex = BRepBuilderAPI_MakeVertex(beginPoint).Vertex()
+    skinner.AddVertex(beginVertex)
 
-        step05Surface = getShapeTranslate(step04Surface, 0, 0, -h2)
+    ks = dao.aSkinningSlicesKs
+    for i in range(len(ks)):
+        sliceWire = Compute(ComputeDaoSliceCircleWire, offset, ks[i])
+        skinner.AddWire(sliceWire)
 
-        return step05Surface
+    endVertex = BRepBuilderAPI_MakeVertex(endPoint).Vertex()
+    skinner.AddVertex(endVertex)
 
-    def getDaoBoundPnt3(self, offset):
-        r = self.aBaseRadius + offset
-        return gp_Pnt(r, 0, 0), gp_Pnt(0, r, 0), gp_Pnt(-r, 0, 0)
+    skinner.Build()
+    surface = skinner.Shape()
+
+    return surface
+
+
+def ComputeDaoIngSurface(offset):
+    scale = dao.aSurfaceZScale
+    sourceSurface = Compute(ComputeDaoSkinningSurface, offset)
+    scaledSurface = utilShapeZScale(sourceSurface, scale)
+    return scaledSurface
+
+
+def ComputeDaoYangSurface(offset):
+    sourceSurface = Compute(ComputeDaoIngSurface, offset)
+    rotatedSurface = utilGetZRotatedShape(sourceSurface, pi)
+    return rotatedSurface
+
+
+def ComputeDaoCaseSurface():
+
+    r = GetVar(DAO_BASE_RADIUS)
+    r2 = r * 2
+    h = dao.aCaseHeight
+    h2 = h / 2
+    offset = dao.aOffset
+    gap = dao.aCaseGap
+    rTop = r + offset + gap
+
+    rSphere = gp_Vec(0, rTop, h2).Magnitude()
+    sphere = BRepPrimAPI_MakeSphere(rSphere).Shape()
+
+    limit = BRepPrimAPI_MakeBox(gp_Pnt(-r2, -r2, -h2), gp_Pnt(r2, r2, h2)).Shape()
+    step01Surface = BRepAlgoAPI_Common(sphere, limit).Shape()
+
+    step02Surface = getShapeTranslate(step01Surface, 0, 0, -h2)
+
+    cutIngSurface = Compute(ComputeDaoIngSurface, offset - gap)
+    cutYangSurface = Compute(ComputeDaoYangSurface, offset - gap)
+    step03Surface = BRepAlgoAPI_Cut(step02Surface, cutIngSurface).Shape()
+    step04Surface = BRepAlgoAPI_Cut(step03Surface, cutYangSurface).Shape()
+
+    step05Surface = getShapeTranslate(step04Surface, 0, 0, -h2)
+
+    return step05Surface
+
+
+def ComputeDaoBoundPnt3(offset):
+    r = GetVar(DAO_BASE_RADIUS) + offset
+    return gp_Pnt(r, 0, 0), gp_Pnt(0, r, 0), gp_Pnt(-r, 0, 0)
 
 
 # **********************************************************************************
@@ -472,15 +470,15 @@ def DrawDaoClassicSlide():
 
     SetStyle(DESK_MAIN_STYLE)
 
-    basePoints = dao.getCached('getDaoBasePoints')
+    basePoints = Compute(ComputeDaoBasePoints)
     DrawDaoPoints(basePoints, 'p')
 
-    classicWire = dao.getCached('getDaoClassicWire')
+    classicWire = Compute(ComputeDaoClassicWire)
     DrawWire(classicWire)
 
     SetStyle(DESK_INFO_STYLE)
 
-    bPnt1, bPnt2, bPnt3 = dao.getCached('getDaoBoundPnt3', 0)
+    bPnt1, bPnt2, bPnt3 = Compute(ComputeDaoBoundPnt3, 0)
     DrawCircle(bPnt1, bPnt2, bPnt3)
 
 
@@ -488,18 +486,18 @@ def DrawDaoOffsetSlide():
 
     SetStyle(DESK_MAIN_STYLE)
 
-    firstWire = dao.getCached('getDaoOffsetWire', dao.aOffset)
+    firstWire = Compute(ComputeDaoOffsetWire, dao.aOffset)
     DrawWire(firstWire)
 
-    firstWirePoints = dao.getCached('getDaoOffsetPnts', dao.aOffset)
+    firstWirePoints = Compute(ComputeDaoOffsetPnts, dao.aOffset)
     DrawDaoPoints(firstWirePoints, 'p')
 
     SetStyle(DESK_INFO_STYLE)
 
-    secondWire = dao.getCached('getDaoSecondOffsetWire', dao.aOffset)
+    secondWire = Compute(ComputeDaoSecondOffsetWire, dao.aOffset)
     DrawWire(secondWire)
 
-    bPnt1, bPnt2, bPnt3 = dao.getCached('getDaoBoundPnt3', dao.aOffset)
+    bPnt1, bPnt2, bPnt3 = Compute(ComputeDaoBoundPnt3, dao.aOffset)
     DrawCircle(bPnt1, bPnt2, bPnt3)
 
 
@@ -508,11 +506,11 @@ def DrawDaoExampleSliceSlide():
     SetStyle(DESK_MAIN_STYLE)
 
     # main dao curve
-    wire = dao.getCached('getDaoOffsetWire', dao.aOffset)
+    wire = Compute(ComputeDaoOffsetWire, dao.aOffset)
     DrawWire(wire)
 
     # focus point
-    focus = dao.getCached('getDaoFocusPnt')
+    focus = Compute(ComputeDaoFocusPnt)
     DrawPoint(focus)
     DrawLabel(focus, 'F')
 
@@ -521,27 +519,27 @@ def DrawDaoExampleSliceSlide():
 
     SetStyle(DESK_FOCUS_STYLE)
 
-    sliceLineP1, sliceLineP2 = dao.getCached('getDaoSliceLinePnt2', dao.aOffset, k)
+    sliceLineP1, sliceLineP2 = Compute(ComputeDaoSliceLinePnt2, dao.aOffset, k)
     DrawLine(sliceLineP1, sliceLineP2)
 
-    sliceFacePnts = dao.getCached('getDaoSliceFacePnts', dao.aOffset, k)
+    sliceFacePnts = Compute(ComputeDaoSliceFacePnts, dao.aOffset, k)
     face = helperFaceFromPnts(sliceFacePnts)
     DrawSurface(face)
 
     SetStyle(DESK_MAIN_STYLE)
 
-    slicePoints = dao.getCached('getDaoSlicePnts', dao.aOffset, k)
+    slicePoints = Compute(ComputeDaoSlicePnts, dao.aOffset, k)
     DrawDaoPoints(slicePoints, 's')
 
     SetStyle(DESK_FOCUS_STYLE)
 
-    sliceCirclePnt1, sliceCirclePnt2, sliceCirclePnt3 = dao.getCached('getDaoSliceCirclePnt3', dao.aOffset, k)
+    sliceCirclePnt1, sliceCirclePnt2, sliceCirclePnt3 = Compute(ComputeDaoSliceCirclePnt3, dao.aOffset, k)
     DrawCircle(sliceCirclePnt1, sliceCirclePnt2, sliceCirclePnt3)
 
     SetStyle(DESK_INFO_STYLE)
 
     # bound
-    bPnt1, bPnt2, bPnt3 = dao.getCached('getDaoBoundPnt3', dao.aOffset)
+    bPnt1, bPnt2, bPnt3 = Compute(ComputeDaoBoundPnt3, dao.aOffset)
     DrawCircle(bPnt1, bPnt2, bPnt3)
 
 
@@ -549,10 +547,10 @@ def DrawManySliceSlide():
 
     SetStyle(DESK_MAIN_STYLE)
 
-    wire = dao.getCached('getDaoOffsetWire', dao.aOffset)
+    wire = Compute(ComputeDaoOffsetWire, dao.aOffset)
     DrawWire(wire)
 
-    focus = dao.getCached('getDaoFocusPnt')
+    focus = Compute(ComputeDaoFocusPnt)
     DrawPoint(focus)
     DrawLabel(focus, 'F')
 
@@ -565,17 +563,17 @@ def DrawManySliceSlide():
 
         SetStyle(DESK_FOCUS_STYLE)
 
-        sliceLineP1, sliceLineP2 = dao.getCached('getDaoSliceLinePnt2', dao.aOffset, k)
+        sliceLineP1, sliceLineP2 = Compute(ComputeDaoSliceLinePnt2, dao.aOffset, k)
         DrawLine(sliceLineP1, sliceLineP2)
 
         SetStyle(DESK_MAIN_STYLE)
 
-        sPnt1, sPnt2, sPnt3 = dao.getCached('getDaoSliceCirclePnt3', dao.aOffset, k)
+        sPnt1, sPnt2, sPnt3 = Compute(ComputeDaoSliceCirclePnt3, dao.aOffset, k)
         DrawCircle(sPnt1, sPnt2, sPnt3)
 
     SetStyle(DESK_INFO_STYLE)
 
-    bPnt1, bPnt2, bPnt3 = dao.getCached('getDaoBoundPnt3', dao.aOffset)
+    bPnt1, bPnt2, bPnt3 = Compute(ComputeDaoBoundPnt3, dao.aOffset)
     DrawCircle(bPnt1, bPnt2, bPnt3)
 
 
@@ -583,7 +581,7 @@ def DrawDaoSkinningSlide():
 
     SetStyle(DESK_MAIN_STYLE)
 
-    focus = dao.getCached('getDaoFocusPnt')
+    focus = Compute(ComputeDaoFocusPnt)
     DrawPoint(focus)
     DrawLabel(focus, 'F')
 
@@ -594,23 +592,52 @@ def DrawDaoSkinningSlide():
 
         SetStyle(DESK_FOCUS_STYLE)
 
-        sliceLineP1, sliceLineP2 = dao.getCached('getDaoSliceLinePnt2', dao.aOffset, k)
+        sliceLineP1, sliceLineP2 = Compute(ComputeDaoSliceLinePnt2, dao.aOffset, k)
         DrawLine(sliceLineP1, sliceLineP2)
 
         SetStyle(DESK_MAIN_STYLE)
 
-        sPnt1, sPnt2, sPnt3 = dao.getCached('getDaoSliceCirclePnt3', dao.aOffset, k)
+        sPnt1, sPnt2, sPnt3 = Compute(ComputeDaoSliceCirclePnt3, dao.aOffset, k)
         DrawCircle(sPnt1, sPnt2, sPnt3)
 
     SetStyle(DESK_FOCUS_STYLE)
 
-    skinningSurface = dao.getCached('getDaoSkinningSurface', dao.aOffset)
+    skinningSurface = Compute(ComputeDaoSkinningSurface, dao.aOffset)
     DrawSurface(skinningSurface)
 
     SetStyle(DESK_INFO_STYLE)
 
-    bPnt1, bPnt2, bPnt3 = dao.getCached('getDaoBoundPnt3', dao.aOffset)
+    bPnt1, bPnt2, bPnt3 = Compute(ComputeDaoBoundPnt3, dao.aOffset)
     DrawCircle(bPnt1, bPnt2, bPnt3)
+
+
+def DrawDaoIngYangSlide():
+
+    ingSurface = Compute(ComputeDaoIngSurface, dao.aOffset)
+    SetSolidBrash(ChromeBrash((141/255, 241/255, 95/255)))
+    DrawSolid(ingSurface)
+
+    yangSurface = Compute(ComputeDaoYangSurface, dao.aOffset)
+    SetSolidBrash(ChromeBrash((255/255, 100/255, 255/255)))
+    DrawSolid(yangSurface)
+
+
+def DrawDaoCaseSlide():
+
+    ingSurface = Compute(ComputeDaoIngSurface, dao.aOffset)
+    SetSolidBrash(ChromeBrash((141/255, 241/255, 95/255)))
+    DrawSolid(ingSurface)
+
+    yangSurface = Compute(ComputeDaoYangSurface, dao.aOffset)
+    SetSolidBrash(ChromeBrash((255/255, 100/255, 255/255)))
+    DrawSolid(yangSurface)
+
+    caseSurface = Compute(ComputeDaoCaseSurface)
+    SetSolidBrash(ChromeBrash((100/255, 100/255, 100/255)))
+    DrawSolid(caseSurface)
+
+
+SetStyle(DAO_SETTING)
 
 
 SetScale(5, 1)
@@ -619,49 +646,7 @@ DrawDesk(-50)
 # DrawDaoOffsetSlide()
 # DrawDaoExampleSliceSlide()
 # DrawManySliceSlide()
-DrawDaoSkinningSlide()
+# DrawDaoSkinningSlide()
+# DrawDaoIngYangSlide()
+DrawDaoCaseSlide()
 Show()
-
-
-'''
-def getDaoIngYangSlide(self):
-
-    dr = Draw()
-
-    ingSurface =Compute('getDaoIngSurface', self.aOffset)
-    style = Style(CHROME_MATERIAL, (141/255, 241/255, 95/255))
-    dr.addItem(SurfaceDraw(ingSurface).doStl(style))
-
-    yangSurface =Compute('getDaoYangSurface', self.aOffset)
-    style = Style(CHROME_MATERIAL, (255/255, 100/255, 255/255))
-    dr.addItem(SurfaceDraw(yangSurface).doStl(style))
-
-    return dr
-
-def getDaoCaseSlide(self):
-
-    dr = Draw()
-
-    ingSurface =Compute('getDaoIngSurface', self.aOffset)
-    style = Style(CHROME_MATERIAL, (141/255, 241/255, 95/255))
-    dr.addItem(SurfaceDraw(ingSurface).doStl(style))
-
-    yangSurface =Compute('getDaoYangSurface', self.aOffset)
-    style = Style(CHROME_MATERIAL, (255/255, 100/255, 255/255))
-    dr.addItem(SurfaceDraw(yangSurface).doStl(style))
-
-    caseSurface =Compute('getDaoCaseSurface')
-    style = Style(CHROME_MATERIAL, (100/255, 100/255, 100/255))
-    dr.addItem(SurfaceDraw(caseSurface).doStl(style))
-
-    return dr
-
-
-
-
-    @staticmethod
-    def getStyles():
-        return [
-        ]
-        
-'''

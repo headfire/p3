@@ -25,9 +25,15 @@ from OCC.Core.Graphic3d import Graphic3d_MaterialAspect
 
 from OCC.Display.SimpleGui import init_display
 
+from math import pi
+
 # ***************************************************
 # Base constants
 # ***************************************************
+
+EQUAL_POINTS_PRECISION = 0.001
+PI = pi
+
 
 WHITE_COLOR = 0.9, 0.9, 0.9
 GRAY_COLOR = 0.6, 0.6, 0.6
@@ -83,6 +89,9 @@ def InvisibleBrash():
 def DecartPnt(x, y, z):
     return gp_Pnt(x, y, z)
 
+
+def IsEqualPnt(pnt1, pnt2):
+    return pnt1.IsEqual(pnt2, EQUAL_POINTS_PRECISION)
 
 # ***************************************************
 # Compute caching system
