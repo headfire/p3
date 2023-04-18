@@ -356,8 +356,8 @@ DESK_PIN_OFFSET = 'DESK_PIN_OFFSET'
 DESK_PIN_RADIUS = 'DESK_PIN_RADIUS'
 DESK_PIN_HEIGHT = 'DESK_PIN_HEIGHT'
 
-DESK_LIMITS_PNT1 = 'DESK_LIMITS_PNT1'
-DESK_LIMITS_PNT2 = 'DESK_LIMITS_PNT2'
+DESK_LIMITS_SIZES = 'DESK_LIMITS_SIZES'
+DESK_BOARD_DOWN = 'DESK_BOARD_DOWN'
 
 DESK_BOARD_BRASH = 'DESK_BOARD_BRASH'
 DESK_PAPER_BRASH = 'DESK_PAPER_BRASH'
@@ -394,8 +394,8 @@ DESK_DEFAULT_STYLE = {
     DESK_PIN_RADIUS: 10,
     DESK_PIN_HEIGHT: 2,
 
-    DESK_LIMITS_PNT1: Decart(-400, -300, 0),
-    DESK_LIMITS_PNT2: Decart(400, 300, 400),
+    DESK_LIMITS_SIZES: Decart(-400, -300, 300),
+    DESK_BOARD_DOWN: 100,
 
     DESK_BOARD_BRASH: PlasticBrash(WOOD_COLOR),
     DESK_PAPER_BRASH: PlasticBrash(PAPER_COLOR),
@@ -657,6 +657,10 @@ def DrawCircle(pnt1, pnt2, pnt3):
 
 
 def DrawBoard():
+
+    backup = BackupVars()
+    GroupBegin()
+
     borderSize = ScaleMain(GetVar(DESK_BOARD_BORDER_SIZE))
     deskHeight = ScaleMain(GetVar(DESK_BOARD_HEIGHT))
 
@@ -674,8 +678,6 @@ def DrawBoard():
     bsx = psx + borderSize * 2
     bsy = psy + borderSize * 2
     bsz = deskHeight
-
-    backup = BackupVars()
 
     SetSolidBrash(GetVar(DESK_BOARD_BRASH))
     DrawBox(bsx, bsy, bsz)
@@ -703,6 +705,7 @@ def DrawBoard():
         DrawCylinder(pinRadius, pinHeight)
         DoMove(Decart(x, y, 0))
 
+    GroupEnd()
     RestoreVars(backup)
 
 
@@ -790,6 +793,24 @@ def DrawBoxFrame(pnt1, pnt2, isLabeled):
 def DrawLimits(pnt1, pnt2, isLabeled=False):
     SetStyle(DESK_INFO_STYLE)
     DrawBoxFrame(pnt1, pnt2, isLabeled)
+
+
+def DrawDesk(isAxisSystem=False, isLimits=False, isLabeled=False):
+
+    down = ScaleMain(GetVar(DESK_BOARD_DOWN))
+
+    DrawBoard()
+    DoMove(Decart(0, 0, -down))
+
+    pnt = GetVar(DESK_LIMITS_SIZES)
+    ax, ay, az = ScaleMain(pnt.X()), ScaleMain(pnt.Y()), ScaleMain(pnt.Z())
+
+    if isLimits:
+        DrawLimits(Decart(-ax, -ay, 0), Decart(ax, ay, az), isLabeled)
+
+    if isAxisSystem:
+        step = ScaleMain(GetVar(DESK_AXES_STEP))
+        DrawAxisSystem(Decart(0, 0, 0), Decart(ax*1.2, ay*1.2, az*1.2), step)
 
 
 def Show():

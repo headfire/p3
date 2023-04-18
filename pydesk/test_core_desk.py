@@ -395,8 +395,8 @@ def TestLimits():
 # DrawLimits(Decart(0, 0, 0), Decart(200, 200, 100))
 
 
-def TestDecor():
-    pass
+def TestDesk():
+    DrawDesk(True, True, True)
 # DrawDecor()
 
 
@@ -435,7 +435,7 @@ tests = [
     TestAxisSystem,
     TestBoxFrame,
     TestLimits,
-    # TestDesk,
+    TestDesk,
 ]
 
 # TestLabel()
