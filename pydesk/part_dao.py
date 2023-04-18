@@ -172,7 +172,7 @@ def _getFaceFromPnts(pnts):
 
 
 # *********************************************************************************
-# *********************************************************************************
+# Compute section
 # *********************************************************************************
 
 
@@ -188,9 +188,9 @@ def ComputeDaoBasePoints():
 
     ps = {
         0: origin,
-        1: _getPntRotate(gpPntMinC, origin, -pi / 4),
+        1: _getPntRotate(gpPntMinC, origin, -PI / 4),
         2: gp_Pnt(-r2, r2, 0),
-        3: _getPntRotate(gpPntMinC, origin, -pi / 4 * 3),
+        3: _getPntRotate(gpPntMinC, origin, -PI / 4 * 3),
         4: gp_Pnt(0, r, 0),
         5: gp_Pnt(r, 0, 0),
         6: gp_Pnt(0, -r, 0),
@@ -249,7 +249,7 @@ def ComputeDaoOffsetPnts(offset):
 def ComputeDaoSecondOffsetWire(offset):
 
     firstWire = Compute(ComputeDaoOffsetWire, offset)
-    secondWire = _getZRotatedShape(firstWire, pi)
+    secondWire = _getZRotatedShape(firstWire, PI)
 
     return secondWire
 
@@ -377,7 +377,7 @@ def ComputeDaoIngSurface(offset):
 
 def ComputeDaoYangSurface(offset):
     sourceSurface = Compute(ComputeDaoIngSurface, offset)
-    rotatedSurface = _getZRotatedShape(sourceSurface, pi)
+    rotatedSurface = _getZRotatedShape(sourceSurface, PI)
     return rotatedSurface
 
 
@@ -414,9 +414,9 @@ def ComputeDaoBoundPnt3(offset):
     return gp_Pnt(r, 0, 0), gp_Pnt(0, r, 0), gp_Pnt(-r, 0, 0)
 
 
-# **********************************************************************************
-# **********************************************************************************
-# **********************************************************************************
+# *********************************************************************************
+# Draw section
+# *********************************************************************************
 
 
 def DrawDaoPoints(pointsDict, prefix):
@@ -601,13 +601,20 @@ def DrawDaoCaseSlide():
 SetStyle(DAO_DEFAULT)
 
 
-SetScale(5, 1)
-DrawDesk(-50)
-# DrawDaoClassicSlide()
-# DrawDaoOffsetSlide()
-# DrawDaoExampleSliceSlide()
-# DrawManySliceSlide()
-# DrawDaoSkinningSlide()
-# DrawDaoIngYangSlide()
-DrawDaoCaseSlide()
-Show()
+# *********************************************************************************
+# Test section
+# *********************************************************************************
+
+
+if __name__ == "__main__":
+
+    SetScale(5, 1)
+    DrawDesk(-50)
+    # DrawDaoClassicSlide()
+    # DrawDaoOffsetSlide()
+    # DrawDaoExampleSliceSlide()
+    # DrawManySliceSlide()
+    # DrawDaoSkinningSlide()
+    # DrawDaoIngYangSlide()
+    DrawDaoCaseSlide()
+    Show()
