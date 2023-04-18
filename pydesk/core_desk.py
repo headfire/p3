@@ -25,6 +25,40 @@ from OCC.Core.Graphic3d import Graphic3d_MaterialAspect
 
 from OCC.Display.SimpleGui import init_display
 
+# ***************************************************
+# Base constants
+# ***************************************************
+
+WHITE_COLOR = 0.9, 0.9, 0.9
+GRAY_COLOR = 0.6, 0.6, 0.6
+DARK_GRAY_COLOR = 0.3, 0.3, 0.3
+
+RED_COLOR = 0.9, 0.3, 0.3
+GREEN_COLOR = 0.3, 0.9, 0.3
+BLUE_COLOR = 0.3, 0.3, 0.9
+
+YELLOW_COLOR = 0.9, 0.9, 0.3
+CYAN_COLOR = 0.3, 0.9, 0.9
+MAGENTA_COLOR = 0.9, 0.3, 0.9
+
+DARK_RED_COLOR = 0.6, 0.3, 0.3
+DARK_GREEN_COLOR = 0.3, 0.6, 0.3
+DARK_BLUE_COLOR = 0.3, 0.3, 0.6
+
+DARK_YELLOW_COLOR = 0.6, 0.6, 0.3
+DARK_CYAN_COLOR = 0.3, 0.6, 0.6
+DARK_MAGENTA_COLOR = 0.6, 0.3, 0.6
+
+WOOD_COLOR = 0.82, 0.46, 0.11
+PAPER_COLOR = 0.90, 0.90, 0.90
+STEEL_COLOR = 0.39, 0.39, 0.39
+GOLD_COLOR = 0.99, 0.78, 0.12
+
+
+# ***************************************************
+# Base convert functions
+# ***************************************************
+
 
 def PlasticBrash(color=None, transparency=None):
     return color, transparency, Graphic3d_NameOfMaterial.Graphic3d_NOM_PLASTIC
@@ -50,6 +84,42 @@ def DecartPnt(x, y, z):
     return gp_Pnt(x, y, z)
 
 
+# ***************************************************
+# Compute caching system
+# ***************************************************
+
+
+computeCache = {}
+
+
+def Compute(func, arg1=None, arg2=None, arg3=None):
+    args = ''
+    if arg1 is not None:
+        args += str(arg1)
+    if arg2 is not None:
+        args += ',' + str(arg2)
+    if arg3 is not None:
+        args += ',' + str(arg3)
+
+    cacheKey = func.__module__ + '.' + func.__name__ + '(' + args + ')'
+
+    if cacheKey in computeCache:
+        print('==> Get from cache', cacheKey)
+        obj = computeCache[cacheKey]
+    else:
+        print('==> Compute', cacheKey)
+        if arg1 is None:
+            obj = func()
+        elif arg2 is None:
+            obj = func(arg1)
+        elif arg3 is None:
+            obj = func(arg1, arg2)
+        else:
+            obj = func(arg1, arg2, arg3)
+        computeCache[cacheKey] = obj
+    return obj
+
+
 def ComputeSphere(argRadius):
     return BRepPrimAPI_MakeSphere(argRadius).Shape()
 
@@ -70,43 +140,18 @@ def ComputeTorus(argRadius1, argRadius2):
     return BRepPrimAPI_MakeTorus(argRadius1, argRadius2).Shape()
 
 
+# **************************************************************
+# Virtual graphic machine
+# **************************************************************
+
 class Scene:
 
     def __init__(self):
-        self.computeCache = {}
         self.rootsAis: [Optional[AIS_Shape]] = []
         self.parentAis: Optional[AIS_Shape] = None
         self.currentAis: Optional[AIS_Shape] = None
         self.dummyShape = BRepPrimAPI_MakeSphere(1).Shape()
         self.dummyBrash = InvisibleBrash()
-
-    def _compute(self, func, arg1=None, arg2=None, arg3=None):
-
-        args = ''
-        if arg1 is not None:
-            args += str(arg1)
-        if arg2 is not None:
-            args += ',' + str(arg2)
-        if arg3 is not None:
-            args += ',' + str(arg3)
-
-        cacheKey = func.__module__ + '.' + func.__name__ + '(' + args + ')'
-
-        if cacheKey in self.computeCache:
-            print('==> Get from cache', cacheKey)
-            obj = self.computeCache[cacheKey]
-        else:
-            print('==> Compute', cacheKey)
-            if arg1 is None:
-                obj = func()
-            elif arg2 is None:
-                obj = func(arg1)
-            elif arg3 is None:
-                obj = func(arg1, arg2)
-            else:
-                obj = func(arg1, arg2, arg3)
-            self.computeCache[cacheKey] = obj
-        return obj
 
     def _drawAis(self, ais: AIS_InteractiveObject, brash):
 
@@ -168,8 +213,6 @@ class Scene:
 
         for ais in self.rootsAis:
             display.Context.Display(ais, False)
-
-        # display.DisplayMessage(labelPnt, text, heightPx, color, False)
 
         display.FitAll()
         display_start()
@@ -246,23 +289,23 @@ class Scene:
         self._drawWire(wire, wireRadius, brash)
 
     def drawSphere(self, r, brash):
-        shape = self._compute(ComputeSphere, r)
+        shape = Compute(ComputeSphere, r)
         self._drawShape(shape, brash)
 
     def drawBox(self, x, y, z, brash):
-        shape = self._compute(ComputeBox, x, y, z)
+        shape = Compute(ComputeBox, x, y, z)
         self._drawShape(shape, brash)
 
     def drawCone(self, r1, r2, h, brash):
-        shape = self._compute(ComputeCone, r1, r2, h)
+        shape = Compute(ComputeCone, r1, r2, h)
         self._drawShape(shape, brash)
 
     def drawCylinder(self, r, h, brash):
-        shape = self._compute(ComputeCylinder, r, h)
+        shape = Compute(ComputeCylinder, r, h)
         self._drawShape(shape, brash)
 
     def drawTorus(self, r1, r2, brash):
-        shape = self._compute(ComputeTorus, r1, r2)
+        shape = Compute(ComputeTorus, r1, r2)
         self._drawShape(shape, brash)
 
     def groupBegin(self):
@@ -277,33 +320,8 @@ class Scene:
 
 scene = Scene()
 
-WHITE_COLOR = 0.9, 0.9, 0.9
-GRAY_COLOR = 0.6, 0.6, 0.6
-DARK_GRAY_COLOR = 0.3, 0.3, 0.3
-
-RED_COLOR = 0.9, 0.3, 0.3
-GREEN_COLOR = 0.3, 0.9, 0.3
-BLUE_COLOR = 0.3, 0.3, 0.9
-
-YELLOW_COLOR = 0.9, 0.9, 0.3
-CYAN_COLOR = 0.3, 0.9, 0.9
-MAGENTA_COLOR = 0.9, 0.3, 0.9
-
-DARK_RED_COLOR = 0.6, 0.3, 0.3
-DARK_GREEN_COLOR = 0.3, 0.6, 0.3
-DARK_BLUE_COLOR = 0.3, 0.3, 0.6
-
-DARK_YELLOW_COLOR = 0.6, 0.6, 0.3
-DARK_CYAN_COLOR = 0.3, 0.6, 0.6
-DARK_MAGENTA_COLOR = 0.6, 0.3, 0.6
-
-WOOD_COLOR = 0.82, 0.46, 0.11
-PAPER_COLOR = 0.90, 0.90, 0.90
-STEEL_COLOR = 0.39, 0.39, 0.39
-GOLD_COLOR = 0.99, 0.78, 0.12
-
 # *************************************************
-# Style vars
+# Desk style vars
 # *************************************************
 
 DESK_LABEL_BRASH = 'DESK_LABEL_BRASH'
@@ -313,7 +331,7 @@ DESK_SOLID_BRASH = 'DESK_SOLID_BRASH'
 DESK_SURFACE_BRASH = 'DESK_SURFACE_BRASH'
 
 # *************************************************
-# Geom vars
+# Desk geom vars
 # *************************************************
 
 DESK_SCALE_TEXT = 'DESK_SCALE_TEXT'
@@ -354,7 +372,7 @@ DESK_PAPER_BRASH = 'DESK_PAPER_BRASH'
 DESK_PIN_BRASH = 'DESK_PIN_BRASH'
 
 # ***************************************************
-# ***************************************************
+# Style definitions
 # ***************************************************
 
 DESK_DEFAULT_STYLE = {
@@ -489,12 +507,31 @@ def ScaleGeom(value):
     return value * mainScale * geomScale
 
 
+# *************************************************
+# Render control
+# *************************************************
+
+
+def Show():
+    scene.show()
+
+
+# *************************************************
+# Hierarchy
+# *************************************************
+
+
 def GroupBegin():
     scene.groupBegin()
 
 
 def GroupEnd():
     scene.groupEnd()
+
+
+# *************************************************
+# Object transformation
+# *************************************************
 
 
 def DoMove(pnt):
@@ -521,6 +558,10 @@ def DoDirect(fromPnt, toPnt):
     scene.doDirect(fromPnt, toPnt)
 
 
+# *************************************************
+# Base primitives
+# *************************************************
+
 def DrawLabel(pnt, text):
     brash = GetVar(DESK_LABEL_BRASH)
     heightPx = GetVar(DESK_LABEL_HEIGHT_PX)
@@ -537,6 +578,11 @@ def DrawSolid(shape):
 def DrawSurface(shape):
     brash = GetVar(DESK_SURFACE_BRASH)
     scene.drawShape(shape, brash)
+
+
+# *************************************************
+# Construct primitives
+# *************************************************
 
 
 def DrawSphere(r):
@@ -563,6 +609,10 @@ def DrawTorus(r1, r2):
     brash = GetVar(DESK_SOLID_BRASH)
     scene.drawTorus(r1, r2, brash)
 
+
+# *************************************************
+# Geom primitives
+# *************************************************
 
 def DrawPoint(pnt):
     brash = GetVar(DESK_POINT_BRASH)
@@ -604,7 +654,7 @@ def DrawWire(wire):
 
 
 # *************************************************************
-# Complex level
+# Complex objects
 # *************************************************************
 
 def DrawArrow(pnt1, pnt2):
@@ -647,7 +697,6 @@ def DrawCircle(pnt1, pnt2, pnt3):
 
 
 def DrawBoard():
-
     backup = BackupVars()
     GroupBegin()
 
@@ -786,7 +835,6 @@ def DrawLimits(pnt1, pnt2, isLabeled=False):
 
 
 def DrawDesk(isAxisSystem=False, isLimits=False, isLabeled=False):
-
     down = ScaleMain(GetVar(DESK_BOARD_DOWN))
 
     DrawBoard()
@@ -801,10 +849,6 @@ def DrawDesk(isAxisSystem=False, isLimits=False, isLabeled=False):
     if isAxisSystem:
         step = ScaleMain(GetVar(DESK_AXES_STEP))
         DrawAxisSystem(DecartPnt(0, 0, 0), DecartPnt(ax * 1.2, ay * 1.2, az * 1.2), step)
-
-
-def Show():
-    scene.show()
 
 
 # ************************************
