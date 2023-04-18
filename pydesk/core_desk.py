@@ -42,6 +42,11 @@ def LabelBrash(color=None, transparency=None):
     return color, transparency, None
 
 
+def InvisibleBrash():
+    return None, 1, None
+
+
+
 def Decart(x, y, z):
     return gp_Pnt(x, y, z)
 
@@ -110,8 +115,8 @@ class Scene:
         self.rootsAis: [Optional[AIS_Shape]] = []
         self.parentAis: Optional[AIS_Shape] = None
         self.currentAis: Optional[AIS_Shape] = None
-        self.dummyShape = BRepPrimAPI_MakeSphere(1)
-        self.dummyBrash = PlasticBrash()
+        self.dummyShape = BRepPrimAPI_MakeSphere(1).Shape()
+        self.dummyBrash = InvisibleBrash()
         self.computer = SceneComputer()
 
     def _drawAis(self, ais: AIS_InteractiveObject, brash):
@@ -181,7 +186,7 @@ class Scene:
         display_start()
 
     def _groupBegin(self):
-        self.drawShape(self.dummyShape, self.dummyBrash)
+        self._drawShape(self.dummyShape, self.dummyBrash)
         self.parentAis = self.currentAis
         self.currentAis = None
 
@@ -593,6 +598,17 @@ def DrawArrowEnd(pnt1, pnt2):
     scene.doDirect(pnt1, pnt2)
 
 
+def DrawMark(pntMark, pntDirect):
+
+    brash = GetVar(DESK_LINE_BRASH)
+    markRadius = ScaleGeom(GetVar(DESK_MARK_RADIUS))
+    markLength = ScaleGeom(GetVar(DESK_MARK_LENGTH))
+
+    scene.drawCylinder(markRadius, markLength, brash)
+    scene.doMove(Decart(0, 0, -markLength / 2))
+    scene.doDirect(pntMark, pntDirect)
+
+
 def DrawWire(wire):
     brash = GetVar(DESK_LINE_BRASH)
     wireRadius = ScaleGeom(GetVar(DESK_LINE_RADIUS))
@@ -613,7 +629,7 @@ def DrawArrow(pnt1, pnt2):
 
     GroupBegin()
     DrawLine(pnt1, pntM2)
-    DrawArrow(pntM2, pnt2)
+    DrawArrowEnd(pntM2, pnt2)
     GroupEnd()
 
 
@@ -629,8 +645,8 @@ def DrawArrow2(pnt1, pnt2):
 
     GroupBegin()
     DrawLine(pntM1, pntM2)
-    DrawArrow(pntM1, pnt1)
-    DrawArrow(pntM2, pnt2)
+    DrawArrowEnd(pntM1, pnt1)
+    DrawArrowEnd(pntM2, pnt2)
     GroupEnd()
 
 
@@ -663,15 +679,15 @@ def DrawDesk():
 
     backup = BackupVars()
 
-    SetSolidBrash(DESK_BOARD_BRASH)
+    SetSolidBrash(GetVar(DESK_BOARD_BRASH))
     DrawBox(bsx, bsy, bsz)
     DoMove(Decart(-bsx / 2, -bsy / 2, -bsz - psz))
 
-    SetSolidBrash(DESK_PAPER_BRASH)
+    SetSolidBrash(GetVar(DESK_PAPER_BRASH))
     DrawBox(psx, psy, psz)
     DoMove(Decart(-psx / 2, -psy / 2, -psz))
 
-    SetLabelBrash(DESK_LABEL_BRASH)
+    SetLabelBrash(GetVar(DESK_LABEL_BRASH))
     DrawLabel(Decart(-bsx / 2, -bsy / 2, bsz * 3), textStr)
 
     dx = (psx / 2 - pinOffset)
@@ -684,7 +700,7 @@ def DrawDesk():
         (-dx, dy),
     ]
 
-    SetSolidBrash(DESK_PIN_BRASH)
+    SetSolidBrash(GetVar(DESK_PIN_BRASH))
     for x, y in pins:
         DrawCylinder(pinRadius, pinHeight)
         DoMove(Decart(x, y, 0))
@@ -693,8 +709,6 @@ def DrawDesk():
 
 
 def DrawAxis(pnt1, pnt2, step):
-    markRadius = ScaleGeom(GetVar(DESK_MARK_RADIUS))
-    markLength = ScaleGeom(GetVar(DESK_MARK_LENGTH))
 
     DrawArrow(pnt1, pnt2)
 
@@ -707,13 +721,11 @@ def DrawAxis(pnt1, pnt2, step):
         v = gp_Vec(pnt1, pnt2)
         v *= targetLen / totalLen
         pntMark = pnt1.Translated(v)
-
-        DrawCylinder(markRadius, markLength)
-        DoMove(Decart(0, 0, -markLength / 2))
-        DoDirect(pntMark, pnt2)
+        DrawMark(pntMark, pnt2)
 
 
-def DrawAxes(pnt1, pnt2, step):
+
+def DrawAxisSystem(pnt1, pnt2, step):
     xBrash = GetVar(DESK_AXES_X_BRASH)
     yBrash = GetVar(DESK_AXES_Y_BRASH)
     zBrash = GetVar(DESK_AXES_Z_BRASH)
@@ -731,7 +743,7 @@ def DrawAxes(pnt1, pnt2, step):
     DrawAxis(pnt1, yPnt, step)
 
     SetLineBrash(zBrash)
-    DrawAxis(pnt1, yPnt, step)
+    DrawAxis(pnt1, zPnt, step)
 
     SetPointBrash(cBrash)
     DrawPoint(pnt1)

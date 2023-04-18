@@ -184,19 +184,17 @@ def TestTorus():
 
 
 def TestLabel():
-    SetSolidBrash(ChromeBrash(BLUE_COLOR))
-    SetLabelBrash(PlasticBrash((0, 0, 0.5), 0.5))
+    SetSolidBrash(ChromeBrash(BLUE_COLOR, 0.5))
+    SetLabelBrash(LabelBrash(YELLOW_COLOR))
     for ix in [-1, 1]:
         for iy in [-1, 1]:
             for iz in [-1, 1]:
-                DrawSphere(5)
+                DrawSphere(2)
                 DoMove(Decart(ix * 20, iy * 20, iz * 20))
                 DrawLabel(Decart(ix * 20, iy * 20, iz * 20), 'P(' + str(ix) + ',' + str(iy) + ',' + str(iz) + ')')
 
 
 def TestPoint():
-    SetPointBrash(ChromeBrash(BLUE_COLOR))
-    SetLabelBrash(ChromeBrash(BLUE_COLOR))
     for ix in [-1, 1]:
         for iy in [-1, 1]:
             for iz in [-1, 1]:
@@ -371,20 +369,20 @@ def TestAxis():
     SetLineBrash(ChromeBrash(BLUE_COLOR))
     DrawAxis(Decart(0, 0, 0), Decart(0, 0, 200), 50)
 
-    SetPointBrash(ChromeBrash(WHITE_COLOR))
+    SetLineBrash(ChromeBrash(WHITE_COLOR))
     DrawPoint(Decart(0, 0, 0))
     dlen = 200/sqrt(3)
     DrawAxis(Decart(0, 0, 0), Decart(dlen, dlen, dlen), 50)
 
-    SetLabelBrash(ChromeBrash(WHITE_COLOR))
+    SetLabelBrash(ChromeBrash(YELLOW_COLOR))
     DrawLabel(Decart(200, 0, 0), 'X')
     DrawLabel(Decart(0, 200, 0), 'Y')
     DrawLabel(Decart(0, 0, 200), 'Z')
 
 
-def TestCoord():
+def TestAxisSystem():
     # DrawDesk()
-    DrawAxis(Decart(0, 0, 100), Decart(300, 300, 400), 50)
+    DrawAxisSystem(Decart(0, 0, 100), Decart(300, 300, 400), 50)
     # DrawLimits()
 
 
@@ -422,19 +420,19 @@ tests = [
     TestSphere,
     TestBox,
     TestCone,
-    # TestCylinder,
-    # TestTorus,
-    # TestLabel,
+    TestCylinder,
+    TestTorus,
+    TestLabel,
 
-    # TestPoint,
-    # TestLine,
-    # TestArrow,
-    # TestArrow2,
-    # TestWire,
-    # TestCircle,
-    # TestDesk,
-    # TestAxis,
-    # TestCoord,
+    TestPoint,
+    TestLine,
+    TestArrow,
+    TestArrow2,
+    TestWire,
+    TestCircle,
+    TestDesk,
+    TestAxis,
+    TestAxisSystem,
     # TestBoxFrame,
     # TestLimits,
     # TestDecor,
