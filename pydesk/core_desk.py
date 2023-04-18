@@ -38,7 +38,7 @@ def GoldBrash(color=None, transparency=None):
     return color, transparency, Graphic3d_NameOfMaterial.Graphic3d_NOM_GOLD
 
 
-def LabelBrash(color=None, transparency=None):
+def TextBrash(color=None, transparency=None):
     return color, transparency, None
 
 
@@ -46,7 +46,7 @@ def InvisibleBrash():
     return None, 1, None
 
 
-def Decart(x, y, z):
+def DecartPnt(x, y, z):
     return gp_Pnt(x, y, z)
 
 
@@ -146,7 +146,7 @@ class Scene:
 
     def _doMove(self, pnt):
         trsf = gp_Trsf()
-        trsf.SetTranslation(gp_Vec(Decart(0, 0, 0), pnt))
+        trsf.SetTranslation(gp_Vec(DecartPnt(0, 0, 0), pnt))
         self._doTrsf(trsf)
 
     def _doRotate(self, axFromPnt, axToPnt, angle):
@@ -169,7 +169,7 @@ class Scene:
             rotateDir = gp_Dir(0, 1, 0)
 
         trsf.SetRotation(gp_Ax1(gp_Pnt(0, 0, 0), rotateDir), rotateAngle)
-        trsf.SetTranslationPart(gp_Vec(Decart(0, 0, 0), fromPnt))
+        trsf.SetTranslationPart(gp_Vec(DecartPnt(0, 0, 0), fromPnt))
         self._doTrsf(trsf)
 
     def _render(self, screenX: int = 1200, screenY: int = 980):
@@ -238,10 +238,10 @@ class Scene:
         self._doRotate(gp_Pnt(0, 0, 0), gp_Pnt(1, 0, 0), angle)
 
     def doRotateY(self, angle):
-        self._doRotate(gp_Pnt(0, 0, 0), Decart(0, 1, 0), angle)
+        self._doRotate(gp_Pnt(0, 0, 0), DecartPnt(0, 1, 0), angle)
 
     def doRotateZ(self, angle):
-        self._doRotate(gp_Pnt(0, 0, 0), Decart(0, 0, 1), angle)
+        self._doRotate(gp_Pnt(0, 0, 0), DecartPnt(0, 0, 1), angle)
 
     def doDirect(self, fromPnt, toPnt):
         self._doDirect(fromPnt, toPnt)
@@ -389,12 +389,12 @@ DESK_DEFAULT_STYLE = {
 
     DESK_BOARD_HEIGHT: 20,
     DESK_BOARD_BORDER_SIZE: 60,
-    DESK_PAPER_SIZES: Decart(1189, 841, 1),  # A0
+    DESK_PAPER_SIZES: DecartPnt(1189, 841, 1),  # A0
     DESK_PIN_OFFSET: 30,
     DESK_PIN_RADIUS: 10,
     DESK_PIN_HEIGHT: 2,
 
-    DESK_LIMITS_SIZES: Decart(-400, -300, 300),
+    DESK_LIMITS_SIZES: DecartPnt(400, 300, 300),
     DESK_BOARD_DOWN: 100,
 
     DESK_BOARD_BRASH: PlasticBrash(WOOD_COLOR),
@@ -603,7 +603,7 @@ def DrawMark(pntMark, pntDirect):
     markLength = ScaleGeom(GetVar(DESK_MARK_LENGTH))
 
     scene.drawCylinder(markRadius, markLength, brash)
-    scene.doMove(Decart(0, 0, -markLength / 2))
+    scene.doMove(DecartPnt(0, 0, -markLength / 2))
     scene.doDirect(pntMark, pntDirect)
 
 
@@ -681,14 +681,14 @@ def DrawBoard():
 
     SetSolidBrash(GetVar(DESK_BOARD_BRASH))
     DrawBox(bsx, bsy, bsz)
-    DoMove(Decart(-bsx / 2, -bsy / 2, -bsz - psz))
+    DoMove(DecartPnt(-bsx / 2, -bsy / 2, -bsz - psz))
 
     SetSolidBrash(GetVar(DESK_PAPER_BRASH))
     DrawBox(psx, psy, psz)
-    DoMove(Decart(-psx / 2, -psy / 2, -psz))
+    DoMove(DecartPnt(-psx / 2, -psy / 2, -psz))
 
     SetLabelBrash(GetVar(DESK_LABEL_BRASH))
-    DrawLabel(Decart(-bsx / 2, -bsy / 2, bsz * 3), textStr)
+    DrawLabel(DecartPnt(-bsx / 2, -bsy / 2, bsz * 3), textStr)
 
     dx = (psx / 2 - pinOffset)
     dy = (psy / 2 - pinOffset)
@@ -703,7 +703,7 @@ def DrawBoard():
     SetSolidBrash(GetVar(DESK_PIN_BRASH))
     for x, y in pins:
         DrawCylinder(pinRadius, pinHeight)
-        DoMove(Decart(x, y, 0))
+        DoMove(DecartPnt(x, y, 0))
 
     GroupEnd()
     RestoreVars(backup)
@@ -731,9 +731,9 @@ def DrawAxisSystem(pnt1, pnt2, step):
     cBrash = GetVar(DESK_AXES_C_BRASH)
     labelBrash = GetVar(DESK_AXES_LABEL_BRASH)
 
-    xPnt = Decart(pnt2.X(), pnt1.Y(), pnt1.Z())
-    yPnt = Decart(pnt1.X(), pnt2.Y(), pnt1.Z())
-    zPnt = Decart(pnt1.X(), pnt1.Y(), pnt2.Z())
+    xPnt = DecartPnt(pnt2.X(), pnt1.Y(), pnt1.Z())
+    yPnt = DecartPnt(pnt1.X(), pnt2.Y(), pnt1.Z())
+    zPnt = DecartPnt(pnt1.X(), pnt1.Y(), pnt2.Z())
 
     SetLineBrash(xBrash)
     DrawAxis(pnt1, xPnt, step)
@@ -770,15 +770,15 @@ def DrawBoxFrame(pnt1, pnt2, isLabeled):
     x2, y2, z2 = pnt2.X(), pnt2.Y(), pnt2.Z()
 
     vertexes = [
-        Decart(x1, y1, z1),
-        Decart(x1, y2, z1),
-        Decart(x2, y2, z1),
-        Decart(x2, y1, z1),
+        DecartPnt(x1, y1, z1),
+        DecartPnt(x1, y2, z1),
+        DecartPnt(x2, y2, z1),
+        DecartPnt(x2, y1, z1),
 
-        Decart(x1, y1, z2),
-        Decart(x1, y2, z2),
-        Decart(x2, y2, z2),
-        Decart(x2, y1, z2),
+        DecartPnt(x1, y1, z2),
+        DecartPnt(x1, y2, z2),
+        DecartPnt(x2, y2, z2),
+        DecartPnt(x2, y1, z2),
     ]
 
     edges = [
@@ -800,17 +800,17 @@ def DrawDesk(isAxisSystem=False, isLimits=False, isLabeled=False):
     down = ScaleMain(GetVar(DESK_BOARD_DOWN))
 
     DrawBoard()
-    DoMove(Decart(0, 0, -down))
+    DoMove(DecartPnt(0, 0, -down))
 
     pnt = GetVar(DESK_LIMITS_SIZES)
     ax, ay, az = ScaleMain(pnt.X()), ScaleMain(pnt.Y()), ScaleMain(pnt.Z())
 
     if isLimits:
-        DrawLimits(Decart(-ax, -ay, 0), Decart(ax, ay, az), isLabeled)
+        DrawLimits(DecartPnt(-ax, -ay, 0), DecartPnt(ax, ay, az), isLabeled)
 
     if isAxisSystem:
         step = ScaleMain(GetVar(DESK_AXES_STEP))
-        DrawAxisSystem(Decart(0, 0, 0), Decart(ax*1.2, ay*1.2, az*1.2), step)
+        DrawAxisSystem(DecartPnt(0, 0, 0), DecartPnt(ax * 1.2, ay * 1.2, az * 1.2), step)
 
 
 def Show():

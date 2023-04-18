@@ -16,7 +16,7 @@ def TestMove():
         for iy in [-1, 1]:
             for iz in [-1, 1]:
                 DrawSphere(10)
-                DoMove(Decart(ix * 20, iy * 20, iz * 20))
+                DoMove(DecartPnt(ix * 20, iy * 20, iz * 20))
 
 
 def TestColor():
@@ -26,7 +26,7 @@ def TestColor():
             for iz in range(n):
                 SetSolidBrash(ChromeBrash(([ix / (n - 1), iy / (n - 1), iz / (n - 1)])))
                 DrawSphere(10)
-                DoMove(Decart(ix * 30, iy * 30, iz * 30))
+                DoMove(DecartPnt(ix * 30, iy * 30, iz * 30))
 
 
 def TestTransparency():
@@ -36,7 +36,7 @@ def TestTransparency():
             for iz in range(n):
                 SetSolidBrash(PlasticBrash(BLUE_COLOR, (ix + iy + iz) / ((n - 1) * 3)))
                 DrawSphere(10)
-                DoMove(Decart(ix * 30, iy * 30, iz * 30))
+                DoMove(DecartPnt(ix * 30, iy * 30, iz * 30))
 
 
 def TestStandardBrash():
@@ -74,10 +74,10 @@ def TestStandardBrash():
         for tr in range(5):
             SetSolidBrash(PlasticBrash(color, tr/4))
             DrawSphere(10)
-            DoMove(Decart(i * 30, tr * 30, 0))
+            DoMove(DecartPnt(i * 30, tr * 30, 0))
             SetSolidBrash(ChromeBrash(color, tr/4))
             DrawSphere(10)
-            DoMove(Decart(i * 30, tr * 30, 100))
+            DoMove(DecartPnt(i * 30, tr * 30, 100))
 
 
 def TestRotate():
@@ -85,54 +85,54 @@ def TestRotate():
     n = 24
     for i in range(n):
         DrawSphere(10)
-        DoMove(Decart(100, 0, 0))
+        DoMove(DecartPnt(100, 0, 0))
         DoRotateZ(i * 360 / n)
 
     SetSolidBrash(ChromeBrash(YELLOW_COLOR))
     for i in range(n):
         DrawSphere(10)
-        DoMove(Decart(100, 0, 0))
+        DoMove(DecartPnt(100, 0, 0))
         DoRotateY(i * 360 / n)
 
     SetSolidBrash(ChromeBrash(RED_COLOR))
     for i in range(n):
         DrawSphere(10)
-        DoMove(Decart(0, 100, 0))
+        DoMove(DecartPnt(0, 100, 0))
         DoRotateX(i * 360 / n)
 
     SetSolidBrash(ChromeBrash(WHITE_COLOR))
     for i in range(n):
         DrawSphere(10)
-        DoRotate(Decart(0, 0, 50), Decart(0, 100, 100), i * 360 / n)
+        DoRotate(DecartPnt(0, 0, 50), DecartPnt(0, 100, 100), i * 360 / n)
 
 
 def TestDirect():
     DrawSphere(10)
 
     DrawSphere(10)
-    DoMove(Decart(100, 100, 500))
+    DoMove(DecartPnt(100, 100, 500))
     DrawSphere(10)
-    DoMove(Decart(-100, 100, 500))
+    DoMove(DecartPnt(-100, 100, 500))
     DrawSphere(10)
-    DoMove(Decart(-100, -100, 500))
+    DoMove(DecartPnt(-100, -100, 500))
     DrawSphere(10)
-    DoMove(Decart(100, -100, 500))
+    DoMove(DecartPnt(100, -100, 500))
 
     DrawCone(50, 0, 200)
-    DoMove(Decart(0, 0, 200))
-    DoDirect(Decart(0, 0, 0), Decart(100, 100, 500))
+    DoMove(DecartPnt(0, 0, 200))
+    DoDirect(DecartPnt(0, 0, 0), DecartPnt(100, 100, 500))
 
     DrawCone(50, 0, 200)
-    DoMove(Decart(0, 0, 200))
-    DoDirect(Decart(0, 0, 0), Decart(-100, 100, 500))
+    DoMove(DecartPnt(0, 0, 200))
+    DoDirect(DecartPnt(0, 0, 0), DecartPnt(-100, 100, 500))
 
     DrawCone(50, 0, 200)
-    DoMove(Decart(0, 0, 200))
-    DoDirect(Decart(0, 0, 0), Decart(-100, -100, 500))
+    DoMove(DecartPnt(0, 0, 200))
+    DoDirect(DecartPnt(0, 0, 0), DecartPnt(-100, -100, 500))
 
     DrawCone(50, 0, 200)
-    DoMove(Decart(0, 0, 200))
-    DoDirect(Decart(0, 0, 0), Decart(100, -100, 500))
+    DoMove(DecartPnt(0, 0, 200))
+    DoDirect(DecartPnt(0, 0, 0), DecartPnt(100, -100, 500))
 
 
 def TestBox():
@@ -145,19 +145,19 @@ def TestBox():
     SetSolidBrash(ChromeBrash(BLUE_COLOR, 0.5))
 
     DrawBox(x, y, d)
-    DoMove(Decart(0, 0, z + d))
+    DoMove(DecartPnt(0, 0, z + d))
     DrawBox(x, y, d)
-    DoMove(Decart(0, 0, -d - d))
+    DoMove(DecartPnt(0, 0, -d - d))
 
     DrawBox(x, d, z)
-    DoMove(Decart(0, y + d, 0))
+    DoMove(DecartPnt(0, y + d, 0))
     DrawBox(x, d, z)
-    DoMove(Decart(0, -d - d, 0))
+    DoMove(DecartPnt(0, -d - d, 0))
 
     DrawBox(d, y, z)
-    DoMove(Decart(x + d, 0, 0))
+    DoMove(DecartPnt(x + d, 0, 0))
     DrawBox(d, y, z)
-    DoMove(Decart(-d - d, 0, 0))
+    DoMove(DecartPnt(-d - d, 0, 0))
 
 
 def TestSphere():
@@ -167,50 +167,50 @@ def TestSphere():
 def TestCone():
     for i in range(6):
         DrawCone(5 + i * 10, i * 10, 10)
-        DoMove(Decart(0, 0, -i * 10))
+        DoMove(DecartPnt(0, 0, -i * 10))
 
 
 def TestCylinder():
     for i in range(6):
         DrawCylinder(5 + i * 10, i + 2 + 5)
-        DoMove(Decart(0, 0, -i * 10))
+        DoMove(DecartPnt(0, 0, -i * 10))
 
 
 def TestTorus():
     DrawTorus(100, 20)
     DrawTorus(100, 20)
     DoRotateX(90)
-    DoMove(Decart(100, 0, 0))
+    DoMove(DecartPnt(100, 0, 0))
 
 
 def TestLabel():
     SetSolidBrash(ChromeBrash(BLUE_COLOR, 0.5))
-    SetLabelBrash(LabelBrash(YELLOW_COLOR))
+    SetLabelBrash(TextBrash(YELLOW_COLOR))
     for ix in [-1, 1]:
         for iy in [-1, 1]:
             for iz in [-1, 1]:
                 DrawSphere(2)
-                DoMove(Decart(ix * 20, iy * 20, iz * 20))
-                DrawLabel(Decart(ix * 20, iy * 20, iz * 20), 'P(' + str(ix) + ',' + str(iy) + ',' + str(iz) + ')')
+                DoMove(DecartPnt(ix * 20, iy * 20, iz * 20))
+                DrawLabel(DecartPnt(ix * 20, iy * 20, iz * 20), 'P(' + str(ix) + ',' + str(iy) + ',' + str(iz) + ')')
 
 
 def TestPoint():
     for ix in [-1, 1]:
         for iy in [-1, 1]:
             for iz in [-1, 1]:
-                DrawPoint(Decart(ix * 20, iy * 20, iz * 20))
-                DrawLabel(Decart(ix * 20, iy * 20, iz * 20), 'P(' + str(ix) + ',' + str(iy) + ',' + str(iz) + ')')
+                DrawPoint(DecartPnt(ix * 20, iy * 20, iz * 20))
+                DrawLabel(DecartPnt(ix * 20, iy * 20, iz * 20), 'P(' + str(ix) + ',' + str(iy) + ',' + str(iz) + ')')
 
 
 def TestLine():
-    pnt000 = Decart(0, 0, 0)
-    pnt001 = Decart(0, 0, 100)
-    pnt010 = Decart(0, 100, 0)
-    pnt011 = Decart(0, 100, 100)
-    pnt100 = Decart(100, 0, 0)
-    pnt101 = Decart(100, 0, 100)
-    pnt110 = Decart(100, 100, 0)
-    pnt111 = Decart(100, 100, 100)
+    pnt000 = DecartPnt(0, 0, 0)
+    pnt001 = DecartPnt(0, 0, 100)
+    pnt010 = DecartPnt(0, 100, 0)
+    pnt011 = DecartPnt(0, 100, 100)
+    pnt100 = DecartPnt(100, 0, 0)
+    pnt101 = DecartPnt(100, 0, 100)
+    pnt110 = DecartPnt(100, 100, 0)
+    pnt111 = DecartPnt(100, 100, 100)
 
     DrawPoint(pnt000)
     DrawPoint(pnt001)
@@ -239,16 +239,16 @@ def TestLine():
 
 
 def TestArrow():
-    pntC = Decart(50, 50, 50)
+    pntC = DecartPnt(50, 50, 50)
 
-    pnt000 = Decart(0, 0, 0)
-    pnt001 = Decart(0, 0, 100)
-    pnt010 = Decart(0, 100, 0)
-    pnt011 = Decart(0, 100, 100)
-    pnt100 = Decart(100, 0, 0)
-    pnt101 = Decart(100, 0, 100)
-    pnt110 = Decart(100, 100, 0)
-    pnt111 = Decart(100, 100, 100)
+    pnt000 = DecartPnt(0, 0, 0)
+    pnt001 = DecartPnt(0, 0, 100)
+    pnt010 = DecartPnt(0, 100, 0)
+    pnt011 = DecartPnt(0, 100, 100)
+    pnt100 = DecartPnt(100, 0, 0)
+    pnt101 = DecartPnt(100, 0, 100)
+    pnt110 = DecartPnt(100, 100, 0)
+    pnt111 = DecartPnt(100, 100, 100)
 
     DrawPoint(pnt000)
     DrawPoint(pnt001)
@@ -268,16 +268,16 @@ def TestArrow():
 
 
 def TestArrow2():
-    pntC = Decart(50, 50, 50)
+    pntC = DecartPnt(50, 50, 50)
 
-    pnt000 = Decart(0, 0, 0)
-    pnt001 = Decart(0, 0, 100)
-    pnt010 = Decart(0, 100, 0)
-    pnt011 = Decart(0, 100, 100)
-    pnt100 = Decart(100, 0, 0)
-    pnt101 = Decart(100, 0, 100)
-    pnt110 = Decart(100, 100, 0)
-    pnt111 = Decart(100, 100, 100)
+    pnt000 = DecartPnt(0, 0, 0)
+    pnt001 = DecartPnt(0, 0, 100)
+    pnt010 = DecartPnt(0, 100, 0)
+    pnt011 = DecartPnt(0, 100, 100)
+    pnt100 = DecartPnt(100, 0, 0)
+    pnt101 = DecartPnt(100, 0, 100)
+    pnt110 = DecartPnt(100, 100, 0)
+    pnt111 = DecartPnt(100, 100, 100)
 
     DrawPoint(pnt000)
     DrawPoint(pnt001)
@@ -338,10 +338,10 @@ def TestWire():
 
 
 def TestCircle():
-    pnt1 = Decart(0, 0, 0)
-    pnt2 = Decart(100, 0, 0)
-    pnt3 = Decart(50, 70, 0)
-    pnt4 = Decart(50, 50, 70)
+    pnt1 = DecartPnt(0, 0, 0)
+    pnt2 = DecartPnt(100, 0, 0)
+    pnt3 = DecartPnt(50, 70, 0)
+    pnt4 = DecartPnt(50, 50, 70)
 
     DrawPoint(pnt1)
     DrawPoint(pnt2)
@@ -361,37 +361,37 @@ def TestBoard():
 def TestAxis():
 
     SetLineBrash(ChromeBrash(RED_COLOR))
-    DrawAxis(Decart(0, 0, 0), Decart(200, 0, 0), 50)
+    DrawAxis(DecartPnt(0, 0, 0), DecartPnt(200, 0, 0), 50)
 
     SetLineBrash(ChromeBrash(GREEN_COLOR))
-    DrawAxis(Decart(0, 0, 0), Decart(0, 200, 0), 50)
+    DrawAxis(DecartPnt(0, 0, 0), DecartPnt(0, 200, 0), 50)
 
     SetLineBrash(ChromeBrash(BLUE_COLOR))
-    DrawAxis(Decart(0, 0, 0), Decart(0, 0, 200), 50)
+    DrawAxis(DecartPnt(0, 0, 0), DecartPnt(0, 0, 200), 50)
 
     SetLineBrash(ChromeBrash(WHITE_COLOR))
-    DrawPoint(Decart(0, 0, 0))
+    DrawPoint(DecartPnt(0, 0, 0))
     dlen = 200/sqrt(3)
-    DrawAxis(Decart(0, 0, 0), Decart(dlen, dlen, dlen), 50)
+    DrawAxis(DecartPnt(0, 0, 0), DecartPnt(dlen, dlen, dlen), 50)
 
     SetLabelBrash(ChromeBrash(YELLOW_COLOR))
-    DrawLabel(Decart(200, 0, 0), 'X')
-    DrawLabel(Decart(0, 200, 0), 'Y')
-    DrawLabel(Decart(0, 0, 200), 'Z')
+    DrawLabel(DecartPnt(200, 0, 0), 'X')
+    DrawLabel(DecartPnt(0, 200, 0), 'Y')
+    DrawLabel(DecartPnt(0, 0, 200), 'Z')
 
 
 def TestAxisSystem():
     # DrawDesk()
-    DrawAxisSystem(Decart(0, 0, 100), Decart(300, 300, 400), 50)
+    DrawAxisSystem(DecartPnt(0, 0, 100), DecartPnt(300, 300, 400), 50)
     # DrawLimits()
 
 
 def TestBoxFrame():
-    DrawBoxFrame(Decart(0, 0, 100), Decart(300, 300, 400), True)
+    DrawBoxFrame(DecartPnt(0, 0, 100), DecartPnt(300, 300, 400), True)
 
 
 def TestLimits():
-    DrawLimits(Decart(-300, -300, 100), Decart(300, 300, 400))
+    DrawLimits(DecartPnt(-300, -300, 100), DecartPnt(300, 300, 400))
 # DrawLimits(Decart(0, 0, 0), Decart(200, 200, 100))
 
 
@@ -433,10 +433,13 @@ tests = [
     TestBoard,
     TestAxis,
     TestAxisSystem,
-    TestBoxFrame,
-    TestLimits,
     TestDesk,
 ]
+
+'''
+TestBoxFrame,
+TestLimits,
+'''
 
 # TestLabel()
 # Render()
