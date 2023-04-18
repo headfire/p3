@@ -26,12 +26,20 @@ from OCC.Core.Graphic3d import Graphic3d_MaterialAspect
 from OCC.Display.SimpleGui import init_display
 
 
-def Plastic(color, transparency=0.0):
+def PlasticBrash(color=None, transparency=None):
     return color, transparency, Graphic3d_NameOfMaterial.Graphic3d_NOM_PLASTIC
 
 
-def Chrome(color, transparency=0.0):
+def ChromeBrash(color=None, transparency=None):
     return color, transparency, Graphic3d_NameOfMaterial.Graphic3d_NOM_CHROME
+
+
+def GoldBrash(color=None, transparency=None):
+    return color, transparency, Graphic3d_NameOfMaterial.Graphic3d_NOM_GOLD
+
+
+def LabelBrash(color=None, transparency=None):
+    return color, transparency, None
 
 
 def Decart(x, y, z):
@@ -103,10 +111,25 @@ class Scene:
         self.parentAis: Optional[AIS_Shape] = None
         self.currentAis: Optional[AIS_Shape] = None
         self.dummyShape = BRepPrimAPI_MakeSphere(1)
-        self.dummyBrash = Plastic(WHITE_COLOR, 1)
+        self.dummyBrash = PlasticBrash()
         self.computer = SceneComputer()
 
-    def _drawAis(self, ais: AIS_InteractiveObject):
+    def _drawAis(self, ais: AIS_InteractiveObject, brash):
+
+        color, transparency, material = brash
+
+        if material is not None:
+            aspect = Graphic3d_MaterialAspect(material)
+            ais.SetMaterial(aspect)
+
+        if transparency is not None:
+            ais.SetTransparency(transparency)
+
+        if color is not None:
+            r, g, b = color
+            qColor = Quantity_Color(r, g, b, Quantity_TypeOfColor(Quantity_TypeOfColor.Quantity_TOC_RGB))
+            ais.SetColor(qColor)
+
         if self.parentAis is None:
             self.rootsAis.append(ais)
         else:
@@ -168,40 +191,17 @@ class Scene:
 
     def _drawLabel(self, pnt, text, height, brash):
 
-        color, transparency, material = brash
-
         ais = AIS_TextLabel()
 
         ais.SetText(TCollection_ExtendedString(text, True))
         ais.SetPosition(pnt)
         ais.SetHeight(height)
 
-        if transparency is not None:
-            ais.SetTransparency(transparency)
-
-        if color is not None:
-            r, g, b = color
-            qColor = Quantity_Color(r, g, b, Quantity_TypeOfColor(Quantity_TypeOfColor.Quantity_TOC_RGB))
-            ais.SetColor(qColor)
-
-        self._drawAis(ais)
+        self._drawAis(ais, brash)
 
     def _drawShape(self, shape, brash):
-        color, transparency, material = brash
-
         ais = AIS_Shape(shape)
-
-        # material set anyway
-        aspect = Graphic3d_MaterialAspect(material)
-        ais.SetMaterial(aspect)
-
-        ais.SetTransparency(transparency)
-
-        r, g, b = color
-        qColor = Quantity_Color(r, g, b, Quantity_TypeOfColor(Quantity_TypeOfColor.Quantity_TOC_RGB))
-        ais.SetColor(qColor)
-
-        self._drawAis(ais)
+        self._drawAis(ais, brash)
 
     def _drawWire(self, wire, wireRadius, brash):
 
@@ -376,11 +376,11 @@ DESK_DEFAULT_STYLE = {
     DESK_ARROW_LENGTH: 30,
     DESK_SURFACE_WIDTH: 2,
 
-    DESK_AXES_X_BRASH: Plastic(RED_COLOR),
-    DESK_AXES_Y_BRASH: Plastic(GREEN_COLOR),
-    DESK_AXES_Z_BRASH: Plastic(BLUE_COLOR),
-    DESK_AXES_C_BRASH: Plastic(WHITE_COLOR),
-    DESK_AXES_LABEL_BRASH: Plastic(YELLOW_COLOR),
+    DESK_AXES_X_BRASH: PlasticBrash(RED_COLOR),
+    DESK_AXES_Y_BRASH: PlasticBrash(GREEN_COLOR),
+    DESK_AXES_Z_BRASH: PlasticBrash(BLUE_COLOR),
+    DESK_AXES_C_BRASH: PlasticBrash(WHITE_COLOR),
+    DESK_AXES_LABEL_BRASH: PlasticBrash(YELLOW_COLOR),
     DESK_AXES_STEP: 50,
 
     DESK_BOARD_HEIGHT: 20,
@@ -393,36 +393,36 @@ DESK_DEFAULT_STYLE = {
     DESK_LIMITS_PNT1: Decart(-400, -300, 0),
     DESK_LIMITS_PNT2: Decart(400, 300, 400),
 
-    DESK_BOARD_BRASH: Plastic(WOOD_COLOR),
-    DESK_PAPER_BRASH: Plastic(PAPER_COLOR),
-    DESK_PIN_BRASH: Chrome(STEEL_COLOR),
+    DESK_BOARD_BRASH: PlasticBrash(WOOD_COLOR),
+    DESK_PAPER_BRASH: PlasticBrash(PAPER_COLOR),
+    DESK_PIN_BRASH: ChromeBrash(STEEL_COLOR),
 
 }
 
 DESK_MAIN_STYLE = {
-    DESK_POINT_BRASH: Chrome(GOLD_COLOR),
-    DESK_LINE_BRASH: Chrome(BLUE_COLOR),
-    DESK_SOLID_BRASH: Chrome(WHITE_COLOR),
-    DESK_SURFACE_BRASH: Chrome(GRAY_COLOR, 0.6),
-    DESK_LABEL_BRASH: Plastic(YELLOW_COLOR),
+    DESK_POINT_BRASH: GoldBrash(),
+    DESK_LINE_BRASH: ChromeBrash(BLUE_COLOR),
+    DESK_SOLID_BRASH: GoldBrash(),
+    DESK_SURFACE_BRASH: ChromeBrash(GRAY_COLOR, 0.6),
+    DESK_LABEL_BRASH: PlasticBrash(YELLOW_COLOR),
     DESK_GEOM_SCALE: 1
 }
 
 DESK_FOCUS_STYLE = {
-    DESK_POINT_BRASH: Chrome(RED_COLOR),
-    DESK_LINE_BRASH: Chrome(RED_COLOR),
-    DESK_SOLID_BRASH: Chrome(RED_COLOR),
-    DESK_SURFACE_BRASH: Chrome(RED_COLOR, 0.6),
-    DESK_LABEL_BRASH: Plastic(RED_COLOR),
+    DESK_POINT_BRASH: ChromeBrash(RED_COLOR),
+    DESK_LINE_BRASH: ChromeBrash(RED_COLOR),
+    DESK_SOLID_BRASH: ChromeBrash(RED_COLOR),
+    DESK_SURFACE_BRASH: ChromeBrash(RED_COLOR, 0.6),
+    DESK_LABEL_BRASH: PlasticBrash(RED_COLOR),
     DESK_GEOM_SCALE: 0.7
 }
 
 DESK_INFO_STYLE = {
-    DESK_POINT_BRASH: Chrome(GRAY_COLOR),
-    DESK_LINE_BRASH: Chrome(GRAY_COLOR),
-    DESK_SOLID_BRASH: Chrome(GRAY_COLOR),
-    DESK_SURFACE_BRASH: Chrome(GRAY_COLOR, 0.6),
-    DESK_LABEL_BRASH: Plastic(GRAY_COLOR),
+    DESK_POINT_BRASH: ChromeBrash(GRAY_COLOR),
+    DESK_LINE_BRASH: ChromeBrash(GRAY_COLOR),
+    DESK_SOLID_BRASH: ChromeBrash(GRAY_COLOR),
+    DESK_SURFACE_BRASH: ChromeBrash(GRAY_COLOR, 0.6),
+    DESK_LABEL_BRASH: PlasticBrash(GRAY_COLOR),
     DESK_GEOM_SCALE: 0.5
 }
 

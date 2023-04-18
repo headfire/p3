@@ -24,7 +24,7 @@ def TestColor():
     for ix in range(n):
         for iy in range(n):
             for iz in range(n):
-                SetSolidBrash(Chrome(([ix / (n - 1), iy / (n - 1), iz / (n - 1)])))
+                SetSolidBrash(ChromeBrash(([ix / (n - 1), iy / (n - 1), iz / (n - 1)])))
                 DrawSphere(10)
                 DoMove(Decart(ix * 30, iy * 30, iz * 30))
 
@@ -34,12 +34,12 @@ def TestTransparency():
     for ix in range(n):
         for iy in range(n):
             for iz in range(n):
-                SetSolidBrash(Plastic(BLUE_COLOR, (ix + iy + iz) / ((n - 1) * 3)))
+                SetSolidBrash(PlasticBrash(BLUE_COLOR, (ix + iy + iz) / ((n - 1) * 3)))
                 DrawSphere(10)
                 DoMove(Decart(ix * 30, iy * 30, iz * 30))
 
 
-def TestStandartBrash():
+def TestStandardBrash():
 
     colors = [
         WHITE_COLOR,
@@ -72,32 +72,35 @@ def TestStandartBrash():
     for color in colors:
         i = i + 1
         for tr in range(5):
-            SetSolidBrash(Plastic(color, tr/4))
+            SetSolidBrash(PlasticBrash(color, tr/4))
             DrawSphere(10)
             DoMove(Decart(i * 30, tr * 30, 0))
+            SetSolidBrash(ChromeBrash(color, tr/4))
+            DrawSphere(10)
+            DoMove(Decart(i * 30, tr * 30, 100))
 
 
 def TestRotate():
-    SetSolidBrash(Chrome(BLUE_COLOR))
+    SetSolidBrash(ChromeBrash(BLUE_COLOR))
     n = 24
     for i in range(n):
         DrawSphere(10)
         DoMove(Decart(100, 0, 0))
         DoRotateZ(i * 360 / n)
 
-    SetSolidBrash(Chrome(YELLOW_COLOR))
+    SetSolidBrash(ChromeBrash(YELLOW_COLOR))
     for i in range(n):
         DrawSphere(10)
         DoMove(Decart(100, 0, 0))
         DoRotateY(i * 360 / n)
 
-    SetSolidBrash(Chrome(RED_COLOR))
+    SetSolidBrash(ChromeBrash(RED_COLOR))
     for i in range(n):
         DrawSphere(10)
         DoMove(Decart(0, 100, 0))
         DoRotateX(i * 360 / n)
 
-    SetSolidBrash(Chrome(WHITE_COLOR))
+    SetSolidBrash(ChromeBrash(WHITE_COLOR))
     for i in range(n):
         DrawSphere(10)
         DoRotate(Decart(0, 0, 50), Decart(0, 100, 100), i * 360 / n)
@@ -136,10 +139,10 @@ def TestBox():
     x, y, z = 10, 15, 20
     d = 3
 
-    SetSolidBrash(Chrome(YELLOW_COLOR))
+    SetSolidBrash(ChromeBrash(YELLOW_COLOR))
     DrawBox(x, y, z)
 
-    SetSolidBrash(Chrome(BLUE_COLOR, 0.5))
+    SetSolidBrash(ChromeBrash(BLUE_COLOR, 0.5))
 
     DrawBox(x, y, d)
     DoMove(Decart(0, 0, z + d))
@@ -181,8 +184,8 @@ def TestTorus():
 
 
 def TestLabel():
-    SetSolidBrash(Chrome(BLUE_COLOR))
-    SetLabelBrash(Plastic((0, 0, 0.5), 0.5)
+    SetSolidBrash(ChromeBrash(BLUE_COLOR))
+    SetLabelBrash(PlasticBrash((0, 0, 0.5), 0.5))
     for ix in [-1, 1]:
         for iy in [-1, 1]:
             for iz in [-1, 1]:
@@ -192,8 +195,8 @@ def TestLabel():
 
 
 def TestPoint():
-    SetPointBrash(Chrome(BLUE_COLOR))
-    SetLabelBrash(Chrome(BLUE_COLOR))
+    SetPointBrash(ChromeBrash(BLUE_COLOR))
+    SetLabelBrash(ChromeBrash(BLUE_COLOR))
     for ix in [-1, 1]:
         for iy in [-1, 1]:
             for iz in [-1, 1]:
@@ -220,7 +223,7 @@ def TestLine():
     DrawPoint(pnt110)
     DrawPoint(pnt111)
 
-    SetLineBrash(Chrome(BLUE_COLOR))
+    SetLineBrash(ChromeBrash(BLUE_COLOR))
     DrawLine(pnt000, pnt001)
     DrawLine(pnt001, pnt011)
     DrawLine(pnt011, pnt010)
@@ -254,7 +257,7 @@ def TestArrow():
     DrawPoint(pnt010)
     DrawPoint(pnt011)
 
-    SetLineBrash(Chrome(BLUE_COLOR))
+    SetLineBrash(ChromeBrash(BLUE_COLOR))
     DrawArrow(pntC, pnt000)
     DrawArrow(pntC, pnt001)
     DrawArrow(pntC, pnt010)
@@ -283,7 +286,7 @@ def TestArrow2():
     DrawPoint(pnt010)
     DrawPoint(pnt011)
 
-    SetLineBrash(Chrome(BLUE_COLOR))
+    SetLineBrash(ChromeBrash(BLUE_COLOR))
     DrawArrow2(pntC, pnt000)
     DrawArrow2(pntC, pnt001)
     DrawArrow2(pntC, pnt010)
@@ -359,21 +362,21 @@ def TestDesk():
 
 def TestAxis():
 
-    SetLineBrash(Chrome(RED_COLOR))
+    SetLineBrash(ChromeBrash(RED_COLOR))
     DrawAxis(Decart(0, 0, 0), Decart(200, 0, 0), 50)
 
-    SetLineBrash(Chrome(GREEN_COLOR))
+    SetLineBrash(ChromeBrash(GREEN_COLOR))
     DrawAxis(Decart(0, 0, 0), Decart(0, 200, 0), 50)
 
-    SetLineBrash(Chrome(BLUE_COLOR))
+    SetLineBrash(ChromeBrash(BLUE_COLOR))
     DrawAxis(Decart(0, 0, 0), Decart(0, 0, 200), 50)
 
-    SetPointBrash(Chrome(WHITE_COLOR))
+    SetPointBrash(ChromeBrash(WHITE_COLOR))
     DrawPoint(Decart(0, 0, 0))
     dlen = 200/sqrt(3)
     DrawAxis(Decart(0, 0, 0), Decart(dlen, dlen, dlen), 50)
 
-    SetLabelBrash(Chrome(WHITE_COLOR))
+    SetLabelBrash(ChromeBrash(WHITE_COLOR))
     DrawLabel(Decart(200, 0, 0), 'X')
     DrawLabel(Decart(0, 200, 0), 'Y')
     DrawLabel(Decart(0, 0, 200), 'Z')
@@ -381,12 +384,12 @@ def TestAxis():
 
 def TestCoord():
     # DrawDesk()
-    DrawAxis(Decart(0, 0, 100), Decart(300, 300, 400))
+    DrawAxis(Decart(0, 0, 100), Decart(300, 300, 400), 50)
     # DrawLimits()
 
 
 def TestBoxFrame():
-    DrawBoxFrame(Decart(0, 0, 100), Decart(300, 300, 400))
+    DrawBoxFrame(Decart(0, 0, 100), Decart(300, 300, 400), True)
 
 
 def TestLimits():
@@ -410,7 +413,7 @@ tests = [
 
     TestColor,
     TestTransparency,
-    TestStandartBrash,
+    TestStandardBrash,
 
     TestMove,
     TestRotate,
@@ -419,22 +422,22 @@ tests = [
     TestSphere,
     TestBox,
     TestCone,
-    TestCylinder,
-    TestTorus,
-    TestLabel,
+    # TestCylinder,
+    # TestTorus,
+    # TestLabel,
 
-    TestPoint,
-    TestLine,
-    TestArrow,
-    TestArrow2,
-    TestWire,
-    TestCircle,
-    TestDesk,
-    TestAxis,
-    TestCoord,
-    TestBoxFrame,
-    TestLimits,
-    TestDecor,
+    # TestPoint,
+    # TestLine,
+    # TestArrow,
+    # TestArrow2,
+    # TestWire,
+    # TestCircle,
+    # TestDesk,
+    # TestAxis,
+    # TestCoord,
+    # TestBoxFrame,
+    # TestLimits,
+    # TestDecor,
 ]
 
 # TestLabel()
