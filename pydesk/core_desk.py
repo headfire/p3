@@ -46,7 +46,6 @@ def InvisibleBrash():
     return None, 1, None
 
 
-
 def Decart(x, y, z):
     return gp_Pnt(x, y, z)
 
@@ -599,7 +598,6 @@ def DrawArrowEnd(pnt1, pnt2):
 
 
 def DrawMark(pntMark, pntDirect):
-
     brash = GetVar(DESK_LINE_BRASH)
     markRadius = ScaleGeom(GetVar(DESK_MARK_RADIUS))
     markLength = ScaleGeom(GetVar(DESK_MARK_LENGTH))
@@ -709,7 +707,6 @@ def DrawDesk():
 
 
 def DrawAxis(pnt1, pnt2, step):
-
     DrawArrow(pnt1, pnt2)
 
     v = gp_Vec(pnt1, pnt2)
@@ -722,7 +719,6 @@ def DrawAxis(pnt1, pnt2, step):
         v *= targetLen / totalLen
         pntMark = pnt1.Translated(v)
         DrawMark(pntMark, pnt2)
-
 
 
 def DrawAxisSystem(pnt1, pnt2, step):
