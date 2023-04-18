@@ -31,7 +31,7 @@ DAO_CASE_HEIGHT = 'DAO_CASE_HEIGHT'
 DAO_CASE_GAP = 'DAO_CASE_GAP'
 
 
-DAO_SETTING = {
+DAO_DEFAULT = {
     DAO_BASE_RADIUS: 40,
     DAO_OFFSET: 3,
     DAO_SLICE_FACE_HEIGHT: 30,
@@ -44,61 +44,47 @@ DAO_SETTING = {
 }
 
 
-class DaoDrawLib:
-
-    def __init__(self):
-
-        self.aSliceCount = 20
-        self.aSurfaceZScale = 0.7
-        self.aCaseHeight = 30
-        self.aCaseGap = 1
-
-
-def getXYZ(gpPnt):
-    return gpPnt.X(), gpPnt.Y(), gpPnt.Z()
-
-
-def isPointExistInPoints(findingPoint, aPoints):
+def _isPointExistInPoints(findingPoint, aPoints):
     for aPoint in aPoints:
         if IsEqualPnt(aPoint, findingPoint):
             return True
     return False
 
 
-def getUniquePoints(aPoints):
+def _getUniquePoints(aPoints):
     uniquePoints = []
     for aPoint in aPoints:
-        if not isPointExistInPoints(aPoint, uniquePoints):
+        if not _isPointExistInPoints(aPoint, uniquePoints):
             uniquePoints += [aPoint]
     return uniquePoints
 
 
-def getPntRotate(pCenter, p, angle):
+def _getPntRotate(pCenter, p, angle):
     ax = gp_Ax1(pCenter, gp_Dir(0, 0, 1))
     pnt = gp_Pnt(p.XYZ())
     pnt.Rotate(ax, angle)
     return pnt
 
 
-def getPntScale(pCenter, p, scale):
+def _getPntScale(pCenter, p, scale):
     pnt = gp_Pnt(p.XYZ())
     pnt.Scale(pCenter, scale)
     return pnt
 
 
-def getTranslatedPoint(aPoint, deltaX, deltaY, deltaZ):
+def _getTranslatedPoint(aPoint, deltaX, deltaY, deltaZ):
     translatedPoint = gp_Pnt(aPoint.XYZ())
     translatedPoint.Translate(gp_Vec(deltaX, deltaY, deltaZ))
     return translatedPoint
 
 
-def getAngle(gpPnt0, gpPnt1, gpPnt2):
+def _getAngle(gpPnt0, gpPnt1, gpPnt2):
     v1 = gp_Vec(gpPnt0, gpPnt1)
     v2 = gp_Vec(gpPnt0, gpPnt2)
     return v2.AngleWithRef(v1, gp_Vec(0, 0, 1))
 
 
-def getShapeItems(shape, topologyType):
+def _getShapeItems(shape, topologyType):
     items = []
     ex = TopExp_Explorer(shape, topologyType)
     while ex.More():
@@ -107,49 +93,34 @@ def getShapeItems(shape, topologyType):
     return items
 
 
-def getPointsFromVertexes(vertexes):
+def _getPointsFromVertexes(vertexes):
     ps = []
     for v in vertexes:
         ps += [BRep_Tool.Pnt(v)]
     return ps
 
 
-# ********************************************************
-# ********************************************************
-# ********************************************************
-
-
-def getShapeMirror(shape):
-    transform = gp_Trsf()
-    transform.SetMirror(gp_Pnt(0, 0, 0))
-    shape = BRepBuilderAPI_Transform(shape, transform).Shape()
-    return shape
-
-
-def getShapeTranslate(shape, x, y, z):
+def _getShapeTranslate(shape, x, y, z):
     transform = gp_Trsf()
     transform.SetTranslation(gp_Vec(x, y, z))
     shape = BRepBuilderAPI_Transform(shape, transform).Shape()
     return shape
 
 
-# *******************************************************************************
-# *******************************************************************************
-# *******************************************************************************
+def _getIntersectPoints(curve, surface):
+    ps = []
+    tool = GeomAPI_IntCS(curve, surface)
+    pCount = tool.NbPoints()
+    for i in range(1, pCount + 1):
+        ps += [tool.Point(i)]
+    return ps
 
 
-def makeEdgesFacesIntersectPoints(edgesShape, facesShape):
-    def findIntersectPoints(curve, surface):
-        ps = []
-        tool = GeomAPI_IntCS(curve, surface)
-        pCount = tool.NbPoints()
-        for i in range(1, pCount + 1):
-            ps += [tool.Point(i)]
-        return ps
+def _getEdgesFacesIntersectPoints(edgesShape, facesShape):
 
     intersectPoints = []
-    aEdges = getShapeItems(edgesShape, TopAbs_EDGE)
-    aFaces = getShapeItems(facesShape, TopAbs_FACE)
+    aEdges = _getShapeItems(edgesShape, TopAbs_EDGE)
+    aFaces = _getShapeItems(facesShape, TopAbs_FACE)
     for aEdge in aEdges:
         for aFace in aFaces:
             # noinspection PyTypeChecker
@@ -157,26 +128,18 @@ def makeEdgesFacesIntersectPoints(edgesShape, facesShape):
             edgeTrimmedCurve = Geom_TrimmedCurve(edgeCurves[0], edgeCurves[1], edgeCurves[2])
             # noinspection PyTypeChecker
             faceSurface = BRep_Tool.Surface(aFace)
-            foundIntersectPoints = findIntersectPoints(edgeTrimmedCurve, faceSurface)
+            foundIntersectPoints = _getIntersectPoints(edgeTrimmedCurve, faceSurface)
             intersectPoints += foundIntersectPoints
     return intersectPoints
 
 
-def utilGetShapePoints(shape):
-    shapeVertexes = getShapeItems(shape, TopAbs_VERTEX)
-    shapePoints = getPointsFromVertexes(shapeVertexes)
-    return getUniquePoints(shapePoints)
+def _getShapePoints(shape):
+    shapeVertexes = _getShapeItems(shape, TopAbs_VERTEX)
+    shapePoints = _getPointsFromVertexes(shapeVertexes)
+    return _getUniquePoints(shapePoints)
 
 
-def makeOffsetWire(aWire, offset):
-    tool = BRepOffsetAPI_MakeOffset()
-    tool.AddWire(aWire)
-    tool.Perform(offset)
-    aOffsetWire = tool.Shape()
-    return aOffsetWire
-
-
-def utilGetZRotatedShape(aShape, angle):
+def _getZRotatedShape(aShape, angle):
     aTransform = gp_Trsf()
     rotationAxis = gp_OZ()
     aTransform.SetRotation(rotationAxis, angle)
@@ -185,20 +148,20 @@ def utilGetZRotatedShape(aShape, angle):
     return rotatedShape
 
 
-def utilShapeZScale(shape, scaleK):
+def _getShapeZScale(shape, scaleK):
     transform = gp_GTrsf()
     transform.SetAffinity(gp_Ax2(gp_Pnt(0, 0, 0), gp_Dir(0, 0, 1), gp_Dir(0, 1, 0)), scaleK)
     shape = BRepBuilderAPI_GTransform(shape, transform).Shape()
     return shape
 
 
-def helperCircleWire(pnt1, pnt2, pnt3):
+def _getCircleWire(pnt1, pnt2, pnt3):
     geomCircle = GC_MakeCircle(pnt1, pnt2, pnt3).Value()
     edge = BRepBuilderAPI_MakeEdge(geomCircle).Edge()
     return BRepBuilderAPI_MakeWire(edge).Wire()
 
 
-def helperFaceFromPnts(pnts):
+def _getFaceFromPnts(pnts):
     bWire = BRepBuilderAPI_MakeWire()
     for i in range(len(pnts)):
         bEdge = BRepBuilderAPI_MakeEdge(pnts[i - 1], pnts[i])
@@ -225,9 +188,9 @@ def ComputeDaoBasePoints():
 
     ps = {
         0: origin,
-        1: getPntRotate(gpPntMinC, origin, -pi / 4),
+        1: _getPntRotate(gpPntMinC, origin, -pi / 4),
         2: gp_Pnt(-r2, r2, 0),
-        3: getPntRotate(gpPntMinC, origin, -pi / 4 * 3),
+        3: _getPntRotate(gpPntMinC, origin, -pi / 4 * 3),
         4: gp_Pnt(0, r, 0),
         5: gp_Pnt(r, 0, 0),
         6: gp_Pnt(0, -r, 0),
@@ -271,7 +234,7 @@ def ComputeDaoOffsetPnts(offset):
 
     aWire = Compute(ComputeDaoOffsetWire, offset)
 
-    p = utilGetShapePoints(aWire)
+    p = _getShapePoints(aWire)
 
     namedPoints = {
         'Left': p[0],
@@ -286,7 +249,7 @@ def ComputeDaoOffsetPnts(offset):
 def ComputeDaoSecondOffsetWire(offset):
 
     firstWire = Compute(ComputeDaoOffsetWire, offset)
-    secondWire = utilGetZRotatedShape(firstWire, pi)
+    secondWire = _getZRotatedShape(firstWire, pi)
 
     return secondWire
 
@@ -311,22 +274,22 @@ def ComputeDaoSliceLinePnt2(offset, sliceK):
     focusPoint = Compute(ComputeDaoFocusPnt)
 
     limitAngle = 0
-    limitPoint = getPntScale(focusPoint, rightPoint, 1.2)
-    BeginAngle = getAngle(focusPoint, limitPoint, beginPoint)
-    endAngle = getAngle(focusPoint, limitPoint, endPoint)
-    limitK = (limitAngle - BeginAngle) / (endAngle - BeginAngle)
+    limitPoint = _getPntScale(focusPoint, rightPoint, 1.2)
+    beginAngle = _getAngle(focusPoint, limitPoint, beginPoint)
+    endAngle = _getAngle(focusPoint, limitPoint, endPoint)
+    limitK = (limitAngle - beginAngle) / (endAngle - beginAngle)
     if sliceK < limitK:  # head
         headK = (sliceK - 0) / (limitK - 0)
         BeginX = rightPoint.X()
         endX = beginPoint.X()
         deltaX = (endX - BeginX) * (1 - headK)
-        lineBeginPoint = getTranslatedPoint(focusPoint, deltaX, 0, 0)
-        lineEndPoint = getTranslatedPoint(limitPoint, deltaX, 0, 0)
+        lineBeginPoint = _getTranslatedPoint(focusPoint, deltaX, 0, 0)
+        lineEndPoint = _getTranslatedPoint(limitPoint, deltaX, 0, 0)
     else:  # tail
         tailK = (sliceK - limitK) / (1 - limitK)
         tailAngle = -(endAngle * tailK)
         lineBeginPoint = focusPoint
-        lineEndPoint = getPntRotate(focusPoint, limitPoint, tailAngle)
+        lineEndPoint = _getPntRotate(focusPoint, limitPoint, tailAngle)
 
     return lineBeginPoint, lineEndPoint
 
@@ -336,8 +299,8 @@ def ComputeDaoSliceFacePnts(offset, sliceK):
     h = GetVar(DAO_SLICE_FACE_HEIGHT)
     beginPoint, endPoint = Compute(ComputeDaoSliceLinePnt2, offset, sliceK)
 
-    x1, y1, z1 = getXYZ(beginPoint)
-    x2, y2, z2 = getXYZ(endPoint)
+    x1, y1, z1 = beginPoint.X(), beginPoint.Y(), beginPoint.Z()
+    x2, y2, z2 = endPoint.X(), endPoint.Y(), endPoint.Z()
 
     pnt0 = gp_Pnt(x1, y1, -h)
     pnt1 = gp_Pnt(x1, y1, +h)
@@ -351,9 +314,9 @@ def ComputeDaoSlicePnts(offset, sliceK):
 
     aWire = Compute(ComputeDaoOffsetWire, offset)
     aFacePnts = Compute(ComputeDaoSliceFacePnts, offset, sliceK)
-    aFace = helperFaceFromPnts(aFacePnts)
+    aFace = _getFaceFromPnts(aFacePnts)
 
-    farPoint, nearPoint = makeEdgesFacesIntersectPoints(aWire, aFace)
+    farPoint, nearPoint = _getEdgesFacesIntersectPoints(aWire, aFace)
 
     return {'Near': nearPoint, 'Far': farPoint}
 
@@ -376,7 +339,7 @@ def ComputeDaoSliceCirclePnt3(offset, sliceK):
 
 def ComputeDaoSliceCircleWire(offset, sliceK):
     pnt1, pnt2, pnt3 = Compute(ComputeDaoSliceCirclePnt3, offset, sliceK)
-    return helperCircleWire(pnt1, pnt2, pnt3)
+    return _getCircleWire(pnt1, pnt2, pnt3)
 
 
 def ComputeDaoSkinningSurface(offset):
@@ -406,15 +369,15 @@ def ComputeDaoSkinningSurface(offset):
 
 
 def ComputeDaoIngSurface(offset):
-    scale = dao.aSurfaceZScale
+    scale = GetVar(DAO_SURFACE_Z_SCALE)
     sourceSurface = Compute(ComputeDaoSkinningSurface, offset)
-    scaledSurface = utilShapeZScale(sourceSurface, scale)
+    scaledSurface = _getShapeZScale(sourceSurface, scale)
     return scaledSurface
 
 
 def ComputeDaoYangSurface(offset):
     sourceSurface = Compute(ComputeDaoIngSurface, offset)
-    rotatedSurface = utilGetZRotatedShape(sourceSurface, pi)
+    rotatedSurface = _getZRotatedShape(sourceSurface, pi)
     return rotatedSurface
 
 
@@ -422,10 +385,10 @@ def ComputeDaoCaseSurface():
 
     r = GetVar(DAO_BASE_RADIUS)
     r2 = r * 2
-    h = dao.aCaseHeight
+    h = GetVar(DAO_CASE_HEIGHT)
     h2 = h / 2
     offset = GetVar(DAO_OFFSET)
-    gap = dao.aCaseGap
+    gap = GetVar(DAO_CASE_GAP)
     rTop = r + offset + gap
 
     rSphere = gp_Vec(0, rTop, h2).Magnitude()
@@ -434,14 +397,14 @@ def ComputeDaoCaseSurface():
     limit = BRepPrimAPI_MakeBox(gp_Pnt(-r2, -r2, -h2), gp_Pnt(r2, r2, h2)).Shape()
     step01Surface = BRepAlgoAPI_Common(sphere, limit).Shape()
 
-    step02Surface = getShapeTranslate(step01Surface, 0, 0, -h2)
+    step02Surface = _getShapeTranslate(step01Surface, 0, 0, -h2)
 
     cutIngSurface = Compute(ComputeDaoIngSurface, offset - gap)
     cutYangSurface = Compute(ComputeDaoYangSurface, offset - gap)
     step03Surface = BRepAlgoAPI_Cut(step02Surface, cutIngSurface).Shape()
     step04Surface = BRepAlgoAPI_Cut(step03Surface, cutYangSurface).Shape()
 
-    step05Surface = getShapeTranslate(step04Surface, 0, 0, -h2)
+    step05Surface = _getShapeTranslate(step04Surface, 0, 0, -h2)
 
     return step05Surface
 
@@ -454,8 +417,6 @@ def ComputeDaoBoundPnt3(offset):
 # **********************************************************************************
 # **********************************************************************************
 # **********************************************************************************
-
-dao = DaoDrawLib()
 
 
 def DrawDaoPoints(pointsDict, prefix):
@@ -523,7 +484,7 @@ def DrawDaoExampleSliceSlide():
     DrawLine(sliceLineP1, sliceLineP2)
 
     sliceFacePnts = Compute(ComputeDaoSliceFacePnts, GetVar(DAO_OFFSET), k)
-    face = helperFaceFromPnts(sliceFacePnts)
+    face = _getFaceFromPnts(sliceFacePnts)
     DrawSurface(face)
 
     SetStyle(DESK_MAIN_STYLE)
@@ -554,7 +515,7 @@ def DrawManySliceSlide():
     DrawPoint(focus)
     DrawLabel(focus, 'F')
 
-    cnt = dao.aSliceCount
+    cnt = GetVar(DAO_SLICE_COUNT)
     bK = 1 / (cnt + 1)
     eK = 1 - 1 / (cnt + 1)
     for i in range(cnt):
@@ -637,7 +598,7 @@ def DrawDaoCaseSlide():
     DrawSolid(caseSurface)
 
 
-SetStyle(DAO_SETTING)
+SetStyle(DAO_DEFAULT)
 
 
 SetScale(5, 1)
