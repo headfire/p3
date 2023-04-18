@@ -1,5 +1,4 @@
 from core_desk import *
-from core_draw import DrawLib
 
 from OCC.Core.gp import gp_Pnt, gp_Trsf, gp_Dir, gp_Vec, gp_Ax1, gp_OZ, gp_GTrsf, gp_Ax2
 from OCC.Core.Geom import Geom_TrimmedCurve
@@ -10,14 +9,45 @@ from OCC.Core.TopAbs import TopAbs_VERTEX, TopAbs_FACE, TopAbs_EDGE
 from OCC.Core.GC import GC_MakeArcOfCircle
 
 from OCC.Core.BRep import BRep_Tool
-from OCC.Core.BRepBuilderAPI import (BRepBuilderAPI_MakeEdge, BRepBuilderAPI_MakeWire,
-                                     BRepBuilderAPI_Transform, BRepBuilderAPI_MakeFace,
+from OCC.Core.BRepBuilderAPI import (BRepBuilderAPI_MakeEdge, BRepBuilderAPI_MakeWire, BRepBuilderAPI_MakeFace,
+                                     BRepBuilderAPI_Transform,
                                      BRepBuilderAPI_MakeVertex, BRepBuilderAPI_GTransform)
 from OCC.Core.BRepOffsetAPI import BRepOffsetAPI_MakeOffset, BRepOffsetAPI_ThruSections
 from OCC.Core.BRepPrimAPI import BRepPrimAPI_MakeSphere, BRepPrimAPI_MakeBox
 from OCC.Core.BRepAlgoAPI import BRepAlgoAPI_Common, BRepAlgoAPI_Cut
 
 from math import pi
+
+
+class DrawLib:
+
+    def __init__(self):
+        self.cache = {}
+
+    def getCached(self, methodName, param1=None, param2=None):
+
+        params = ''
+        if param1 is not None:
+            params += str(param1)
+        if param2 is not None:
+            params += ',' + str(param2)
+
+        cacheKey = methodName + '(' + params + ')'
+
+        method = self.__getattribute__(methodName)
+        if cacheKey in self.cache:
+            print('==> Get from cache', cacheKey)
+            obj = self.cache[cacheKey]
+        else:
+            print('==> Compute', cacheKey)
+            if param1 is None:
+                obj = method()
+            elif param2 is None:
+                obj = method(param1)
+            else:
+                obj = method(param1, param2)
+            self.cache[cacheKey] = obj
+        return obj
 
 
 EQUAL_POINTS_PRECISION = 0.001
@@ -101,6 +131,7 @@ def getShapeTranslate(shape, x, y, z):
     shape = BRepBuilderAPI_Transform(shape, transform).Shape()
     return shape
 
+
 # *******************************************************************************
 # *******************************************************************************
 # *******************************************************************************
@@ -160,9 +191,11 @@ def utilShapeZScale(shape, scaleK):
     return shape
 
 
-# *********************************************************************************
-# *********************************************************************************
-# *********************************************************************************
+def helperCircleWire(pnt1, pnt2, pnt3):
+    geomCircle = GC_MakeCircle(pnt1, pnt2, pnt3).Value()
+    edge = BRepBuilderAPI_MakeEdge(geomCircle).Edge()
+    return BRepBuilderAPI_MakeWire(edge).Wire()
+
 
 def helperFaceFromPnts(pnts):
     bWire = BRepBuilderAPI_MakeWire()
@@ -173,6 +206,10 @@ def helperFaceFromPnts(pnts):
     wire = bWire.Wire()
     return BRepBuilderAPI_MakeFace(wire).Face()
 
+
+# *********************************************************************************
+# *********************************************************************************
+# *********************************************************************************
 
 
 class DaoDrawLib(DrawLib):
@@ -415,63 +452,56 @@ class DaoDrawLib(DrawLib):
         r = self.aBaseRadius + offset
         return gp_Pnt(r, 0, 0), gp_Pnt(0, r, 0), gp_Pnt(-r, 0, 0)
 
-    # **********************************************************************************
-    # **********************************************************************************
-    # **********************************************************************************
+
+# **********************************************************************************
+# **********************************************************************************
+# **********************************************************************************
+
+dao = DaoDrawLib()
 
 
-daoLib = DaoDrawLib()
-
-
-
-
-def DrawDaoPoints(pointsDict, prefix, style):
-
-    SetStyle(style)
+def DrawDaoPoints(pointsDict, prefix):
     for key in pointsDict:
-        DrawPoint(pointsDict[key]).doCls(pointsCls))
+        DrawPoint(pointsDict[key])
 
     for key in pointsDict:
-        LabelDraw(pointsDict[key], prefix + str(key)).doCls('info'))
-
-    return dr
-
+        DrawLabel(pointsDict[key], prefix + str(key))
 
 
 def DrawDaoClassicSlide():
+    SetStyle(DESK_MAIN_STYLE)
 
-    SetStyle(DAO_MAIN_STYLE)
-
-    basePoints = daoLib.getCached('getDaoBasePoints')
+    basePoints = dao.getCached('getDaoBasePoints')
     DrawDaoPoints(basePoints, 'p')
 
-    classicWire = daoLib.getCached('getDaoClassicWire')
+    classicWire = dao.getCached('getDaoClassicWire')
     DrawWire(classicWire)
 
-    SetStyle(DAO_INFO_STYLE)
-    bPnt1, bPnt2, bPnt3 = daoLib.getCached('getDaoBoundPnt3', 0)
+    SetStyle(DESK_INFO_STYLE)
+    bPnt1, bPnt2, bPnt3 = dao.getCached('getDaoBoundPnt3', 0)
     DrawCircle(bPnt1, bPnt2, bPnt3)
 
 
+SetScale(5, 1)
+DrawDesk()
 DrawDaoClassicSlide()
 Show()
-
 
 '''
 def getDaoOffsetSlide(self):
 
     dr = Draw()
 
-    firstWire = self.getCached('getDaoOffsetWire', self.aOffset)
+    firstWire =Compute('getDaoOffsetWire', self.aOffset)
     dr.addItem(WireDraw(firstWire).doCls('main'))
 
-    firstWirePoints = self.getCached('getDaoOffsetPnts', self.aOffset)
+    firstWirePoints =Compute('getDaoOffsetPnts', self.aOffset)
     dr.addItem(getPointsDraw(firstWirePoints, 'p', 'main'))
 
-    secondWire = self.getCached('getDaoSecondOffsetWire', self.aOffset)
+    secondWire =Compute('getDaoSecondOffsetWire', self.aOffset)
     dr.addItem(WireDraw(secondWire).doCls('info'))
 
-    bPnt1, bPnt2, bPnt3 = self.getCached('getDaoBoundPnt3', self.aOffset)
+    bPnt1, bPnt2, bPnt3 =Compute('getDaoBoundPnt3', self.aOffset)
     dr.addItem(CircleDraw(bPnt1, bPnt2, bPnt3).doCls('info'))
 
     return dr
@@ -481,31 +511,31 @@ def getDaoExampleSliceSlide(self):
     dr = Draw()
 
     # main dao curve
-    wire = self.getCached('getDaoOffsetWire', self.aOffset)
+    wire =Compute('getDaoOffsetWire', self.aOffset)
     dr.addItem(WireDraw(wire).doCls('main'))
 
     # focus point
-    focus = self.getCached('getDaoFocusPnt')
+    focus =Compute('getDaoFocusPnt')
     dr.addItem(PointDraw(focus).doCls('main'))
     dr.addItem(LabelDraw(focus, 'F').doCls('main'))
 
     # slice
     k = self.aSliceExampleK
 
-    sliceLineP1, sliceLineP2 = self.getCached('getDaoSliceLinePnt2', self.aOffset, k)
+    sliceLineP1, sliceLineP2 =Compute('getDaoSliceLinePnt2', self.aOffset, k)
     dr.addItem(LineDraw(sliceLineP1, sliceLineP2).doCls('focus'))
 
-    sliceFacePnts = self.getCached('getDaoSliceFacePnts', self.aOffset, k)
+    sliceFacePnts =Compute('getDaoSliceFacePnts', self.aOffset, k)
     dr.addItem(FaceDraw(sliceFacePnts).doCls('focus'))
 
-    slicePoints = self.getCached('getDaoSlicePnts', self.aOffset, k)
+    slicePoints =Compute('getDaoSlicePnts', self.aOffset, k)
     dr.addItem(getPointsDraw(slicePoints, 's', 'main'))
 
-    sliceCirclePnt1, sliceCirclePnt2, sliceCirclePnt3 = self.getCached('getDaoSliceCirclePnt3', self.aOffset, k)
+    sliceCirclePnt1, sliceCirclePnt2, sliceCirclePnt3 =Compute('getDaoSliceCirclePnt3', self.aOffset, k)
     dr.addItem(CircleDraw(sliceCirclePnt1, sliceCirclePnt2, sliceCirclePnt3).doCls('focus'))
 
     # bound
-    bPnt1, bPnt2, bPnt3 = self.getCached('getDaoBoundPnt3', self.aOffset)
+    bPnt1, bPnt2, bPnt3 =Compute('getDaoBoundPnt3', self.aOffset)
     dr.addItem(CircleDraw(bPnt1, bPnt2, bPnt3).doCls('info'))
 
     return dr
@@ -514,10 +544,10 @@ def getManySliceSlide(self):
 
     dr = Draw()
 
-    wire = self.getCached('getDaoOffsetWire', self.aOffset)
+    wire =Compute('getDaoOffsetWire', self.aOffset)
     dr.addItem(WireDraw(wire).doCls('main'))
 
-    focus = self.getCached('getDaoFocusPnt')
+    focus =Compute('getDaoFocusPnt')
     dr.addItem(PointDraw(focus).doCls('focus'))
     dr.addItem(LabelDraw(focus, 'F').doCls('main'))
 
@@ -528,13 +558,13 @@ def getManySliceSlide(self):
 
         k = bK + i * (eK - bK) / (cnt - 1)
 
-        sliceLineP1, sliceLineP2 = self.getCached('getDaoSliceLinePnt2', self.aOffset, k)
+        sliceLineP1, sliceLineP2 =Compute('getDaoSliceLinePnt2', self.aOffset, k)
         dr.addItem(LineDraw(sliceLineP1, sliceLineP2).doCls('focus'))
 
-        sPnt1, sPnt2, sPnt3 = self.getCached('getDaoSliceCirclePnt3', self.aOffset, k)
+        sPnt1, sPnt2, sPnt3 =Compute('getDaoSliceCirclePnt3', self.aOffset, k)
         dr.addItem(CircleDraw(sPnt1, sPnt2, sPnt3).doCls('main'))
 
-    bPnt1, bPnt2, bPnt3 = self.getCached('getDaoBoundPnt3', self.aOffset)
+    bPnt1, bPnt2, bPnt3 =Compute('getDaoBoundPnt3', self.aOffset)
     dr.addItem(CircleDraw(bPnt1, bPnt2, bPnt3).doCls('info'))
 
     return dr
@@ -543,7 +573,7 @@ def getDaoSkinningSlide(self):
 
     dr = Draw()
 
-    focus = self.getCached('getDaoFocusPnt')
+    focus =Compute('getDaoFocusPnt')
     dr.addItem(PointDraw(focus).doCls('focus'))
     dr.addItem(LabelDraw(focus, 'F').doCls('main'))
 
@@ -552,16 +582,16 @@ def getDaoSkinningSlide(self):
 
         k = ks[i]
 
-        sliceLineP1, sliceLineP2 = self.getCached('getDaoSliceLinePnt2', self.aOffset, k)
+        sliceLineP1, sliceLineP2 =Compute('getDaoSliceLinePnt2', self.aOffset, k)
         dr.addItem(LineDraw(sliceLineP1, sliceLineP2).doCls('focus'))
 
-        sPnt1, sPnt2, sPnt3 = self.getCached('getDaoSliceCirclePnt3', self.aOffset, k)
+        sPnt1, sPnt2, sPnt3 =Compute('getDaoSliceCirclePnt3', self.aOffset, k)
         dr.addItem(CircleDraw(sPnt1, sPnt2, sPnt3).doCls('main'))
 
-    skinningSurface = self.getCached('getDaoSkinningSurface', self.aOffset)
+    skinningSurface =Compute('getDaoSkinningSurface', self.aOffset)
     dr.addItem(SurfaceDraw(skinningSurface).doCls('focus'))
 
-    bPnt1, bPnt2, bPnt3 = self.getCached('getDaoBoundPnt3', self.aOffset)
+    bPnt1, bPnt2, bPnt3 =Compute('getDaoBoundPnt3', self.aOffset)
     dr.addItem(CircleDraw(bPnt1, bPnt2, bPnt3).doCls('info'))
 
     return dr
@@ -570,11 +600,11 @@ def getDaoIngYangSlide(self):
 
     dr = Draw()
 
-    ingSurface = self.getCached('getDaoIngSurface', self.aOffset)
+    ingSurface =Compute('getDaoIngSurface', self.aOffset)
     style = Style(CHROME_MATERIAL, (141/255, 241/255, 95/255))
     dr.addItem(SurfaceDraw(ingSurface).doStl(style))
 
-    yangSurface = self.getCached('getDaoYangSurface', self.aOffset)
+    yangSurface =Compute('getDaoYangSurface', self.aOffset)
     style = Style(CHROME_MATERIAL, (255/255, 100/255, 255/255))
     dr.addItem(SurfaceDraw(yangSurface).doStl(style))
 
@@ -584,15 +614,15 @@ def getDaoCaseSlide(self):
 
     dr = Draw()
 
-    ingSurface = self.getCached('getDaoIngSurface', self.aOffset)
+    ingSurface =Compute('getDaoIngSurface', self.aOffset)
     style = Style(CHROME_MATERIAL, (141/255, 241/255, 95/255))
     dr.addItem(SurfaceDraw(ingSurface).doStl(style))
 
-    yangSurface = self.getCached('getDaoYangSurface', self.aOffset)
+    yangSurface =Compute('getDaoYangSurface', self.aOffset)
     style = Style(CHROME_MATERIAL, (255/255, 100/255, 255/255))
     dr.addItem(SurfaceDraw(yangSurface).doStl(style))
 
-    caseSurface = self.getCached('getDaoCaseSurface')
+    caseSurface =Compute('getDaoCaseSurface')
     style = Style(CHROME_MATERIAL, (100/255, 100/255, 100/255))
     dr.addItem(SurfaceDraw(caseSurface).doStl(style))
 
