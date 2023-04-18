@@ -834,11 +834,10 @@ def DrawLimits(pnt1, pnt2, isLabeled=False):
     DrawBoxFrame(pnt1, pnt2, isLabeled)
 
 
-def DrawDesk(isAxisSystem=False, isLimits=False, isLabeled=False):
-    down = ScaleMain(GetVar(DESK_BOARD_DOWN))
+def DrawDesk(down=0, isAxisSystem=False, isLimits=False, isLabeled=False):
 
     DrawBoard()
-    DoMove(DecartPnt(0, 0, -down))
+    DoMove(DecartPnt(0, 0, down))
 
     pnt = GetVar(DESK_LIMITS_SIZES)
     ax, ay, az = ScaleMain(pnt.X()), ScaleMain(pnt.Y()), ScaleMain(pnt.Z())

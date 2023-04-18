@@ -469,6 +469,7 @@ def DrawDaoPoints(pointsDict, prefix):
 
 
 def DrawDaoClassicSlide():
+
     SetStyle(DESK_MAIN_STYLE)
 
     basePoints = dao.getCached('getDaoBasePoints')
@@ -478,124 +479,151 @@ def DrawDaoClassicSlide():
     DrawWire(classicWire)
 
     SetStyle(DESK_INFO_STYLE)
+
     bPnt1, bPnt2, bPnt3 = dao.getCached('getDaoBoundPnt3', 0)
     DrawCircle(bPnt1, bPnt2, bPnt3)
 
 
-SetScale(5, 1)
-DrawDesk()
-DrawDaoClassicSlide()
-Show()
+def DrawDaoOffsetSlide():
 
-'''
-def getDaoOffsetSlide(self):
+    SetStyle(DESK_MAIN_STYLE)
 
-    dr = Draw()
+    firstWire = dao.getCached('getDaoOffsetWire', dao.aOffset)
+    DrawWire(firstWire)
 
-    firstWire =Compute('getDaoOffsetWire', self.aOffset)
-    dr.addItem(WireDraw(firstWire).doCls('main'))
+    firstWirePoints = dao.getCached('getDaoOffsetPnts', dao.aOffset)
+    DrawDaoPoints(firstWirePoints, 'p')
 
-    firstWirePoints =Compute('getDaoOffsetPnts', self.aOffset)
-    dr.addItem(getPointsDraw(firstWirePoints, 'p', 'main'))
+    SetStyle(DESK_INFO_STYLE)
 
-    secondWire =Compute('getDaoSecondOffsetWire', self.aOffset)
-    dr.addItem(WireDraw(secondWire).doCls('info'))
+    secondWire = dao.getCached('getDaoSecondOffsetWire', dao.aOffset)
+    DrawWire(secondWire)
 
-    bPnt1, bPnt2, bPnt3 =Compute('getDaoBoundPnt3', self.aOffset)
-    dr.addItem(CircleDraw(bPnt1, bPnt2, bPnt3).doCls('info'))
+    bPnt1, bPnt2, bPnt3 = dao.getCached('getDaoBoundPnt3', dao.aOffset)
+    DrawCircle(bPnt1, bPnt2, bPnt3)
 
-    return dr
 
-def getDaoExampleSliceSlide(self):
+def DrawDaoExampleSliceSlide():
 
-    dr = Draw()
+    SetStyle(DESK_MAIN_STYLE)
 
     # main dao curve
-    wire =Compute('getDaoOffsetWire', self.aOffset)
-    dr.addItem(WireDraw(wire).doCls('main'))
+    wire = dao.getCached('getDaoOffsetWire', dao.aOffset)
+    DrawWire(wire)
 
     # focus point
-    focus =Compute('getDaoFocusPnt')
-    dr.addItem(PointDraw(focus).doCls('main'))
-    dr.addItem(LabelDraw(focus, 'F').doCls('main'))
+    focus = dao.getCached('getDaoFocusPnt')
+    DrawPoint(focus)
+    DrawLabel(focus, 'F')
 
     # slice
-    k = self.aSliceExampleK
+    k = dao.aSliceExampleK
 
-    sliceLineP1, sliceLineP2 =Compute('getDaoSliceLinePnt2', self.aOffset, k)
-    dr.addItem(LineDraw(sliceLineP1, sliceLineP2).doCls('focus'))
+    SetStyle(DESK_FOCUS_STYLE)
 
-    sliceFacePnts =Compute('getDaoSliceFacePnts', self.aOffset, k)
-    dr.addItem(FaceDraw(sliceFacePnts).doCls('focus'))
+    sliceLineP1, sliceLineP2 = dao.getCached('getDaoSliceLinePnt2', dao.aOffset, k)
+    DrawLine(sliceLineP1, sliceLineP2)
 
-    slicePoints =Compute('getDaoSlicePnts', self.aOffset, k)
-    dr.addItem(getPointsDraw(slicePoints, 's', 'main'))
+    sliceFacePnts = dao.getCached('getDaoSliceFacePnts', dao.aOffset, k)
+    face = helperFaceFromPnts(sliceFacePnts)
+    DrawSurface(face)
 
-    sliceCirclePnt1, sliceCirclePnt2, sliceCirclePnt3 =Compute('getDaoSliceCirclePnt3', self.aOffset, k)
-    dr.addItem(CircleDraw(sliceCirclePnt1, sliceCirclePnt2, sliceCirclePnt3).doCls('focus'))
+    SetStyle(DESK_MAIN_STYLE)
+
+    slicePoints = dao.getCached('getDaoSlicePnts', dao.aOffset, k)
+    DrawDaoPoints(slicePoints, 's')
+
+    SetStyle(DESK_FOCUS_STYLE)
+
+    sliceCirclePnt1, sliceCirclePnt2, sliceCirclePnt3 = dao.getCached('getDaoSliceCirclePnt3', dao.aOffset, k)
+    DrawCircle(sliceCirclePnt1, sliceCirclePnt2, sliceCirclePnt3)
+
+    SetStyle(DESK_INFO_STYLE)
 
     # bound
-    bPnt1, bPnt2, bPnt3 =Compute('getDaoBoundPnt3', self.aOffset)
-    dr.addItem(CircleDraw(bPnt1, bPnt2, bPnt3).doCls('info'))
+    bPnt1, bPnt2, bPnt3 = dao.getCached('getDaoBoundPnt3', dao.aOffset)
+    DrawCircle(bPnt1, bPnt2, bPnt3)
 
-    return dr
 
-def getManySliceSlide(self):
+def DrawManySliceSlide():
 
-    dr = Draw()
+    SetStyle(DESK_MAIN_STYLE)
 
-    wire =Compute('getDaoOffsetWire', self.aOffset)
-    dr.addItem(WireDraw(wire).doCls('main'))
+    wire = dao.getCached('getDaoOffsetWire', dao.aOffset)
+    DrawWire(wire)
 
-    focus =Compute('getDaoFocusPnt')
-    dr.addItem(PointDraw(focus).doCls('focus'))
-    dr.addItem(LabelDraw(focus, 'F').doCls('main'))
+    focus = dao.getCached('getDaoFocusPnt')
+    DrawPoint(focus)
+    DrawLabel(focus, 'F')
 
-    cnt = self.aSliceCount
+    cnt = dao.aSliceCount
     bK = 1 / (cnt + 1)
     eK = 1 - 1 / (cnt + 1)
     for i in range(cnt):
 
         k = bK + i * (eK - bK) / (cnt - 1)
 
-        sliceLineP1, sliceLineP2 =Compute('getDaoSliceLinePnt2', self.aOffset, k)
-        dr.addItem(LineDraw(sliceLineP1, sliceLineP2).doCls('focus'))
+        SetStyle(DESK_FOCUS_STYLE)
 
-        sPnt1, sPnt2, sPnt3 =Compute('getDaoSliceCirclePnt3', self.aOffset, k)
-        dr.addItem(CircleDraw(sPnt1, sPnt2, sPnt3).doCls('main'))
+        sliceLineP1, sliceLineP2 = dao.getCached('getDaoSliceLinePnt2', dao.aOffset, k)
+        DrawLine(sliceLineP1, sliceLineP2)
 
-    bPnt1, bPnt2, bPnt3 =Compute('getDaoBoundPnt3', self.aOffset)
-    dr.addItem(CircleDraw(bPnt1, bPnt2, bPnt3).doCls('info'))
+        SetStyle(DESK_MAIN_STYLE)
 
-    return dr
+        sPnt1, sPnt2, sPnt3 = dao.getCached('getDaoSliceCirclePnt3', dao.aOffset, k)
+        DrawCircle(sPnt1, sPnt2, sPnt3)
 
-def getDaoSkinningSlide(self):
+    SetStyle(DESK_INFO_STYLE)
 
-    dr = Draw()
+    bPnt1, bPnt2, bPnt3 = dao.getCached('getDaoBoundPnt3', dao.aOffset)
+    DrawCircle(bPnt1, bPnt2, bPnt3)
 
-    focus =Compute('getDaoFocusPnt')
-    dr.addItem(PointDraw(focus).doCls('focus'))
-    dr.addItem(LabelDraw(focus, 'F').doCls('main'))
 
-    ks = self.aSkinningSlicesKs
+def DrawDaoSkinningSlide():
+
+    SetStyle(DESK_MAIN_STYLE)
+
+    focus = dao.getCached('getDaoFocusPnt')
+    DrawPoint(focus)
+    DrawLabel(focus, 'F')
+
+    ks = dao.aSkinningSlicesKs
     for i in range(len(ks)):
 
         k = ks[i]
 
-        sliceLineP1, sliceLineP2 =Compute('getDaoSliceLinePnt2', self.aOffset, k)
-        dr.addItem(LineDraw(sliceLineP1, sliceLineP2).doCls('focus'))
+        SetStyle(DESK_FOCUS_STYLE)
 
-        sPnt1, sPnt2, sPnt3 =Compute('getDaoSliceCirclePnt3', self.aOffset, k)
-        dr.addItem(CircleDraw(sPnt1, sPnt2, sPnt3).doCls('main'))
+        sliceLineP1, sliceLineP2 = dao.getCached('getDaoSliceLinePnt2', dao.aOffset, k)
+        DrawLine(sliceLineP1, sliceLineP2)
 
-    skinningSurface =Compute('getDaoSkinningSurface', self.aOffset)
-    dr.addItem(SurfaceDraw(skinningSurface).doCls('focus'))
+        SetStyle(DESK_MAIN_STYLE)
 
-    bPnt1, bPnt2, bPnt3 =Compute('getDaoBoundPnt3', self.aOffset)
-    dr.addItem(CircleDraw(bPnt1, bPnt2, bPnt3).doCls('info'))
+        sPnt1, sPnt2, sPnt3 = dao.getCached('getDaoSliceCirclePnt3', dao.aOffset, k)
+        DrawCircle(sPnt1, sPnt2, sPnt3)
 
-    return dr
+    SetStyle(DESK_FOCUS_STYLE)
 
+    skinningSurface = dao.getCached('getDaoSkinningSurface', dao.aOffset)
+    DrawSurface(skinningSurface)
+
+    SetStyle(DESK_INFO_STYLE)
+
+    bPnt1, bPnt2, bPnt3 = dao.getCached('getDaoBoundPnt3', dao.aOffset)
+    DrawCircle(bPnt1, bPnt2, bPnt3)
+
+
+SetScale(5, 1)
+DrawDesk(-50)
+# DrawDaoClassicSlide()
+# DrawDaoOffsetSlide()
+# DrawDaoExampleSliceSlide()
+# DrawManySliceSlide()
+DrawDaoSkinningSlide()
+Show()
+
+
+'''
 def getDaoIngYangSlide(self):
 
     dr = Draw()
