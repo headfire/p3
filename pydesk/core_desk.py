@@ -50,12 +50,37 @@ def DecartPnt(x, y, z):
     return gp_Pnt(x, y, z)
 
 
-class Computer:
+def ComputeSphere(argRadius):
+    return BRepPrimAPI_MakeSphere(argRadius).Shape()
+
+
+def ComputeBox(argDx, argDy, argDz):
+    return BRepPrimAPI_MakeBox(argDx, argDy, argDz).Shape()
+
+
+def ComputeCone(argRadius1, argRadius2, argHeight):
+    return BRepPrimAPI_MakeCone(argRadius1, argRadius2, argHeight).Shape()
+
+
+def ComputeCylinder(argRadius, argHeight):
+    return BRepPrimAPI_MakeCylinder(argRadius, argHeight).Shape()
+
+
+def ComputeTorus(argRadius1, argRadius2):
+    return BRepPrimAPI_MakeTorus(argRadius1, argRadius2).Shape()
+
+
+class Scene:
 
     def __init__(self):
-        self.cache = {}
+        self.computeCache = {}
+        self.rootsAis: [Optional[AIS_Shape]] = []
+        self.parentAis: Optional[AIS_Shape] = None
+        self.currentAis: Optional[AIS_Shape] = None
+        self.dummyShape = BRepPrimAPI_MakeSphere(1).Shape()
+        self.dummyBrash = InvisibleBrash()
 
-    def compute(self, methodName, arg1=None, arg2=None, arg3=None):
+    def _compute(self, func, arg1=None, arg2=None, arg3=None):
 
         args = ''
         if arg1 is not None:
@@ -65,58 +90,23 @@ class Computer:
         if arg3 is not None:
             args += ',' + str(arg3)
 
-        cacheKey = methodName + '(' + args + ')'
+        cacheKey = func.__module__ + '.' + func.__name__ + '(' + args + ')'
 
-        method = self.__getattribute__(methodName)
-        if cacheKey in self.cache:
+        if cacheKey in self.computeCache:
             print('==> Get from cache', cacheKey)
-            obj = self.cache[cacheKey]
+            obj = self.computeCache[cacheKey]
         else:
             print('==> Compute', cacheKey)
             if arg1 is None:
-                obj = method()
+                obj = func()
             elif arg2 is None:
-                obj = method(arg1)
+                obj = func(arg1)
             elif arg3 is None:
-                obj = method(arg1, arg2)
+                obj = func(arg1, arg2)
             else:
-                obj = method(arg1, arg2, arg3)
-            self.cache[cacheKey] = obj
+                obj = func(arg1, arg2, arg3)
+            self.computeCache[cacheKey] = obj
         return obj
-
-
-class SceneComputer(Computer):
-
-    @staticmethod
-    def computeSphere(argRadius):
-        return BRepPrimAPI_MakeSphere(argRadius).Shape()
-
-    @staticmethod
-    def computeBox(argDx, argDy, argDz):
-        return BRepPrimAPI_MakeBox(argDx, argDy, argDz).Shape()
-
-    @staticmethod
-    def computeCone(argRadius1, argRadius2, argHeight):
-        return BRepPrimAPI_MakeCone(argRadius1, argRadius2, argHeight).Shape()
-
-    @staticmethod
-    def computeCylinder(argRadius, argHeight):
-        return BRepPrimAPI_MakeCylinder(argRadius, argHeight).Shape()
-
-    @staticmethod
-    def computeTorus(argRadius1, argRadius2):
-        return BRepPrimAPI_MakeTorus(argRadius1, argRadius2).Shape()
-
-
-class Scene:
-
-    def __init__(self):
-        self.rootsAis: [Optional[AIS_Shape]] = []
-        self.parentAis: Optional[AIS_Shape] = None
-        self.currentAis: Optional[AIS_Shape] = None
-        self.dummyShape = BRepPrimAPI_MakeSphere(1).Shape()
-        self.dummyBrash = InvisibleBrash()
-        self.computer = SceneComputer()
 
     def _drawAis(self, ais: AIS_InteractiveObject, brash):
 
@@ -256,23 +246,23 @@ class Scene:
         self._drawWire(wire, wireRadius, brash)
 
     def drawSphere(self, r, brash):
-        shape = self.computer.compute('computeSphere', r)
+        shape = self._compute(ComputeSphere, r)
         self._drawShape(shape, brash)
 
     def drawBox(self, x, y, z, brash):
-        shape = self.computer.compute('computeBox', x, y, z)
+        shape = self._compute(ComputeBox, x, y, z)
         self._drawShape(shape, brash)
 
     def drawCone(self, r1, r2, h, brash):
-        shape = self.computer.compute('computeCone', r1, r2, h)
+        shape = self._compute(ComputeCone, r1, r2, h)
         self._drawShape(shape, brash)
 
     def drawCylinder(self, r, h, brash):
-        shape = self.computer.compute('computeCylinder', r, h)
+        shape = self._compute(ComputeCylinder, r, h)
         self._drawShape(shape, brash)
 
     def drawTorus(self, r1, r2, brash):
-        shape = self.computer.compute('computeTorus', r1, r2)
+        shape = self._compute(ComputeTorus, r1, r2)
         self._drawShape(shape, brash)
 
     def groupBegin(self):

@@ -445,8 +445,8 @@ TestLimits,
 # Render()
 # exit()
 
-tests.pop()()
-Show()
+print(DrawBox.__name__, DrawBox.__module__)
+# Show()
 
 '''
 for test in tests:
