@@ -656,7 +656,7 @@ def DrawCircle(pnt1, pnt2, pnt3):
     DrawWire(wire)
 
 
-def DrawDesk():
+def DrawBoard():
     borderSize = ScaleMain(GetVar(DESK_BOARD_BORDER_SIZE))
     deskHeight = ScaleMain(GetVar(DESK_BOARD_HEIGHT))
 
@@ -787,6 +787,11 @@ def DrawBoxFrame(pnt1, pnt2, isLabeled):
     DrawFrame(vertexes, edges, isLabeled)
 
 
+def DrawLimits(pnt1, pnt2, isLabeled=False):
+    SetStyle(DESK_INFO_STYLE)
+    DrawBoxFrame(pnt1, pnt2, isLabeled)
+
+
 def Show():
     scene.show()
 
@@ -795,6 +800,6 @@ def Show():
 # ************************************
 # ************************************
 
-SetScale(5, 1)
+SetScale(1, 1)
 SetStyle(DESK_DEFAULT_STYLE)
 SetStyle(DESK_MAIN_STYLE)

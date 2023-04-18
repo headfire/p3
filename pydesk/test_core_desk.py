@@ -354,8 +354,8 @@ def TestCircle():
     DrawCircle(pnt2, pnt3, pnt4)
 
 
-def TestDesk():
-    DrawDesk()
+def TestBoard():
+    DrawBoard()
 
 
 def TestAxis():
@@ -391,7 +391,7 @@ def TestBoxFrame():
 
 
 def TestLimits():
-    pass
+    DrawLimits(Decart(-300, -300, 100), Decart(300, 300, 400))
 # DrawLimits(Decart(0, 0, 0), Decart(200, 200, 100))
 
 
@@ -430,12 +430,12 @@ tests = [
     TestArrow2,
     TestWire,
     TestCircle,
-    TestDesk,
+    TestBoard,
     TestAxis,
     TestAxisSystem,
-    # TestBoxFrame,
-    # TestLimits,
-    # TestDecor,
+    TestBoxFrame,
+    TestLimits,
+    # TestDesk,
 ]
 
 # TestLabel()
