@@ -150,7 +150,7 @@ class Scene:
         self.rootsAis: [Optional[AIS_Shape]] = []
         self.parentAis: Optional[AIS_Shape] = None
         self.currentAis: Optional[AIS_Shape] = None
-        self.dummyShape = BRepPrimAPI_MakeSphere(1).Shape()
+        self.dummyShape = BRepPrimAPI_MakeSphere(0.0001).Shape()
         self.dummyBrash = InvisibleBrash()
 
     def _drawAis(self, ais: AIS_InteractiveObject, brash):
