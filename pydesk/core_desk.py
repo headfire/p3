@@ -159,14 +159,30 @@ def ComputeTorus(argRadius1, argRadius2):
 class Exporter:
     def __init__(self):
         self.lines = []
+        self.dir = ''
+
+    @staticmethod
+    def getArgStr(arg):
+        return str(arg)
 
     def setDir(self, dirName):
         pass
 
     def log(self, funcName, arg1=None, arg2=None, arg3=None):
-        arg = ''
-        self.lines.append(funcName + '(' +  + ')')
+        if arg3 is not None:
+            args = self.getArgStr(arg1) + ', ' + self.getArgStr(arg2) + ', ' + self.getArgStr(arg3)
+        elif arg2 is not None:
+            args = self.getArgStr(arg1) + ', ' + self.getArgStr(arg2)
+        elif arg1 is not None:
+            args = self.getArgStr(arg1)
+        else:
+            args = ''
 
+        self.lines.append(funcName + '(' + args + ')')
+
+    def end(self):
+        with open('somefile.txt', 'a') as the_file:
+            the_file.write('Hello\n')
 
 class Scene:
 
