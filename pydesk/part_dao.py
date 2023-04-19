@@ -575,11 +575,11 @@ def DrawDaoSkinningSlide():
 def DrawDaoIngYangSlide():
 
     ingSurface = Compute(ComputeDaoIngSurface, GetVar(DAO_OFFSET))
-    SetSolidBrash(ChromeBrash((141/255, 241/255, 95/255)))
+    SetSolidBrash(ChromeBrash(DARK_MAGENTA_COLOR))
     DrawSolid(ingSurface)
 
     yangSurface = Compute(ComputeDaoYangSurface, GetVar(DAO_OFFSET))
-    SetSolidBrash(ChromeBrash(Rgb(255/255, 100/255, 255/255)))
+    SetSolidBrash(ChromeBrash(DARK_CYAN_COLOR))
     DrawSolid(yangSurface)
 
 

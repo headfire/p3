@@ -156,6 +156,18 @@ def ComputeTorus(argRadius1, argRadius2):
 # Virtual graphic machine
 # **************************************************************
 
+class Exporter:
+    def __init__(self):
+        self.lines = []
+
+    def setDir(self, dirName):
+        pass
+
+    def log(self, funcName, arg1=None, arg2=None, arg3=None):
+        arg = ''
+        self.lines.append(funcName + '(' +  + ')')
+
+
 class Scene:
 
     def __init__(self):
