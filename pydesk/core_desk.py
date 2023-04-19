@@ -64,6 +64,7 @@ def IsEqualPnt(pnt1, pnt2):
 def Rgb(r, g, b):
     return r, g, b
 
+
 # ***************************************************
 # Base constants
 # ***************************************************
@@ -159,17 +160,24 @@ def ComputeTorus(argRadius1, argRadius2):
 class Exporter:
     def __init__(self):
         self.lines = []
-        self.dir = ''
+        self.dir = None
 
     @staticmethod
     def getArgStr(arg):
         return str(arg)
 
     def setDir(self, dirName):
-        pass
+        self.dir = dirName
 
-    def log(self, funcName, arg1=None, arg2=None, arg3=None):
-        if arg3 is not None:
+    def log(self, funcName, arg1=None, arg2=None, arg3=None, arg4=None):
+
+        if self.dir is None:
+            return
+
+        if arg4 is not None:
+            args = self.getArgStr(arg1) + ', ' + self.getArgStr(arg2) + ', ' + self.getArgStr(
+                arg3) + ', ' + self.getArgStr(arg4)
+        elif arg3 is not None:
             args = self.getArgStr(arg1) + ', ' + self.getArgStr(arg2) + ', ' + self.getArgStr(arg3)
         elif arg2 is not None:
             args = self.getArgStr(arg1) + ', ' + self.getArgStr(arg2)
@@ -180,9 +188,11 @@ class Exporter:
 
         self.lines.append(funcName + '(' + args + ')')
 
-    def end(self):
-        with open('somefile.txt', 'a') as the_file:
-            the_file.write('Hello\n')
+    def save(self):
+        with open('scene.js', 'a') as f:
+            for line in self.lines:
+                f.write(line + '\n')
+
 
 class Scene:
 
@@ -192,6 +202,7 @@ class Scene:
         self.currentAis: Optional[AIS_Shape] = None
         self.dummyShape = BRepPrimAPI_MakeSphere(0.0001).Shape()
         self.dummyBrash = InvisibleBrash()
+        self.ex = Exporter()
 
     def _drawAis(self, ais: AIS_InteractiveObject, brash):
 
@@ -302,59 +313,76 @@ class Scene:
         self._drawShape(shape, brash)
 
     def doMove(self, pnt):
+        self.ex.log('DoMove', pnt)
         self._doMove(pnt)
 
     def doRotate(self, axFromPnt, axToPnt, angle):
+        self.ex.log('DoRotate', axFromPnt, axToPnt, angle)
         self._doRotate(axFromPnt, axToPnt, angle)
 
     def doRotateX(self, angle):
+        self.ex.log('DoRotateX', angle)
         self._doRotate(gp_Pnt(0, 0, 0), gp_Pnt(1, 0, 0), angle)
 
     def doRotateY(self, angle):
+        self.ex.log('DoRotateY', angle)
         self._doRotate(gp_Pnt(0, 0, 0), DecartPnt(0, 1, 0), angle)
 
     def doRotateZ(self, angle):
+        self.ex.log('DoRotateZ', angle)
         self._doRotate(gp_Pnt(0, 0, 0), DecartPnt(0, 0, 1), angle)
 
     def doDirect(self, fromPnt, toPnt):
+        self.ex.log('DoDirect', fromPnt, toPnt)
         self._doDirect(fromPnt, toPnt)
 
     def drawLabel(self, pnt, text, height, brash):
+        self.ex.log('DrawLabel', pnt, text, height, brash)
         self._drawLabel(pnt, text, height, brash)
 
     def drawShape(self, shape, brash):
+        self.ex.log('DrawShape', shape, brash)
         self._drawShape(shape, brash)
 
     def drawWire(self, wire, wireRadius, brash):
+        self.ex.log('DrawWire', wire, wireRadius, brash)
         self._drawWire(wire, wireRadius, brash)
 
     def drawSphere(self, r, brash):
+        self.ex.log('DrawSphere', r, brash)
         shape = Compute(ComputeSphere, r)
         self._drawShape(shape, brash)
 
     def drawBox(self, x, y, z, brash):
+        self.ex.log('DrawBox', x, y, z, brash)
         shape = Compute(ComputeBox, x, y, z)
         self._drawShape(shape, brash)
 
     def drawCone(self, r1, r2, h, brash):
+        self.ex.log('DrawCone', r1, r2, h, brash)
         shape = Compute(ComputeCone, r1, r2, h)
         self._drawShape(shape, brash)
 
     def drawCylinder(self, r, h, brash):
+        self.ex.log('DrawCylinder', r, h, brash)
         shape = Compute(ComputeCylinder, r, h)
         self._drawShape(shape, brash)
 
     def drawTorus(self, r1, r2, brash):
+        self.ex.log('DrawTorus', r1, r2, brash)
         shape = Compute(ComputeTorus, r1, r2)
         self._drawShape(shape, brash)
 
     def groupBegin(self):
+        self.ex.log('GroupBegin')
         self._groupBegin()
 
     def groupEnd(self):
+        self.ex.log('GroupEnd')
         self._groupEnd()
 
     def show(self):
+        self.ex.log('Show')
         self._render()
 
 
@@ -875,7 +903,6 @@ def DrawLimits(pnt1, pnt2, isLabeled=False):
 
 
 def DrawDesk(down=0, isAxisSystem=False, isLimits=False, isLabeled=False):
-
     DrawBoard()
     DoMove(DecartPnt(0, 0, down))
 
