@@ -27,39 +27,6 @@ from OCC.Display.SimpleGui import init_display
 
 from math import pi
 
-# ***************************************************
-# Base constants
-# ***************************************************
-
-EQUAL_POINTS_PRECISION = 0.001
-PI = pi
-
-
-WHITE_COLOR = 0.9, 0.9, 0.9
-GRAY_COLOR = 0.6, 0.6, 0.6
-DARK_GRAY_COLOR = 0.3, 0.3, 0.3
-
-RED_COLOR = 0.9, 0.3, 0.3
-GREEN_COLOR = 0.3, 0.9, 0.3
-BLUE_COLOR = 0.3, 0.3, 0.9
-
-YELLOW_COLOR = 0.9, 0.9, 0.3
-CYAN_COLOR = 0.3, 0.9, 0.9
-MAGENTA_COLOR = 0.9, 0.3, 0.9
-
-DARK_RED_COLOR = 0.6, 0.3, 0.3
-DARK_GREEN_COLOR = 0.3, 0.6, 0.3
-DARK_BLUE_COLOR = 0.3, 0.3, 0.6
-
-DARK_YELLOW_COLOR = 0.6, 0.6, 0.3
-DARK_CYAN_COLOR = 0.3, 0.6, 0.6
-DARK_MAGENTA_COLOR = 0.6, 0.3, 0.6
-
-WOOD_COLOR = 0.82, 0.46, 0.11
-PAPER_COLOR = 0.90, 0.90, 0.90
-STEEL_COLOR = 0.39, 0.39, 0.39
-GOLD_COLOR = 0.99, 0.78, 0.12
-
 
 # ***************************************************
 # Base convert functions
@@ -92,6 +59,42 @@ def DecartPnt(x, y, z):
 
 def IsEqualPnt(pnt1, pnt2):
     return pnt1.IsEqual(pnt2, EQUAL_POINTS_PRECISION)
+
+
+def Rgb(r, g, b):
+    return r, g, b
+
+# ***************************************************
+# Base constants
+# ***************************************************
+
+EQUAL_POINTS_PRECISION = 0.001
+PI = pi
+
+WHITE_COLOR = Rgb(0.9, 0.9, 0.9)
+GRAY_COLOR = Rgb(0.6, 0.6, 0.6)
+DARK_GRAY_COLOR = Rgb(0.3, 0.3, 0.3)
+
+RED_COLOR = Rgb(0.9, 0.3, 0.3)
+GREEN_COLOR = Rgb(0.3, 0.9, 0.3)
+BLUE_COLOR = Rgb(0.3, 0.3, 0.9)
+
+YELLOW_COLOR = Rgb(0.9, 0.9, 0.3)
+CYAN_COLOR = Rgb(0.3, 0.9, 0.9)
+MAGENTA_COLOR = Rgb(0.9, 0.3, 0.9)
+
+DARK_RED_COLOR = Rgb(0.6, 0.3, 0.3)
+DARK_GREEN_COLOR = Rgb(0.3, 0.6, 0.3)
+DARK_BLUE_COLOR = Rgb(0.3, 0.3, 0.6)
+
+DARK_YELLOW_COLOR = Rgb(0.6, 0.6, 0.3)
+DARK_CYAN_COLOR = Rgb(0.3, 0.6, 0.6)
+DARK_MAGENTA_COLOR = Rgb(0.6, 0.3, 0.6)
+
+WOOD_COLOR = Rgb(0.82, 0.46, 0.11)
+PAPER_COLOR = Rgb(0.90, 0.90, 0.90)
+STEEL_COLOR = Rgb(0.39, 0.39, 0.39)
+GOLD_COLOR = Rgb(0.99, 0.78, 0.12)
 
 # ***************************************************
 # Compute caching system
