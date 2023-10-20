@@ -1,1 +1,1 @@
-make dao_01 screen
+make dao.py slide_01 dao_01
